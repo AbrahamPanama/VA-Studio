@@ -1,0 +1,24 @@
+{
+  "description": "selection-link with nothing selected used to crash (null anchor); it is a no-op.",
+  "input": "{FIXTURES}/commands-no-target.svg",
+  "actions": "selection-link;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_stderr_contains": [
+    "Select"
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"box\"",
+        "id=\"ta\"",
+        "id=\"tb\"",
+        "id=\"tc\"",
+        "id=\"te\""
+      ],
+      "not_contains": [
+        "<a "
+      ]
+    }
+  }
+}

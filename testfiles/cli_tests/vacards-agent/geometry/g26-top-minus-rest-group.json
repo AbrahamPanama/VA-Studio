@@ -1,0 +1,23 @@
+{
+  "description": "Top-minus-rest with a group on top: the group acts as one combined shape, keeps its position and subtracts the rect below it.",
+  "input": "{FIXTURES}/groups-boolean.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r1,gover;vacards-boolean:op=top-minus-rest;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "targets": {"selected": 2, "excluded": []},
+      "modified": ["govera"],
+      "deleted": ["r1"],
+      "selection_after": ["govera"],
+      "undo": "one-step"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "contains": ["id=\"gover\"", "id=\"govera\""], "not_contains": ["id=\"r1\""]}
+  }
+}

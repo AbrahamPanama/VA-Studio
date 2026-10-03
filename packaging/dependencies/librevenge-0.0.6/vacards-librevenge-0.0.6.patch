@@ -1,0 +1,2661 @@
+--- a/src/lib/RVNGSVGDrawingGenerator.cpp
++++ b/src/lib/RVNGSVGDrawingGenerator.cpp
+@@ -22,6 +22,7 @@
+ 
+ #include <stdio.h>
+ 
++#include <cmath>
+ #include <iostream>
+ #include <map>
+ #include <memory>
+@@ -74,6 +75,184 @@
+ 	return retVal;
+ }
+ 
++//! XML-escape a value that is written into an attribute (quotes included).
++//! Text nodes already go through RVNGString::escapeXML; this closes the
++//! attribute-side gap found by S03 (raw font-family values).
++static std::string escapeXmlAttribute(const RVNGString &value)
++{
++	return RVNGString::escapeXML(value).cstr();
++}
++
++//! Read a finite numeric property. A string/binary property reports
++//! RVNG_UNIT_ERROR, which is treated as malformed rather than silently zero.
++static bool getFiniteNumber(const RVNGPropertyList &propList, const char *name, double &value)
++{
++	const RVNGProperty *prop = propList[name];
++	if (!prop || prop->getUnit() == RVNG_UNIT_ERROR)
++		return false;
++	value = prop->getDouble();
++	return std::isfinite(value);
++}
++
++//! Versioned CDR crop transport keys (S03 draft contract, version 1).
++static const char *const cdrFidelityVersion = "vacards:cdr-fidelity-version";
++static const char *const cdrObjectId = "vacards:cdr-object-id";
++static const char *const cdrContentKind = "vacards:cdr-content-kind";
++static const char *const cdrCropRole = "vacards:cdr-crop-role";
++static const char *const cdrCropSpace = "vacards:cdr-crop-space";
++static const char *const cdrCropFillRule = "vacards:cdr-crop-fill-rule";
++static const char *const cdrCropPath = "vacards:cdr-crop-path";
++static const char *const cdrImageTransform = "vacards:cdr-image-transform";
++
++//! Standards-based default for an explicit hard break. The approved CDR
++//! transport carries no line-height/baseline metric (CDR_EVENT_CONTRACT.md
++//! section 8), so the only defensible advance is the CSS `line-height: normal`
++//! default expressed in SVG em units. It is deliberately not a Corel metric.
++static const char *const kTextLineAdvance = "1.2em";
++
++static std::string getStringValue(const RVNGPropertyList &propList, const char *name)
++{
++	const RVNGProperty *prop = propList[name];
++	if (!prop)
++		return std::string();
++	return prop->getStr().cstr();
++}
++
++//! Serialize a crop boundary into SVG path data. Returns false if any node is
++//! malformed (unknown action, missing/non-finite coordinates). Deliberately
++//! separate from drawPath so unmarked legacy streams keep their exact bytes.
++static bool serializeCropPath(const RVNGPropertyListVector &path, std::string &out, unsigned long &subpathCount)
++{
++	out.clear();
++	subpathCount = 0;
++	if (path.count() == 0)
++		return false;
++	std::ostringstream sink;
++	for (unsigned long i = 0; i < path.count(); ++i)
++	{
++		const RVNGPropertyList &node = path[i];
++		const RVNGProperty *actionProp = node["librevenge:path-action"];
++		if (!actionProp)
++			return false;
++		const std::string action = actionProp->getStr().cstr();
++		if (action.length() != 1)
++			return false;
++		const char code = action[0];
++		// SVG path data must begin with a moveto; a producer boundary whose
++		// first node is anything else is refused before any clipPath is emitted.
++		if (i == 0 && code != 'M')
++			return false;
++		double x = 0.0, y = 0.0, x1 = 0.0, y1 = 0.0, x2 = 0.0, y2 = 0.0;
++		switch (code)
++		{
++		case 'M':
++			if (!getFiniteNumber(node, "svg:x", x) || !getFiniteNumber(node, "svg:y", y))
++				return false;
++			++subpathCount;
++			sink << "\nM" << doubleToString(72*getInchValue(*node["svg:x"]))
++			     << "," << doubleToString(72*getInchValue(*node["svg:y"]));
++			break;
++		case 'L':
++		case 'T':
++			if (!getFiniteNumber(node, "svg:x", x) || !getFiniteNumber(node, "svg:y", y))
++				return false;
++			sink << "\n" << code << doubleToString(72*getInchValue(*node["svg:x"]))
++			     << "," << doubleToString(72*getInchValue(*node["svg:y"]));
++			break;
++		case 'H':
++			if (!getFiniteNumber(node, "svg:x", x))
++				return false;
++			sink << "\nH" << doubleToString(72*getInchValue(*node["svg:x"]));
++			break;
++		case 'V':
++			if (!getFiniteNumber(node, "svg:y", y))
++				return false;
++			sink << "\nV" << doubleToString(72*getInchValue(*node["svg:y"]));
++			break;
++		case 'Q':
++		case 'S':
++			if (!getFiniteNumber(node, "svg:x1", x1) || !getFiniteNumber(node, "svg:y1", y1) ||
++			        !getFiniteNumber(node, "svg:x", x) || !getFiniteNumber(node, "svg:y", y))
++				return false;
++			sink << "\n" << code << doubleToString(72*getInchValue(*node["svg:x1"]))
++			     << "," << doubleToString(72*getInchValue(*node["svg:y1"])) << " "
++			     << doubleToString(72*getInchValue(*node["svg:x"]))
++			     << "," << doubleToString(72*getInchValue(*node["svg:y"]));
++			break;
++		case 'C':
++			if (!getFiniteNumber(node, "svg:x1", x1) || !getFiniteNumber(node, "svg:y1", y1) ||
++			        !getFiniteNumber(node, "svg:x2", x2) || !getFiniteNumber(node, "svg:y2", y2) ||
++			        !getFiniteNumber(node, "svg:x", x) || !getFiniteNumber(node, "svg:y", y))
++				return false;
++			sink << "\nC" << doubleToString(72*getInchValue(*node["svg:x1"]))
++			     << "," << doubleToString(72*getInchValue(*node["svg:y1"])) << " "
++			     << doubleToString(72*getInchValue(*node["svg:x2"]))
++			     << "," << doubleToString(72*getInchValue(*node["svg:y2"])) << " "
++			     << doubleToString(72*getInchValue(*node["svg:x"]))
++			     << "," << doubleToString(72*getInchValue(*node["svg:y"]));
++			break;
++		case 'A':
++		{
++			double arx = 0.0, ary = 0.0;
++			if (!getFiniteNumber(node, "svg:rx", arx) || !getFiniteNumber(node, "svg:ry", ary) ||
++			        !getFiniteNumber(node, "svg:x", x) || !getFiniteNumber(node, "svg:y", y))
++				return false;
++			double rotation = 0.0;
++			if (node["librevenge:rotate"] && !getFiniteNumber(node, "librevenge:rotate", rotation))
++				return false;
++			int largeArc = 1, sweep = 1;
++			if (node["librevenge:large-arc"])
++			{
++				if (node["librevenge:large-arc"]->getUnit() == RVNG_UNIT_ERROR)
++					return false;
++				largeArc = node["librevenge:large-arc"]->getInt();
++			}
++			if (node["librevenge:sweep"])
++			{
++				if (node["librevenge:sweep"]->getUnit() == RVNG_UNIT_ERROR)
++					return false;
++				sweep = node["librevenge:sweep"]->getInt();
++			}
++			sink << "\nA" << doubleToString(72*getInchValue(*node["svg:rx"]))
++			     << "," << doubleToString(72*getInchValue(*node["svg:ry"])) << " "
++			     << doubleToString(rotation) << " " << largeArc << "," << sweep << " "
++			     << doubleToString(72*getInchValue(*node["svg:x"]))
++			     << "," << doubleToString(72*getInchValue(*node["svg:y"]));
++			break;
++		}
++		case 'Z':
++			sink << "\nZ";
++			break;
++		default:
++			return false;
++		}
++	}
++	if (subpathCount == 0)
++		return false;
++	out = sink.str();
++	return true;
++}
++
++//! Convert the CDR image->parent affine [a b c d e f] (x'=a x+b y+e,
++//! y'=c x+d y+f; recovered CDRTransforms.cpp) into an SVG matrix. SVG
++//! matrix(A B C D E F) is x'=A x+C y+E, y'=B x+D y+F, so b and c swap.
++static bool getImageTransformMatrix(const RVNGPropertyList &propList, std::string &matrix)
++{
++	const RVNGPropertyListVector *xform = propList.child(cdrImageTransform);
++	if (!xform || xform->count() != 6)
++		return false;
++	double m[6];
++	for (unsigned long i = 0; i < 6; ++i)
++	{
++		if (!getFiniteNumber((*xform)[i], "vacards:cdr-matrix-value", m[i]))
++			return false;
++	}
++	matrix = "matrix(" + doubleToString(m[0]) + ", " + doubleToString(m[2]) + ", " +
++	         doubleToString(m[1]) + ", " + doubleToString(m[3]) + ", " +
++	         doubleToString(m[4]) + ", " + doubleToString(m[5]) + ")";
++	return true;
++}
++
+ static unsigned stringToColour(const RVNGString &s)
+ {
+ 	std::string str(s.cstr());
+@@ -178,6 +357,36 @@
+ 	std::vector<double> m_rowsDistanceFromOrigin;
+ };
+ 
++//! A resolved span style plus the characters inserted under it. The style is a
++//! deep copy of the resolved openSpan property list so it survives the
++//! synchronous draw call (contract section 6).
++struct TextRun
++{
++	RVNGPropertyList style;
++	std::string text;
++};
++
++//! One hard-break delimited line. `insertLineBreak()` starts a new TextLine;
++//! consecutive breaks therefore produce consecutive (empty) lines.
++struct TextLine
++{
++	std::vector<TextRun> runs;
++	//! Span style basis for this line. It is the active span style when one is
++	//! open, otherwise the style of the most recent non-empty run (so a blank
++	//! line created after closeSpan still resolves its dy="1.2em" against the
++	//! adjacent run's font-size). Only used for blank lines. Empty when neither
++	//! an active span nor a prior non-empty run style exists (D2 / T01-FIX2).
++	RVNGPropertyList styleBasis;
++};
++
++//! One `openParagraph()`/`closeParagraph()` pair. The alignment is captured
++//! from `fo:text-align` and mapped to an SVG text-anchor plus anchor position.
++struct TextParagraph
++{
++	std::string align;
++	std::vector<TextLine> lines;
++};
++
+ } // DrawingSVG namespace
+ 
+ using namespace DrawingSVG;
+@@ -190,6 +399,34 @@
+ 	void writeStyle(bool isClosed=true);
+ 	void drawPolySomething(const RVNGPropertyListVector &vertices, bool isClosed);
+ 
++	//! write a plain (legacy) SVG image element; bytes unchanged from 0.0.6
++	void writeGraphicObjectImage(const RVNGPropertyList &propList);
++	//! versioned CDR crop path: emits a native clip or refuses with a notice
++	void drawVersionedCropGraphicObject(const RVNGPropertyList &propList, int version);
++	//! deterministic, valid-XML capability diagnostic for a refused extension
++	void writeCapabilityNotice(const char *capability, const RVNGPropertyList &propList);
++	//! deterministic, valid-XML diagnostic for a refused text extension
++	void writeTextCapabilityNotice(const char *capability, const RVNGPropertyList &propList);
++	//! write the SVG attributes shared by a legacy <tspan> and a buffered run
++	void writeSpanAttributes(const RVNGPropertyList &pList);
++	//! start buffering a marked (versioned) multiline text object
++	void beginMarkedText(double anchorLeft, double anchorCenter, double anchorRight);
++	//! open a paragraph inside the buffered text object
++	void openTextParagraph(const RVNGPropertyList &propList);
++	//! resolve the current span style for subsequent buffered runs
++	void openTextSpan(const RVNGPropertyList &style);
++	//! close the current span scope
++	void closeTextSpan();
++	//! style basis for a line: the active span, else the most recent non-empty
++	//! run style (empty when no style is available; never guessed)
++	RVNGPropertyList textStyleBasis() const;
++	//! append raw (unescaped) characters to the current buffered run
++	void appendText(const std::string &raw);
++	//! explicit hard break: start a new buffered line
++	void insertTextLineBreak();
++	//! emit and clear the buffered text object content
++	void flushMarkedText();
++
+ 	//! return the namespace and the delimiter
+ 	std::string const &getNamespaceAndDelim() const
+ 	{
+@@ -208,6 +445,8 @@
+ 	int m_groupId;
+ 	//! layerId used if svg:id is not defined when calling startLayer
+ 	int m_layerId;
++	//! unique index for versioned CDR crop clipPaths
++	int m_cropClipIndex;
+ 	//! a prefix used to define the svg namespace
+ 	std::string m_nmSpace;
+ 	//! a prefix used to define the svg namespace with delimiter
+@@ -220,6 +459,23 @@
+ 	std::map<RVNGString, std::string> m_masterNameToContentMap;
+ 	//! the actual opened table
+ 	std::shared_ptr<Table> m_table;
++
++	//! true while a marked (versioned) text object is being buffered
++	bool m_textBuffering;
++	//! true while a span inside the buffered text object is open
++	bool m_textSpanOpen;
++	//! true while the last buffered run may still receive characters
++	bool m_textRunOpen;
++	//! resolved style of the currently open span
++	RVNGPropertyList m_textSpanStyle;
++	//! style of the most recent non-empty run, retained across closeSpan() so a
++	//! later blank line keeps the adjacent run's basis (empty until a run with
++	//! an explicit style is buffered; never synthesized)
++	RVNGPropertyList m_textLastRunStyle;
++	//! paragraph anchor positions (user units)
++	double m_textAnchorLeft, m_textAnchorCenter, m_textAnchorRight;
++	//! buffered paragraphs of the current marked text object (bounded per object)
++	std::vector<TextParagraph> m_textParagraphs;
+ };
+ 
+ RVNGSVGDrawingGeneratorPrivate::RVNGSVGDrawingGeneratorPrivate(RVNGStringVector &vec, const RVNGString &nmSpace) :
+@@ -232,12 +488,18 @@
+ 	m_arrowStartIndex(1),
+ 	m_arrowEndIndex(1),
+ 	m_groupId(1000), m_layerId(1000),
++	m_cropClipIndex(1),
+ 	m_nmSpace(nmSpace.cstr()),
+ 	m_nmSpaceAndDelim(""),
+ 	m_outputSink(),
+ 	m_vec(vec),
+ 	m_masterName(), m_masterNameToContentMap(),
+-	m_table()
++	m_table(),
++	m_textBuffering(false), m_textSpanOpen(false), m_textRunOpen(false),
++	m_textSpanStyle(),
++	m_textLastRunStyle(),
++	m_textAnchorLeft(0.0), m_textAnchorCenter(0.0), m_textAnchorRight(0.0),
++	m_textParagraphs()
+ {
+ 	if (!m_nmSpace.empty())
+ 		m_nmSpaceAndDelim = m_nmSpace+":";
+@@ -342,16 +604,16 @@
+ 			m_outputSink << "  <" << getNamespaceAndDelim() << "radialGradient id=\"grad" << m_gradientIndex++ << "\"";
+ 
+ 			if (m_style["svg:cx"])
+-				m_outputSink << " cx=\"" << m_style["svg:cx"]->getStr().cstr() << "\"";
++				m_outputSink << " cx=\"" << escapeXmlAttribute(m_style["svg:cx"]->getStr()) << "\"";
+ 			else if (m_style["draw:cx"])
+-				m_outputSink << " cx=\"" << m_style["draw:cx"]->getStr().cstr() << "\"";
++				m_outputSink << " cx=\"" << escapeXmlAttribute(m_style["draw:cx"]->getStr()) << "\"";
+ 
+ 			if (m_style["svg:cy"])
+-				m_outputSink << " cy=\"" << m_style["svg:cy"]->getStr().cstr() << "\"";
++				m_outputSink << " cy=\"" << escapeXmlAttribute(m_style["svg:cy"]->getStr()) << "\"";
+ 			else if (m_style["draw:cy"])
+-				m_outputSink << " cy=\"" << m_style["draw:cy"]->getStr().cstr() << "\"";
++				m_outputSink << " cy=\"" << escapeXmlAttribute(m_style["draw:cy"]->getStr()) << "\"";
+ 			if (m_style["svg:r"])
+-				m_outputSink << " r=\"" << m_style["svg:r"]->getStr().cstr() << "\"";
++				m_outputSink << " r=\"" << escapeXmlAttribute(m_style["svg:r"]->getStr()) << "\"";
+ 			else if (m_style["draw:border"])
+ 				m_outputSink << " r=\"" << doubleToString((1 - m_style["draw:border"]->getDouble())*100.0) << "%\"";
+ 			else
+@@ -364,9 +626,9 @@
+ 					RVNGPropertyList const &grad=m_gradient[c];
+ 					m_outputSink << "    <" << getNamespaceAndDelim() << "stop";
+ 					if (grad["svg:offset"])
+-						m_outputSink << " offset=\"" << grad["svg:offset"]->getStr().cstr() << "\"";
++						m_outputSink << " offset=\"" << escapeXmlAttribute(grad["svg:offset"]->getStr()) << "\"";
+ 					if (grad["svg:stop-color"])
+-						m_outputSink << " stop-color=\"" << grad["svg:stop-color"]->getStr().cstr() << "\"";
++						m_outputSink << " stop-color=\"" << escapeXmlAttribute(grad["svg:stop-color"]->getStr()) << "\"";
+ 					if (grad["svg:stop-opacity"])
+ 						m_outputSink << " stop-opacity=\"" << doubleToString(grad["svg:stop-opacity"]->getDouble()) << "\"";
+ 					m_outputSink << "/>" << std::endl;
+@@ -375,11 +637,11 @@
+ 			else if (m_style["draw:start-color"] && m_style["draw:end-color"])
+ 			{
+ 				m_outputSink << "    <" << getNamespaceAndDelim() << "stop offset=\"0%\"";
+-				m_outputSink << " stop-color=\"" << m_style["draw:end-color"]->getStr().cstr() << "\"";
++				m_outputSink << " stop-color=\"" << escapeXmlAttribute(m_style["draw:end-color"]->getStr()) << "\"";
+ 				m_outputSink << " stop-opacity=\"" << doubleToString(m_style["librevenge:end-opacity"] ? m_style["librevenge:end-opacity"]->getDouble() : 1) << "\" />" << std::endl;
+ 
+ 				m_outputSink << "    <" << getNamespaceAndDelim() << "stop offset=\"100%\"";
+-				m_outputSink << " stop-color=\"" << m_style["draw:start-color"]->getStr().cstr() << "\"";
++				m_outputSink << " stop-color=\"" << escapeXmlAttribute(m_style["draw:start-color"]->getStr()) << "\"";
+ 				m_outputSink << " stop-opacity=\"" << doubleToString(m_style["librevenge:start-opacity"] ? m_style["librevenge:start-opacity"]->getDouble() : 1) << "\" />" << std::endl;
+ 			}
+ 			m_outputSink << "  </" << getNamespaceAndDelim() << "radialGradient>\n";
+@@ -423,7 +685,7 @@
+ 						if (grad["svg:offset"])
+ 							m_outputSink << "offset=\"" << doubleToString(50.-50.*grad["svg:offset"]->getDouble()) << "%\"";
+ 						if (grad["svg:stop-color"])
+-							m_outputSink << " stop-color=\"" << grad["svg:stop-color"]->getStr().cstr() << "\"";
++							m_outputSink << " stop-color=\"" << escapeXmlAttribute(grad["svg:stop-color"]->getStr()) << "\"";
+ 						if (grad["svg:stop-opacity"])
+ 							m_outputSink << " stop-opacity=\"" << doubleToString(grad["svg:stop-opacity"]->getDouble()) << "\"";
+ 						m_outputSink << "/>" << std::endl;
+@@ -437,7 +699,7 @@
+ 						if (grad["svg:offset"])
+ 							m_outputSink << "offset=\"" << doubleToString(50.+50.*grad["svg:offset"]->getDouble()) << "%\"";
+ 						if (grad["svg:stop-color"])
+-							m_outputSink << " stop-color=\"" << grad["svg:stop-color"]->getStr().cstr() << "\"";
++							m_outputSink << " stop-color=\"" << escapeXmlAttribute(grad["svg:stop-color"]->getStr()) << "\"";
+ 						if (grad["svg:stop-opacity"])
+ 							m_outputSink << " stop-opacity=\"" << doubleToString(grad["svg:stop-opacity"]->getDouble()) << "\"";
+ 						m_outputSink << "/>" << std::endl;
+@@ -450,9 +712,9 @@
+ 						RVNGPropertyList const &grad=m_gradient[c];
+ 						m_outputSink << "    <" << getNamespaceAndDelim() << "stop";
+ 						if (grad["svg:offset"])
+-							m_outputSink << " offset=\"" << grad["svg:offset"]->getStr().cstr() << "\"";
++							m_outputSink << " offset=\"" << escapeXmlAttribute(grad["svg:offset"]->getStr()) << "\"";
+ 						if (grad["svg:stop-color"])
+-							m_outputSink << " stop-color=\"" << grad["svg:stop-color"]->getStr().cstr() << "\"";
++							m_outputSink << " stop-color=\"" << escapeXmlAttribute(grad["svg:stop-color"]->getStr()) << "\"";
+ 						if (grad["svg:stop-opacity"])
+ 							m_outputSink << " stop-opacity=\"" << doubleToString(grad["svg:stop-opacity"]->getDouble()) << "\"";
+ 						m_outputSink << "/>" << std::endl;
+@@ -464,25 +726,25 @@
+ 				if (!m_style["draw:style"] || m_style["draw:style"]->getStr() == "linear")
+ 				{
+ 					m_outputSink << "    <" << getNamespaceAndDelim() << "stop offset=\"0%\"";
+-					m_outputSink << " stop-color=\"" << m_style["draw:start-color"]->getStr().cstr() << "\"";
++					m_outputSink << " stop-color=\"" << escapeXmlAttribute(m_style["draw:start-color"]->getStr()) << "\"";
+ 					m_outputSink << " stop-opacity=\"" << doubleToString(m_style["librevenge:start-opacity"] ? m_style["librevenge:start-opacity"]->getDouble() : 1) << "\" />" << std::endl;
+ 
+ 					m_outputSink << "    <" << getNamespaceAndDelim() << "stop offset=\"100%\"";
+-					m_outputSink << " stop-color=\"" << m_style["draw:end-color"]->getStr().cstr() << "\"";
++					m_outputSink << " stop-color=\"" << escapeXmlAttribute(m_style["draw:end-color"]->getStr()) << "\"";
+ 					m_outputSink << " stop-opacity=\"" << doubleToString(m_style["librevenge:end-opacity"] ? m_style["librevenge:end-opacity"]->getDouble() : 1) << "\" />" << std::endl;
+ 				}
+ 				else
+ 				{
+ 					m_outputSink << "    <" << getNamespaceAndDelim() << "stop offset=\"0%\"";
+-					m_outputSink << " stop-color=\"" << m_style["draw:end-color"]->getStr().cstr() << "\"";
++					m_outputSink << " stop-color=\"" << escapeXmlAttribute(m_style["draw:end-color"]->getStr()) << "\"";
+ 					m_outputSink << " stop-opacity=\"" << doubleToString(m_style["librevenge:end-opacity"] ? m_style["librevenge:end-opacity"]->getDouble() : 1) << "\" />" << std::endl;
+ 
+ 					m_outputSink << "    <" << getNamespaceAndDelim() << "stop offset=\"50%\"";
+-					m_outputSink << " stop-color=\"" << m_style["draw:start-color"]->getStr().cstr() << "\"";
++					m_outputSink << " stop-color=\"" << escapeXmlAttribute(m_style["draw:start-color"]->getStr()) << "\"";
+ 					m_outputSink << " stop-opacity=\"" << doubleToString(m_style["librevenge:start-opacity"] ? m_style["librevenge:start-opacity"]->getDouble() : 1) << "\" />" << std::endl;
+ 
+ 					m_outputSink << "    <" << getNamespaceAndDelim() << "stop offset=\"100%\"";
+-					m_outputSink << " stop-color=\"" << m_style["draw:end-color"]->getStr().cstr() << "\"";
++					m_outputSink << " stop-color=\"" << escapeXmlAttribute(m_style["draw:end-color"]->getStr()) << "\"";
+ 					m_outputSink << " stop-opacity=\"" << doubleToString(m_style["librevenge:end-opacity"] ? m_style["librevenge:end-opacity"]->getDouble() : 1) << "\" />" << std::endl;
+ 				}
+ 			}
+@@ -537,7 +799,7 @@
+ 		else
+ 			m_outputSink << "height=\"100\" ";
+ 
+-		m_outputSink << "xlink:href=\"data:" << m_style["librevenge:mime-type"]->getStr().cstr() << ";base64,";
++		m_outputSink << "xlink:href=\"data:" << escapeXmlAttribute(m_style["librevenge:mime-type"]->getStr()) << ";base64,";
+ 		m_outputSink << m_style["draw:fill-image"]->getStr().cstr();
+ 		m_outputSink << "\" />\n";
+ 		m_outputSink << "  </" << getNamespaceAndDelim() << "pattern>\n";
+@@ -587,7 +849,7 @@
+ 	if (m_style["draw:stroke"] && m_style["draw:stroke"]->getStr() != "none")
+ 	{
+ 		if (m_style["svg:stroke-color"])
+-			m_outputSink << "stroke: " << m_style["svg:stroke-color"]->getStr().cstr()  << "; ";
++			m_outputSink << "stroke: " << escapeXmlAttribute(m_style["svg:stroke-color"]->getStr())  << "; ";
+ 		if (m_style["svg:stroke-opacity"] &&  m_style["svg:stroke-opacity"]->getInt()!= 1)
+ 			m_outputSink << "stroke-opacity: " << doubleToString(m_style["svg:stroke-opacity"]->getDouble()) << "; ";
+ 	}
+@@ -640,15 +902,15 @@
+ 	}
+ 
+ 	if (m_style["svg:stroke-linecap"])
+-		m_outputSink << "stroke-linecap: " << m_style["svg:stroke-linecap"]->getStr().cstr() << "; ";
++		m_outputSink << "stroke-linecap: " << escapeXmlAttribute(m_style["svg:stroke-linecap"]->getStr()) << "; ";
+ 
+ 	if (m_style["svg:stroke-linejoin"])
+-		m_outputSink << "stroke-linejoin: " << m_style["svg:stroke-linejoin"]->getStr().cstr() << "; ";
++		m_outputSink << "stroke-linejoin: " << escapeXmlAttribute(m_style["svg:stroke-linejoin"]->getStr()) << "; ";
+ 
+ 	if (m_style["draw:fill"] && m_style["draw:fill"]->getStr() == "none")
+ 		m_outputSink << "fill: none; ";
+ 	else if (m_style["svg:fill-rule"])
+-		m_outputSink << "fill-rule: " << m_style["svg:fill-rule"]->getStr().cstr() << "; ";
++		m_outputSink << "fill-rule: " << escapeXmlAttribute(m_style["svg:fill-rule"]->getStr()) << "; ";
+ 
+ 	if (m_style["draw:fill"] && m_style["draw:fill"]->getStr() == "gradient")
+ 		m_outputSink << "fill: url(#grad" << m_gradientIndex-1 << "); ";
+@@ -660,7 +922,7 @@
+ 
+ 	if (m_style["draw:fill"] && m_style["draw:fill"]->getStr() == "solid")
+ 		if (m_style["draw:fill-color"])
+-			m_outputSink << "fill: " << m_style["draw:fill-color"]->getStr().cstr() << "; ";
++			m_outputSink << "fill: " << escapeXmlAttribute(m_style["draw:fill-color"]->getStr()) << "; ";
+ 	if (m_style["draw:opacity"] && m_style["draw:opacity"]->getDouble() < 1)
+ 		m_outputSink << "fill-opacity: " << doubleToString(m_style["draw:opacity"]->getDouble()) << "; ";
+ 
+@@ -672,7 +934,347 @@
+ 	m_outputSink << "\""; // style
+ }
+ 
++void RVNGSVGDrawingGeneratorPrivate::writeGraphicObjectImage(const RVNGPropertyList &propList)
++{
++	m_outputSink << "<" << getNamespaceAndDelim() << "image ";
++	if (propList["svg:x"] && propList["svg:y"] && propList["svg:width"] && propList["svg:height"])
++	{
++		double x=getInchValue(*propList["svg:x"]);
++		double y=getInchValue(*propList["svg:y"]);
++		double width=getInchValue(*propList["svg:width"]);
++		double height=getInchValue(*propList["svg:height"]);
++		bool flipX(propList["draw:mirror-horizontal"] && propList["draw:mirror-horizontal"]->getInt());
++		bool flipY(propList["draw:mirror-vertical"] && propList["draw:mirror-vertical"]->getInt());
+ 
++		m_outputSink << "x=\"" << doubleToString(72*x) << "\" y=\"" << doubleToString(72*y) << "\" ";
++		m_outputSink << "width=\"" << doubleToString(72*width) << "\" height=\"" << doubleToString(72*height) << "\" ";
++		if (flipX || flipY || propList["librevenge:rotate"])
++		{
++			double xmiddle = x + width / 2.0;
++			double ymiddle = y + height / 2.0;
++			m_outputSink << "transform=\"";
++			m_outputSink << " translate(" << doubleToString(72*xmiddle) << ", " << doubleToString(72*ymiddle) << ") ";
++			m_outputSink << " scale(" << (flipX ? "-1" : "1") << ", " << (flipY ? "-1" : "1") << ") ";
++			// rotation is around the center of the object's bounding box
++			if (propList["librevenge:rotate"])
++			{
++				double angle(propList["librevenge:rotate"]->getDouble());
++				while (angle > 180.0)
++					angle -= 360.0;
++				while (angle < -180.0)
++					angle += 360.0;
++				m_outputSink << " rotate(" << doubleToString(angle) << ") ";
++			}
++			m_outputSink << " translate(" << doubleToString(-72*xmiddle) << ", " << doubleToString(-72*ymiddle) << ") ";
++			m_outputSink << "\" ";
++		}
++	}
++	m_outputSink << "xlink:href=\"data:" << escapeXmlAttribute(propList["librevenge:mime-type"]->getStr()) << ";base64,";
++	m_outputSink << propList["office:binary-data"]->getStr().cstr();
++	m_outputSink << "\" />\n";
++}
++
++void RVNGSVGDrawingGeneratorPrivate::writeCapabilityNotice(const char *capability, const RVNGPropertyList &propList)
++{
++	m_outputSink << "<!-- librevenge:cdr-crop capability=\"" << capability << "\"";
++	const RVNGProperty *objId = propList[cdrObjectId];
++	if (objId && objId->getUnit() != RVNG_UNIT_ERROR)
++		m_outputSink << " object-id=\"" << objId->getInt() << "\"";
++	m_outputSink << " -->\n";
++	RVNG_DEBUG_MSG(("RVNGSVGDrawingGenerator: CDR crop capability=%s\n", capability));
++}
++
++void RVNGSVGDrawingGeneratorPrivate::writeTextCapabilityNotice(const char *capability, const RVNGPropertyList &propList)
++{
++	m_outputSink << "<!-- librevenge:cdr-text capability=\"" << capability << "\"";
++	const RVNGProperty *objId = propList[cdrObjectId];
++	if (objId && objId->getUnit() != RVNG_UNIT_ERROR)
++		m_outputSink << " object-id=\"" << objId->getInt() << "\"";
++	m_outputSink << " -->\n";
++	RVNG_DEBUG_MSG(("RVNGSVGDrawingGenerator: CDR text capability=%s\n", capability));
++}
++
++void RVNGSVGDrawingGeneratorPrivate::writeSpanAttributes(const RVNGPropertyList &pList)
++{
++	if (pList["style:font-name"])
++		m_outputSink << "font-family=\"" << escapeXmlAttribute(pList["style:font-name"]->getStr()) << "\" ";
++	if (pList["fo:font-style"])
++		m_outputSink << "font-style=\"" << escapeXmlAttribute(pList["fo:font-style"]->getStr()) << "\" ";
++	if (pList["fo:font-weight"])
++		m_outputSink << "font-weight=\"" << escapeXmlAttribute(pList["fo:font-weight"]->getStr()) << "\" ";
++	if (pList["fo:font-variant"])
++		m_outputSink << "font-variant=\"" << escapeXmlAttribute(pList["fo:font-variant"]->getStr()) << "\" ";
++	if (pList["fo:font-size"])
++		m_outputSink << "font-size=\"" << doubleToString(pList["fo:font-size"]->getDouble()) << "\" ";
++	if (pList["fo:color"])
++		m_outputSink << "fill=\"" << escapeXmlAttribute(pList["fo:color"]->getStr()) << "\" ";
++	if (pList["fo:text-transform"])
++		m_outputSink << "text-transform=\"" << escapeXmlAttribute(pList["fo:text-transform"]->getStr()) << "\" ";
++	if (pList["svg:fill-opacity"])
++		m_outputSink << "fill-opacity=\"" << doubleToString(pList["svg:fill-opacity"]->getDouble()) << "\" ";
++	if (pList["svg:stroke-opacity"])
++		m_outputSink << "stroke-opacity=\"" << doubleToString(pList["svg:stroke-opacity"]->getDouble()) << "\" ";
++}
++
++void RVNGSVGDrawingGeneratorPrivate::beginMarkedText(double anchorLeft, double anchorCenter, double anchorRight)
++{
++	m_textBuffering = true;
++	m_textSpanOpen = false;
++	m_textRunOpen = false;
++	m_textSpanStyle.clear();
++	m_textLastRunStyle.clear();
++	m_textAnchorLeft = anchorLeft;
++	m_textAnchorCenter = anchorCenter;
++	m_textAnchorRight = anchorRight;
++	m_textParagraphs.clear();
++}
++
++void RVNGSVGDrawingGeneratorPrivate::openTextParagraph(const RVNGPropertyList &propList)
++{
++	TextParagraph paragraph;
++	paragraph.align = getStringValue(propList, "fo:text-align");
++	TextLine firstLine;
++	// The span normally opens after openParagraph, so this is usually empty and
++	// is refreshed by insertTextLineBreak() when the first line stays blank. If
++	// the previous paragraph left a non-empty run style, seed it here so a
++	// paragraph that starts with no active span still has a defensible basis.
++	firstLine.styleBasis = textStyleBasis();
++	paragraph.lines.push_back(firstLine);
++	m_textParagraphs.push_back(paragraph);
++	m_textRunOpen = false;
++}
++
++void RVNGSVGDrawingGeneratorPrivate::openTextSpan(const RVNGPropertyList &style)
++{
++	m_textSpanStyle = style;
++	m_textSpanOpen = true;
++	m_textRunOpen = false;
++}
++
++void RVNGSVGDrawingGeneratorPrivate::closeTextSpan()
++{
++	m_textSpanOpen = false;
++	m_textRunOpen = false;
++	m_textSpanStyle.clear();
++}
++
++RVNGPropertyList RVNGSVGDrawingGeneratorPrivate::textStyleBasis() const
++{
++	// Prefer the span that is active right now; otherwise reuse the exact style
++	// of the most recent non-empty run. There is no fallback beyond that: if no
++	// style was ever buffered for this object the result is empty and the blank
++	// line stays attribute-free rather than guessing (T01-FIX2).
++	if (m_textSpanOpen)
++		return m_textSpanStyle;
++	return m_textLastRunStyle;
++}
++
++void RVNGSVGDrawingGeneratorPrivate::appendText(const std::string &raw)
++{
++	if (!m_textBuffering)
++		return;
++	if (m_textParagraphs.empty())
++		openTextParagraph(RVNGPropertyList());
++	TextParagraph &paragraph = m_textParagraphs.back();
++	if (paragraph.lines.empty())
++		paragraph.lines.push_back(TextLine());
++	TextLine &line = paragraph.lines.back();
++	if (!m_textRunOpen)
++	{
++		TextRun run;
++		if (m_textSpanOpen)
++			run.style = m_textSpanStyle;
++		line.runs.push_back(run);
++		m_textRunOpen = true;
++	}
++	line.runs.back().text += raw;
++	// Remember the exact style of the most recent non-empty run. It survives the
++	// synchronous closeSpan() (contract section 6 deep copy) so a blank line
++	// produced after the span closed still reuses the adjacent run's basis. A
++	// run created without an open span has an empty style, so this records
++	// "no explicit style" rather than a guessed one.
++	if (!raw.empty())
++		m_textLastRunStyle = line.runs.back().style;
++	// Keep the active span style on the line even after the span closes, so a
++	// later blank line still has a defensible font-size basis (D2).
++	line.styleBasis = m_textSpanStyle;
++}
++
++void RVNGSVGDrawingGeneratorPrivate::insertTextLineBreak()
++{
++	if (!m_textBuffering)
++		return;
++	if (m_textParagraphs.empty())
++		openTextParagraph(RVNGPropertyList());
++	TextParagraph &paragraph = m_textParagraphs.back();
++	if (paragraph.lines.empty())
++		paragraph.lines.push_back(TextLine());
++	// The line just ended is blank: freeze the span style basis active at the
++	// break so its dy=1.2em resolves like an adjacent run (D2). When the break
++	// happens after closeSpan() (or at a paragraph start with no open span) the
++	// basis falls back to the most recent non-empty run style; if there is none
++	// it stays empty and the line remains attribute-free (T01-FIX2).
++	if (paragraph.lines.back().runs.empty())
++		paragraph.lines.back().styleBasis = textStyleBasis();
++	TextLine nextLine;
++	nextLine.styleBasis = textStyleBasis();
++	paragraph.lines.push_back(nextLine);
++	m_textRunOpen = false;
++}
++
++void RVNGSVGDrawingGeneratorPrivate::flushMarkedText()
++{
++	// Explicit global line index for the whole object: line 0 sits on the
++	// unchanged 0.0.6 frame baseline and every later line advances by exactly one
++	// kTextLineAdvance ("1.2em", the approved default). The index is incremented
++	// per line, not per paragraph, so the first line of every paragraph after the
++	// first also advances and no paragraph overlaps the previous one (D1).
++	std::size_t lineIndex = 0;
++	for (std::size_t p = 0; p < m_textParagraphs.size(); ++p)
++	{
++		const TextParagraph &paragraph = m_textParagraphs[p];
++		const bool centered = paragraph.align == "center";
++		const bool right = paragraph.align == "end" || paragraph.align == "right";
++		const double anchorX = centered ? m_textAnchorCenter : (right ? m_textAnchorRight : m_textAnchorLeft);
++		const char *anchor = centered ? "middle" : (right ? "end" : "start");
++		for (std::size_t l = 0; l < paragraph.lines.size(); ++l)
++		{
++			const TextLine &line = paragraph.lines[l];
++			const bool advance = (lineIndex > 0);
++			++lineIndex;
++			bool positioned = false;
++			for (std::size_t r = 0; r < line.runs.size(); ++r)
++			{
++				const TextRun &run = line.runs[r];
++				if (run.text.empty())
++					continue;
++				m_outputSink << "<" << getNamespaceAndDelim() << "tspan ";
++				if (!positioned)
++				{
++					m_outputSink << "x=\"" << doubleToString(anchorX) << "\"";
++					if (advance)
++						m_outputSink << " dy=\"" << kTextLineAdvance << "\"";
++					m_outputSink << " text-anchor=\"" << anchor << "\" ";
++					positioned = true;
++				}
++				writeSpanAttributes(run.style);
++				m_outputSink << ">" << RVNGString::escapeXML(RVNGString(run.text.c_str())).cstr()
++				             << "</" << getNamespaceAndDelim() << "tspan>";
++			}
++			if (!positioned)
++			{
++				// A blank hard-break line still needs a positioned tspan so the
++				// break advances the text position instead of being collapsed.
++				// Carry the span style basis captured at the break (D2) so its
++				// dy=1.2em resolves against the same font-size as the adjacent
++				// run; when no span style was ever active the line stays
++				// attribute-free exactly as before.
++				m_outputSink << "<" << getNamespaceAndDelim() << "tspan x=\"" << doubleToString(anchorX) << "\"";
++				if (advance)
++					m_outputSink << " dy=\"" << kTextLineAdvance << "\"";
++				m_outputSink << " text-anchor=\"" << anchor << "\" ";
++				writeSpanAttributes(line.styleBasis);
++				m_outputSink << "/>";
++			}
++		}
++	}
++	// Per-object buffer: released as soon as the object is serialized.
++	m_textBuffering = false;
++	m_textParagraphs.clear();
++}
++
++void RVNGSVGDrawingGeneratorPrivate::drawVersionedCropGraphicObject(const RVNGPropertyList &propList, int version)
++{
++	if (version != 1)
++	{
++		writeCapabilityNotice("unsupported-version", propList);
++		writeGraphicObjectImage(propList);
++		return;
++	}
++	if (getStringValue(propList, cdrContentKind) != "bitmap")
++	{
++		writeCapabilityNotice("unsupported-content-kind", propList);
++		writeGraphicObjectImage(propList);
++		return;
++	}
++	if (!propList[cdrObjectId] || propList[cdrObjectId]->getUnit() == RVNG_UNIT_ERROR)
++	{
++		writeCapabilityNotice("malformed-object-id", propList);
++		writeGraphicObjectImage(propList);
++		return;
++	}
++	const std::string role = getStringValue(propList, cdrCropRole);
++	if (role != "crop-only" && role != "visible-frame")
++	{
++		writeCapabilityNotice("unsupported-crop-role", propList);
++		writeGraphicObjectImage(propList);
++		return;
++	}
++	if (role == "visible-frame")
++		RVNG_DEBUG_MSG(("RVNGSVGDrawingGenerator: CDR crop boundary is an independently visible frame\n"));
++	const std::string space = getStringValue(propList, cdrCropSpace);
++	if (space != "parent" && space != "image")
++	{
++		writeCapabilityNotice("unsupported-crop-space", propList);
++		writeGraphicObjectImage(propList);
++		return;
++	}
++	const std::string rule = getStringValue(propList, cdrCropFillRule);
++	if (rule != "unspecified" && rule != "nonzero" && rule != "evenodd")
++	{
++		writeCapabilityNotice("unsupported-crop-fill-rule", propList);
++		writeGraphicObjectImage(propList);
++		return;
++	}
++	const RVNGPropertyListVector *path = propList.child(cdrCropPath);
++	if (!path || path->count() == 0)
++	{
++		// no boundary recorded: keep the image valid and unclipped
++		writeGraphicObjectImage(propList);
++		return;
++	}
++	std::string matrix;
++	if (space == "image" && !getImageTransformMatrix(propList, matrix))
++	{
++		writeCapabilityNotice("malformed-image-transform", propList);
++		writeGraphicObjectImage(propList);
++		return;
++	}
++	std::string pathData;
++	unsigned long subpathCount = 0;
++	if (!serializeCropPath(*path, pathData, subpathCount))
++	{
++		writeCapabilityNotice("malformed-crop-path", propList);
++		writeGraphicObjectImage(propList);
++		return;
++	}
++	if (rule == "unspecified" && subpathCount > 1)
++	{
++		// Compound holes cannot be proven from the producer field: refuse to guess.
++		writeCapabilityNotice("unspecified-compound-fill-rule", propList);
++		writeGraphicObjectImage(propList);
++		return;
++	}
++
++	const int clipId = m_cropClipIndex++;
++	m_outputSink << "<" << getNamespaceAndDelim() << "defs>\n";
++	m_outputSink << "<" << getNamespaceAndDelim() << "clipPath id=\"cdrclip" << clipId
++	             << "\" clipPathUnits=\"userSpaceOnUse\"";
++	if (!matrix.empty())
++		m_outputSink << " transform=\"" << matrix << "\"";
++	m_outputSink << ">\n";
++	m_outputSink << "<" << getNamespaceAndDelim() << "path d=\"" << pathData << "\"";
++	if (rule == "nonzero" || rule == "evenodd")
++		m_outputSink << " clip-rule=\"" << rule << "\"";
++	m_outputSink << " />\n";
++	m_outputSink << "</" << getNamespaceAndDelim() << "clipPath>\n";
++	m_outputSink << "</" << getNamespaceAndDelim() << "defs>\n";
++	m_outputSink << "<" << getNamespaceAndDelim() << "g clip-path=\"url(#cdrclip" << clipId << ")\">\n";
++	writeGraphicObjectImage(propList);
++	m_outputSink << "</" << getNamespaceAndDelim() << "g>\n";
++}
++
++
+ RVNGSVGDrawingGenerator::RVNGSVGDrawingGenerator(RVNGStringVector &vec, const RVNGString &nmSpace) :
+ 	m_pImpl(new RVNGSVGDrawingGeneratorPrivate(vec, nmSpace))
+ {
+@@ -777,7 +1379,7 @@
+ 	finalName.appendEscapedXML(layer);
+ 	m_pImpl->m_outputSink << " id=\"" << finalName.cstr() << "\"";
+ 	if (propList["svg:fill-rule"])
+-		m_pImpl->m_outputSink << " fill-rule=\"" << propList["svg:fill-rule"]->getStr().cstr() << "\"";
++		m_pImpl->m_outputSink << " fill-rule=\"" << escapeXmlAttribute(propList["svg:fill-rule"]->getStr()) << "\"";
+ 	m_pImpl->m_outputSink << " >\n";
+ }
+ 
+@@ -917,42 +1519,21 @@
+ 		return;
+ 	if (!propList["office:binary-data"])
+ 		return;
+-	m_pImpl->m_outputSink << "<" << m_pImpl->getNamespaceAndDelim() << "image ";
+-	if (propList["svg:x"] && propList["svg:y"] && propList["svg:width"] && propList["svg:height"])
++	const RVNGProperty *version = propList[cdrFidelityVersion];
++	if (!version)
+ 	{
+-		double x=getInchValue(*propList["svg:x"]);
+-		double y=getInchValue(*propList["svg:y"]);
+-		double width=getInchValue(*propList["svg:width"]);
+-		double height=getInchValue(*propList["svg:height"]);
+-		bool flipX(propList["draw:mirror-horizontal"] && propList["draw:mirror-horizontal"]->getInt());
+-		bool flipY(propList["draw:mirror-vertical"] && propList["draw:mirror-vertical"]->getInt());
+-
+-		m_pImpl->m_outputSink << "x=\"" << doubleToString(72*x) << "\" y=\"" << doubleToString(72*y) << "\" ";
+-		m_pImpl->m_outputSink << "width=\"" << doubleToString(72*width) << "\" height=\"" << doubleToString(72*height) << "\" ";
+-		if (flipX || flipY || propList["librevenge:rotate"])
+-		{
+-			double xmiddle = x + width / 2.0;
+-			double ymiddle = y + height / 2.0;
+-			m_pImpl->m_outputSink << "transform=\"";
+-			m_pImpl->m_outputSink << " translate(" << doubleToString(72*xmiddle) << ", " << doubleToString(72*ymiddle) << ") ";
+-			m_pImpl->m_outputSink << " scale(" << (flipX ? "-1" : "1") << ", " << (flipY ? "-1" : "1") << ") ";
+-			// rotation is around the center of the object's bounding box
+-			if (propList["librevenge:rotate"])
+-			{
+-				double angle(propList["librevenge:rotate"]->getDouble());
+-				while (angle > 180.0)
+-					angle -= 360.0;
+-				while (angle < -180.0)
+-					angle += 360.0;
+-				m_pImpl->m_outputSink << " rotate(" << doubleToString(angle) << ") ";
+-			}
+-			m_pImpl->m_outputSink << " translate(" << doubleToString(-72*xmiddle) << ", " << doubleToString(-72*ymiddle) << ") ";
+-			m_pImpl->m_outputSink << "\" ";
+-		}
++		// unmarked stream: exact legacy behavior
++		m_pImpl->writeGraphicObjectImage(propList);
++		return;
+ 	}
+-	m_pImpl->m_outputSink << "xlink:href=\"data:" << propList["librevenge:mime-type"]->getStr().cstr() << ";base64,";
+-	m_pImpl->m_outputSink << propList["office:binary-data"]->getStr().cstr();
+-	m_pImpl->m_outputSink << "\" />\n";
++	if (version->getUnit() == RVNG_UNIT_ERROR)
++	{
++		// marker present but not numeric: refuse the extension, do not guess
++		m_pImpl->writeCapabilityNotice("malformed-version", propList);
++		m_pImpl->writeGraphicObjectImage(propList);
++		return;
++	}
++	m_pImpl->drawVersionedCropGraphicObject(propList, version->getInt());
+ }
+ 
+ void RVNGSVGDrawingGenerator::drawConnector(const RVNGPropertyList &/*propList*/)
+@@ -965,7 +1546,7 @@
+ 	double x = 0.0;
+ 	double y = 0.0;
+ 	double height = 0.0;
+-	m_pImpl->m_outputSink << "<" << m_pImpl->getNamespaceAndDelim() << "text ";
++	double width = 0.0;
+ 	if (propList["svg:x"] && propList["svg:y"])
+ 	{
+ 		x = getInchValue(*propList["svg:x"]);
+@@ -977,7 +1558,7 @@
+ 
+ 	if (propList["svg:width"])
+ 	{
+-		double width = getInchValue(*propList["svg:width"]);
++		width = getInchValue(*propList["svg:width"]);
+ 		xmiddle += width / 2.0;
+ 	}
+ 
+@@ -1001,9 +1582,40 @@
+ 	else
+ 		y += height;
+ 
++	double xBase = x;
+ 	if (propList["fo:padding-left"])
+ 		x += propList["fo:padding-left"]->getDouble();
++
++	// Versioned CDR text: decide before emitting <text> so a refused extension
++	// is reported as a sibling diagnostic, never inside the element.
++	bool marked = false;
++	const RVNGProperty *version = propList[cdrFidelityVersion];
++	if (version)
++	{
++		if (version->getUnit() == RVNG_UNIT_ERROR)
++			m_pImpl->writeTextCapabilityNotice("malformed-version", propList);
++		else if (version->getInt() != 1)
++			m_pImpl->writeTextCapabilityNotice("unsupported-version", propList);
++		else if (propList[cdrContentKind] && getStringValue(propList, cdrContentKind) != "text")
++			m_pImpl->writeTextCapabilityNotice("unsupported-content-kind", propList);
++		else
++			marked = true;
++	}
+ 
++	// Anchor positions of the paragraph content box (user units). Without a
++	// frame width, center/right degrade to the left edge instead of guessing.
++	double anchorLeft = 72.0 * x;
++	double anchorRight = anchorLeft;
++	if (propList["svg:width"])
++	{
++		double paddingRight = propList["fo:padding-right"] ? propList["fo:padding-right"]->getDouble() : 0.0;
++		anchorRight = 72.0 * (xBase + width - paddingRight);
++	}
++	if (anchorRight < anchorLeft)
++		anchorRight = anchorLeft;
++	double anchorCenter = (anchorLeft + anchorRight) / 2.0;
++
++	m_pImpl->m_outputSink << "<" << m_pImpl->getNamespaceAndDelim() << "text ";
+ 	m_pImpl->m_outputSink << "x=\"" << doubleToString(72*x) << "\" y=\"" << doubleToString(72*y) << "\"";
+ 
+ 	// rotation is around the center of the object's bounding box
+@@ -1016,12 +1628,23 @@
+ 			angle += 360.0;
+ 		m_pImpl->m_outputSink << " transform=\"rotate(" << doubleToString(angle) << ", " << doubleToString(72*xmiddle) << ", " << doubleToString(72*ymiddle) << ")\" ";
+ 	}
+-	m_pImpl->m_outputSink << ">\n";
+-
++	if (marked)
++	{
++		// xml:space keeps explicit spaces/tabs. Buffered tspan content is emitted
++		// with no formatting whitespace, or it would become renderable text.
++		m_pImpl->m_outputSink << " xml:space=\"preserve\">";
++		m_pImpl->beginMarkedText(anchorLeft, anchorCenter, anchorRight);
++	}
++	else
++	{
++		m_pImpl->m_outputSink << ">\n";
++	}
+ }
+ 
+ void RVNGSVGDrawingGenerator::endTextObject()
+ {
++	if (m_pImpl->m_textBuffering)
++		m_pImpl->flushMarkedText();
+ 	m_pImpl->m_outputSink << "</" << m_pImpl->getNamespaceAndDelim() << "text>\n";
+ }
+ 
+@@ -1035,7 +1658,11 @@
+ void RVNGSVGDrawingGenerator::closeListElement() {}
+ 
+ void RVNGSVGDrawingGenerator::defineParagraphStyle(const RVNGPropertyList & /*propList*/) {}
+-void RVNGSVGDrawingGenerator::openParagraph(const RVNGPropertyList & /*propList*/) {}
++void RVNGSVGDrawingGenerator::openParagraph(const RVNGPropertyList &propList)
++{
++	if (m_pImpl->m_textBuffering)
++		m_pImpl->openTextParagraph(propList);
++}
+ void RVNGSVGDrawingGenerator::closeParagraph() {}
+ 
+ void RVNGSVGDrawingGenerator::defineCharacterStyle(const RVNGPropertyList &propList)
+@@ -1055,30 +1682,24 @@
+ 	        m_pImpl->m_idSpanMap.find(propList["librevenge:span-id"]->getInt())!=m_pImpl->m_idSpanMap.end())
+ 		pList=m_pImpl->m_idSpanMap.find(propList["librevenge:span-id"]->getInt())->second;
+ 
++	if (m_pImpl->m_textBuffering)
++	{
++		m_pImpl->openTextSpan(pList);
++		return;
++	}
++
+ 	m_pImpl->m_outputSink << "<" << m_pImpl->getNamespaceAndDelim() << "tspan ";
+-	if (pList["style:font-name"])
+-		m_pImpl->m_outputSink << "font-family=\"" << pList["style:font-name"]->getStr().cstr() << "\" ";
+-	if (pList["fo:font-style"])
+-		m_pImpl->m_outputSink << "font-style=\"" << pList["fo:font-style"]->getStr().cstr() << "\" ";
+-	if (pList["fo:font-weight"])
+-		m_pImpl->m_outputSink << "font-weight=\"" << pList["fo:font-weight"]->getStr().cstr() << "\" ";
+-	if (pList["fo:font-variant"])
+-		m_pImpl->m_outputSink << "font-variant=\"" << pList["fo:font-variant"]->getStr().cstr() << "\" ";
+-	if (pList["fo:font-size"])
+-		m_pImpl->m_outputSink << "font-size=\"" << doubleToString(pList["fo:font-size"]->getDouble()) << "\" ";
+-	if (pList["fo:color"])
+-		m_pImpl->m_outputSink << "fill=\"" << pList["fo:color"]->getStr().cstr() << "\" ";
+-	if (pList["fo:text-transform"])
+-		m_pImpl->m_outputSink << "text-transform=\"" << pList["fo:text-transform"]->getStr().cstr() << "\" ";
+-	if (pList["svg:fill-opacity"])
+-		m_pImpl->m_outputSink << "fill-opacity=\"" << doubleToString(pList["svg:fill-opacity"]->getDouble()) << "\" ";
+-	if (pList["svg:stroke-opacity"])
+-		m_pImpl->m_outputSink << "stroke-opacity=\"" << doubleToString(pList["svg:stroke-opacity"]->getDouble()) << "\" ";
++	m_pImpl->writeSpanAttributes(pList);
+ 	m_pImpl->m_outputSink << ">\n";
+ }
+ 
+ void RVNGSVGDrawingGenerator::closeSpan()
+ {
++	if (m_pImpl->m_textBuffering)
++	{
++		m_pImpl->closeTextSpan();
++		return;
++	}
+ 	m_pImpl->m_outputSink << "</" << m_pImpl->getNamespaceAndDelim() << "tspan>\n";
+ }
+ 
+@@ -1087,21 +1708,41 @@
+ 
+ void RVNGSVGDrawingGenerator::insertText(const RVNGString &str)
+ {
++	if (m_pImpl->m_textBuffering)
++	{
++		m_pImpl->appendText(str.cstr());
++		return;
++	}
+ 	m_pImpl->m_outputSink << RVNGString::escapeXML(str).cstr();
+ }
+ 
+ void RVNGSVGDrawingGenerator::insertTab()
+ {
++	if (m_pImpl->m_textBuffering)
++	{
++		m_pImpl->appendText("\t");
++		return;
++	}
+ 	m_pImpl->m_outputSink << "\t";
+ }
+ 
+ void RVNGSVGDrawingGenerator::insertSpace()
+ {
++	if (m_pImpl->m_textBuffering)
++	{
++		m_pImpl->appendText(" ");
++		return;
++	}
+ 	m_pImpl->m_outputSink << " ";
+ }
+ 
+ void RVNGSVGDrawingGenerator::insertLineBreak()
+ {
++	if (m_pImpl->m_textBuffering)
++	{
++		m_pImpl->insertTextLineBreak();
++		return;
++	}
+ 	m_pImpl->m_outputSink << "\n";
+ }
+ 
+--- a/src/test/Makefile.am
++++ b/src/test/Makefile.am
+@@ -18,6 +18,8 @@
+ 	RVNGDirectoryStreamTest.cpp \
+ 	RVNGOLEStreamTest.cpp \
+ 	RVNGPropertyListTest.cpp \
++	RVNGSVGDrawingGeneratorCropTest.cpp \
++	RVNGSVGDrawingGeneratorTextTest.cpp \
+ 	RVNGStreamTest.cpp \
+ 	RVNGStringIterTest.cpp \
+ 	RVNGStringTest.cpp \
+--- a/src/test/Makefile.in
++++ b/src/test/Makefile.in
+@@ -110,6 +110,8 @@
+ 	test-RVNGDirectoryStreamTest.$(OBJEXT) \
+ 	test-RVNGOLEStreamTest.$(OBJEXT) \
+ 	test-RVNGPropertyListTest.$(OBJEXT) \
++	test-RVNGSVGDrawingGeneratorCropTest.$(OBJEXT) \
++	test-RVNGSVGDrawingGeneratorTextTest.$(OBJEXT) \
+ 	test-RVNGStreamTest.$(OBJEXT) \
+ 	test-RVNGStringIterTest.$(OBJEXT) \
+ 	test-RVNGStringTest.$(OBJEXT) test-test.$(OBJEXT)
+@@ -146,6 +148,8 @@
+ 	./$(DEPDIR)/test-RVNGDirectoryStreamTest.Po \
+ 	./$(DEPDIR)/test-RVNGOLEStreamTest.Po \
+ 	./$(DEPDIR)/test-RVNGPropertyListTest.Po \
++	./$(DEPDIR)/test-RVNGSVGDrawingGeneratorCropTest.Po \
++	./$(DEPDIR)/test-RVNGSVGDrawingGeneratorTextTest.Po \
+ 	./$(DEPDIR)/test-RVNGStreamTest.Po \
+ 	./$(DEPDIR)/test-RVNGStringIterTest.Po \
+ 	./$(DEPDIR)/test-RVNGStringTest.Po ./$(DEPDIR)/test-test.Po
+@@ -573,6 +577,8 @@
+ 	RVNGDirectoryStreamTest.cpp \
+ 	RVNGOLEStreamTest.cpp \
+ 	RVNGPropertyListTest.cpp \
++	RVNGSVGDrawingGeneratorCropTest.cpp \
++	RVNGSVGDrawingGeneratorTextTest.cpp \
+ 	RVNGStreamTest.cpp \
+ 	RVNGStringIterTest.cpp \
+ 	RVNGStringTest.cpp \
+@@ -646,6 +652,8 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-RVNGDirectoryStreamTest.Po@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-RVNGOLEStreamTest.Po@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-RVNGPropertyListTest.Po@am__quote@ # am--include-marker
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-RVNGSVGDrawingGeneratorCropTest.Po@am__quote@ # am--include-marker
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-RVNGSVGDrawingGeneratorTextTest.Po@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-RVNGStreamTest.Po@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-RVNGStringIterTest.Po@am__quote@ # am--include-marker
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-RVNGStringTest.Po@am__quote@ # am--include-marker
+@@ -733,7 +741,35 @@
+ @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='RVNGPropertyListTest.cpp' object='test-RVNGPropertyListTest.obj' libtool=no @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o test-RVNGPropertyListTest.obj `if test -f 'RVNGPropertyListTest.cpp'; then $(CYGPATH_W) 'RVNGPropertyListTest.cpp'; else $(CYGPATH_W) '$(srcdir)/RVNGPropertyListTest.cpp'; fi`
++
++test-RVNGSVGDrawingGeneratorCropTest.o: RVNGSVGDrawingGeneratorCropTest.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT test-RVNGSVGDrawingGeneratorCropTest.o -MD -MP -MF $(DEPDIR)/test-RVNGSVGDrawingGeneratorCropTest.Tpo -c -o test-RVNGSVGDrawingGeneratorCropTest.o `test -f 'RVNGSVGDrawingGeneratorCropTest.cpp' || echo '$(srcdir)/'`RVNGSVGDrawingGeneratorCropTest.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test-RVNGSVGDrawingGeneratorCropTest.Tpo $(DEPDIR)/test-RVNGSVGDrawingGeneratorCropTest.Po
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='RVNGSVGDrawingGeneratorCropTest.cpp' object='test-RVNGSVGDrawingGeneratorCropTest.o' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o test-RVNGSVGDrawingGeneratorCropTest.o `test -f 'RVNGSVGDrawingGeneratorCropTest.cpp' || echo '$(srcdir)/'`RVNGSVGDrawingGeneratorCropTest.cpp
++
++test-RVNGSVGDrawingGeneratorCropTest.obj: RVNGSVGDrawingGeneratorCropTest.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT test-RVNGSVGDrawingGeneratorCropTest.obj -MD -MP -MF $(DEPDIR)/test-RVNGSVGDrawingGeneratorCropTest.Tpo -c -o test-RVNGSVGDrawingGeneratorCropTest.obj `if test -f 'RVNGSVGDrawingGeneratorCropTest.cpp'; then $(CYGPATH_W) 'RVNGSVGDrawingGeneratorCropTest.cpp'; else $(CYGPATH_W) '$(srcdir)/RVNGSVGDrawingGeneratorCropTest.cpp'; fi`
++@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test-RVNGSVGDrawingGeneratorCropTest.Tpo $(DEPDIR)/test-RVNGSVGDrawingGeneratorCropTest.Po
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='RVNGSVGDrawingGeneratorCropTest.cpp' object='test-RVNGSVGDrawingGeneratorCropTest.obj' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o test-RVNGSVGDrawingGeneratorCropTest.obj `if test -f 'RVNGSVGDrawingGeneratorCropTest.cpp'; then $(CYGPATH_W) 'RVNGSVGDrawingGeneratorCropTest.cpp'; else $(CYGPATH_W) '$(srcdir)/RVNGSVGDrawingGeneratorCropTest.cpp'; fi`
+ 
++test-RVNGSVGDrawingGeneratorTextTest.o: RVNGSVGDrawingGeneratorTextTest.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT test-RVNGSVGDrawingGeneratorTextTest.o -MD -MP -MF $(DEPDIR)/test-RVNGSVGDrawingGeneratorTextTest.Tpo -c -o test-RVNGSVGDrawingGeneratorTextTest.o `test -f 'RVNGSVGDrawingGeneratorTextTest.cpp' || echo '$(srcdir)/'`RVNGSVGDrawingGeneratorTextTest.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test-RVNGSVGDrawingGeneratorTextTest.Tpo $(DEPDIR)/test-RVNGSVGDrawingGeneratorTextTest.Po
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='RVNGSVGDrawingGeneratorTextTest.cpp' object='test-RVNGSVGDrawingGeneratorTextTest.o' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o test-RVNGSVGDrawingGeneratorTextTest.o `test -f 'RVNGSVGDrawingGeneratorTextTest.cpp' || echo '$(srcdir)/'`RVNGSVGDrawingGeneratorTextTest.cpp
++
++test-RVNGSVGDrawingGeneratorTextTest.obj: RVNGSVGDrawingGeneratorTextTest.cpp
++@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT test-RVNGSVGDrawingGeneratorTextTest.obj -MD -MP -MF $(DEPDIR)/test-RVNGSVGDrawingGeneratorTextTest.Tpo -c -o test-RVNGSVGDrawingGeneratorTextTest.obj `if test -f 'RVNGSVGDrawingGeneratorTextTest.cpp'; then $(CYGPATH_W) 'RVNGSVGDrawingGeneratorTextTest.cpp'; else $(CYGPATH_W) '$(srcdir)/RVNGSVGDrawingGeneratorTextTest.cpp'; fi`
++@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test-RVNGSVGDrawingGeneratorTextTest.Tpo $(DEPDIR)/test-RVNGSVGDrawingGeneratorTextTest.Po
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='RVNGSVGDrawingGeneratorTextTest.cpp' object='test-RVNGSVGDrawingGeneratorTextTest.obj' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o test-RVNGSVGDrawingGeneratorTextTest.obj `if test -f 'RVNGSVGDrawingGeneratorTextTest.cpp'; then $(CYGPATH_W) 'RVNGSVGDrawingGeneratorTextTest.cpp'; else $(CYGPATH_W) '$(srcdir)/RVNGSVGDrawingGeneratorTextTest.cpp'; fi`
++
+ test-RVNGStreamTest.o: RVNGStreamTest.cpp
+ @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT test-RVNGStreamTest.o -MD -MP -MF $(DEPDIR)/test-RVNGStreamTest.Tpo -c -o test-RVNGStreamTest.o `test -f 'RVNGStreamTest.cpp' || echo '$(srcdir)/'`RVNGStreamTest.cpp
+ @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test-RVNGStreamTest.Tpo $(DEPDIR)/test-RVNGStreamTest.Po
+@@ -1118,6 +1154,8 @@
+ 	-rm -f ./$(DEPDIR)/test-RVNGDirectoryStreamTest.Po
+ 	-rm -f ./$(DEPDIR)/test-RVNGOLEStreamTest.Po
+ 	-rm -f ./$(DEPDIR)/test-RVNGPropertyListTest.Po
++	-rm -f ./$(DEPDIR)/test-RVNGSVGDrawingGeneratorCropTest.Po
++	-rm -f ./$(DEPDIR)/test-RVNGSVGDrawingGeneratorTextTest.Po
+ 	-rm -f ./$(DEPDIR)/test-RVNGStreamTest.Po
+ 	-rm -f ./$(DEPDIR)/test-RVNGStringIterTest.Po
+ 	-rm -f ./$(DEPDIR)/test-RVNGStringTest.Po
+@@ -1172,6 +1210,8 @@
+ 	-rm -f ./$(DEPDIR)/test-RVNGDirectoryStreamTest.Po
+ 	-rm -f ./$(DEPDIR)/test-RVNGOLEStreamTest.Po
+ 	-rm -f ./$(DEPDIR)/test-RVNGPropertyListTest.Po
++	-rm -f ./$(DEPDIR)/test-RVNGSVGDrawingGeneratorCropTest.Po
++	-rm -f ./$(DEPDIR)/test-RVNGSVGDrawingGeneratorTextTest.Po
+ 	-rm -f ./$(DEPDIR)/test-RVNGStreamTest.Po
+ 	-rm -f ./$(DEPDIR)/test-RVNGStringIterTest.Po
+ 	-rm -f ./$(DEPDIR)/test-RVNGStringTest.Po
+--- /dev/null
++++ b/src/test/RVNGSVGDrawingGeneratorCropTest.cpp
+@@ -0,0 +1,668 @@
++/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
++/* librevenge
++ * Version: MPL 2.0 / LGPLv2.1+
++ *
++ * This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * Alternatively, the contents of this file may be used under the terms
++ * of the GNU Lesser General Public License Version 2.1 or later
++ * (LGPLv2.1+), in which case the provisions of the LGPLv2.1+ are
++ * applicable instead of those above.
++ */
++
++// Focused synthetic producer/consumer tests for the versioned CDR crop
++// transport serialized by RVNGSVGDrawingGenerator (C02). The producer here is
++// the test itself: it builds the exact property lists the recovered libcdr
++// reader is contracted to emit (S03/CDR_EVENT_CONTRACT.md), and the consumer is
++// the stock generator plus an independent string/SVG oracle.
++
++#include <cppunit/TestFixture.h>
++#include <cppunit/extensions/HelperMacros.h>
++
++#include <librevenge/librevenge.h>
++#include <librevenge/RVNGSVGDrawingGenerator.h>
++
++#include <cmath>
++#include <cstddef>
++#include <sstream>
++#include <string>
++#include <vector>
++
++namespace test
++{
++
++using namespace librevenge;
++
++namespace
++{
++
++const char *const kVersion = "vacards:cdr-fidelity-version";
++const char *const kObjectId = "vacards:cdr-object-id";
++const char *const kContentKind = "vacards:cdr-content-kind";
++const char *const kCropRole = "vacards:cdr-crop-role";
++const char *const kCropSpace = "vacards:cdr-crop-space";
++const char *const kCropFillRule = "vacards:cdr-crop-fill-rule";
++const char *const kCropPath = "vacards:cdr-crop-path";
++const char *const kImageTransform = "vacards:cdr-image-transform";
++
++//! Exact pre-patch (0.0.6) bytes for one unmarked PNG graphic object, captured
++//! from the unmodified generator before the C02 change. This is the strongest
++//! available byte-compatibility oracle for an unmarked stream.
++const char *const kLegacyImageSvg =
++    "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"4.0000in\" height=\"4.0000in\" viewBox=\"0 0 288.0000 288.0000\" >\n"
++    "<image x=\"36.0000\" y=\"54.0000\" width=\"144.0000\" height=\"108.0000\" xlink:href=\"data:image/png;base64,QUJD\" />\n"
++    "</svg>\n\n";
++
++const char *const kImageElement =
++    "<image x=\"36.0000\" y=\"54.0000\" width=\"144.0000\" height=\"108.0000\" xlink:href=\"data:image/png;base64,QUJD\" />";
++
++bool contains(const std::string &haystack, const std::string &needle)
++{
++	return haystack.find(needle) != std::string::npos;
++}
++
++std::size_t countOccurrences(const std::string &haystack, const std::string &needle)
++{
++	std::size_t count = 0, pos = 0;
++	while ((pos = haystack.find(needle, pos)) != std::string::npos)
++	{
++		++count;
++		pos += needle.size();
++	}
++	return count;
++}
++
++//! substring strictly between the first `open` at/after `from` and the next `close`
++std::string between(const std::string &text, const std::string &open, const std::string &close,
++                    std::size_t from = 0)
++{
++	const std::size_t begin = text.find(open, from);
++	if (begin == std::string::npos)
++		return std::string();
++	const std::size_t valueStart = begin + open.size();
++	const std::size_t end = text.find(close, valueStart);
++	if (end == std::string::npos)
++		return std::string();
++	return text.substr(valueStart, end - valueStart);
++}
++
++//! parse a comma/whitespace separated list of numbers
++std::vector<double> parseNumberList(std::string text)
++{
++	for (std::size_t i = 0; i < text.size(); ++i)
++		if (text[i] == ',')
++			text[i] = ' ';
++	std::vector<double> values;
++	std::istringstream stream(text);
++	double value = 0.0;
++	while (stream >> value)
++		values.push_back(value);
++	return values;
++}
++
++RVNGPropertyList makeImage()
++{
++	RVNGPropertyList img;
++	img.insert("librevenge:mime-type", "image/png");
++	const unsigned char payload[] = { 'A', 'B', 'C' };
++	img.insert("office:binary-data", payload, 3);
++	img.insert("svg:x", 0.5);
++	img.insert("svg:y", 0.75);
++	img.insert("svg:width", 2.0);
++	img.insert("svg:height", 1.5);
++	return img;
++}
++
++RVNGPropertyList makeCropImage(const char *space = "parent",
++                               const char *rule = "nonzero",
++                               const char *role = "crop-only")
++{
++	RVNGPropertyList img = makeImage();
++	img.insert(kVersion, 1);
++	img.insert(kContentKind, "bitmap");
++	img.insert(kObjectId, 11);
++	img.insert(kCropRole, role);
++	img.insert(kCropSpace, space);
++	img.insert(kCropFillRule, rule);
++	return img;
++}
++
++//! one closed rectangular subpath, in inches
++RVNGPropertyListVector rectanglePath()
++{
++	RVNGPropertyListVector path;
++	RVNGPropertyList n;
++	n.insert("librevenge:path-action", "M"); n.insert("svg:x", 0.6); n.insert("svg:y", 0.8); path.append(n);
++	n.clear(); n.insert("librevenge:path-action", "L"); n.insert("svg:x", 1.1); n.insert("svg:y", 0.8); path.append(n);
++	n.clear(); n.insert("librevenge:path-action", "L"); n.insert("svg:x", 1.1); n.insert("svg:y", 1.4); path.append(n);
++	n.clear(); n.insert("librevenge:path-action", "Z"); path.append(n);
++	return path;
++}
++
++RVNGPropertyListVector twoSubpaths()
++{
++	RVNGPropertyListVector path = rectanglePath();
++	RVNGPropertyList n;
++	n.insert("librevenge:path-action", "M"); n.insert("svg:x", 0.7); n.insert("svg:y", 0.9); path.append(n);
++	n.clear(); n.insert("librevenge:path-action", "L"); n.insert("svg:x", 1.0); n.insert("svg:y", 0.9); path.append(n);
++	n.clear(); n.insert("librevenge:path-action", "L"); n.insert("svg:x", 1.0); n.insert("svg:y", 1.2); path.append(n);
++	n.clear(); n.insert("librevenge:path-action", "Z"); path.append(n);
++	return path;
++}
++
++RVNGPropertyListVector matrixPath(const double m[6])
++{
++	RVNGPropertyListVector xform;
++	for (int i = 0; i < 6; ++i)
++	{
++		// vector order is the contract: the six entries are [a b c d e f]
++		RVNGPropertyList n;
++		n.insert("vacards:cdr-matrix-value", m[i]);
++		xform.append(n);
++	}
++	return xform;
++}
++
++template <class F>
++std::string emit(F fill)
++{
++	RVNGStringVector out;
++	RVNGSVGDrawingGenerator gen(out, "");
++	RVNGPropertyList doc;
++	gen.startDocument(doc);
++	RVNGPropertyList page;
++	page.insert("svg:width", 4.0);
++	page.insert("svg:height", 4.0);
++	gen.startPage(page);
++	fill(gen);
++	gen.endPage();
++	gen.endDocument();
++	std::string all;
++	for (unsigned i = 0; i < out.size(); ++i)
++	{
++		all += out[i].cstr();
++		all += "\n";
++	}
++	return all;
++}
++
++} // anonymous namespace
++
++class RVNGSVGDrawingGeneratorCropTest : public CPPUNIT_NS::TestFixture
++{
++public:
++	virtual void setUp();
++	virtual void tearDown();
++
++private:
++	CPPUNIT_TEST_SUITE(RVNGSVGDrawingGeneratorCropTest);
++	CPPUNIT_TEST(testUnmarkedLegacyBytes);
++	CPPUNIT_TEST(testParentSpaceRectangle);
++	CPPUNIT_TEST(testCurveAndArcPath);
++	CPPUNIT_TEST(testShearNotDoubleApplied);
++	CPPUNIT_TEST(testImageSpaceTransformOrder);
++	CPPUNIT_TEST(testCompoundExplicitFillRule);
++	CPPUNIT_TEST(testUnspecifiedCompoundRefused);
++	CPPUNIT_TEST(testUnspecifiedSingleClosedUsesNonzero);
++	CPPUNIT_TEST(testMalformedNumericRefused);
++	CPPUNIT_TEST(testLeadingNonMovetoRefused);
++	CPPUNIT_TEST(testMalformedImageTransformRefused);
++	CPPUNIT_TEST(testUnknownMarkerRefused);
++	CPPUNIT_TEST(testSharedImageIndependentCrops);
++	CPPUNIT_TEST(testSeparateVisibleFramePreserved);
++	CPPUNIT_TEST(testVisibleFrameRoleSeparateDrawPath);
++	CPPUNIT_TEST(testXmlAttributeAndTextEscaping);
++	CPPUNIT_TEST(testMarkerWithoutBoundaryKeepsImage);
++	CPPUNIT_TEST_SUITE_END();
++
++	void testUnmarkedLegacyBytes();
++	void testParentSpaceRectangle();
++	void testCurveAndArcPath();
++	void testShearNotDoubleApplied();
++	void testImageSpaceTransformOrder();
++	void testCompoundExplicitFillRule();
++	void testUnspecifiedCompoundRefused();
++	void testUnspecifiedSingleClosedUsesNonzero();
++	void testMalformedNumericRefused();
++	void testLeadingNonMovetoRefused();
++	void testMalformedImageTransformRefused();
++	void testUnknownMarkerRefused();
++	void testSharedImageIndependentCrops();
++	void testSeparateVisibleFramePreserved();
++	void testVisibleFrameRoleSeparateDrawPath();
++	void testXmlAttributeAndTextEscaping();
++	void testMarkerWithoutBoundaryKeepsImage();
++};
++
++void RVNGSVGDrawingGeneratorCropTest::setUp()
++{
++}
++
++void RVNGSVGDrawingGeneratorCropTest::tearDown()
++{
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testUnmarkedLegacyBytes()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeImage();
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(std::string(kLegacyImageSvg) == svg);
++	CPPUNIT_ASSERT(!contains(svg, "clipPath"));
++	CPPUNIT_ASSERT(!contains(svg, "cdr-crop"));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testParentSpaceRectangle()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage();
++		img.insert(kCropPath, rectanglePath());
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(svg, "<clipPath id=\"cdrclip1\" clipPathUnits=\"userSpaceOnUse\">\n"));
++	CPPUNIT_ASSERT(contains(svg, "<path d=\"\nM43.2000,57.6000\nL79.2000,57.6000\nL79.2000,100.8000\nZ\" clip-rule=\"nonzero\" />"));
++	CPPUNIT_ASSERT(contains(svg, "<g clip-path=\"url(#cdrclip1)\">\n"));
++	CPPUNIT_ASSERT(contains(svg, kImageElement));
++	// parent-space boundary must not carry the image affine
++	CPPUNIT_ASSERT(!contains(svg, "transform=\"matrix("));
++	// no protocol field leaks into the SVG text
++	CPPUNIT_ASSERT(!contains(svg, "vacards:"));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testCurveAndArcPath()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage();
++		RVNGPropertyListVector path;
++		RVNGPropertyList n;
++		n.insert("librevenge:path-action", "M"); n.insert("svg:x", 0.6); n.insert("svg:y", 0.8); path.append(n);
++		n.clear(); n.insert("librevenge:path-action", "C");
++		n.insert("svg:x1", 0.7); n.insert("svg:y1", 0.8);
++		n.insert("svg:x2", 0.9); n.insert("svg:y2", 1.0);
++		n.insert("svg:x", 1.1); n.insert("svg:y", 1.1); path.append(n);
++		n.clear(); n.insert("librevenge:path-action", "A");
++		n.insert("svg:rx", 0.2); n.insert("svg:ry", 0.1);
++		n.insert("librevenge:rotate", 30.0);
++		n.insert("librevenge:large-arc", 0);
++		n.insert("librevenge:sweep", 1);
++		n.insert("svg:x", 1.0); n.insert("svg:y", 1.2); path.append(n);
++		n.clear(); n.insert("librevenge:path-action", "Z"); path.append(n);
++		img.insert(kCropPath, path);
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(svg, "\nC50.4000,57.6000 64.8000,72.0000 79.2000,79.2000"));
++	CPPUNIT_ASSERT(contains(svg, "\nA14.4000,7.2000 30.0000 0,1 72.0000,86.4000"));
++	CPPUNIT_ASSERT(contains(svg, "\nZ\" clip-rule=\"nonzero\" />"));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testShearNotDoubleApplied()
++{
++	// The image carries an asymmetric affine (rotation); the parent-space
++	// boundary must stay exactly where the producer put it.
++	const std::string plain = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage();
++		img.insert(kCropPath, rectanglePath());
++		gen.drawGraphicObject(img);
++	});
++	const std::string rotated = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage();
++		img.insert("librevenge:rotate", 17.1455);
++		img.insert("draw:mirror-horizontal", true);
++		img.insert(kCropPath, rectanglePath());
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(plain, "<path d=\"\nM43.2000,57.6000\nL79.2000,57.6000\nL79.2000,100.8000\nZ\" clip-rule=\"nonzero\" />"));
++	CPPUNIT_ASSERT(contains(rotated, "<path d=\"\nM43.2000,57.6000\nL79.2000,57.6000\nL79.2000,100.8000\nZ\" clip-rule=\"nonzero\" />"));
++	CPPUNIT_ASSERT(!contains(rotated, "transform=\"matrix("));
++	CPPUNIT_ASSERT(contains(rotated, "rotate(17.1455)"));
++	CPPUNIT_ASSERT(contains(rotated, "scale(-1, 1)"));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testImageSpaceTransformOrder()
++{
++	// The image-space boundary must be mapped once by the producer's CDR affine
++	// [a b c d e f]: x'=a x+b y+e, y'=c x+d y+f (CDRTransforms.cpp). C02 carries
++	// that affine as the clipPath transform matrix(a, c, b, d, e, f), which SVG
++	// applies as x'=A x+C y+E, y'=B x+D y+F. This test does not trust the matrix
++	// string: it reads the emitted matrix and boundary back out of the SVG, maps
++	// a landmark with SVG semantics, and compares that with the same landmark
++	// mapped independently by the approved CDR formula. An asymmetric shear makes
++	// a b/c swap observable.
++	const double m[6] = { 1.0, 0.5, -0.5, 1.0, 0.125, -0.25 };
++	const std::string svg = emit([&m](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage("image");
++		img.insert(kCropPath, rectanglePath());
++		img.insert(kImageTransform, matrixPath(m));
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(svg, "clipPathUnits=\"userSpaceOnUse\" transform="));
++	CPPUNIT_ASSERT(contains(svg, "<g clip-path=\"url(#cdrclip1)\">"));
++	CPPUNIT_ASSERT(contains(svg, kImageElement));
++
++	// Consumer side: read the six emitted SVG matrix entries [A B C D E F].
++	const std::vector<double> svgMatrix = parseNumberList(between(svg, "transform=\"matrix(", ")\""));
++	CPPUNIT_ASSERT(svgMatrix.size() == 6);
++	// Read the emitted first moveto landmark (SVG user units) from path data.
++	const std::vector<double> landmark = parseNumberList(between(between(svg, " d=\"", "\""), "\nM", "\n"));
++	CPPUNIT_ASSERT(landmark.size() == 2);
++
++	// Oracle side: map the source landmark (0.6in, 0.8in -> 43.2pt, 57.6pt)
++	// through the approved CDR formula, using the producer's units.
++	const double srcX = 72.0 * 0.6;
++	const double srcY = 72.0 * 0.8;
++	const double cdrX = m[0] * srcX + m[1] * srcY + m[4];
++	const double cdrY = m[2] * srcX + m[3] * srcY + m[5];
++
++	// Consumer maps the emitted landmark with SVG matrix order.
++	const double mappedX = svgMatrix[0] * landmark[0] + svgMatrix[2] * landmark[1] + svgMatrix[4];
++	const double mappedY = svgMatrix[1] * landmark[0] + svgMatrix[3] * landmark[1] + svgMatrix[5];
++	CPPUNIT_ASSERT_DOUBLES_EQUAL(cdrX, mappedX, 1e-4);
++	CPPUNIT_ASSERT_DOUBLES_EQUAL(cdrY, mappedY, 1e-4);
++	// this shear must actually move the landmark (guards a no-op mapping)
++	CPPUNIT_ASSERT(std::fabs(mappedX - srcX) > 1.0 || std::fabs(mappedY - srcY) > 1.0);
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testCompoundExplicitFillRule()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage("parent", "evenodd");
++		img.insert(kCropPath, twoSubpaths());
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(svg, "clip-rule=\"evenodd\""));
++	// both subpaths survive in one path
++	std::size_t first = svg.find("\nM");
++	std::size_t second = svg.find("\nM", first + 1);
++	CPPUNIT_ASSERT(first != std::string::npos);
++	CPPUNIT_ASSERT(second != std::string::npos);
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testUnspecifiedCompoundRefused()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage("parent", "unspecified");
++		img.insert(kCropPath, twoSubpaths());
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(svg, "<!-- librevenge:cdr-crop capability=\"unspecified-compound-fill-rule\""));
++	CPPUNIT_ASSERT(!contains(svg, "clipPath"));
++	CPPUNIT_ASSERT(contains(svg, kImageElement));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testUnspecifiedSingleClosedUsesNonzero()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage("parent", "unspecified");
++		img.insert(kCropPath, rectanglePath());
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(svg, "<clipPath id=\"cdrclip1\""));
++	// default nonzero: no clip-rule attribute is guessed
++	CPPUNIT_ASSERT(!contains(svg, "clip-rule="));
++	CPPUNIT_ASSERT(!contains(svg, "capability="));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testMalformedNumericRefused()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage();
++		RVNGPropertyListVector path;
++		RVNGPropertyList n;
++		n.insert("librevenge:path-action", "M"); n.insert("svg:x", 0.6); n.insert("svg:y", 0.8); path.append(n);
++		n.clear(); n.insert("librevenge:path-action", "L");
++		n.insert("svg:x", RVNGString("not-a-number"));
++		n.insert("svg:y", 1.0);
++		path.append(n);
++		img.insert(kCropPath, path);
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(svg, "<!-- librevenge:cdr-crop capability=\"malformed-crop-path\""));
++	CPPUNIT_ASSERT(!contains(svg, "clipPath"));
++	CPPUNIT_ASSERT(contains(svg, kImageElement));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testLeadingNonMovetoRefused()
++{
++	// SVG path data must begin with a moveto. A producer boundary whose first
++	// node is anything else must be refused with the existing malformed-crop-path
++	// notice and the image preserved unclipped, never emitted as invalid clipPath
++	// data (a leading lineto can silently blank the image).
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage();
++		RVNGPropertyListVector path;
++		RVNGPropertyList n;
++		n.insert("librevenge:path-action", "L"); n.insert("svg:x", 0.6); n.insert("svg:y", 0.8); path.append(n);
++		n.clear(); n.insert("librevenge:path-action", "M"); n.insert("svg:x", 1.1); n.insert("svg:y", 0.8); path.append(n);
++		n.clear(); n.insert("librevenge:path-action", "L"); n.insert("svg:x", 1.1); n.insert("svg:y", 1.4); path.append(n);
++		n.clear(); n.insert("librevenge:path-action", "Z"); path.append(n);
++		img.insert(kCropPath, path);
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(svg, "<!-- librevenge:cdr-crop capability=\"malformed-crop-path\""));
++	CPPUNIT_ASSERT(!contains(svg, "clipPath"));
++	// no invalid leading-lineto path data leaks into the document
++	CPPUNIT_ASSERT(!contains(svg, "d=\"\nL"));
++	CPPUNIT_ASSERT(contains(svg, kImageElement));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testMalformedImageTransformRefused()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage("image");
++		img.insert(kCropPath, rectanglePath());
++		RVNGPropertyListVector shortXform;
++		RVNGPropertyList n;
++		n.insert("vacards:cdr-matrix-value", 1.0);
++		shortXform.append(n);
++		img.insert(kImageTransform, shortXform);
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(svg, "<!-- librevenge:cdr-crop capability=\"malformed-image-transform\""));
++	CPPUNIT_ASSERT(!contains(svg, "clipPath"));
++	CPPUNIT_ASSERT(contains(svg, kImageElement));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testUnknownMarkerRefused()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage();
++		img.remove(kVersion);
++		img.insert(kVersion, 2);
++		img.insert(kCropPath, rectanglePath());
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(svg, "<!-- librevenge:cdr-crop capability=\"unsupported-version\" object-id=\"11\" -->"));
++	CPPUNIT_ASSERT(!contains(svg, "clipPath"));
++	CPPUNIT_ASSERT(contains(svg, kImageElement));
++
++	const std::string malformedVersion = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage();
++		img.remove(kVersion);
++		img.insert(kVersion, RVNGString("one"));
++		img.insert(kCropPath, rectanglePath());
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(malformedVersion, "capability=\"malformed-version\""));
++	CPPUNIT_ASSERT(!contains(malformedVersion, "clipPath"));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testSharedImageIndependentCrops()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList first = makeCropImage();
++		first.insert(kObjectId, 11);
++		first.insert(kCropPath, rectanglePath());
++		gen.drawGraphicObject(first);
++
++		RVNGPropertyList second = makeCropImage();
++		second.insert(kObjectId, 11);
++		RVNGPropertyListVector path;
++		RVNGPropertyList n;
++		n.insert("librevenge:path-action", "M"); n.insert("svg:x", 1.0); n.insert("svg:y", 1.0); path.append(n);
++		n.clear(); n.insert("librevenge:path-action", "L"); n.insert("svg:x", 1.5); n.insert("svg:y", 1.0); path.append(n);
++		n.clear(); n.insert("librevenge:path-action", "L"); n.insert("svg:x", 1.5); n.insert("svg:y", 1.5); path.append(n);
++		n.clear(); n.insert("librevenge:path-action", "Z"); path.append(n);
++		second.insert(kCropPath, path);
++		gen.drawGraphicObject(second);
++	});
++	CPPUNIT_ASSERT(contains(svg, "clipPath id=\"cdrclip1\""));
++	CPPUNIT_ASSERT(contains(svg, "clipPath id=\"cdrclip2\""));
++	CPPUNIT_ASSERT(contains(svg, "url(#cdrclip1)"));
++	CPPUNIT_ASSERT(contains(svg, "url(#cdrclip2)"));
++	CPPUNIT_ASSERT(contains(svg, "\nM43.2000,57.6000"));
++	CPPUNIT_ASSERT(contains(svg, "\nM72.0000,72.0000"));
++	// same shared payload serialized twice, never mutated
++	std::size_t p1 = svg.find("base64,QUJD");
++	std::size_t p2 = svg.find("base64,QUJD", p1 + 1);
++	CPPUNIT_ASSERT(p1 != std::string::npos);
++	CPPUNIT_ASSERT(p2 != std::string::npos);
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testSeparateVisibleFramePreserved()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage();
++		img.insert(kCropPath, rectanglePath());
++		gen.drawGraphicObject(img);
++
++		// An independently visible frame is an ordinary drawPath event and must
++		// survive as a separate visible <path>, not be consumed by the clip.
++		RVNGPropertyList style;
++		style.insert("draw:stroke", "solid");
++		style.insert("svg:stroke-color", "#ff0000");
++		style.insert("draw:fill", "none");
++		gen.setStyle(style);
++		RVNGPropertyListVector d;
++		RVNGPropertyList n;
++		n.insert("librevenge:path-action", "M"); n.insert("svg:x", 0.5); n.insert("svg:y", 0.5); d.append(n);
++		n.clear(); n.insert("librevenge:path-action", "L"); n.insert("svg:x", 1.0); n.insert("svg:y", 0.5); d.append(n);
++		n.clear(); n.insert("librevenge:path-action", "Z"); d.append(n);
++		RVNGPropertyList frame;
++		frame.insert("svg:d", d);
++		gen.drawPath(frame);
++	});
++	CPPUNIT_ASSERT(contains(svg, "<clipPath id=\"cdrclip1\""));
++	CPPUNIT_ASSERT(contains(svg, "</g>\n<path d=\" "));
++	CPPUNIT_ASSERT(contains(svg, "stroke: #ff0000;"));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testVisibleFrameRoleSeparateDrawPath()
++{
++	// Approved decision: a `visible-frame` role boundary remains a separately
++	// emitted drawPath; the bitmap event must not synthesize a visible frame
++	// because it carries no complete stroke/fill style. The boundary on the
++	// bitmap event is still consumed as its clip.
++	//
++	// (a) The bitmap event alone is clipped and emits no styled frame: the only
++	// <path> is the boundary inside <defs>.
++	const std::string bitmapOnly = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage("parent", "nonzero", "visible-frame");
++		img.insert(kCropPath, rectanglePath());
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(contains(bitmapOnly, "<clipPath id=\"cdrclip1\" clipPathUnits=\"userSpaceOnUse\">"));
++	CPPUNIT_ASSERT(contains(bitmapOnly, "<g clip-path=\"url(#cdrclip1)\">\n"));
++	CPPUNIT_ASSERT(contains(bitmapOnly, kImageElement));
++	CPPUNIT_ASSERT(bitmapOnly.find("stroke:") == std::string::npos);
++	CPPUNIT_ASSERT(bitmapOnly.find("fill:") == std::string::npos);
++	CPPUNIT_ASSERT(countOccurrences(bitmapOnly, "<path ") == 1);
++
++	// (b) The reader's independent visible frame (an ordinary drawPath event)
++	// survives next to the clip; the bitmap stays clipped.
++	const std::string withFrame = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage("parent", "nonzero", "visible-frame");
++		img.insert(kCropPath, rectanglePath());
++		gen.drawGraphicObject(img);
++
++		RVNGPropertyList style;
++		style.insert("draw:stroke", "solid");
++		style.insert("svg:stroke-color", "#00ff00");
++		style.insert("draw:fill", "none");
++		gen.setStyle(style);
++		RVNGPropertyListVector d;
++		RVNGPropertyList n;
++		n.insert("librevenge:path-action", "M"); n.insert("svg:x", 0.5); n.insert("svg:y", 0.5); d.append(n);
++		n.clear(); n.insert("librevenge:path-action", "L"); n.insert("svg:x", 1.0); n.insert("svg:y", 0.5); d.append(n);
++		n.clear(); n.insert("librevenge:path-action", "Z"); d.append(n);
++		RVNGPropertyList frame;
++		frame.insert("svg:d", d);
++		gen.drawPath(frame);
++	});
++	CPPUNIT_ASSERT(contains(withFrame, "<clipPath id=\"cdrclip1\""));
++	CPPUNIT_ASSERT(contains(withFrame, "<g clip-path=\"url(#cdrclip1)\">"));
++	CPPUNIT_ASSERT(contains(withFrame, kImageElement));
++	CPPUNIT_ASSERT(contains(withFrame, "</g>\n<path d=\" "));
++	CPPUNIT_ASSERT(contains(withFrame, "stroke: #00ff00;"));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testXmlAttributeAndTextEscaping()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList text;
++		text.insert("svg:x", 1.0);
++		text.insert("svg:y", 1.0);
++		text.insert("svg:width", 2.0);
++		text.insert("svg:height", 1.0);
++		gen.startTextObject(text);
++		RVNGPropertyList para;
++		gen.openParagraph(para);
++		RVNGPropertyList span;
++		span.insert("fo:font-size", 12.0, RVNG_POINT);
++		span.insert("style:font-name", "DejaVu <Sans> & \"Test\"");
++		span.insert("fo:font-style", "italic\" onload=\"x");
++		span.insert("fo:font-weight", "bold&<>");
++		span.insert("fo:color", "#fff\"&");
++		gen.openSpan(span);
++		gen.insertText("A < B & C > D \"q\"");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, "font-family=\"DejaVu &lt;Sans&gt; &amp; &quot;Test&quot;\""));
++	CPPUNIT_ASSERT(contains(svg, "font-style=\"italic&quot; onload=&quot;x\""));
++	CPPUNIT_ASSERT(contains(svg, "font-weight=\"bold&amp;&lt;&gt;\""));
++	CPPUNIT_ASSERT(contains(svg, "fill=\"#fff&quot;&amp;\""));
++	CPPUNIT_ASSERT(contains(svg, "A &lt; B &amp; C &gt; D &quot;q&quot;"));
++	// no raw unescaped injection remains
++	CPPUNIT_ASSERT(!contains(svg, "font-family=\"DejaVu <Sans>"));
++	CPPUNIT_ASSERT(!contains(svg, "onload=\"x\""));
++}
++
++void RVNGSVGDrawingGeneratorCropTest::testMarkerWithoutBoundaryKeepsImage()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList img = makeCropImage();
++		// required crop-path absent: no boundary recorded, image stays valid
++		gen.drawGraphicObject(img);
++	});
++	CPPUNIT_ASSERT(!contains(svg, "clipPath"));
++	CPPUNIT_ASSERT(!contains(svg, "capability="));
++	CPPUNIT_ASSERT(contains(svg, kImageElement));
++}
++
++CPPUNIT_TEST_SUITE_REGISTRATION(RVNGSVGDrawingGeneratorCropTest);
++
++}
+--- /dev/null
++++ b/src/test/RVNGSVGDrawingGeneratorTextTest.cpp
+@@ -0,0 +1,813 @@
++/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
++/* librevenge
++ * Version: MPL 2.0 / LGPLv2.1+
++ *
++ * This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this
++ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
++ *
++ * Major Contributor(s):
++ * Copyright (C) 2006 Ariya Hidayat (ariya@kde.org)
++ *
++ * For minor contributions see the git repository.
++ *
++ * Alternatively, the contents of this file may be used under the terms
++ * of the GNU Lesser General Public License Version 2.1 or later
++ * (LGPLv2.1+), in which case the provisions of the LGPLv2.1+ are
++ * applicable instead of those above.
++ */
++
++// Focused synthetic producer/consumer tests for explicit text lines and
++// paragraph alignment serialized by RVNGSVGDrawingGenerator (T01).
++//
++// The producer is the test itself: it builds the exact property/event stream
++// that the recovered libcdr reader is contracted to emit
++// (S03/CDR_EVENT_CONTRACT.md section 3.2). The consumer is the stock generator
++// plus an independent string oracle. Values are asserted exactly (line strings,
++// line count, anchor attribute and anchor position), not merely by presence.
++//
++// The only spacing value used for a hard break is the documented, standards
++// based CSS `line-height: normal` default expressed as SVG `dy="1.2em"`. The
++// CDR transport carries no line/baseline metric (contract section 8), so no
++// Corel line-height, per-line metric or custom line breaker is invented here.
++
++#include <cppunit/TestFixture.h>
++#include <cppunit/extensions/HelperMacros.h>
++
++#include <librevenge/librevenge.h>
++#include <librevenge/RVNGSVGDrawingGenerator.h>
++
++#include <cstddef>
++#include <string>
++#include <vector>
++
++namespace test
++{
++
++using namespace librevenge;
++
++namespace
++{
++
++const char *const kVersion = "vacards:cdr-fidelity-version";
++const char *const kContentKind = "vacards:cdr-content-kind";
++const char *const kTextKind = "vacards:cdr-text-kind";
++const char *const kObjectId = "vacards:cdr-object-id";
++
++//! Exact pre-patch (0.0.6, C02 only) bytes for one unmarked text object with a
++//! single Lora/12pt span, captured from the tree before the T01 change. This is
++//! the strongest available byte-compatibility oracle for an unmarked stream.
++const char *const kLegacyTextSvg =
++    "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"4.0000in\" height=\"4.0000in\" viewBox=\"0 0 288.0000 288.0000\" >\n"
++    "<text x=\"72.0000\" y=\"144.0000\">\n"
++    "<tspan font-family=\"Lora\" font-size=\"12.0000\" >\n"
++    "A &lt; B &amp; C</tspan>\n"
++    "</text>\n"
++    "</svg>\n\n";
++
++bool contains(const std::string &haystack, const std::string &needle)
++{
++	return haystack.find(needle) != std::string::npos;
++}
++
++std::size_t countOccurrences(const std::string &haystack, const std::string &needle)
++{
++	std::size_t count = 0, pos = 0;
++	while ((pos = haystack.find(needle, pos)) != std::string::npos)
++	{
++		++count;
++		pos += needle.size();
++	}
++	return count;
++}
++
++template <class F>
++std::string emit(F fill)
++{
++	RVNGStringVector out;
++	RVNGSVGDrawingGenerator gen(out, "");
++	RVNGPropertyList doc;
++	gen.startDocument(doc);
++	RVNGPropertyList page;
++	page.insert("svg:width", 4.0);
++	page.insert("svg:height", 4.0);
++	gen.startPage(page);
++	fill(gen);
++	gen.endPage();
++	gen.endDocument();
++	std::string all;
++	for (unsigned i = 0; i < out.size(); ++i)
++	{
++		all += out[i].cstr();
++		all += "\n";
++	}
++	return all;
++}
++
++//! Frame used by every marked case: x=1in y=1in w=2in h=1in -> anchors at
++//! 72pt (left), 144pt (center) and 216pt (right); baseline at 144pt.
++RVNGPropertyList frame()
++{
++	RVNGPropertyList t;
++	t.insert("svg:x", 1.0);
++	t.insert("svg:y", 1.0);
++	t.insert("svg:width", 2.0);
++	t.insert("svg:height", 1.0);
++	return t;
++}
++
++RVNGPropertyList markedFrame(const char *kind = "text")
++{
++	RVNGPropertyList t = frame();
++	t.insert(kVersion, 1);
++	t.insert(kContentKind, kind);
++	t.insert(kTextKind, "artistic");
++	t.insert(kObjectId, 88);
++	return t;
++}
++
++RVNGPropertyList style(const char *font, double sizePt)
++{
++	RVNGPropertyList s;
++	s.insert("fo:font-size", sizePt, RVNG_POINT);
++	if (font)
++		s.insert("style:font-name", font);
++	return s;
++}
++
++RVNGPropertyList paragraph(const char *align)
++{
++	RVNGPropertyList p;
++	if (align)
++		p.insert("fo:text-align", align);
++	return p;
++}
++
++} // anonymous namespace
++
++class RVNGSVGDrawingGeneratorTextTest : public CPPUNIT_NS::TestFixture
++{
++public:
++	virtual void setUp();
++	virtual void tearDown();
++
++private:
++	CPPUNIT_TEST_SUITE(RVNGSVGDrawingGeneratorTextTest);
++	CPPUNIT_TEST(testUnmarkedTextBytesUnchanged);
++	CPPUNIT_TEST(testUnmarkedLineBreakStaysLiteralNewline);
++	CPPUNIT_TEST(testMarkedSingleLineExact);
++	CPPUNIT_TEST(testUnequalLineLengthsAndLineCount);
++	CPPUNIT_TEST(testInitialAndInteriorBlankLines);
++	CPPUNIT_TEST(testBlankLineCarriesActiveFontSize);
++	CPPUNIT_TEST(testBlankLineWithoutSpanStaysAttributeFree);
++	CPPUNIT_TEST(testBlankLineAfterClosedSpanKeepsRunStyle);
++	CPPUNIT_TEST(testParagraphLeadingBlankKeepsPreviousRunStyle);
++	CPPUNIT_TEST(testTwoParagraphsAdvanceAndKeepAlignment);
++	CPPUNIT_TEST(testMixedInlineSpans);
++	CPPUNIT_TEST(testFTextASnapshotShape);
++	CPPUNIT_TEST(testAlignmentAnchors);
++	CPPUNIT_TEST(testPaddingAnchors);
++	CPPUNIT_TEST(testUnicodeAndWhitespace);
++	CPPUNIT_TEST(testEscapingInMarkedText);
++	CPPUNIT_TEST(testJustifyFallsBackToStart);
++	CPPUNIT_TEST(testUnsupportedVersionFallsBackToLegacy);
++	CPPUNIT_TEST(testUnsupportedContentKindFallsBackToLegacy);
++	CPPUNIT_TEST(testBufferReleasedPerObject);
++	CPPUNIT_TEST(testSpanIdResolutionInMarkedText);
++	CPPUNIT_TEST_SUITE_END();
++
++	void testUnmarkedTextBytesUnchanged();
++	void testUnmarkedLineBreakStaysLiteralNewline();
++	void testMarkedSingleLineExact();
++	void testUnequalLineLengthsAndLineCount();
++	void testInitialAndInteriorBlankLines();
++	void testBlankLineCarriesActiveFontSize();
++	void testBlankLineWithoutSpanStaysAttributeFree();
++	void testBlankLineAfterClosedSpanKeepsRunStyle();
++	void testParagraphLeadingBlankKeepsPreviousRunStyle();
++	void testTwoParagraphsAdvanceAndKeepAlignment();
++	void testMixedInlineSpans();
++	void testFTextASnapshotShape();
++	void testAlignmentAnchors();
++	void testPaddingAnchors();
++	void testUnicodeAndWhitespace();
++	void testEscapingInMarkedText();
++	void testJustifyFallsBackToStart();
++	void testUnsupportedVersionFallsBackToLegacy();
++	void testUnsupportedContentKindFallsBackToLegacy();
++	void testBufferReleasedPerObject();
++	void testSpanIdResolutionInMarkedText();
++};
++
++void RVNGSVGDrawingGeneratorTextTest::setUp()
++{
++}
++
++void RVNGSVGDrawingGeneratorTextTest::tearDown()
++{
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testUnmarkedTextBytesUnchanged()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList t = frame();
++		gen.startTextObject(t);
++		gen.openParagraph(RVNGPropertyList());
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("A < B & C");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(std::string(kLegacyTextSvg) == svg);
++	CPPUNIT_ASSERT(!contains(svg, "xml:space"));
++	CPPUNIT_ASSERT(!contains(svg, "text-anchor"));
++	CPPUNIT_ASSERT(!contains(svg, "dy="));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testUnmarkedLineBreakStaysLiteralNewline()
++{
++	// Absent marker => exact legacy bytes: a break is still a raw newline in a
++	// single tspan, no positioned line is synthesized.
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList t = frame();
++		gen.startTextObject(t);
++		gen.openParagraph(paragraph("center"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("first");
++		gen.insertLineBreak();
++		gen.insertText("second");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, "<text x=\"72.0000\" y=\"144.0000\">\n"));
++	CPPUNIT_ASSERT(contains(svg, ">\nfirst\nsecond</tspan>"));
++	CPPUNIT_ASSERT(!contains(svg, "text-anchor"));
++	CPPUNIT_ASSERT(!contains(svg, "dy="));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testMarkedSingleLineExact()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("left"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("Hello");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	const std::string expected =
++	    "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"4.0000in\" height=\"4.0000in\" viewBox=\"0 0 288.0000 288.0000\" >\n"
++	    "<text x=\"72.0000\" y=\"144.0000\" xml:space=\"preserve\">"
++	    "<tspan x=\"72.0000\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"12.0000\" >Hello</tspan>"
++	    "</text>\n"
++	    "</svg>\n\n";
++	CPPUNIT_ASSERT(expected == svg);
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testUnequalLineLengthsAndLineCount()
++{
++	// One span spanning three hard breaks: the generator must open a new
++	// positioned line for each break and keep the same run style.
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("center"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("short");
++		gen.insertLineBreak();
++		gen.insertText("a much longer second line");
++		gen.insertLineBreak();
++		gen.insertText("mid");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++
++	// Exact line strings, in order and on their own positioned tspan.
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"144.0000\" text-anchor=\"middle\" font-family=\"Lora\" font-size=\"12.0000\" >short</tspan>"));
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"144.0000\" dy=\"1.2em\" text-anchor=\"middle\" font-family=\"Lora\" font-size=\"12.0000\" >a much longer second line</tspan>"));
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"144.0000\" dy=\"1.2em\" text-anchor=\"middle\" font-family=\"Lora\" font-size=\"12.0000\" >mid</tspan>"));
++
++	// Three lines => three anchored lines and two advances.
++	CPPUNIT_ASSERT_EQUAL(std::size_t(3), countOccurrences(svg, "text-anchor=\"middle\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "dy=\"1.2em\""));
++	// Center anchor position, not the legacy left edge.
++	CPPUNIT_ASSERT_EQUAL(std::size_t(3), countOccurrences(svg, "x=\"144.0000\""));
++	CPPUNIT_ASSERT(!contains(svg, "x=\"72.0000\" text-anchor"));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testInitialAndInteriorBlankLines()
++{
++	// Line 0 blank, line 1 text, line 2 blank, line 3 text.
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("left"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertLineBreak();
++		gen.insertText("after initial");
++		gen.insertLineBreak();
++		gen.insertLineBreak();
++		gen.insertText("after interior");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	// Blank lines carry the active Lora/12pt style basis so their dy=1.2em
++	// resolves against the same font-size as the adjacent runs (D2).
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"12.0000\" />"));
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" dy=\"1.2em\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"12.0000\" >after initial</tspan>"));
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" dy=\"1.2em\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"12.0000\" />"));
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" dy=\"1.2em\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"12.0000\" >after interior</tspan>"));
++	// four lines: four anchors, three advances, two of them blank
++	CPPUNIT_ASSERT_EQUAL(std::size_t(4), countOccurrences(svg, "text-anchor=\"start\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(3), countOccurrences(svg, "dy=\"1.2em\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "font-size=\"12.0000\" />"));
++	// No blank line is collapse-to-whitespace or drops to the inherited size.
++	CPPUNIT_ASSERT(!contains(svg, "text-anchor=\"start\" />"));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testBlankLineCarriesActiveFontSize()
++{
++	// A blank line between two 18pt runs must be emitted with the same 18pt
++	// font-size basis, otherwise its dy=1.2em would resolve against the
++	// inherited UA size instead of the adjacent runs (D2).
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("left"));
++		gen.openSpan(style("Lora", 18.0));
++		gen.insertText("first");
++		gen.insertLineBreak();
++		gen.insertLineBreak();
++		gen.insertText("second");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"18.0000\" >first</tspan>"));
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" dy=\"1.2em\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"18.0000\" />"));
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" dy=\"1.2em\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"18.0000\" >second</tspan>"));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(3), countOccurrences(svg, "font-size=\"18.0000\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "dy=\"1.2em\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(1), countOccurrences(svg, "font-size=\"18.0000\" />"));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testBlankLineWithoutSpanStaysAttributeFree()
++{
++	// Documented limit: when no span style was ever active there is no defensible
++	// font-size basis, so the blank line stays an attribute-free positioned tspan
++	// (empty line and whitespace preserved exactly, no guessed size).
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("left"));
++		gen.insertText("first");
++		gen.insertLineBreak();
++		gen.insertLineBreak();
++		gen.insertText("second");
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, ">first</tspan>"));
++	CPPUNIT_ASSERT(contains(svg, ">second</tspan>"));
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" dy=\"1.2em\" text-anchor=\"start\" />"));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "dy=\"1.2em\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(0), countOccurrences(svg, "font-size="));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testBlankLineAfterClosedSpanKeepsRunStyle()
++{
++	// Residual D2 boundary (T01-FIX2): the break happens AFTER closeSpan(), so no
++	// span is active when the blank line is finalized. The blank line must still
++	// reuse the previous non-empty run's exact font/size basis instead of
++	// resolving its dy=1.2em against the inherited UA size.
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("left"));
++		gen.openSpan(style("Lora", 18.0));
++		gen.insertText("first");
++		gen.closeSpan();
++		gen.insertLineBreak();
++		gen.insertLineBreak();
++		gen.openSpan(style("Lora", 18.0));
++		gen.insertText("second");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	// Exact positioned blank line: the 18pt basis survives the closeSpan().
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" dy=\"1.2em\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"18.0000\" />"));
++	// Three lines, one advance each after the first, and the blank line has a
++	// basis rather than an attribute-free positioned tspan.
++	CPPUNIT_ASSERT_EQUAL(std::size_t(3), countOccurrences(svg, "font-size=\"18.0000\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "dy=\"1.2em\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(1), countOccurrences(svg, "font-size=\"18.0000\" />"));
++	CPPUNIT_ASSERT(!contains(svg, "text-anchor=\"start\" />"));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testParagraphLeadingBlankKeepsPreviousRunStyle()
++{
++	// Paragraph starts with no active span: its first line is blank and no span
++	// has opened yet. The basis comes from the previous paragraph's last
++	// non-empty run, so the first line still advances against the real size
++	// instead of the inherited UA size (T01-FIX2, paragraph-start boundary).
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("left"));
++		gen.openSpan(style("Lora", 20.0));
++		gen.insertText("p1");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.openParagraph(paragraph("center"));
++		gen.insertLineBreak();
++		gen.openSpan(style("Lora", 20.0));
++		gen.insertText("p2");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"144.0000\" dy=\"1.2em\" text-anchor=\"middle\" font-family=\"Lora\" font-size=\"20.0000\" />"));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(3), countOccurrences(svg, "font-size=\"20.0000\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "dy=\"1.2em\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(1), countOccurrences(svg, "font-size=\"20.0000\" />"));
++	// Per-paragraph anchors are unchanged: p1 start@72, p2 middle@144.
++	CPPUNIT_ASSERT_EQUAL(std::size_t(1), countOccurrences(svg, "tspan x=\"72.0000\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "tspan x=\"144.0000\""));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testTwoParagraphsAdvanceAndKeepAlignment()
++{
++	// Two paragraphs in one marked text object: the first line of the second
++	// paragraph must advance by the same 1.2em default so it does not overlap the
++	// previous paragraph, while each paragraph keeps its own alignment (D1).
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("left"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("p1 line0");
++		gen.insertLineBreak();
++		gen.insertText("p1 line1");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.openParagraph(paragraph("center"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("p2 line0");
++		gen.insertLineBreak();
++		gen.insertText("p2 line1");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++
++	// Exact tspans for all four lines: the second paragraph's first line is
++	// advanced (dy) and anchored at the center, not stacked on p1's baseline.
++	const std::string expectedText =
++	    "<text x=\"72.0000\" y=\"144.0000\" xml:space=\"preserve\">"
++	    "<tspan x=\"72.0000\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"12.0000\" >p1 line0</tspan>"
++	    "<tspan x=\"72.0000\" dy=\"1.2em\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"12.0000\" >p1 line1</tspan>"
++	    "<tspan x=\"144.0000\" dy=\"1.2em\" text-anchor=\"middle\" font-family=\"Lora\" font-size=\"12.0000\" >p2 line0</tspan>"
++	    "<tspan x=\"144.0000\" dy=\"1.2em\" text-anchor=\"middle\" font-family=\"Lora\" font-size=\"12.0000\" >p2 line1</tspan>"
++	    "</text>\n";
++	CPPUNIT_ASSERT(contains(svg, expectedText));
++	// One advance per line after the first line of the object.
++	CPPUNIT_ASSERT_EQUAL(std::size_t(3), countOccurrences(svg, "dy=\"1.2em\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(4), countOccurrences(svg, "text-anchor="));
++	// Paragraph 1 stays left, paragraph 2 stays centered.
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "tspan x=\"72.0000\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "tspan x=\"144.0000\""));
++	// The second paragraph's first line is never left un-advanced.
++	CPPUNIT_ASSERT(!contains(svg, "x=\"144.0000\" text-anchor"));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testMixedInlineSpans()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("left"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("Hello");
++		gen.closeSpan();
++		gen.openSpan(style("DejaVu Sans", 10.0));
++		gen.insertText("World");
++		gen.closeSpan();
++		gen.insertLineBreak();
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("Bye");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	// First line: two spans. Only the first carries the anchor position.
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"12.0000\" >Hello</tspan><tspan font-family=\"DejaVu Sans\" font-size=\"10.0000\" >World</tspan>"));
++	// The second run on a line must not restart the anchor.
++	CPPUNIT_ASSERT(!contains(svg, "x=\"72.0000\" text-anchor=\"start\" font-family=\"DejaVu Sans\""));
++	// Second line reuses the first span style but is positioned by dy.
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" dy=\"1.2em\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"12.0000\" >Bye</tspan>"));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "text-anchor=\"start\""));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testFTextASnapshotShape()
++{
++	// Shape of the real F-TEXT-A `text88` event stream
++	// (S03/proof/traces/F-TEXT-A-text88.rawtrace.txt): one centered paragraph,
++	// four Lora/14pt spans, 12 insertLineBreak events with runs of consecutive
++	// breaks. line0 "Recuerdo de", line1 " Mi Graduación", line2 " ",
++	// line3 "Escuela Alto Cedro ", seven blank lines, then the date line and a
++	// trailing space line. 13 lines total.
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("center"));
++
++		gen.openSpan(style("Lora", 14.0));
++		gen.insertText("Recuerdo de");
++		gen.insertLineBreak();
++		gen.insertText(" Mi Graduaci\xC3\xB3n");
++		gen.insertLineBreak();
++		gen.closeSpan();
++
++		gen.openSpan(style("Lora", 14.0));
++		gen.insertText(" ");
++		gen.insertLineBreak();
++		gen.insertText("Escuela Alto Cedro ");
++		gen.insertLineBreak();
++		gen.insertLineBreak();
++		gen.closeSpan();
++
++		gen.openSpan(style("Lora", 14.0));
++		gen.insertLineBreak();
++		gen.insertLineBreak();
++		gen.insertLineBreak();
++		gen.insertLineBreak();
++		gen.insertLineBreak();
++		gen.insertLineBreak();
++		gen.closeSpan();
++
++		gen.openSpan(style("Lora", 14.0));
++		gen.insertText("14 de Diciembre de 2026");
++		gen.insertLineBreak();
++		gen.insertText(" ");
++		gen.closeSpan();
++
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++
++	// 13 lines, 12 breaks, 7 of the lines blank.
++	CPPUNIT_ASSERT_EQUAL(std::size_t(13), countOccurrences(svg, "text-anchor=\"middle\""));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(12), countOccurrences(svg, "dy=\"1.2em\""));
++	// Every blank line carries the active Lora/14pt basis (D2), so none relies
++	// on the inherited UA font-size for its dy.
++	CPPUNIT_ASSERT_EQUAL(std::size_t(7), countOccurrences(svg, "font-size=\"14.0000\" />"));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(0), countOccurrences(svg, "text-anchor=\"middle\" />"));
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"144.0000\" dy=\"1.2em\" text-anchor=\"middle\" font-family=\"Lora\" font-size=\"14.0000\" />"));
++	// Every line shares the frame centre, not a per-run anchor.
++	CPPUNIT_ASSERT_EQUAL(std::size_t(13), countOccurrences(svg, "x=\"144.0000\""));
++	// Exact non-blank line strings survive, including the Unicode accent.
++	CPPUNIT_ASSERT(contains(svg, ">Recuerdo de</tspan>"));
++	CPPUNIT_ASSERT(contains(svg, "> Mi Graduaci\xC3\xB3n</tspan>"));
++	CPPUNIT_ASSERT(contains(svg, ">Escuela Alto Cedro </tspan>"));
++	CPPUNIT_ASSERT(contains(svg, ">14 de Diciembre de 2026</tspan>"));
++	// Whitespace-only and blank lines are lines, not collapsed whitespace.
++	CPPUNIT_ASSERT(contains(svg, "> </tspan>"));
++	// No raw break leaks into the editable text content.
++	CPPUNIT_ASSERT(!contains(svg, ">Recuerdo de\n"));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testAlignmentAnchors()
++{
++	// left -> start@left edge, center -> middle@center, end/right -> end@right.
++	struct Case
++	{
++		const char *align;
++		const char *anchor;
++		const char *x;
++	};
++	const Case cases[] =
++	{
++		{ "left",  "start",  "72.0000" },
++		{ "center","middle", "144.0000" },
++		{ "end",   "end",    "216.0000" },
++		{ "right", "end",    "216.0000" },
++		{ 0,       "start",  "72.0000" } // no fo:text-align -> left default
++	};
++	for (std::size_t i = 0; i < sizeof(cases)/sizeof(cases[0]); ++i)
++	{
++		const Case &c = cases[i];
++		const std::string svg = emit([&c](RVNGSVGDrawingGenerator &gen)
++		{
++			gen.startTextObject(markedFrame());
++			gen.openParagraph(paragraph(c.align));
++			gen.openSpan(style("Lora", 12.0));
++			gen.insertText("X");
++			gen.closeSpan();
++			gen.closeParagraph();
++			gen.endTextObject();
++		});
++		const std::string expected = std::string("<tspan x=\"") + c.x +
++		                             "\" text-anchor=\"" + c.anchor + "\"";
++		CPPUNIT_ASSERT(contains(svg, expected));
++		CPPUNIT_ASSERT_EQUAL(std::size_t(1), countOccurrences(svg, "text-anchor="));
++	}
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testPaddingAnchors()
++{
++	// padding-left 0.25in, padding-right 0.5in: left=90, right=180, center=135.
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList t = markedFrame();
++		t.insert("fo:padding-left", 0.25);
++		t.insert("fo:padding-right", 0.5);
++		gen.startTextObject(t);
++		gen.openParagraph(paragraph("center"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("X");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, "<text x=\"90.0000\" y=\"144.0000\" xml:space=\"preserve\">"));
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"135.0000\" text-anchor=\"middle\""));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testUnicodeAndWhitespace()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame("text"));
++		gen.openParagraph(paragraph("left"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("Caf\xC3\xA9 \xE2\x82\xAC");
++		gen.insertSpace();
++		gen.insertSpace();
++		gen.insertText("  spaced  ");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, "xml:space=\"preserve\""));
++	// Two explicit insertSpace calls plus the literal leading spaces survive.
++	CPPUNIT_ASSERT(contains(svg, ">Caf\xC3\xA9 \xE2\x82\xAC    spaced  </tspan>"));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testEscapingInMarkedText()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("center"));
++		RVNGPropertyList s;
++		s.insert("fo:font-size", 12.0, RVNG_POINT);
++		s.insert("style:font-name", "DejaVu <Sans> & \"Test\"");
++		s.insert("fo:font-style", "italic\" onload=\"x");
++		s.insert("fo:font-weight", "bold&<>");
++		s.insert("fo:color", "#fff\"&");
++		gen.openSpan(s);
++		gen.insertText("A < B & C > D \"q\"");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, "font-family=\"DejaVu &lt;Sans&gt; &amp; &quot;Test&quot;\""));
++	CPPUNIT_ASSERT(contains(svg, "font-style=\"italic&quot; onload=&quot;x\""));
++	CPPUNIT_ASSERT(contains(svg, "font-weight=\"bold&amp;&lt;&gt;\""));
++	CPPUNIT_ASSERT(contains(svg, "fill=\"#fff&quot;&amp;\""));
++	CPPUNIT_ASSERT(contains(svg, ">A &lt; B &amp; C &gt; D &quot;q&quot;</tspan>"));
++	CPPUNIT_ASSERT(!contains(svg, "font-family=\"DejaVu <Sans>"));
++	CPPUNIT_ASSERT(!contains(svg, "onload=\"x\""));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testJustifyFallsBackToStart()
++{
++	// SVG has no justified anchor and the transport carries no per-line width
++	// metric, so `justify`/`full` are anchored at start (documented fallback);
++	// no per-line textLength or custom line breaker is invented.
++	const std::string justify = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("justify"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("a b c");
++		gen.insertLineBreak();
++		gen.insertText("d e");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(justify, "<tspan x=\"72.0000\" text-anchor=\"start\""));
++	CPPUNIT_ASSERT(contains(justify, "<tspan x=\"72.0000\" dy=\"1.2em\" text-anchor=\"start\""));
++	CPPUNIT_ASSERT(!contains(justify, "textLength"));
++	CPPUNIT_ASSERT(!contains(justify, "text-anchor=\"middle\""));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testUnsupportedVersionFallsBackToLegacy()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		RVNGPropertyList t = frame();
++		t.insert(kVersion, 2);
++		t.insert(kContentKind, "text");
++		t.insert(kObjectId, 88);
++		t.insert("librevenge:rotate", 0.0);
++		gen.startTextObject(t);
++		gen.openParagraph(paragraph("center"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("first");
++		gen.insertLineBreak();
++		gen.insertText("second");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, "<!-- librevenge:cdr-text capability=\"unsupported-version\" object-id=\"88\" -->"));
++	CPPUNIT_ASSERT(contains(svg, ">\nfirst\nsecond</tspan>"));
++	CPPUNIT_ASSERT(!contains(svg, "xml:space"));
++	CPPUNIT_ASSERT(!contains(svg, "text-anchor"));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testUnsupportedContentKindFallsBackToLegacy()
++{
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame("bitmap"));
++		gen.openParagraph(paragraph("center"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("first");
++		gen.insertLineBreak();
++		gen.insertText("second");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, "<!-- librevenge:cdr-text capability=\"unsupported-content-kind\""));
++	CPPUNIT_ASSERT(contains(svg, ">\nfirst\nsecond</tspan>"));
++	CPPUNIT_ASSERT(!contains(svg, "text-anchor"));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testBufferReleasedPerObject()
++{
++	// Two marked objects in one page: the second must not replay the first.
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("left"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("one");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("center"));
++		gen.openSpan(style("Lora", 12.0));
++		gen.insertText("two");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, ">one</tspan>"));
++	CPPUNIT_ASSERT(contains(svg, ">two</tspan>"));
++	// one anchored line per object, not a growing buffer
++	CPPUNIT_ASSERT_EQUAL(std::size_t(2), countOccurrences(svg, "text-anchor="));
++	CPPUNIT_ASSERT_EQUAL(std::size_t(0), countOccurrences(svg, "dy=\"1.2em\""));
++}
++
++void RVNGSVGDrawingGeneratorTextTest::testSpanIdResolutionInMarkedText()
++{
++	// defineCharacterStyle + span-id resolution must still feed the buffered run
++	// (existing SVG generator state is reused, not reimplemented).
++	const std::string svg = emit([](RVNGSVGDrawingGenerator &gen)
++	{
++		gen.startTextObject(markedFrame());
++		gen.openParagraph(paragraph("left"));
++		RVNGPropertyList named;
++		named.insert("librevenge:span-id", 7);
++		named.insert("fo:font-size", 18.0, RVNG_POINT);
++		named.insert("style:font-name", "Lora");
++		gen.defineCharacterStyle(named);
++		RVNGPropertyList reference;
++		reference.insert("librevenge:span-id", 7);
++		gen.openSpan(reference);
++		gen.insertText("styled");
++		gen.closeSpan();
++		gen.closeParagraph();
++		gen.endTextObject();
++	});
++	CPPUNIT_ASSERT(contains(svg, "<tspan x=\"72.0000\" text-anchor=\"start\" font-family=\"Lora\" font-size=\"18.0000\" >styled</tspan>"));
++}
++
++CPPUNIT_TEST_SUITE_REGISTRATION(RVNGSVGDrawingGeneratorTextTest);
++
++}

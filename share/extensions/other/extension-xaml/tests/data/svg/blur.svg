@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg width="100%" height="100%" viewBox="0 0 480 360" version="1.1" id="svg5" inkscape:version="1.2 (dc2aedaf03, 2022-05-15)" sodipodi:docname="blur.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+   <defs id="defs2">
+      <filter inkscape:collect="always" style="color-interpolation-filters:sRGB" id="filter793" x="-0.16660433" y="-0.15277301" width="1.3332087" height="1.305546">
+         <feGaussianBlur inkscape:collect="always" stdDeviation="5 5" id="feGaussianBlur795" />
+      </filter>
+      <filter inkscape:collect="always" style="color-interpolation-filters:sRGB" id="filter793-0" x="-0.17121048" y="-0.17121048" width="1.342421" height="1.342421">
+         <feGaussianBlur inkscape:collect="always" stdDeviation="70" id="feGaussianBlur795-2" />
+      </filter>
+      <filter inkscape:collect="always" style="color-interpolation-filters:sRGB" id="filter3317" x="-0.23445084" y="-0.25878262" width="1.4689017" height="1.5175652">
+         <feGaussianBlur inkscape:collect="always" stdDeviation="7" id="feGaussianBlur3319" />
+      </filter>
+      <filter inkscape:collect="always" style="color-interpolation-filters:sRGB" id="filter3468" x="-0.084709811" y="-0.07978879" width="1.1704886" height="1.1683093">
+         <feGaussianBlur inkscape:collect="always" stdDeviation="3" id="feGaussianBlur3470" />
+      </filter>
+   </defs>
+   <rect style="fill:#00ffff;stroke-width:0.465806;filter:url(#filter793);stop-color:#000000" id="rect184" width="72.026939" height="78.547905" x="23.416168" y="43.275448" />
+   <rect style="mix-blend-mode:normal;fill:#00ffff;stroke-width:0.44532;filter:url(#filter793-0);stop-color:#000000" id="rect184-4" width="1000" height="1000" x="127.01048" y="39.866764" transform="scale(0.1)translate(1400, 500)" />
+   <path style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3468)" d="M 296.26671,61.788243 362.01573,40.400005 404.00005,149.71767 Z" id="path3465" />
+   <g id="g3315" style="filter:url(#filter3317)">
+      <rect style="fill:#008000;stroke-width:6.778;stop-color:#000000" id="rect3390" width="114.86276" height="69.709816" x="232.89415" y="247.94513" />
+      <rect style="mix-blend-mode:normal;fill:#008000;stroke-width:0.465808;stop-color:#000000" id="rect184-4-3" width="79.58226" height="72.099617" x="89.880905" y="191.2991" />
+   </g>
+</svg>

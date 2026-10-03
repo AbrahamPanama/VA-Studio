@@ -1,0 +1,11 @@
+{
+  "description": "vacards-describe lists the two new bitmap actions and the histogram remap choice.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-describe",
+  "expect_exit": 0,
+  "expect_records_text_contains": [
+    "\"name\":\"vacards-bitmap-tone-query\"",
+    "\"name\":\"vacards-bitmap-histogram\"",
+    "\"key\":\"remap\""
+  ]
+}

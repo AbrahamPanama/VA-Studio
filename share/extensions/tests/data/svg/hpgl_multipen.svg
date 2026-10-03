@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297">
+  <g
+     inkscape:label="pen1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:none;stroke:#ff0000"
+       width="19.938889"
+       height="21.119028"
+       x="39.029922"
+       y="7.9519877" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Pen 2 ">
+    <rect
+       style="fill:none;stroke:#ff0000"
+       width="19.938889"
+       height="21.119028"
+       x="68.276741"
+       y="7.9519863" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="pEn3">
+    <rect
+       style="fill:none;stroke:#ff0000"
+       width="19.938889"
+       height="21.119028"
+       x="10.536871"
+       y="7.9519877" />
+  </g>
+</svg>

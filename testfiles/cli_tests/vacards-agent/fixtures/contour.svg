@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     width="40" height="20" viewBox="0 0 40 20">
+  <rect id="art" x="1" y="1" width="8" height="8" style="fill:#ff0000"/>
+  <rect id="cut" x="0" y="0" width="10" height="10" style="fill:none;stroke:#000000"/>
+  <g id="marked" inkscape:nesting-contour-version="1">
+    <rect id="art2" x="21" y="1" width="8" height="8"/>
+    <rect id="cut3" x="20" y="0" width="10" height="10" inkscape:nesting-contour="true" style="fill:none;stroke:#000000"/>
+  </g>
+  <use id="markedclone" href="#marked" x="0" y="30"/>
+</svg>

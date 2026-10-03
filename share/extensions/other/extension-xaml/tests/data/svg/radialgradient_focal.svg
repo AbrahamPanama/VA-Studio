@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%"
+    viewBox="0 0 480 360">
+    <!-- Derived from pservers-grad-12-b.svg and pservers-grad-13-b.svg
+         from the SVG unit test suite under the 3-clause BSD license-->
+    <defs>
+        <radialGradient id="grad1d" gradientUnits="objectBoundingBox" cx="10%" cy="10%" r="75%" fx="00.00%" fy="75%">
+            <stop offset="0" stop-opacity="0" />
+            <stop offset=".5" stop-color="darkblue" />
+            <stop offset="1" stop-opacity="0" />
+        </radialGradient>
+        <radialGradient id="grad6d" gradientUnits="objectBoundingBox" cx="10%" cy="10%" r="75%" fx="83.33%" fy="75%">
+            <stop offset="0" stop-opacity="0" />
+            <stop offset=".5" stop-color="darkblue" />
+            <stop offset="1" stop-opacity="0" />
+        </radialGradient>
+        <radialGradient id="Grad1">
+            <stop stop-color="#009" offset="0" />
+            <stop stop-color="lime" offset="1" />
+        </radialGradient>
+        <radialGradient id="Grad2" gradientUnits="objectBoundingBox" cx=".2" cy=".2" fx=".2" fy=".2" r=".5">
+            <stop stop-color="#009" offset="0" />
+            <stop stop-color="lime" offset="1" />
+        </radialGradient>
+
+        <g id="alpha">
+            <rect x="00" y="0" width="100" height="60" fill="yellow" />
+            <rect x="00" y="0" width="20" height="60" fill="gold" />
+            <rect x="25" y="0" width="20" height="60" fill="orange" />
+            <rect x="50" y="0" width="20" height="60" fill="sienna" />
+            <rect x="75" y="0" width="20" height="60" fill="gold" />
+            <rect x="00" y="0" width="100" height="60" />
+            <!-- inherits a radial gradient -->
+        </g>
+    </defs>
+    <radialGradient id="Grad3" cx="25" cy="215" r="25" fx="25" fy="215" gradientUnits="userSpaceOnUse">
+        <stop stop-color="yellow" offset="0" />
+        <stop stop-color="blue" offset="1" />
+    </radialGradient>
+    <g id="group1" stroke="black" stroke-width="0.5">
+        <rect x="10" y="35" width="460" height="50" fill="url(#Grad1)" />
+        <rect x="10" y="125" width="460" height="50" fill="url(#Grad2)" />
+        <rect transform="translate(10, 260) rotate(-90)" x="0" y="0" width="50" height="460" fill="url(#Grad3)" />
+
+        <use xlink:href="#alpha" x="017.5" y="240" fill="url(#grad1d)" />
+        <use xlink:href="#alpha" x="355" y="240" fill="url(#grad6d)" />
+
+    </g>
+</svg>

@@ -1,0 +1,31 @@
+Content-Type: multipart/mixed; boundary="--CALLDATA--//--CALLDATA--"
+MIME-Version: 1.0
+Program: inkscape
+Arguments: --actions=unlock-all;select-by-element:flowRoot;object-to-path;select-clear;select-by-element:rect;select-by-element:circle;select-by-element:ellipse;select-by-element:line;select-by-element:polyline;select-by-element:polygon;select-by-element:text;object-to-path;select-clear;select-by-element:use;object-unlink-clones;export-overwrite;export-do input.svg
+
+----CALLDATA--//--CALLDATA--
+Content-Type: application/octet-stream; Name="input.svg"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment
+Filename: input.svg
+
+PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxz
+dmcKICAgdmlld0JveD0iMCAwIDIyIDIyIgogICB2ZXJzaW9uPSIxLjEiCiAgIGlkPSJzdmcxIgog
+ICBzb2RpcG9kaTpkb2NuYW1lPSJpbnB1dC5zdmciCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8v
+d3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIgogICB4bWxuczpzb2RpcG9kaT0i
+aHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiCiAgIHht
+bG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3
+LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHNvZGlwb2RpOm5hbWVkdmlldwogICAgIGlkPSJuYW1lZHZp
+ZXcxIgogICAgIHBhZ2Vjb2xvcj0iI2ZmZmZmZiIKICAgICBib3JkZXJjb2xvcj0iIzAwMDAwMCIK
+ICAgICBib3JkZXJvcGFjaXR5PSIwLjI1IgogICAgIGlua3NjYXBlOnNob3dwYWdlc2hhZG93PSIy
+IgogICAgIGlua3NjYXBlOnBhZ2VvcGFjaXR5PSIwLjAiCiAgICAgaW5rc2NhcGU6cGFnZWNoZWNr
+ZXJib2FyZD0iMCIKICAgICBpbmtzY2FwZTpkZXNrY29sb3I9IiNkMWQxZDEiIC8+CiAgPGRlZnMK
+ICAgICBpZD0iZGVmczMwNTEiPgogICAgPHN0eWxlCiAgICAgICB0eXBlPSJ0ZXh0L2NzcyIKICAg
+ICAgIGlkPSJjdXJyZW50LWNvbG9yLXNjaGVtZSI+JiMxMDsgICAgICAuQ29sb3JTY2hlbWUtVGV4
+dCB7JiMxMDsgICAgICAgIGNvbG9yOnJlZDsmIzEwOyAgICAgIH0mIzEwOyAgICAgIDwvc3R5bGU+
+CiAgPC9kZWZzPgogIDxwYXRoCiAgICAgc3R5bGU9ImZpbGw6Y3VycmVudENvbG9yO2ZpbGwtb3Bh
+Y2l0eToxO3N0cm9rZTpub25lIgogICAgIGQ9Ik0gNyAzIEMgNi40NDYgMyA2IDMuNDQ2IDYgNCIK
+ICAgICBjbGFzcz0iQ29sb3JTY2hlbWUtVGV4dCIKICAgICBpZD0icGF0aDEiIC8+Cjwvc3ZnPgo=
+
+----CALLDATA--//--CALLDATA----

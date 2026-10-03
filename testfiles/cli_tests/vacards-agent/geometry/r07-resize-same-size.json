@@ -1,0 +1,16 @@
+{
+  "description": "Resizing to the current size is a legitimate no-op.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a;vacards-transform-resize:width=20,height=20,bbox=geometric",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "unchanged",
+      "mode": "collective-geometry",
+      "reason": "unchanged",
+      "undo": "none"
+    }
+  ]
+}

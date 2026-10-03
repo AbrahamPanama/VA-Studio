@@ -1,0 +1,27 @@
+image: registry.gitlab.com/inkscape/inkscape-ci-docker/master
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+build:linux:asan:
+  stage: build
+  script:
+    - mkdir build
+    - cd build
+    - cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer"
+    - ninja
+  artifacts:
+    expire_in: 1 year
+    paths:
+      - build/
+
+test:linux:asan:
+  stage: test
+  needs: ["build:linux:asan"]
+  script:
+    - cd build
+    - ctest --output-on-failure

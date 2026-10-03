@@ -1,0 +1,76 @@
+<!--
+  This unit test is adapted from CSSSelect2, 
+  https://github.com/Kozea/cssselect2/blob/master/tests/ids.html
+  (BSD License)
+
+  THIS IS NOT A USEFUL SVG! IT'S ONLY USED TO TEST CORRECTNESS OF CSS4 IMPLEMENTATION!
+
+  Changes: 
+  html -> svg
+  body -> g (layer)
+  div -> g
+  head -> defs
+  link -> linearGradient
+  ol -> text
+  li -> tspan
+  p -> pattern
+  map -> clipPath
+  area -> circle
+  b -> p
+  em -> textPath
+  fieldset -> radialGradient
+  input -> stop
+  span -> mask
+-->
+<svg id="svg"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+  <defs id="defs">
+    <linearGradient id="linearGradient-href" href="foo" />
+    <linearGradient id="linearGradient-nohref" />
+  </defs>
+  <g inkscape:groupmode="layer" id="layer">
+    <g id="outer-g">
+      <rect id="rect1" name="foo" style="fill:black;" width="5"></rect>
+      <rect id="rect2" style="fill: red;"></rect>
+      <rect id="rect3" style=""></rect>
+      <text id="first-text" class="a b c e">
+        <tspan id="first-tspan" my-attr="test">content</tspan>
+        <!--test-->
+        <tspan id="second-tspan" lang="En-us">
+          <g id="tspan-g">
+          </g>
+        </tspan>
+        <tspan id="third-tspan" my-attr="test" class="ab c"></tspan>
+        <tspan id="fourth-tspan" my-attr="test" class="ab
+c"></tspan>
+        <tspan id="fifth-tspan" my-attr="test"></tspan>
+        <tspan id="sixth-tspan"></tspan>
+        <tspan id="seventh-tspan"></tspan>
+      </text>
+      <pattern id="paragraph">
+        <p id="pattern-p">hi</p>
+        <textPath id="pattern-textPath">there</textPath>
+        <p id="pattern-p2">guy</p>
+        <a href="inkscape.org" id="link">
+          <polygon id="link-element"/>
+        </a> 
+        <a id="nolink"></a>
+        <radialGradient id="radialGradient" disabled="disabled">
+          <stop id="stop-radialGradient" />
+          <stop offset="1" id="stop2-radialGradient" />
+        </radialGradient>
+      </pattern>
+      <text id="second-text" class="e">
+      </text>
+      <clipPath name="dummymap" id="clipPath">
+        <circle shape="circle" coords="200,250,25" href="foo.html" id="circle-href" />
+        <circle shape="default" id="circle-nohref" />
+      </clipPath>
+    </g>
+    <g id="foobar-g" foobar="ab bc
+cde">
+      <mask id="foobar-mask"></mask>
+    </g>
+  </g>
+</svg>

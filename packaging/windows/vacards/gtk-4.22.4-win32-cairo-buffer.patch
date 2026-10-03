@@ -1,0 +1,598 @@
+--- a/gdk/win32/gdkcairocontext-win32.c
++++ b/gdk/win32/gdkcairocontext-win32.c
+@@ -38,0 +39,36 @@
++
++  /* VACards 2026-09-21 (packaging/windows/vacards/
++   * gtk-4.22.4-win32-cairo-buffer.patch):
++   *
++   * Reusable CPU-owned ARGB32 DIB backing store for the default (non-DComp)
++   * GDI path.  The previous code created a fresh
++   * cairo_win32_surface_create_with_format(hdc) every frame, which allocates a
++   * full-size fallback DIB, reads the window back into it and writes it out
++   * again.  Instead we keep one DIB per buffer size/scale, draw into the image
++   * renderer view of that DIB, and BitBlt only the damaged physical-pixel
++   * rectangles to the window.
++   *
++   * gdi_frame_image is the referenced image view used for the current frame
++   * (it shares the DIB bits with gdi_buffer and is owned by it; we hold our own
++   * reference so the view stays alive for the whole frame).  gdi_buffer_valid
++   * is FALSE whenever the backing pixels cannot be trusted (new surface,
++   * size/scale change, empty restore). Failed presentation keeps the DIB
++   * pixels and retains unpresented damage for a timed retry. */
++  cairo_surface_t *gdi_buffer;
++  cairo_surface_t *gdi_frame_image;
++  guint            gdi_buffer_width;
++  guint            gdi_buffer_height;
++  double           gdi_buffer_scale;
++  gboolean         gdi_buffer_valid;
++  gboolean         gdi_legacy_frame;
++  gboolean         gdi_release_pending;
++  gboolean         gdi_alloc_failed;
++  gboolean         gdi_alloc_warned;
++  gboolean         gdi_transfer_warned;
++  HDC              gdi_legacy_dc;
++  guint            gdi_retry_id;
++  guint            gdi_retry_ms;
++  guint            gdi_attempt_width, gdi_attempt_height;
++  double           gdi_attempt_scale;
++  gulong           gdi_mapped_id, gdi_state_id;
++  cairo_region_t  *gdi_pending;
+@@ -46,0 +83,111 @@
++
++/* Release the per-frame surface.  In the reusable-buffer path
++ * self->cairo_surface aliases the referenced image view, so drop the alias
++ * first and release the image reference exactly once; otherwise (legacy
++ * display surface or zero-size placeholder) the context owns it directly. */
++static void
++gdk_win32_cairo_context_gdi_frame_clear (GdkWin32CairoContext *self)
++{
++  if (self->gdi_frame_image != NULL)
++    {
++      if (self->cairo_surface == self->gdi_frame_image)
++        self->cairo_surface = NULL;
++      g_clear_pointer (&self->gdi_frame_image, cairo_surface_destroy);
++    }
++  else if (self->gdi_legacy_frame && self->cairo_surface != NULL)
++    {
++      /* The legacy path holds a window DC until end_frame; release it before
++       * dropping the surface so an aborted frame cannot leak it. */
++      GdkSurface *surface = gdk_draw_context_get_surface (GDK_DRAW_CONTEXT (self));
++      HWND hwnd = gdk_win32_surface_get_handle (surface);
++
++      g_clear_pointer (&self->cairo_surface, cairo_surface_destroy);
++      if (self->gdi_legacy_dc != NULL)
++        ReleaseDC (hwnd, self->gdi_legacy_dc);
++    }
++  else
++    {
++      g_clear_pointer (&self->cairo_surface, cairo_surface_destroy);
++    }
++
++  self->gdi_legacy_frame = FALSE;
++  self->gdi_legacy_dc = NULL;
++}
++
++static void
++gdk_win32_cairo_context_gdi_buffer_clear (GdkWin32CairoContext *self,
++                                          gboolean              destroy)
++{
++  if (destroy)
++    g_clear_pointer (&self->gdi_buffer, cairo_surface_destroy);
++
++  self->gdi_buffer_width = 0;
++  self->gdi_buffer_height = 0;
++  self->gdi_buffer_scale = 0.0;
++  self->gdi_buffer_valid = FALSE;
++}
++
++/* A zero-size image surface is a valid draw target: cairo_create() succeeds,
++ * drawing is clipped away, and no pixel backing is allocated.  It is used for
++ * empty (minimized) frames and for the failure fallbacks so the renderer never
++ * receives a NULL context. */
++static cairo_surface_t *
++gdk_win32_cairo_context_gdi_empty_surface (void)
++{
++  return cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
++}
++
++/* Controlled A/B escape hatch for the field experiment: the reusable backing
++ * store is the default, and GDK_WIN32_CAIRO_GDI_BUFFER=0 restores the previous
++ * per-frame cairo_win32_surface_create_with_format() behavior.  It is not a
++ * documented GTK debug flag so that no other backend state has to change. */
++static gboolean
++gdk_win32_cairo_context_gdi_buffer_disabled (void)
++{
++  static gsize cached = 0;
++  if (g_once_init_enter (&cached))
++    {
++      const char *value = g_getenv ("GDK_WIN32_CAIRO_GDI_BUFFER");
++      gboolean disabled = value != NULL &&
++        (g_ascii_strcasecmp (value, "0") == 0 ||
++         g_ascii_strcasecmp (value, "false") == 0 ||
++         g_ascii_strcasecmp (value, "off") == 0);
++      g_once_init_leave (&cached, disabled ? 2 : 1);
++    }
++  return cached == 2;
++}
++
++static gboolean gdk_win32_cairo_context_gdi_fault (gboolean allocation) {
++  static int mode = -1, remaining, skip;
++  if (mode == -1)
++    {
++      const char *v = g_getenv ("VACARDS_TEST_GDK_GDI_FAULT");
++      mode = v && strcmp (v, "alloc-once") == 0 ? 1 :
++             v && strcmp (v, "bitblt-once") == 0 ? 2 :
++             v && strncmp (v, "bitblt:", 7) == 0 && v[7] >= '1' && v[7] <= '8' && v[8] == 0 ? 2 :
++             v && strncmp (v, "bitblt-after:1:", 15) == 0 && v[15] >= '1' && v[15] <= '8' && v[16] == 0 ? 3 : 0;
++      remaining = mode == 1 || (v && strcmp (v, "bitblt-once") == 0) ? 1 : mode == 2 ? v[7] - '0' : mode == 3 ? v[15] - '0' : 0;
++      skip = mode == 3 ? 1 : 0;
++    }
++  if (allocation == 2) { if (mode == 3 && skip) skip--; return FALSE; }
++  if (mode == 3 && skip) return FALSE;
++  if (remaining && (mode == 3 ? !allocation : mode == (allocation ? 1 : 2))) { remaining--; return TRUE; }
++  return FALSE;
++}
++static void
++gdk_win32_cairo_context_gdi_cancel_retry (GdkWin32CairoContext *self)
++{
++  if (self->gdi_retry_id != 0)
++    g_source_remove (self->gdi_retry_id);
++  self->gdi_retry_id = 0;
++  self->gdi_retry_ms = 0;
++}
++
++static gboolean
++gdk_win32_cairo_context_gdi_retry (gpointer data)
++{
++  GdkWin32CairoContext *self = data;
++  GdkSurface *surface = gdk_draw_context_get_surface (GDK_DRAW_CONTEXT (self));
++  cairo_region_t *logical;
++  double scale = surface ? gdk_surface_get_scale (surface) : 0;
++  int i;
+@@ -47,0 +195,28 @@
++  self->gdi_retry_id = 0;
++  if (self->gdi_pending == NULL)
++    return G_SOURCE_REMOVE;
++  if (!(scale > 0.0) || scale > G_MAXDOUBLE)
++    {
++      if (surface && gdk_surface_get_mapped (surface))
++        gdk_surface_invalidate_rect (surface, NULL);
++      return G_SOURCE_REMOVE;
++    }
++
++  logical = cairo_region_create ();
++  for (i = 0; i < cairo_region_num_rectangles (self->gdi_pending); i++)
++    {
++      cairo_rectangle_int_t rect;
++      int x1, y1, x2, y2;
++
++      cairo_region_get_rectangle (self->gdi_pending, i, &rect);
++      x1 = floor (rect.x / scale);
++      y1 = floor (rect.y / scale);
++      x2 = ceil (((double) rect.x + rect.width) / scale);
++      y2 = ceil (((double) rect.y + rect.height) / scale);
++      cairo_region_union_rectangle (logical, &(cairo_rectangle_int_t) { x1, y1, x2 - x1, y2 - y1 });
++    }
++  gdk_surface_invalidate_region (surface, logical);
++  cairo_region_destroy (logical);
++  return G_SOURCE_REMOVE;
++}
++
+@@ -48,0 +224,29 @@
++gdk_win32_cairo_context_gdi_schedule_retry (GdkWin32CairoContext *self)
++{
++  if (self->gdi_retry_id != 0)
++    return;
++  self->gdi_retry_ms = self->gdi_retry_ms ? MIN (self->gdi_retry_ms * 2, 2000) : 250;
++  self->gdi_retry_id = g_timeout_add (self->gdi_retry_ms,
++                                     gdk_win32_cairo_context_gdi_retry, self);
++}
++
++static void
++gdk_win32_cairo_context_gdi_visibility (GdkSurface *surface,
++                                        GParamSpec *pspec,
++                                        GdkWin32CairoContext *self)
++{
++  gboolean minimized = GDK_IS_TOPLEVEL (surface) &&
++    (gdk_toplevel_get_state (GDK_TOPLEVEL (surface)) & GDK_TOPLEVEL_STATE_MINIMIZED);
++  if (gdk_surface_get_mapped (surface) && !minimized)
++    return;
++  if (self->cairo_surface != NULL)
++    self->gdi_release_pending = TRUE;
++  else
++    {
++      gdk_win32_cairo_context_gdi_cancel_retry (self);
++      gdk_win32_cairo_context_gdi_buffer_clear (self, TRUE);
++      g_clear_pointer (&self->gdi_pending, cairo_region_destroy);
++    }
++}
++
++static void
+@@ -98 +302,8 @@
+-    return TRUE; /* We'll fallback */
++    {
++      self->gdi_mapped_id = g_signal_connect (surface, "notify::mapped",
++                                              G_CALLBACK (gdk_win32_cairo_context_gdi_visibility), self);
++      if (GDK_IS_TOPLEVEL (surface))
++        self->gdi_state_id = g_signal_connect (surface, "notify::state",
++                                               G_CALLBACK (gdk_win32_cairo_context_gdi_visibility), self);
++      return TRUE; /* We'll fallback */
++    }
+@@ -136,0 +348 @@
++  gboolean dcomp = self->swap_chain != NULL;
+@@ -137,0 +350,8 @@
++  if (self->gdi_mapped_id != 0)
++    g_signal_handler_disconnect (surface, self->gdi_mapped_id);
++  if (self->gdi_state_id != 0)
++    g_signal_handler_disconnect (surface, self->gdi_state_id);
++  self->gdi_mapped_id = self->gdi_state_id = 0;
++  gdk_win32_cairo_context_gdi_cancel_retry (self);
++  g_clear_pointer (&self->gdi_pending, cairo_region_destroy);
++
+@@ -142,0 +363,10 @@
++
++  /* DComp owns cairo_surface in its path, so only abort a possibly in-flight
++   * GDI frame when this context is not the swap-chain path. */
++  if (!dcomp)
++    gdk_win32_cairo_context_gdi_frame_clear (self);
++  gdk_win32_cairo_context_gdi_buffer_clear (self, TRUE);
++  self->gdi_legacy_frame = FALSE;
++  self->gdi_legacy_dc = NULL;
++  self->gdi_release_pending = self->gdi_alloc_failed = self->gdi_alloc_warned = self->gdi_transfer_warned = FALSE;
++  self->gdi_attempt_width = self->gdi_attempt_height = self->gdi_attempt_scale = 0;
+@@ -301,6 +531,6 @@
+-gdk_win32_cairo_context_begin_frame_gdi (GdkDrawContext  *draw_context,
+-                                         gpointer         context_data,
+-                                         GdkMemoryDepth   depth,
+-                                         cairo_region_t  *region,
+-                                         GdkColorState  **out_color_state,
+-                                         GdkMemoryDepth  *out_depth)
++gdk_win32_cairo_context_begin_frame_gdi_legacy (GdkDrawContext  *draw_context,
++                                                gpointer         context_data,
++                                                GdkMemoryDepth   depth,
++                                                cairo_region_t  *region,
++                                                GdkColorState  **out_color_state,
++                                                GdkMemoryDepth  *out_depth)
+@@ -319,0 +550 @@
++  self->gdi_legacy_dc = hdc;
+@@ -332,0 +564,231 @@
++gdk_win32_cairo_context_end_frame_gdi_legacy (GdkDrawContext *draw_context,
++                                              gpointer        context_data,
++                                              cairo_region_t *painted)
++{
++  GdkWin32CairoContext *self = GDK_WIN32_CAIRO_CONTEXT (draw_context);
++  cairo_surface_flush (self->cairo_surface);
++  gdk_win32_cairo_context_gdi_frame_clear (self);
++}
++
++/* Install the per-frame fallback: either the original per-frame window
++ * surface, or, when GetDC fails there too, a zero-size placeholder so the
++ * renderer still gets a valid context.  The reusable DIB is dropped; an
++ * allocation failure remains latched until the size or scale changes. */
++static void
++gdk_win32_cairo_context_gdi_use_legacy (GdkWin32CairoContext *self,
++                                        GdkDrawContext       *draw_context,
++                                        gpointer              context_data,
++                                        GdkMemoryDepth        depth,
++                                        cairo_region_t       *region,
++                                        GdkColorState       **out_color_state,
++                                        GdkMemoryDepth       *out_depth)
++{
++  gdk_win32_cairo_context_gdi_buffer_clear (self, TRUE);
++  gdk_win32_cairo_context_begin_frame_gdi_legacy (draw_context, context_data,
++                                                  depth, region,
++                                                  out_color_state, out_depth);
++
++  if (self->cairo_surface == NULL)
++    self->cairo_surface = gdk_win32_cairo_context_gdi_empty_surface ();
++  self->gdi_legacy_frame = self->gdi_legacy_dc != NULL;
++}
++
++/*
++ * Default (non-DComp) GDI path.
++ *
++ * Draws into the image renderer view of the reusable ARGB32 DIB owned by this
++ * context instead of creating a fresh display surface per frame.  Only the
++ * damaged physical-pixel rectangles are copied to the window DC in end_frame.
++ * This deliberately targets the image backend so drawing does not go through
++ * the Win32 GDI compositor dispatch.
++ */
++static void
++gdk_win32_cairo_context_begin_frame_gdi (GdkDrawContext  *draw_context,
++                                         gpointer         context_data,
++                                         GdkMemoryDepth   depth,
++                                         cairo_region_t  *region,
++                                         GdkColorState  **out_color_state,
++                                         GdkMemoryDepth  *out_depth)
++{
++  GdkWin32CairoContext *self = GDK_WIN32_CAIRO_CONTEXT (draw_context);
++  GdkSurface *surface = gdk_draw_context_get_surface (draw_context);
++  cairo_surface_t *image;
++  guint width, height;
++  double scale;
++  cairo_t *cr;
++  RECT client;
++  guint align;
++  gint64 client_width, client_height;
++  gboolean full = FALSE;
++
++  /* gdk_draw_context_begin_frame_full() asserts both of these after this
++   * callback returns, including on the failure paths, so set them before
++   * anything can bail out. */
++  *out_color_state = GDK_COLOR_STATE_SRGB;
++  *out_depth = gdk_color_state_get_depth (GDK_COLOR_STATE_SRGB);
++
++  /* Drop any surface left over from an earlier frame before reusing or
++   * replacing the backing storage. */
++  gdk_win32_cairo_context_gdi_frame_clear (self);
++
++  if (gdk_win32_cairo_context_gdi_buffer_disabled ())
++    {
++      gdk_win32_cairo_context_gdi_use_legacy (self, draw_context, context_data,
++                                              depth, region,
++                                              out_color_state, out_depth);
++      return;
++    }
++
++  gdk_draw_context_get_buffer_size (draw_context, &width, &height);
++  /* Buffer dimensions and the client rect are physical pixels. Win32 supplies
++   * an integer scale through the double API. Allow one alignment step at most. */
++  scale = gdk_surface_get_scale (surface);
++  if (!(scale > 0.0 && scale <= G_MAXUINT))
++    {
++      if (!self->gdi_alloc_failed)
++        g_warning ("GDK-WIN32: scale unavailable; using per-frame fallback");
++      self->gdi_alloc_failed = TRUE;
++      gdk_win32_cairo_context_gdi_use_legacy (self, draw_context, context_data,
++                                              depth, region, out_color_state, out_depth);
++      return;
++    }
++  if (GetClientRect (gdk_win32_surface_get_handle (surface), &client))
++    {
++      align = MAX (1u, (guint) ceil (scale));
++      client_width = (gint64) client.right - client.left;
++      client_height = (gint64) client.bottom - client.top;
++      if (client_width <= 0 || client_height <= 0)
++        width = height = 0;
++      else
++        {
++          guint64 bound_width = ((guint64) client_width + align - 1) / align * align;
++          guint64 bound_height = ((guint64) client_height + align - 1) / align * align;
++          width = MIN (width, (guint) MIN (bound_width, G_MAXINT));
++          height = MIN (height, (guint) MIN (bound_height, G_MAXINT));
++        }
++    }
++
++  if (self->gdi_attempt_width != width ||
++      self->gdi_attempt_height != height || self->gdi_attempt_scale != scale)
++    {
++      gdk_win32_cairo_context_gdi_cancel_retry (self);
++      g_clear_pointer (&self->gdi_pending, cairo_region_destroy);
++      self->gdi_alloc_failed = self->gdi_alloc_warned = self->gdi_transfer_warned = FALSE;
++      self->gdi_attempt_width = width;
++      self->gdi_attempt_height = height;
++      self->gdi_attempt_scale = scale;
++      gdk_win32_cairo_context_gdi_buffer_clear (self, TRUE);
++    }
++
++  if (width == 0 || height == 0)
++    {
++      /* Minimized/empty: allocate no pixel backing and force a full repaint
++       * later.  A zero-size image surface is a valid placeholder. */
++      gdk_win32_cairo_context_gdi_buffer_clear (self, TRUE);
++      self->cairo_surface = gdk_win32_cairo_context_gdi_empty_surface ();
++      return;
++    }
++
++  if (self->gdi_alloc_failed)
++    {
++      gdk_win32_cairo_context_gdi_use_legacy (self, draw_context, context_data,
++                                              depth, region, out_color_state, out_depth);
++      return;
++    }
++
++  if (self->gdi_buffer == NULL ||
++      cairo_surface_status (self->gdi_buffer) != CAIRO_STATUS_SUCCESS ||
++      self->gdi_buffer_width != width ||
++      self->gdi_buffer_height != height ||
++      self->gdi_buffer_scale != scale)
++    {
++      gdk_win32_cairo_context_gdi_buffer_clear (self, TRUE);
++
++      self->gdi_buffer = gdk_win32_cairo_context_gdi_fault (TRUE) ? NULL :
++        cairo_win32_surface_create_with_dib (CAIRO_FORMAT_ARGB32,
++                                              width, height);
++      if (self->gdi_buffer == NULL ||
++          cairo_surface_status (self->gdi_buffer) != CAIRO_STATUS_SUCCESS)
++        {
++          self->gdi_alloc_failed = TRUE;
++          if (!self->gdi_alloc_warned)
++            g_warning ("GDK-WIN32: could not allocate a %ux%u reusable GDI "
++                       "backing store (%s); using the per-frame fallback",
++                       width,
++                       height,
++                       self->gdi_buffer != NULL
++                         ? cairo_status_to_string (cairo_surface_status (self->gdi_buffer))
++                         : "out of memory");
++          self->gdi_alloc_warned = TRUE;
++          gdk_win32_cairo_context_gdi_use_legacy (self, draw_context,
++                                                  context_data, depth, region,
++                                                  out_color_state, out_depth);
++          return;
++        }
++
++      self->gdi_buffer_width = width;
++      self->gdi_buffer_height = height;
++      self->gdi_buffer_scale = scale;
++      self->gdi_buffer_valid = FALSE;
++    }
++
++  if (!self->gdi_buffer_valid)
++    full = TRUE;
++
++  /* cairo_win32_surface_get_image() returns the image surface that shares the
++   * DIB bits; it is owned by gdi_buffer.  Validate it and take our own
++   * reference for the duration of the frame so the image renderer is used
++   * directly and the view cannot be torn down under us. */
++  image = cairo_win32_surface_get_image (self->gdi_buffer);
++  if (image == NULL ||
++      cairo_surface_status (image) != CAIRO_STATUS_SUCCESS ||
++      cairo_surface_get_type (image) != CAIRO_SURFACE_TYPE_IMAGE)
++    {
++      self->gdi_alloc_failed = TRUE;
++      if (!self->gdi_alloc_warned)
++        g_warning ("GDK-WIN32: reusable GDI backing store has no valid image "
++                   "view; using the per-frame fallback");
++      self->gdi_alloc_warned = TRUE;
++      gdk_win32_cairo_context_gdi_use_legacy (self, draw_context, context_data,
++                                              depth, region,
++                                              out_color_state, out_depth);
++      return;
++    }
++
++  self->gdi_frame_image = cairo_surface_reference (image);
++  self->cairo_surface = self->gdi_frame_image;
++
++  /* The renderer only repaints what it is told is damaged, so a backing store
++   * without trustworthy content must expand the received physical-pixel
++   * region to the full buffer before the region is used for clipping. */
++  if (full)
++    cairo_region_union_rectangle (region,
++                                  &(cairo_rectangle_int_t) {
++                                      0, 0, width, height
++                                  });
++
++  cr = cairo_create (self->cairo_surface);
++  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
++  gdk_cairo_region (cr, region);
++  cairo_fill (cr);
++
++  /* If the clear could not be recorded, keep the buffer marked invalid so the
++   * next frame is fully repainted instead of trusting stale pixels. */
++  self->gdi_buffer_valid = cairo_status (cr) == CAIRO_STATUS_SUCCESS;
++  cairo_destroy (cr);
++}
++
++static void
++gdk_win32_cairo_context_gdi_finish_frame (GdkWin32CairoContext *self)
++{
++  gdk_win32_cairo_context_gdi_frame_clear (self);
++  if (self->gdi_release_pending)
++    {
++      self->gdi_release_pending = FALSE;
++      gdk_win32_cairo_context_gdi_cancel_retry (self);
++      g_clear_pointer (&self->gdi_pending, cairo_region_destroy);
++      gdk_win32_cairo_context_gdi_buffer_clear (self, TRUE);
++    }
++}
++
++static void
+@@ -339 +801,4 @@
+-  HDC hdc;
++  HDC window_dc = NULL, source_dc;
++  cairo_region_t *transfer;
++  int i;
++  const char *failure = NULL;
+@@ -341,2 +806,13 @@
+-  hdc = cairo_win32_surface_get_dc (self->cairo_surface);
+-  cairo_surface_flush (self->cairo_surface);
++  if (self->gdi_legacy_frame)
++    {
++      gdk_win32_cairo_context_end_frame_gdi_legacy (draw_context,
++                                                    context_data, painted);
++      self->gdi_legacy_frame = FALSE;
++      gdk_win32_cairo_context_gdi_finish_frame (self);
++      return;
++    }
++  if (self->gdi_frame_image == NULL || self->gdi_buffer == NULL)
++    {
++      gdk_win32_cairo_context_gdi_finish_frame (self);
++      return;
++    }
+@@ -344,2 +820,70 @@
+-  ReleaseDC (gdk_win32_surface_get_handle (surface), hdc);
+-  g_clear_pointer (&self->cairo_surface, cairo_surface_destroy);
++  transfer = cairo_region_copy (painted);
++  if (self->gdi_pending != NULL)
++    cairo_region_union (transfer, self->gdi_pending);
++  cairo_region_intersect_rectangle (transfer,
++                                    &(cairo_rectangle_int_t) {
++                                        0, 0, self->gdi_buffer_width,
++                                        self->gdi_buffer_height
++                                    });
++  if (cairo_region_is_empty (transfer))
++    {
++      cairo_region_destroy (transfer);
++      gdk_win32_cairo_context_gdi_finish_frame (self);
++      return;
++    }
++
++  cairo_surface_flush (self->gdi_frame_image);
++  cairo_surface_flush (self->gdi_buffer);
++  if (cairo_surface_status (self->gdi_frame_image) != CAIRO_STATUS_SUCCESS ||
++      cairo_surface_status (self->gdi_buffer) != CAIRO_STATUS_SUCCESS)
++    {
++      self->gdi_buffer_valid = FALSE;
++      failure = "invalid DIB";
++      goto failed;
++    }
++
++  window_dc = GetDC (gdk_win32_surface_get_handle (surface));
++  if (window_dc == NULL)
++    { failure = "GetDC"; goto failed; }
++  source_dc = cairo_win32_surface_get_dc (self->gdi_buffer);
++  if (source_dc == NULL)
++    { failure = "cairo_win32_surface_get_dc"; goto failed; }
++
++  for (i = 0; i < cairo_region_num_rectangles (transfer); i++)
++    {
++      cairo_rectangle_int_t rect;
++      cairo_region_get_rectangle (transfer, i, &rect);
++      if (rect.width > 0 && rect.height > 0 &&
++          (gdk_win32_cairo_context_gdi_fault (FALSE) ||
++           !BitBlt (window_dc, rect.x, rect.y, rect.width, rect.height,
++                   source_dc, rect.x, rect.y, SRCCOPY)))
++        { failure = "BitBlt"; break; }
++    }
++  if (failure == NULL) /* one successful transfer per frame for bitblt-after */
++    gdk_win32_cairo_context_gdi_fault (2);
++  if (!GdiFlush () && failure == NULL)
++    failure = "GdiFlush";
++  if (failure == NULL)
++    {
++      g_clear_pointer (&self->gdi_pending, cairo_region_destroy);
++      self->gdi_transfer_warned = FALSE;
++      gdk_win32_cairo_context_gdi_cancel_retry (self);
++    }
++
++failed:
++  if (window_dc != NULL)
++    ReleaseDC (gdk_win32_surface_get_handle (surface), window_dc);
++  if (failure != NULL)
++    {
++      if (self->gdi_pending == NULL)
++        self->gdi_pending = cairo_region_copy (transfer);
++      else
++        cairo_region_union (self->gdi_pending, transfer);
++      if (!self->gdi_transfer_warned)
++        g_warning ("GDK-WIN32: %s failed; retaining pending presentation", failure);
++      self->gdi_transfer_warned = TRUE;
++      if (gdk_surface_get_mapped (surface))
++        gdk_win32_cairo_context_gdi_schedule_retry (self);
++    }
++  cairo_region_destroy (transfer);
++  gdk_win32_cairo_context_gdi_finish_frame (self);
+@@ -389,0 +934,13 @@
++  /* A resize can arrive during a GDI frame; release its DIB at end_frame. */
++  if (self->swap_chain == NULL)
++    {
++      gdk_win32_cairo_context_gdi_cancel_retry (self);
++      if (self->cairo_surface != NULL)
++        self->gdi_release_pending = TRUE;
++      else
++        {
++          g_clear_pointer (&self->gdi_pending, cairo_region_destroy);
++          gdk_win32_cairo_context_gdi_buffer_clear (self, TRUE);
++        }
++    }
++

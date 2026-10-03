@@ -1,0 +1,20 @@
+{
+  "description": "Both directions with a 1mm distance produce two offsets per eligible source (observed 4 results for a rectangle and a circle).",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:sq,ci;vacards-offset:distance=1mm,direction=both",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-offset",
+      "status": "changed",
+      "mode": "per-selected-root",
+      "reason": "success",
+      "targets": {"selected": 2, "eligible": 2},
+      "created": ["path1", "path2", "path3", "path4"],
+      "selection_after": ["path1", "path2", "path3", "path4"],
+      "undo": "one-step",
+      "metrics": {"skipped": 0, "open_subpaths_skipped": 0, "results": 4}
+    }
+  ]
+}

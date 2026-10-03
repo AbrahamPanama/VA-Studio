@@ -1,0 +1,16 @@
+{
+  "description": "A circle has no corners (its joins are tangent-continuous): the native circle is captured as a shape but has no eligible corner, so the action rejects no-corners and changes nothing.",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:c;vacards-corners:radius=2mm",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "rejected",
+      "mode": "single-object",
+      "reason": "no-corners",
+      "undo": "none"
+    }
+  ]
+}

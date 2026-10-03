@@ -1,0 +1,21 @@
+{
+  "description": "Resize one object to width=40 at the default nw anchor; height is unchanged.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a;vacards-transform-resize:width=40;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "undo": "one-step",
+      "metrics": {"old_width": 20.0, "old_height": 20.0, "new_width": 40.0, "new_height": 20.0},
+      "data": {"transform_stroke": true, "preserve_transform": false}
+    }
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "contains": ["width=\"40\"", "x=\"0\""]}
+  }
+}

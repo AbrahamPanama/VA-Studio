@@ -1,0 +1,53 @@
+--- a/gdk/macos/gdkmacossurface-private.h
++++ b/gdk/macos/gdkmacossurface-private.h
+@@ -75,6 +75,7 @@ struct _GdkMacosSurface
+   guint in_change_monitor : 1;
+   guint in_frame : 1;
+   guint awaiting_frame : 1;
++  guint unmapped_freeze : 1;
+ };
+ 
+ struct _GdkMacosSurfaceClass
+--- a/gdk/macos/gdkmacossurface.c
++++ b/gdk/macos/gdkmacossurface.c
+@@ -195,6 +195,14 @@ gdk_macos_surface_hide (GdkSurface *surface)
+ 
+   self->show_on_next_swap = FALSE;
+ 
++  /* Keep the unmapped freeze separate from an outstanding frame's freeze.
++   * Core hide may call us repeatedly, including before the first show. */
++  if (!self->unmapped_freeze)
++    {
++      self->unmapped_freeze = TRUE;
++      gdk_surface_freeze_updates (surface);
++    }
++
+   _gdk_macos_surface_cancel_frame (self);
+ 
+   was_key = [self->window isKeyWindow];
+@@ -484,6 +492,7 @@ gdk_macos_surface_constructed (GObject *object)
+                                G_CONNECT_SWAPPED);
+     }
+ 
++  self->unmapped_freeze = TRUE;
+   gdk_surface_freeze_updates (GDK_SURFACE (self));
+   _gdk_macos_surface_monitor_changed (self);
+ 
+@@ -767,7 +776,16 @@ _gdk_macos_surface_show (GdkMacosSurface *self)
+       gdk_surface_set_is_mapped (GDK_SURFACE (self), TRUE);
++      /* A mapped notification can hide or destroy the surface. */
++      if (GDK_SURFACE_DESTROYED (self) ||
++          !GDK_SURFACE_IS_MAPPED (GDK_SURFACE (self)))
++        return;
++
+       gdk_surface_request_layout (GDK_SURFACE (self));
+       gdk_surface_invalidate_rect (GDK_SURFACE (self), NULL);
+-      gdk_surface_thaw_updates (GDK_SURFACE (self));
++      if (self->unmapped_freeze)
++        {
++          self->unmapped_freeze = FALSE;
++          gdk_surface_thaw_updates (GDK_SURFACE (self));
++        }
+     }
+ }
+ 

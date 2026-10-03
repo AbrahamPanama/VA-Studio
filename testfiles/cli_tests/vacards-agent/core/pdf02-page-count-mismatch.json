@@ -1,0 +1,18 @@
+{
+  "description": "PDF2: /Count larger than the page tree must not dereference a null page in the font scan.",
+  "input": "{FIXTURES}/pdf2-count-mismatch.pdf",
+  "args": [
+    "--export-type=svg",
+    "--export-filename={WORK}/out.svg"
+  ],
+  "timeout": 90,
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "<svg"
+      ]
+    }
+  }
+}

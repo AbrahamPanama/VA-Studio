@@ -1,0 +1,11 @@
+:root {
+ --my-a: "lower-a";
+ --my-A: "upper-A";
+ --my-b: var(--my-a);
+ --my-c: var(--my-A, "fallback");
+ --: "can be empty";
+ ---: "can start with a dash";
+ --0: "can start with a number";
+ --_: "can start with underscore";
+ --\263a: "can start with escape";
+}

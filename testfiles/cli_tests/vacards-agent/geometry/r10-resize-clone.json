@@ -1,0 +1,17 @@
+{
+  "description": "A clone resizes as an object: the <use> instance is transformed, not its source.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:clone;vacards-transform-resize:width=20",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "changed",
+      "reason": "success",
+      "modified": ["clone"],
+      "undo": "one-step",
+      "metrics": {"old_width": 10.0, "new_width": 20.0}
+    }
+  ]
+}

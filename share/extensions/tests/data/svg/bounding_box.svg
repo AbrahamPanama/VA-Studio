@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1000"
+   height="1000"
+   viewBox="0 0 1000 1000"
+   version="1.1"
+   id="svg8"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25, custom)"
+   sodipodi:docname="bounding_box.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs33">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath4">
+      <rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:3.24283;stroke-linecap:round;stroke-linejoin:round"
+         id="rect4"
+         width="100"
+         height="100"
+         x="300"
+         y="100" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath10">
+      <rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:3.24283;stroke-linecap:round;stroke-linejoin:round"
+         id="rect11"
+         width="100"
+         height="100"
+         x="100"
+         y="700" />
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="ClippedBoundingBoxes"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:inline">
+    <rect
+       style="fill:#000000;fill-rule:evenodd;stroke-width:3.24283;stroke-linecap:round;stroke-linejoin:round;fill-opacity:1"
+       id="clipped_rect1"
+       width="200"
+       height="100"
+       x="300"
+       y="100"
+       clip-path="url(#clipPath4)" />
+    <g
+       id="group_with_clipped_child">
+      <rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:3.24283;stroke-linecap:round;stroke-linejoin:round"
+         id="rect1"
+         width="100"
+         height="100"
+         x="100"
+         y="300" />
+      <rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:3.24283;stroke-linecap:round;stroke-linejoin:round"
+         id="clipped_rect2"
+         width="200"
+         height="100"
+         x="300"
+         y="100"
+         clip-path="url(#clipPath4)"
+         transform="translate(0, 200)" />
+    </g>
+    <g
+       id="group_with_invisible_clipped_child">
+      <rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:3.24283;stroke-linecap:round;stroke-linejoin:round"
+         id="rect3"
+         width="100"
+         height="100"
+         x="100"
+         y="500" />
+      <rect
+         style="display:none;fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:3.24283;stroke-linecap:round;stroke-linejoin:round"
+         id="clipped_rect3"
+         width="200"
+         height="100"
+         x="300"
+         y="100"
+         clip-path="url(#clipPath4)"
+         transform="translate(0, 400)" />
+    </g>
+    <g
+       id="clipped_group"
+       clip-path="url(#clipPath10)">
+      <rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:3.24283;stroke-linecap:round;stroke-linejoin:round"
+         id="rect8"
+         width="100"
+         height="100"
+         x="100"
+         y="700" />
+      <rect
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:3.24283;stroke-linecap:round;stroke-linejoin:round"
+         id="rect9"
+         width="200"
+         height="100"
+         x="300"
+         y="700"
+         clip-path="none" />
+    </g>
+  </g>
+</svg>

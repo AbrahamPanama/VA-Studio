@@ -1,0 +1,21 @@
+{
+  "description": "element-image-crop with nothing selected used to crash (no window); it reports and leaves the document unchanged.",
+  "input": "{FIXTURES}/commands-no-target.svg",
+  "actions": "element-image-crop;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_stderr_contains": [
+    "nothing selected"
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"box\"",
+        "id=\"ta\"",
+        "id=\"tb\"",
+        "id=\"tc\"",
+        "id=\"te\""
+      ]
+    }
+  }
+}

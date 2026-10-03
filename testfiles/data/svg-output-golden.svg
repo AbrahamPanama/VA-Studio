@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="120" height="80" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+  <sodipodi:namedview id="view1" inkscape:document-units="px" sodipodi:docname="Arcángel.svg" />
+  <style><![CDATA[.title > tspan { fill: #123456; }]]></style>
+  <!--keep & < > in this comment-->
+  <g id="outer" inkscape:label="Pizarro &amp; Quirós &lt;Arcángel&gt; &quot;portrait&quot;">
+    <g id="inner" sodipodi:insensitive="true">
+      <image id="photo" xlink:href="assets/arcangel.png" width="20" height="20" />
+      <text id="caption" xml:space="preserve">Pizarro Quirós <tspan style="font-weight:bold">Arcángel 😀</tspan></text>
+    </g>
+  </g>
+</svg>

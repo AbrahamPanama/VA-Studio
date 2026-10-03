@@ -1,0 +1,24 @@
+{
+  "description": "selection-set-nesting-contour groups the pair and reports Changed.",
+  "input": "{FIXTURES}/contour.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:art,cut;selection-set-nesting-contour;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "selection-set-nesting-contour",
+      "status": "changed",
+      "reason": "success",
+      "targets": {"selected": 2, "eligible": 2},
+      "modified": ["art", "cut"],
+      "data": {"contour": "cut"},
+      "undo": "one-step"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": ["inkscape:nesting-contour=\"true\"", "inkscape:nesting-contour-version=\"1\""]
+    }
+  }
+}

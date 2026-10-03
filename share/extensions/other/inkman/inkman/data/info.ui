@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+Copyright (C) Martin Owens
+
+This file is part of Inkscape Extensions Manager.
+
+Inkscape Extensions Manager is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Inkscape Extensions Manager is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Inkscape Extensions Manager.  If not, see <http://www.gnu.org/licenses/>.
+
+-->
+<interface domain="org.inkscape.extensions-manager">
+  <requires lib="gtk" version="4.0"/>
+  <!-- interface-license-type gplv3 -->
+  <!-- interface-name Inkscape Extensions Manager -->
+  <!-- interface-description Download and manage inkscape extensions -->
+  <!-- interface-copyright Martin Owens -->
+  <object class="GtkWindow" id="info">
+    <property name="title" translatable="yes">Package Information</property>
+    <property name="modal">True</property>
+    <property name="default_width">500</property>
+    <property name="default_height">450</property>
+    <property name="icon_name">gtk-about</property>
+    <property name="child">
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <property name="spacing">4</property>
+        <property name="margin-start">4</property>
+        <property name="margin-end">4</property>
+        <property name="margin_top">4</property>
+        <property name="margin_bottom">4</property>
+        <child>
+          <object class="GtkGrid">
+            <child>
+              <object class="GtkLabel" id="info_name">
+                <property name="margin-start">7</property>
+                <property name="margin-end">7</property>
+                <property name="margin_top">7</property>
+                <property name="margin_bottom">7</property>
+                <property name="hexpand">True</property>
+                <property name="label" translatable="yes">Package Name</property>
+                <property name="xalign">0</property>
+                <attributes>
+                  <attribute name="weight" value="bold"></attribute>
+                  <attribute name="scale" value="1.5"></attribute>
+                </attributes>
+                <layout>
+                  <property name="column">1</property>
+                  <property name="row">0</property>
+                  <property name="column-span">2</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkPicture" id="info_image">
+                <property name="can-shrink">False</property>
+                <layout>
+                  <property name="column">0</property>
+                  <property name="row">0</property>
+                  <property name="row-span">3</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="info_desc">
+                <property name="margin-start">7</property>
+                <property name="margin-end">7</property>
+                <property name="margin_top">2</property>
+                <property name="margin_bottom">2</property>
+                <property name="label" translatable="yes">Package Description</property>
+                <property name="xalign">0</property>
+                <property name="yalign">0</property>
+                <attributes>
+                  <attribute name="style" value="italic"></attribute>
+                </attributes>
+                <layout>
+                  <property name="column">1</property>
+                  <property name="row">1</property>
+                  <property name="column-span">2</property>
+                  <property name="row-span">2</property>
+                </layout>
+              </object>
+            </child>
+            <child>
+              <object class="GtkGrid">
+                <property name="margin-start">4</property>
+                <property name="margin-end">8</property>
+                <property name="row_homogeneous">True</property>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="margin-start">2</property>
+                    <property name="margin-end">6</property>
+                    <property name="margin_top">2</property>
+                    <property name="margin_bottom">2</property>
+                    <property name="label" translatable="yes">License:</property>
+                    <property name="xalign">1</property>
+                    <attributes>
+                      <attribute name="weight" value="bold"></attribute>
+                    </attributes>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="margin-start">2</property>
+                    <property name="margin-end">6</property>
+                    <property name="margin_top">2</property>
+                    <property name="margin_bottom">2</property>
+                    <property name="label" translatable="yes">Author:</property>
+                    <property name="xalign">1</property>
+                    <attributes>
+                      <attribute name="weight" value="bold"></attribute>
+                    </attributes>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">0</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="margin-start">2</property>
+                    <property name="margin-end">6</property>
+                    <property name="margin_top">2</property>
+                    <property name="margin_bottom">2</property>
+                    <property name="label" translatable="yes">Version:</property>
+                    <property name="xalign">1</property>
+                    <attributes>
+                      <attribute name="weight" value="bold"></attribute>
+                    </attributes>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">2</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel">
+                    <property name="margin-start">2</property>
+                    <property name="margin-end">6</property>
+                    <property name="margin_top">2</property>
+                    <property name="margin_bottom">2</property>
+                    <property name="label" translatable="yes">Website:</property>
+                    <property name="xalign">1</property>
+                    <attributes>
+                      <attribute name="weight" value="bold"></attribute>
+                    </attributes>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">3</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="info_author">
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">label</property>
+                    <property name="xalign">0</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">0</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="info_license">
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">label</property>
+                    <property name="xalign">0</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">1</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="info_version">
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">label</property>
+                    <property name="xalign">0</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">2</property>
+                    </layout>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLinkButton" id="info_website">
+                    <property name="label" translatable="yes">button</property>
+                    <property name="focusable">True</property>
+                    <property name="focus_on_click">False</property>
+                    <property name="receives_default">True</property>
+                    <property name="uri">https://inkscape.org</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">3</property>
+                    </layout>
+                  </object>
+                </child>
+                <layout>
+                  <property name="column">0</property>
+                  <property name="row">3</property>
+                  <property name="column-span">3</property>
+                </layout>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="has_frame">True</property>
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <property name="focusable">True</property>
+            <property name="child">
+              <object class="GtkTreeView" id="inx">
+                <property name="focusable">True</property>
+                <child internal-child="selection">
+                  <object class="GtkTreeSelection"/>
+                </child>
+              </object>
+            </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="info_close">
+            <property name="halign">end</property>
+            <property name="label" translatable="yes">Close</property>
+            <property name="focusable">True</property>
+            <property name="receives_default">True</property>
+            <signal name="clicked" handler="close"/>
+          </object>
+        </child>
+      </object>
+    </property>
+  </object>
+</interface>

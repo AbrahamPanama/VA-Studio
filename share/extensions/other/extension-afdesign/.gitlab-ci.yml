@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: 2023 Software Freedom Conservancy <info@sfconservancy.org>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+# Dependencies are managed in the Dockerfile in the inkscape-ci-docker
+# Git repository. Change them there, wait a bit, and then we'll use
+# the new ones here in these builds.
+image: ${IMAGE}
+
+stages:
+  - build
+  - test
+  - coverage
+  - deploy
+variables:
+  GIT_DEPTH: "10"
+  GIT_SUBMODULE_STRATEGY: recursive
+  IMAGE: registry.gitlab.com/inkscape/inkscape-ci-docker/extensions
+
+# cache packages, see https://stackoverflow.com/a/71752683/1320237
+cache:
+  paths:
+    - .cache/pip
+    - .tox
+
+test:python:
+  parallel:
+    matrix:
+      - TOX_ENV: [3.8.0, 3.9.0, 3.10.0, 3.11.0, 3.12.0]
+  before_script:
+    - source /root/pyenv-init
+    - pyenv shell $TOX_ENV
+    - poetry export --with=dev --without-hashes --output=requirements.txt && cat requirements.txt 
+  script:
+    - tox -e py -- --cov=. --cov-report html --cov-report term
+  artifacts:
+    name: "coverage"
+    when: always
+    paths:
+      - .coverage-*
+      - htmlcov
+
+test:coverage:
+  stage: coverage
+  script:
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/inkscape/extensions.git --depth 1
+    - sed -i 's|\(--cov-report term\)|\1 --ignore-glob=extensions/*|' tox.ini
+    - sed -i "/COVERAGE_FILE/a\ \ \ \ PYTHONPATH=$(realpath .):$(realpath extensions)" tox.ini
+    - cat tox.ini
+    - source /root/pyenv-init
+    - pyenv shell 3.8.0
+    - pip install coverage
+    - coverage3 combine .coverage-*
+    - coverage3 report -m --precision=2
+    - coverage3 html --ignore-errors --title="Coverage for Inkscape Afdesign extension (${CI_COMMIT_REF_NAME} branch)"
+    - echo -e "\n\n"
+      "Coverage report successfully created; you can access the full HTML report at\n"
+      "  https://inkscape.gitlab.io/-/extras/extension-afdesign/-/jobs/${CI_JOB_ID}/artifacts/htmlcov/index.html"
+      "\n\n"
+    - pyenv shell 3.9.0
+    - pip install pylint==2.13.9
+    - python3 extensions/tests/add_pylint.py htmlcov/index.html
+    - pip install anybadge
+    - pylintscore=$(grep -Eo "[0-9]+.[0-9]+</td></tr></tfoot>" htmlcov/index.html | grep -Eo "[0-9]+.[0-9]+")
+    - anybadge -l pylint -v $pylintscore -f htmlcov/pylint.svg 2=red 4=orange 8=yellow 10=green
+  dependencies:
+    - test:python
+  when: always
+  coverage: '/TOTAL.+?(\d+.\d+%)/'
+  artifacts:
+    paths:
+      - htmlcov/
+
+test:validate-inx:
+  script:
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/inkscape/extensions.git --depth 1
+    - apt-get update && apt-get install libxml2-utils
+    - xmllint --noout --relaxng extensions/inkex/tester/inkscape.extension.rng *.inx
+    - xmllint --noout --schematron extensions/inkex/tester/inkscape.extension.schema *.inx
+
+test:compliance:
+  stage: test
+  # parallel builds, see https://docs.gitlab.com/ee/ci/yaml/#parallelmatrix
+  # and see https://docs.gitlab.com/ee/ci/jobs/job_control.html#run-a-one-dimensional-matrix-of-parallel-jobs
+  parallel:
+    matrix:
+      - TOX_ENV: [types, codestyle, reuse]
+  before_script:
+    - source /root/pyenv-init
+    # test with lowest version required to comply
+    - pyenv shell 3.10
+  script:
+    - tox -e $TOX_ENV

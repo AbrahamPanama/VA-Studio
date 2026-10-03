@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="215.9mm" height="279.4mm" viewBox="0 0 612 792">
+  <g id="Layer_1" data-name="Layer 1">
+    <text transform="translate(91.001 58.0322)" font-size="31.0858" font-family="GoudyBookletter1911">Illustrator Import test document</text>
+    <text transform="translate(44 267.0003)" font-size="18" font-family="GoudyBookletter1911">This document should import as 8.5 x 11 inches. Illustrator uses a fixed<tspan x="0" y="21.6001">resolution of 72 px per inch.</tspan></text>
+    <text transform="translate(52 496.3331)" font-size="18" font-family="GoudyBookletter1911">Text in Layer 1</text>
+    <g id="Named_Group" data-name="Named Group">
+      <rect x="53.1419" y="329.5352" width="72" height="72" fill="#fff" stroke="#000" stroke-miterlimit="10"/>
+      <rect x="180.9051" y="329.5352" width="72" height="72" fill="#ff0901" stroke="#000" stroke-miterlimit="10"/>
+      <rect x="321.5352" y="329.5352" width="72" height="72" fill="#ff0901"/>
+      <g>
+        <text transform="translate(52 425.333)" font-size="18" font-family="GoudyBookletter1911">Stroke only</text>
+        <text transform="translate(181.9998 425.333)" font-size="18" font-family="GoudyBookletter1911">Fill + stroke</text>
+        <text transform="translate(325.9999 425.333)" font-size="18" font-family="GoudyBookletter1911">Fill only</text>
+      </g>
+    </g>
+    <text transform="translate(448.8995 341.4339)" font-size="12" font-family="GoudyBookletter1911">Three squares, each<tspan x="0" y="14.4004">1 inch (2.54 cm) to a side.</tspan><tspan x="0" y="43.2002">Objects do not change</tspan><tspan x="0" y="57.5996">size when stroke is added.</tspan></text>
+  </g>
+  <g id="Layer_2" data-name="Layer 2">
+    <text transform="translate(192.0011 496.3331)" font-size="18" font-family="GoudyBookletter1911">Text in Layer 2</text>
+    <g id="Layer_2A" data-name="Layer 2A">
+      <text transform="translate(322.0021 496.3331)" font-size="18" font-family="GoudyBookletter1911">Text in Layer 2A, a sub-layer<tspan x="0" y="21.5996">of layer 2</tspan></text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,17 @@
+{
+  "description": "Selecting a group and its child collapses to the group (one target); the resize applies to the group only.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:grp,ga;vacards-transform-resize:width=50",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "changed",
+      "reason": "success",
+      "modified": ["grp"],
+      "undo": "one-step",
+      "targets": {"eligible": 1}
+    }
+  ]
+}

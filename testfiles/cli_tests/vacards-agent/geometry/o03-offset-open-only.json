@@ -1,0 +1,19 @@
+{
+  "description": "An open path is not closed geometry: the action rejects with no-closed-shapes and reports the open-subpath skip.",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:open;vacards-offset:distance=2",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-offset",
+      "status": "rejected",
+      "mode": "per-selected-root",
+      "reason": "no-closed-shapes",
+      "message": "selection contains no supported closed vector regions to offset",
+      "targets": {"selected": 1, "eligible": 0},
+      "undo": "none",
+      "metrics": {"skipped": 1, "open_subpaths_skipped": 1}
+    }
+  ]
+}

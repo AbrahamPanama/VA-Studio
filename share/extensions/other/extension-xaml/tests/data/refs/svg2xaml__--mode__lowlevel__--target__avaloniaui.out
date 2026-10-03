@@ -1,0 +1,441 @@
+<?xml version="1.0" ?>
+<ResourceDictionary xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns="https://github.com/avaloniaui">
+  <DrawingGroup x:Key="input">
+    <DrawingGroup.ClipGeometry>
+      <RectangleGeometry Rect="0.0,0.0,1000.0,1000.0"/>
+    </DrawingGroup.ClipGeometry>
+    <DrawingGroup>
+      <DrawingGroup Opacity="0.5">
+        <GeometryDrawing Brush="#ffff0000">
+          <GeometryDrawing.Geometry>
+            <RectangleGeometry Rect="651.3089,353.92661,248.69112,201.49811"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup>
+    </DrawingGroup>
+    <DrawingGroup>
+      <GeometryDrawing Brush="#ff000080">
+        <GeometryDrawing.Geometry>
+          <EllipseGeometry RadiusX="50.0" RadiusY="50.0" Center="150.0,450.0"/>
+        </GeometryDrawing.Geometry>
+      </GeometryDrawing>
+      <GeometryDrawing>
+        <GeometryDrawing.Pen>
+          <Pen Brush="#ffff0000" LineJoin="Miter" Thickness="16.0"/>
+        </GeometryDrawing.Pen>
+        <GeometryDrawing.Geometry>
+          <EllipseGeometry RadiusX="100.0" RadiusY="50.0" Center="400.0,450.0"/>
+        </GeometryDrawing.Geometry>
+      </GeometryDrawing>
+      <GeometryDrawing Brush="#ffffff00">
+        <GeometryDrawing.Pen>
+          <Pen Brush="#ff008000" LineJoin="Miter" Thickness="16.0"/>
+        </GeometryDrawing.Pen>
+        <GeometryDrawing.Geometry>
+          <PathGeometry Figures="m 783.086 477.824 a 100 50 0 0 1 -111.098 20.1744 a 100 50 0 0 1 -71.963 -46.8834 a 100 50 0 0 1 67.7113 -48.4409 a 100 50 0 0 1 112.787 17.6779 L 700 450 Z" FillRule="NonZero"/>
+        </GeometryDrawing.Geometry>
+      </GeometryDrawing>
+      <DrawingGroup>
+        <GeometryDrawing>
+          <GeometryDrawing.Pen>
+            <Pen Brush="#ff000000" LineJoin="Miter" Thickness="10.0"/>
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="M 100 600 L 200 700 L 300 600 L 400 700" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <DrawingGroup>
+          <DrawingGroup.Transform>
+            <MatrixTransform Matrix="7.0710678118654755,7.0710678118654755,-7.0710678118654755,7.0710678118654755,100.0,600.0"/>
+          </DrawingGroup.Transform>
+          <DrawingGroup>
+            <DrawingGroup.Transform>
+              <MatrixTransform Matrix="1.1,0.0,0.0,1.1,1.1,0.0"/>
+            </DrawingGroup.Transform>
+            <GeometryDrawing Brush="#ff000000">
+              <GeometryDrawing.Pen>
+                <Pen Brush="#ff000000" LineJoin="Round" Thickness="0.625"/>
+              </GeometryDrawing.Pen>
+              <GeometryDrawing.Geometry>
+                <PathGeometry Figures="M 8.71859 4.03374 L -2.20729 0.0160133 L 8.71859 -4.00171 C 6.97309 -1.62965 6.98315 1.61574 8.71859 4.03374 z"/>
+              </GeometryDrawing.Geometry>
+            </GeometryDrawing>
+          </DrawingGroup>
+        </DrawingGroup>
+      </DrawingGroup>
+      <GeometryDrawing>
+        <GeometryDrawing.Pen>
+          <Pen Brush="#ff000000" LineJoin="Miter" Thickness="10.0"/>
+        </GeometryDrawing.Pen>
+        <GeometryDrawing.Geometry>
+          <PathGeometry Figures="m 500 600 c 0 0 0 100 100 100 c 100 0 0 -100 100 -100 c 100 0 100 100 100 100" FillRule="NonZero"/>
+        </GeometryDrawing.Geometry>
+      </GeometryDrawing>
+      <GeometryDrawing Brush="#ffffff00">
+        <GeometryDrawing.Pen>
+          <Pen Brush="#ff008000" LineJoin="Miter" Thickness="10.0"/>
+        </GeometryDrawing.Pen>
+        <GeometryDrawing.Geometry>
+          <PathGeometry Figures="m 244.833 889.14 l -45.3389 -8.13446 l -32.4043 32.7375 l -6.27415 -45.6335 l -41.1487 -20.7018 l 41.4612 -20.0686 l 6.97297 -45.532 l 31.8986 33.2304 l 45.4582 -7.43847 l -21.7468 40.6061 z" FillRule="NonZero"/>
+        </GeometryDrawing.Geometry>
+      </GeometryDrawing>
+      <DrawingGroup>
+        <DrawingGroup.Transform>
+          <MatrixTransform Matrix="1.0,0.0,0.0,1.0,200.0,2.99622"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#ffffff00">
+          <GeometryDrawing.Pen>
+            <Pen Brush="#ff008000" LineJoin="Miter" Thickness="10.0"/>
+          </GeometryDrawing.Pen>
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 244.833 889.14 l -45.3389 -8.13446 l -32.4043 32.7375 l -6.27415 -45.6335 l -41.1487 -20.7018 l 41.4612 -20.0686 l 6.97297 -45.532 l 31.8986 33.2304 l 45.4582 -7.43847 l -21.7468 40.6061 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup>
+    </DrawingGroup>
+    <DrawingGroup>
+      <DrawingGroup>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 109.589 100 h -1.41797 v -5.22072 h -5.32097 V 100 h -1.41798 V 89.3366 h 1.41798 v 4.1823 h 5.32097 v -4.1823 h 1.41797 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 119.042 96.14 h -5.89389 q 0 0.737632 0.222 1.28907 q 0.22201 0.544272 0.60873 0.895184 q 0.3724 0.343751 0.88086 0.515626 q 0.51563 0.171875 1.13151 0.171875 q 0.81641 0 1.63998 -0.322266 q 0.83073 -0.329428 1.18164 -0.644533 h 0.0716 v 1.4681 q -0.68034 0.286459 -1.38933 0.479819 q -0.70898 0.193361 -1.48958 0.193361 q -1.99089 0 -3.10808 -1.07422 q -1.11719 -1.08138 -1.11719 -3.06511 q 0 -1.96224 1.06706 -3.11524 q 1.07422 -1.153 2.82162 -1.153 q 1.61849 0 2.49219 0.945315 q 0.88086 0.945314 0.88086 2.68555 z m -1.31055 -1.03125 q -0.007 -1.0599 -0.53711 -1.63998 q -0.52279 -0.580079 -1.59701 -0.580079 q -1.08138 0 -1.72591 0.637371 q -0.63737 0.637371 -0.72331 1.58269 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 122.444 100 h -1.34635 V 88.8567 h 1.34635 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 126.469 100 h -1.34636 V 88.8567 h 1.34636 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 135.951 96.0039 q 0 1.95508 -1.0026 3.0866 q -1.00261 1.13152 -2.68556 1.13152 q -1.69727 0 -2.69987 -1.13152 q -0.99545 -1.13151 -0.99545 -3.0866 q 0 -1.95508 0.99545 -3.0866 q 1.0026 -1.13867 2.69987 -1.13867 q 1.68295 0 2.68556 1.13867 q 1.0026 1.13151 1.0026 3.0866 z m -1.38932 0 q 0 -1.55404 -0.60873 -2.30599 q -0.60872 -0.759116 -1.69011 -0.759116 q -1.0957 0 -1.70443 0.759116 q -0.60156 0.751955 -0.60156 2.30599 q 0 1.50391 0.60872 2.28451 q 0.60873 0.773439 1.69727 0.773439 q 1.07422 0 1.68295 -0.766278 q 0.61589 -0.773439 0.61589 -2.29167 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="M 155.709 89.3366 L 152.938 100 h -1.59701 L 149.099 91.1484 L 146.908 100 h -1.5612 l -2.82162 -10.6634 h 1.45378 l 2.24154 8.86591 l 2.20573 -8.86591 h 1.43946 l 2.22722 8.95184 l 2.22722 -8.95184 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 163.794 96.0039 q 0 1.95508 -1.00261 3.0866 q -1.0026 1.13152 -2.68555 1.13152 q -1.69727 0 -2.69988 -1.13152 q -0.99544 -1.13151 -0.99544 -3.0866 q 0 -1.95508 0.99544 -3.0866 q 1.00261 -1.13867 2.69988 -1.13867 q 1.68295 0 2.68555 1.13867 q 1.00261 1.13151 1.00261 3.0866 z m -1.38933 0 q 0 -1.55404 -0.60872 -2.30599 q -0.60873 -0.759116 -1.69011 -0.759116 q -1.09571 0 -1.70443 0.759116 q -0.60157 0.751955 -0.60157 2.30599 q 0 1.50391 0.60873 2.28451 q 0.60872 0.773439 1.69727 0.773439 q 1.07422 0 1.68295 -0.766278 q 0.61588 -0.773439 0.61588 -2.29167 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 170.87 93.4687 h -0.0716 q -0.30078 -0.07161 -0.58724 -0.100261 q -0.2793 -0.03581 -0.66602 -0.03581 q -0.62304 0 -1.20312 0.279297 q -0.58008 0.272137 -1.11719 0.708986 V 100 h -1.34636 v -7.99937 h 1.34636 v 1.18164 q 0.80208 -0.644533 1.41081 -0.909507 q 0.61588 -0.272136 1.25325 -0.272136 q 0.35092 0 0.50847 0.02148 q 0.15755 0.01432 0.47266 0.06445 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 173.498 100 h -1.34636 V 88.8567 h 1.34636 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 182.651 100 h -1.34636 v -0.837893 q -0.58008 0.501304 -1.21029 0.780601 q -0.63021 0.279302 -1.36784 0.279302 q -1.43229 0 -2.27735 -1.10287 q -0.83789 -1.10287 -0.83789 -3.05795 q 0 -1.01693 0.28646 -1.81185 q 0.29362 -0.794924 0.78776 -1.35352 q 0.48698 -0.544272 1.13151 -0.830731 q 0.6517 -0.286459 1.34636 -0.286459 q 0.63021 0 1.11719 0.136068 q 0.48698 0.128907 1.02409 0.408204 v -3.46615 h 1.34636 z m -1.34636 -1.96941 v -4.59051 q -0.54427 -0.24349 -0.97396 -0.336589 q -0.42969 -0.0931 -0.93815 -0.0931 q -1.13152 0 -1.76172 0.787762 q -0.63021 0.787762 -0.63021 2.23438 q 0 1.42513 0.48698 2.16993 q 0.48698 0.737632 1.5612 0.737632 q 0.57292 0 1.16016 -0.250652 q 0.58724 -0.257813 1.0957 -0.658856 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup>
+      <DrawingGroup>
+        <DrawingGroup.Transform>
+          <MatrixTransform Matrix="0.26458333,0.0,0.0,0.26458333,372.02961,28.904505"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 126.989 233.045 h -0.27067 q -0.83907 -0.24361 -2.19242 -0.48721 q -1.35335 -0.27067 -2.38189 -0.27067 q -3.2751 0 -4.76378 1.46162 q -1.46162 1.43455 -1.46162 5.22392 v 1.02854 h 9.1757 v 4.27658 h -9.0133 v 25.9572 h -5.08858 v -25.9572 h -3.4375 v -4.27658 h 3.4375 v -1.00148 q 0 -5.38632 2.67963 -8.25541 q 2.67962 -2.89617 7.74114 -2.89617 q 1.70522 0 3.05857 0.16241 q 1.38041 0.1624 2.51722 0.37893 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 135.353 270.235 h -5.08859 v -42.1162 h 5.08859 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 171.19 255.132 q 0 7.38928 -3.78937 11.6659 q -3.78937 4.27657 -10.1501 4.27657 q -6.41486 0 -10.2042 -4.27657 q -3.76231 -4.27658 -3.76231 -11.6659 q 0 -7.38927 3.76231 -11.6659 q 3.78937 -4.30364 10.2042 -4.30364 q 6.36074 0 10.1501 4.30364 q 3.78937 4.27658 3.78937 11.6659 z m -5.25099 0 q 0 -5.87352 -2.30069 -8.71555 q -2.30069 -2.8691 -6.3878 -2.8691 q -4.14124 0 -6.44193 2.8691 q -2.27362 2.84203 -2.27362 8.71555 q 0 5.68406 2.30069 8.63436 q 2.30069 2.92323 6.41486 2.92323 q 4.06005 0 6.36074 -2.89616 q 2.32775 -2.92323 2.32775 -8.66143 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 217.095 240.002 l -7.87648 30.2338 h -4.70965 l -7.76821 -23.3046 l -7.71408 23.3046 h -4.68259 l -7.95768 -30.2338 h 5.30512 l 5.54873 23.4129 l 7.55168 -23.4129 h 4.19537 l 7.74115 23.4129 l 5.25098 -23.4129 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 259.617 269.965 q -1.43455 0.37894 -3.13976 0.62254 q -1.67815 0.2436 -3.00443 0.2436 q -4.62845 0 -7.03741 -2.49016 q -2.40896 -2.49016 -2.40896 -7.98475 v -16.0778 h -3.4375 v -4.27658 h 3.4375 v -8.68849 h 5.08859 v 8.68849 h 10.502 v 4.27658 h -10.502 v 13.7771 q 0 2.38189 0.10827 3.73524 q 0.10826 1.32628 0.75787 2.49016 q 0.59547 1.08268 1.62402 1.59695 q 1.05561 0.48721 3.1939 0.48721 q 1.24508 0 2.59842 -0.35187 q 1.35335 -0.37894 1.94882 -0.62254 h 0.27067 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 291.069 255.646 h -22.2761 q 0 2.78789 0.83907 4.87205 q 0.83908 2.05708 2.30069 3.38336 q 1.40748 1.29922 3.32924 1.94882 q 1.94882 0.64961 4.27657 0.64961 q 3.08563 0 6.19833 -1.21801 q 3.13977 -1.24508 4.46605 -2.43603 h 0.27067 v 5.54873 q -2.57136 1.08267 -5.25099 1.81348 q -2.67963 0.73081 -5.62992 0.73081 q -7.52461 0 -11.7471 -4.06004 q -4.22244 -4.08711 -4.22244 -11.5846 q 0 -7.41635 4.03297 -11.7741 q 4.06005 -4.35777 10.6644 -4.35777 q 6.11713 0 9.4193 3.57283 q 3.32923 3.57284 3.32923 10.1501 z m -4.95325 -3.89764 q -0.0271 -4.00591 -2.03002 -6.19833 q -1.97589 -2.19243 -6.03593 -2.19243 q -4.08711 0 -6.52313 2.40896 q -2.40896 2.40896 -2.73376 5.9818 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 324.957 270.235 h -6.41487 l -8.58022 -11.6117 l -8.63435 11.6117 h -5.92766 l 11.8012 -15.0763 l -11.6929 -15.1575 h 6.41487 l 8.52609 11.4223 l 8.55315 -11.4223 h 5.95473 l -11.8824 14.8868 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 347.287 269.965 q -1.43455 0.37894 -3.13976 0.62254 q -1.67815 0.2436 -3.00443 0.2436 q -4.62845 0 -7.03741 -2.49016 q -2.40896 -2.49016 -2.40896 -7.98475 v -16.0778 h -3.4375 v -4.27658 h 3.4375 v -8.68849 h 5.08859 v 8.68849 h 10.502 v 4.27658 h -10.502 v 13.7771 q 0 2.38189 0.10827 3.73524 q 0.10826 1.32628 0.75787 2.49016 q 0.59547 1.08268 1.62402 1.59695 q 1.05561 0.48721 3.1939 0.48721 q 1.24508 0 2.59842 -0.35187 q 1.35335 -0.37894 1.94882 -0.62254 h 0.27067 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 148.751 309.293 l -7.87648 30.2338 h -4.70964 l -7.76822 -23.3046 l -7.71408 23.3046 h -4.68258 l -7.95768 -30.2338 h 5.30512 l 5.54873 23.4129 l 7.55167 -23.4129 h 4.19538 l 7.74115 23.4129 l 5.25098 -23.4129 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 181.367 339.527 h -5.08858 v -17.2146 q 0 -2.08415 -0.24361 -3.89764 q -0.2436 -1.84055 -0.89321 -2.86909 q -0.67667 -1.13681 -1.94882 -1.67815 q -1.27214 -0.56841 -3.30216 -0.56841 q -2.08416 0 -4.35778 1.02855 q -2.27362 1.02854 -4.35778 2.62549 v 22.5738 h -5.08858 v -42.1162 h 5.08858 v 15.2387 q 2.38189 -1.97588 4.92618 -3.08563 q 2.5443 -1.10974 5.22392 -1.10974 q 4.89912 0 7.47048 2.9503 q 2.57136 2.95029 2.57136 8.49902 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 196.633 304.231 h -5.7382 v -5.27806 h 5.7382 z m -0.32481 35.2953 h -5.08858 v -30.2338 h 5.08858 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 228.734 337.632 q -2.54429 1.21802 -4.84498 1.89469 q -2.27362 0.67667 -4.84498 0.67667 q -3.2751 0 -6.00886 -0.94734 q -2.73377 -0.97441 -4.68259 -2.92323 q -1.97588 -1.94882 -3.05856 -4.92618 q -1.08268 -2.97737 -1.08268 -6.95621 q 0 -7.41634 4.06004 -11.6388 q 4.08711 -4.22245 10.7727 -4.22245 q 2.59842 0 5.08858 0.73081 q 2.51723 0.73081 4.60138 1.78642 v 5.65699 h -0.27067 q -2.32775 -1.81348 -4.81791 -2.78789 q -2.46309 -0.97441 -4.81792 -0.97441 q -4.33071 0 -6.84793 2.92323 q -2.49016 2.89616 -2.49016 8.52608 q 0 5.46753 2.43602 8.41782 q 2.46309 2.92323 6.90207 2.92323 q 1.54282 0 3.13977 -0.406 q 1.59695 -0.40601 2.86909 -1.05561 q 1.10975 -0.56841 2.08416 -1.19095 q 0.97441 -0.64961 1.54281 -1.10974 h 0.27067 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 260.538 339.527 h -5.08859 v -17.2146 q 0 -2.08415 -0.2436 -3.89764 q -0.2436 -1.84055 -0.89321 -2.86909 q -0.67667 -1.13681 -1.94882 -1.67815 q -1.27215 -0.56841 -3.30217 -0.56841 q -2.08415 0 -4.35777 1.02855 q -2.27363 1.02854 -4.35778 2.62549 v 22.5738 h -5.08859 v -42.1162 h 5.08859 v 15.2387 q 2.38189 -1.97588 4.92618 -3.08563 q 2.54429 -1.10974 5.22392 -1.10974 q 4.89912 0 7.47048 2.9503 q 2.57136 2.95029 2.57136 8.49902 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 148.751 378.584 l -7.87648 30.2338 h -4.70964 l -7.76822 -23.3046 l -7.71408 23.3046 h -4.68258 L 108.043 378.584 h 5.30512 l 5.54873 23.4129 l 7.55167 -23.4129 h 4.19538 l 7.74115 23.4129 l 5.25098 -23.4129 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 174.952 384.133 h -0.27067 q -1.13682 -0.27067 -2.21949 -0.37894 q -1.05561 -0.13533 -2.51723 -0.13533 q -2.35482 0 -4.54725 1.05561 q -2.19242 1.02854 -4.22244 2.67963 v 21.4641 h -5.08858 V 378.584 h 5.08858 v 4.46604 q 3.0315 -2.43602 5.33219 -3.4375 q 2.32776 -1.02854 4.73671 -1.02854 q 1.32628 0 1.92176 0.0812 q 0.59547 0.0541 1.78642 0.2436 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 202.263 408.818 h -5.06152 v -3.22096 q -0.67667 0.46013 -1.84055 1.29921 q -1.13681 0.81201 -2.21949 1.29921 q -1.27215 0.62254 -2.92323 1.02855 q -1.65108 0.43307 -3.87057 0.43307 q -4.08711 0 -6.92914 -2.7067 q -2.84203 -2.70669 -2.84203 -6.90207 q 0 -3.4375 1.46162 -5.54872 q 1.48868 -2.13829 4.22244 -3.3563 q 2.76083 -1.21801 6.6314 -1.65109 q 3.87057 -0.43307 8.30955 -0.6496 v -0.78494 q 0 -1.73229 -0.62254 -2.8691 q -0.59547 -1.13681 -1.73228 -1.78642 q -1.08268 -0.62254 -2.59843 -0.83907 q -1.51575 -0.21654 -3.16683 -0.21654 q -2.00295 0 -4.46605 0.54134 q -2.46309 0.51427 -5.08858 1.51575 h -0.27067 V 379.234 q 1.48868 -0.406 4.30364 -0.89321 q 2.81496 -0.4872 5.54873 -0.4872 q 3.1939 0 5.54872 0.54134 q 2.38189 0.51427 4.11418 1.78642 q 1.70521 1.24507 2.59842 3.22096 q 0.89321 1.97589 0.89321 4.89912 z m -5.06152 -7.44341 v -8.41782 q -2.32775 0.13534 -5.49459 0.40601 q -3.13976 0.27067 -4.98031 0.78494 q -2.19243 0.62254 -3.54577 1.94882 q -1.35335 1.29921 -1.35335 3.5999 q 0 2.59843 1.56988 3.92471 q 1.56988 1.29921 4.79085 1.29921 q 2.67963 0 4.89912 -1.02854 q 2.21949 -1.05561 4.11417 -2.51723 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 238.668 393.336 q 0 3.6811 -1.05561 6.73967 q -1.05561 3.0315 -2.97736 5.14272 q -1.78642 2.00295 -4.22245 3.1127 q -2.40895 1.08268 -5.11565 1.08268 q -2.35482 0 -4.27657 -0.51428 q -1.89469 -0.51427 -3.87058 -1.59695 v 12.6673 h -5.08858 V 378.584 h 5.08858 v 3.16683 q 2.03002 -1.70522 4.54725 -2.84203 q 2.54429 -1.16388 5.41339 -1.16388 q 5.46752 0 8.49902 4.14124 q 3.05856 4.11418 3.05856 11.4493 z m -5.25098 0.13533 q 0 -5.46752 -1.86762 -8.17421 q -1.86762 -2.7067 -5.7382 -2.7067 q -2.19242 0 -4.41191 0.94735 q -2.21949 0.94734 -4.24951 2.49016 v 17.1334 q 2.16536 0.97441 3.70817 1.32628 q 1.56989 0.35187 3.54577 0.35187 q 4.24951 0 6.6314 -2.86909 q 2.3819 -2.8691 2.3819 -8.49903 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 268.198 400.103 q 0 4.14124 -3.4375 6.7938 q -3.41044 2.65256 -9.3381 2.65256 q -3.3563 0 -6.17126 -0.78494 q -2.7879 -0.81201 -4.68258 -1.75935 v -5.71113 h 0.27067 q 2.40895 1.81349 5.35925 2.89616 q 2.9503 1.05562 5.65699 1.05562 q 3.3563 0 5.25099 -1.08268 q 1.89468 -1.08268 1.89468 -3.41044 q 0 -1.78642 -1.02854 -2.70669 q -1.02854 -0.92028 -3.95177 -1.56988 q -1.08268 -0.24361 -2.84203 -0.56841 q -1.73229 -0.3248 -3.16683 -0.70374 q -3.97885 -1.05561 -5.657 -3.08563 q -1.65108 -2.05709 -1.65108 -5.03445 q 0 -1.86762 0.75787 -3.51871 q 0.78495 -1.65108 2.35483 -2.95029 q 1.51575 -1.27215 3.84351 -2.00296 q 2.35482 -0.75787 5.25098 -0.75787 q 2.7067 0 5.46752 0.67667 q 2.7879 0.64961 4.62845 1.59695 v 5.44046 h -0.27067 q -1.94882 -1.43455 -4.73671 -2.40896 q -2.7879 -1.00148 -5.46752 -1.00148 q -2.7879 0 -4.70965 1.08268 q -1.92176 1.05561 -1.92176 3.16683 q 0 1.86762 1.16388 2.81496 q 1.13681 0.94735 3.68111 1.54282 q 1.40748 0.3248 3.13976 0.64961 q 1.75935 0.3248 2.92323 0.59547 q 3.54577 0.81201 5.46752 2.7879 q 1.92176 2.00295 1.92176 5.30512 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup>
+      <DrawingGroup>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 209.46 95.7174 q 0 1.16016 -0.25781 2.0267 q -0.25066 0.859377 -0.83074 1.4323 q -0.55143 0.544272 -1.28906 0.794924 q -0.73763 0.250656 -1.71876 0.250656 q -1.0026 0 -1.7474 -0.264979 q -0.74479 -0.264974 -1.25325 -0.780601 q -0.58008 -0.587241 -0.8379 -1.41797 q -0.25065 -0.830731 -0.25065 -2.04102 v -6.38087 h 1.41797 v 6.45249 q 0 0.866538 0.11459 1.36784 q 0.12174 0.501303 0.40104 0.909507 q 0.31511 0.465496 0.85222 0.701824 q 0.54427 0.236329 1.30338 0.236329 q 0.76628 0 1.30339 -0.229167 q 0.53711 -0.236329 0.85938 -0.708986 q 0.2793 -0.408204 0.39388 -0.930992 q 0.12175 -0.529949 0.12175 -1.31055 v -6.4883 h 1.41797 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 219.143 92.5592 q 0 0.708986 -0.25065 1.31771 q -0.24349 0.601564 -0.6875 1.04557 q -0.55143 0.551434 -1.30339 0.830731 q -0.75195 0.272136 -1.89779 0.272136 h -1.41797 V 100 h -1.41797 V 89.3366 h 2.89323 q 0.95964 0 1.62566 0.164714 q 0.66601 0.157552 1.18164 0.501303 q 0.60873 0.408204 0.93815 1.01693 q 0.33659 0.608725 0.33659 1.53972 z m -1.47526 0.03581 q 0 -0.551433 -0.19336 -0.959638 q -0.19336 -0.408204 -0.58724 -0.666017 q -0.34375 -0.222005 -0.78776 -0.315105 q -0.43685 -0.10026 -1.11003 -0.10026 h -1.40365 v 4.26108 h 1.19596 q 0.85938 0 1.39649 -0.150391 q 0.53711 -0.157552 0.8737 -0.494141 q 0.33659 -0.343751 0.47266 -0.723309 q 0.14323 -0.379559 0.14323 -0.852216 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 227.987 92.5592 q 0 0.708986 -0.25065 1.31771 q -0.24349 0.601564 -0.6875 1.04557 q -0.55143 0.551434 -1.30339 0.830731 q -0.75195 0.272136 -1.89779 0.272136 h -1.41797 V 100 h -1.41797 V 89.3366 h 2.89323 q 0.95964 0 1.62566 0.164714 q 0.66601 0.157552 1.18164 0.501303 q 0.60873 0.408204 0.93815 1.01693 q 0.33659 0.608725 0.33659 1.53972 z m -1.47526 0.03581 q 0 -0.551433 -0.19336 -0.959638 q -0.19336 -0.408204 -0.58724 -0.666017 q -0.34375 -0.222005 -0.78776 -0.315105 q -0.43685 -0.10026 -1.11003 -0.10026 h -1.40365 v 4.26108 h 1.19596 q 0.85938 0 1.39649 -0.150391 q 0.53711 -0.157552 0.8737 -0.494141 q 0.33659 -0.343751 0.47266 -0.723309 q 0.14323 -0.379559 0.14323 -0.852216 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 236.882 100 h -7.0254 V 89.3366 h 7.0254 v 1.26042 h -5.60743 v 2.92188 h 5.60743 v 1.26042 h -5.60743 v 3.96029 h 5.60743 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 247.953 100 h -1.8405 l -3.56642 -4.23959 h -1.99805 V 100 H 239.13 V 89.3366 h 2.98634 q 0.96679 0 1.61133 0.128907 q 0.64453 0.121745 1.16016 0.444011 q 0.58008 0.365235 0.90234 0.92383 q 0.32943 0.551434 0.32943 1.40365 q 0 1.153 -0.58008 1.9336 q -0.58008 0.773439 -1.59701 1.16732 z m -3.31577 -7.66278 q 0 -0.458334 -0.16471 -0.809247 q -0.15755 -0.358073 -0.52995 -0.601564 q -0.30794 -0.207682 -0.73047 -0.286459 q -0.42253 -0.08594 -0.99544 -0.08594 h -1.66863 v 4.02475 h 1.4323 q 0.67318 0 1.17448 -0.114584 q 0.5013 -0.121745 0.85221 -0.444011 q 0.32227 -0.300782 0.47266 -0.687502 q 0.15755 -0.393881 0.15755 -0.995445 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup>
+      <DrawingGroup>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 310.928 100 h -1.41797 v -9.18817 l -2.96485 6.25197 h -0.84506 l -2.94336 -6.25197 V 100 h -1.32488 V 89.3366 h 1.9336 l 2.84311 5.93686 l 2.75 -5.93686 h 1.96941 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 320.317 100 h -1.34635 v -0.888023 q -0.68034 0.537111 -1.30339 0.82357 q -0.62305 0.286463 -1.375 0.286463 q -1.26042 0 -1.96225 -0.766282 q -0.70182 -0.773439 -0.70182 -2.26303 v -5.19207 h 1.34635 v 4.5547 q 0 0.608725 0.0573 1.04557 q 0.0573 0.429688 0.24349 0.737632 q 0.19336 0.315105 0.5013 0.458334 q 0.30794 0.14323 0.89518 0.14323 q 0.52279 0 1.13868 -0.272136 q 0.62305 -0.272136 1.16016 -0.694663 v -5.97267 h 1.34635 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 324.328 100 h -1.34636 V 88.8567 h 1.34636 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 331.145 99.9284 q -0.37955 0.100265 -0.83073 0.164715 q -0.44401 0.0644 -0.79492 0.0644 q -1.22461 0 -1.86198 -0.658853 q -0.63738 -0.658856 -0.63738 -2.11264 v -4.25392 h -0.9095 v -1.13151 h 0.9095 v -2.29883 h 1.34636 v 2.29883 h 2.77865 v 1.13151 h -2.77865 v 3.64519 q 0 0.63021 0.0286 0.988284 q 0.0286 0.350912 0.20052 0.658856 q 0.15755 0.286459 0.42969 0.422527 q 0.27929 0.128906 0.84505 0.128906 q 0.32943 0 0.6875 -0.0931 q 0.35808 -0.100261 0.51563 -0.164714 h 0.0716 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 334.218 90.6614 h -1.51824 v -1.39649 h 1.51824 z M 334.132 100 h -1.34636 v -7.99937 h 1.34636 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 343.313 100 h -1.34636 V 88.8567 h 1.34636 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 347.423 90.6614 h -1.51824 v -1.39649 h 1.51824 z M 347.337 100 h -1.34636 v -7.99937 h 1.34636 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 356.69 100 h -1.34635 v -4.5547 q 0 -0.551434 -0.0645 -1.03125 q -0.0645 -0.486981 -0.23632 -0.759117 q -0.17904 -0.300782 -0.51563 -0.444011 q -0.33659 -0.150391 -0.8737 -0.150391 q -0.55143 0 -1.153 0.272136 q -0.60156 0.272136 -1.153 0.694663 V 100 h -1.34635 v -7.99937 h 1.34635 v 0.888023 q 0.63021 -0.522788 1.30339 -0.816409 q 0.67318 -0.29362 1.38217 -0.29362 q 1.29622 0 1.97656 0.780601 q 0.68034 0.7806 0.68034 2.2487 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 365.979 96.14 h -5.8939 q 0 0.737632 0.22201 1.28907 q 0.222 0.544272 0.60872 0.895184 q 0.3724 0.343751 0.88086 0.515626 q 0.51563 0.171875 1.13152 0.171875 q 0.8164 0 1.63997 -0.322266 q 0.83074 -0.329428 1.18165 -0.644533 h 0.0716 v 1.4681 q -0.68034 0.286459 -1.38932 0.479819 q -0.70899 0.193361 -1.48959 0.193361 q -1.99089 0 -3.10808 -1.07422 q -1.11719 -1.08138 -1.11719 -3.06511 q 0 -1.96224 1.06706 -3.11524 q 1.07422 -1.153 2.82162 -1.153 q 1.61849 0 2.49219 0.945315 q 0.88087 0.945314 0.88087 2.68555 z m -1.31055 -1.03125 q -0.007 -1.0599 -0.53712 -1.63998 q -0.52278 -0.580079 -1.597 -0.580079 q -1.08139 0 -1.72592 0.637371 q -0.63737 0.637371 -0.72331 1.58269 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 305.479 118.262 q -0.37956 0.10026 -0.83073 0.16471 q -0.44401 0.0645 -0.79493 0.0645 q -1.22461 0 -1.86198 -0.65886 q -0.63737 -0.65885 -0.63737 -2.11263 v -4.25392 h -0.90951 v -1.13151 h 0.90951 v -2.29884 h 1.34636 v 2.29884 h 2.77865 v 1.13151 h -2.77865 v 3.64519 q 0 0.63021 0.0286 0.98829 q 0.0286 0.35091 0.20052 0.65885 q 0.15756 0.28646 0.42969 0.42253 q 0.2793 0.1289 0.84506 0.1289 q 0.32942 0 0.6875 -0.0931 q 0.35807 -0.10027 0.51562 -0.16472 h 0.0716 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 313.8 114.473 h -5.89389 q 0 0.73763 0.222 1.28907 q 0.22201 0.54427 0.60873 0.89518 q 0.3724 0.34375 0.88086 0.51563 q 0.51563 0.17187 1.13151 0.17187 q 0.81641 0 1.63998 -0.32226 q 0.83073 -0.32943 1.18164 -0.64454 h 0.0716 v 1.46811 q -0.68034 0.28645 -1.38933 0.47981 q -0.70898 0.19336 -1.48958 0.19336 q -1.99089 0 -3.10808 -1.07422 q -1.11719 -1.08138 -1.11719 -3.06511 q 0 -1.96224 1.06706 -3.11524 q 1.07422 -1.153 2.82162 -1.153 q 1.61849 0 2.49219 0.94532 q 0.88086 0.94531 0.88086 2.68555 z m -1.31055 -1.03125 q -0.007 -1.0599 -0.53711 -1.63998 q -0.52279 -0.58008 -1.59701 -0.58008 q -1.08138 0 -1.72591 0.63737 q -0.63737 0.63737 -0.72331 1.58269 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 322.766 118.333 h -1.69727 l -2.27019 -3.07228 l -2.28451 3.07228 H 314.946 l 3.1224 -3.98895 l -3.09376 -4.01042 h 1.69727 l 2.25587 3.02214 l 2.26302 -3.02214 h 1.57553 l -3.14389 3.93881 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 328.675 118.262 q -0.37956 0.10026 -0.83073 0.16471 q -0.44402 0.0645 -0.79493 0.0645 q -1.22461 0 -1.86198 -0.65886 q -0.63737 -0.65885 -0.63737 -2.11263 v -4.25392 h -0.90951 v -1.13151 h 0.90951 v -2.29884 h 1.34635 v 2.29884 h 2.77866 v 1.13151 h -2.77866 v 3.64519 q 0 0.63021 0.0286 0.98829 q 0.0287 0.35091 0.20052 0.65885 q 0.15755 0.28646 0.42969 0.42253 q 0.2793 0.1289 0.84505 0.1289 q 0.32943 0 0.68751 -0.0931 q 0.35807 -0.10027 0.51562 -0.16472 h 0.0716 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 308.243 127.264 h -5.39259 v 3.00782 h 4.63347 v 1.26042 h -4.63347 v 5.13478 h -1.41798 v -10.6634 h 6.81057 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 317.811 127.228 q 0.65169 0.71614 0.99544 1.75456 q 0.35092 1.03841 0.35092 2.35612 q 0 1.31772 -0.35808 2.36329 q -0.35091 1.03841 -0.98828 1.73308 q -0.65886 0.72331 -1.5612 1.08854 q -0.89519 0.36524 -2.04819 0.36524 q -1.12435 0 -2.04818 -0.3724 q -0.91667 -0.3724 -1.5612 -1.08138 q -0.64453 -0.70899 -0.99544 -1.74024 q -0.34375 -1.03125 -0.34375 -2.35613 q 0 -1.30338 0.34375 -2.33464 q 0.34375 -1.03841 1.0026 -1.77604 q 0.63021 -0.70183 1.5612 -1.07422 q 0.93816 -0.3724 2.04102 -0.3724 q 1.14584 0 2.05535 0.37956 q 0.91667 0.37239 1.55404 1.06706 z m -0.12891 4.11068 q 0 -2.07682 -0.93099 -3.20118 q -0.93099 -1.13151 -2.54232 -1.13151 q -1.62566 0 -2.55665 1.13151 q -0.92383 1.12436 -0.92383 3.20118 q 0 2.09832 0.94531 3.21551 q 0.94532 1.11002 2.53517 1.11002 q 1.58984 0 2.528 -1.11002 q 0.94531 -1.11719 0.94531 -3.21551 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+        <GeometryDrawing Brush="#ff000000">
+          <GeometryDrawing.Geometry>
+            <PathGeometry Figures="m 329.355 127.228 q 0.65169 0.71614 0.99544 1.75456 q 0.35091 1.03841 0.35091 2.35612 q 0 1.31772 -0.35807 2.36329 q -0.35091 1.03841 -0.98828 1.73308 q -0.65886 0.72331 -1.56121 1.08854 q -0.89518 0.36524 -2.04818 0.36524 q -1.12435 0 -2.04818 -0.3724 q -0.91667 -0.3724 -1.5612 -1.08138 q -0.64453 -0.70899 -0.99545 -1.74024 q -0.34375 -1.03125 -0.34375 -2.35613 q 0 -1.30338 0.34375 -2.33464 q 0.34376 -1.03841 1.00261 -1.77604 q 0.63021 -0.70183 1.5612 -1.07422 q 0.93816 -0.3724 2.04102 -0.3724 q 1.14584 0 2.05535 0.37956 q 0.91667 0.37239 1.55404 1.06706 z m -0.12891 4.11068 q 0 -2.07682 -0.93099 -3.20118 q -0.93099 -1.13151 -2.54233 -1.13151 q -1.62565 0 -2.55664 1.13151 q -0.92383 1.12436 -0.92383 3.20118 q 0 2.09832 0.94531 3.21551 q 0.94532 1.11002 2.53516 1.11002 q 1.58985 0 2.52801 -1.11002 q 0.94531 -1.11719 0.94531 -3.21551 z" FillRule="NonZero"/>
+          </GeometryDrawing.Geometry>
+        </GeometryDrawing>
+      </DrawingGroup>
+      <DrawingGroup>
+        <DrawingGroup.Transform>
+          <MatrixTransform Matrix="1.0,0.0,0.0,1.0,445.71038,-129.64807"/>
+        </DrawingGroup.Transform>
+        <DrawingGroup>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="m 64.6165 228.86 q -0.8737 0.40104 -1.91211 0.70182 q -1.03125 0.29362 -1.99805 0.29362 q -1.2461 0 -2.28451 -0.34375 q -1.03841 -0.34375 -1.76889 -1.03125 q -0.737632 -0.69466 -1.13867 -1.73308 q -0.401043 -1.04557 -0.401043 -2.44206 q 0 -2.55665 1.48959 -4.03191 q 1.49675 -1.48242 4.10353 -1.48242 q 0.909507 0 1.85482 0.222 q 0.952476 0.21485 2.04818 0.73763 v 1.68295 h -0.128907 q -0.222005 -0.17188 -0.644532 -0.45117 q -0.422527 -0.2793 -0.830732 -0.4655 q -0.494141 -0.222 -1.12435 -0.36523 q -0.623048 -0.1504 -1.41797 -0.1504 q -1.79037 0 -2.83594 1.153 q -1.03841 1.14584 -1.03841 3.10808 q 0 2.06967 1.08854 3.22267 q 1.08854 1.14583 2.96485 1.14583 q 0.687501 0 1.36784 -0.13607 q 0.687502 -0.13606 1.20313 -0.35091 v -2.61394 h -2.85743 v -1.24609 h 4.26108 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="m 71.9785 223.117 h -0.07161 q -0.300782 -0.0716 -0.587241 -0.10026 q -0.279298 -0.0358 -0.666017 -0.0358 q -0.623049 0 -1.20313 0.2793 q -0.580079 0.27213 -1.11719 0.70898 v 5.67905 h -1.34636 v -7.99937 h 1.34636 v 1.18165 q 0.802085 -0.64454 1.41081 -0.90951 q 0.615887 -0.27214 1.25326 -0.27214 q 0.350912 0 0.508464 0.0215 q 0.157553 0.0143 0.472658 0.0645 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="m 80.0638 225.652 q 0 1.95508 -1.00261 3.08659 q -1.00261 1.13152 -2.68555 1.13152 q -1.69727 0 -2.69988 -1.13152 q -0.995445 -1.13151 -0.995445 -3.08659 q 0 -1.95508 0.995445 -3.0866 q 1.00261 -1.13867 2.69988 -1.13867 q 1.68295 0 2.68555 1.13867 q 1.00261 1.13152 1.00261 3.0866 z m -1.38933 0 q 0 -1.55404 -0.608725 -2.306 q -0.608726 -0.75911 -1.69011 -0.75911 q -1.09571 0 -1.70443 0.75911 q -0.601564 0.75196 -0.601564 2.306 q 0 1.50391 0.608725 2.28451 q 0.608726 0.77344 1.69727 0.77344 q 1.07422 0 1.68295 -0.76628 q 0.615887 -0.77344 0.615887 -2.29167 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="m 88.7793 229.648 h -1.34636 v -0.88802 q -0.68034 0.53711 -1.30339 0.82357 q -0.623049 0.28646 -1.375 0.28646 q -1.26042 0 -1.96224 -0.76628 q -0.701824 -0.77344 -0.701824 -2.26303 v -5.19207 h 1.34636 v 4.5547 q 0 0.60873 0.05729 1.04558 q 0.05729 0.42969 0.24349 0.73763 q 0.19336 0.3151 0.501303 0.45833 q 0.307944 0.14323 0.895185 0.14323 q 0.522787 0 1.13867 -0.27213 q 0.623048 -0.27214 1.16016 -0.69467 v -5.97267 h 1.34636 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="m 98.4688 225.552 q 0 0.97396 -0.279297 1.7832 q -0.279298 0.80209 -0.787763 1.36069 q -0.472657 0.52994 -1.11719 0.82356 q -0.637371 0.28646 -1.35352 0.28646 q -0.623049 0 -1.13151 -0.13606 q -0.501304 -0.13607 -1.02409 -0.42253 v 3.35157 h -1.34636 v -10.9499 h 1.34636 v 0.8379 q 0.53711 -0.45118 1.20313 -0.75196 q 0.673178 -0.30794 1.43229 -0.30794 q 1.44662 0 2.2487 1.0957 q 0.809246 1.08855 0.809246 3.02931 z m -1.38933 0.0358 q 0 -1.44662 -0.494142 -2.16277 q -0.494141 -0.71615 -1.51823 -0.71615 q -0.58008 0 -1.16732 0.25065 q -0.587241 0.25066 -1.12435 0.65886 v 4.53321 q 0.572918 0.25782 0.981122 0.35092 q 0.415365 0.0931 0.938153 0.0931 q 1.12435 0 1.75456 -0.75911 q 0.63021 -0.75912 0.63021 -2.2487 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="m 107.263 225.788 h -5.89389 q 0 0.73763 0.22201 1.28906 q 0.222 0.54427 0.60872 0.89519 q 0.3724 0.34375 0.88086 0.51562 q 0.51563 0.17188 1.13151 0.17188 q 0.81641 0 1.63998 -0.32227 q 0.83073 -0.32943 1.18165 -0.64453 h 0.0716 v 1.4681 q -0.68034 0.28646 -1.38933 0.47982 q -0.70898 0.19336 -1.48958 0.19336 q -1.99089 0 -3.10808 -1.07422 q -1.11719 -1.08138 -1.11719 -3.06511 q 0 -1.96225 1.06706 -3.11524 q 1.07422 -1.153 2.82162 -1.153 q 1.61849 0 2.49219 0.94531 q 0.88086 0.94532 0.88086 2.68556 z m -1.31055 -1.03126 q -0.007 -1.05989 -0.53711 -1.63997 q -0.52279 -0.58008 -1.59701 -0.58008 q -1.08138 0 -1.72591 0.63737 q -0.63737 0.63737 -0.72331 1.58268 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="M 115.792 229.648 H 114.446 v -0.83789 q -0.58008 0.5013 -1.21029 0.7806 q -0.63021 0.2793 -1.36784 0.2793 q -1.43229 0 -2.27735 -1.10287 q -0.83789 -1.10287 -0.83789 -3.05795 q 0 -1.01693 0.28646 -1.81185 q 0.29362 -0.79493 0.78776 -1.35352 q 0.48698 -0.54427 1.13151 -0.83073 q 0.6517 -0.28646 1.34636 -0.28646 q 0.63021 0 1.11719 0.13607 q 0.48698 0.1289 1.02409 0.4082 v -3.46615 h 1.34636 z m -1.34636 -1.9694 v -4.59051 q -0.54427 -0.24349 -0.97396 -0.33659 q -0.42969 -0.0931 -0.93815 -0.0931 q -1.13151 0 -1.76172 0.78776 q -0.63021 0.78777 -0.63021 2.23438 q 0 1.42514 0.48698 2.16993 q 0.48698 0.73763 1.5612 0.73763 q 0.57292 0 1.16016 -0.25065 q 0.58724 -0.25781 1.0957 -0.65885 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+        </DrawingGroup>
+        <DrawingGroup>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="m 59.7681 259.576 q -0.379559 0.10026 -0.830731 0.16471 q -0.444012 0.0644 -0.794924 0.0644 q -1.22461 0 -1.86198 -0.65885 q -0.637371 -0.65886 -0.637371 -2.11264 v -4.25391 h -0.909507 v -1.13152 h 0.909507 v -2.29883 h 1.34636 v 2.29883 h 2.77865 v 1.13152 h -2.77865 v 3.64519 q 0 0.63021 0.02865 0.98828 q 0.02865 0.35091 0.200522 0.65886 q 0.157552 0.28646 0.429688 0.42252 q 0.279298 0.12891 0.845054 0.12891 q 0.329428 0 0.687502 -0.0931 q 0.358073 -0.10026 0.515626 -0.16471 h 0.07161 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="m 68.0898 255.788 h -5.89389 q 0 0.73763 0.222005 1.28906 q 0.222006 0.54427 0.608726 0.89519 q 0.372396 0.34375 0.880861 0.51562 q 0.515626 0.17188 1.13151 0.17188 q 0.816408 0 1.63998 -0.32227 q 0.830731 -0.32943 1.18164 -0.64453 h 0.07162 v 1.4681 q -0.68034 0.28646 -1.38933 0.47982 q -0.708986 0.19336 -1.48959 0.19336 q -1.99089 0 -3.10808 -1.07422 q -1.11719 -1.08138 -1.11719 -3.06511 q 0 -1.96225 1.06706 -3.11524 q 1.07422 -1.153 2.82162 -1.153 q 1.61849 0 2.49219 0.94531 q 0.880861 0.94532 0.880861 2.68556 z m -1.31055 -1.03126 q -0.0072 -1.05989 -0.537111 -1.63997 q -0.522788 -0.58008 -1.59701 -0.58008 q -1.08138 0 -1.72592 0.63737 q -0.637372 0.63737 -0.723309 1.58268 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="m 77.0559 259.648 h -1.69727 l -2.27019 -3.07227 l -2.28451 3.07227 h -1.56836 l 3.1224 -3.98894 l -3.09376 -4.01043 h 1.69727 l 2.25587 3.02215 l 2.26303 -3.02215 h 1.57552 l -3.14389 3.93882 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+          <GeometryDrawing Brush="#ff000000">
+            <GeometryDrawing.Geometry>
+              <PathGeometry Figures="m 82.9642 259.576 q -0.379558 0.10026 -0.830731 0.16471 q -0.444012 0.0644 -0.794924 0.0644 q -1.22461 0 -1.86198 -0.65885 q -0.637372 -0.65886 -0.637372 -2.11264 v -4.25391 h -0.909507 v -1.13152 h 0.909507 v -2.29883 h 1.34636 v 2.29883 h 2.77865 v 1.13152 h -2.77865 v 3.64519 q 0 0.63021 0.02865 0.98828 q 0.02864 0.35091 0.200521 0.65886 q 0.157552 0.28646 0.429688 0.42252 q 0.279298 0.12891 0.845054 0.12891 q 0.329428 0 0.687502 -0.0931 q 0.358074 -0.10026 0.515626 -0.16471 h 0.07162 z" FillRule="NonZero"/>
+            </GeometryDrawing.Geometry>
+          </GeometryDrawing>
+        </DrawingGroup>
+      </DrawingGroup>
+      <GeometryDrawing Brush="#ff000080">
+        <GeometryDrawing.Geometry>
+          <RectangleGeometry Rect="100.0,200.0,100.0,100.0"/>
+        </GeometryDrawing.Geometry>
+      </GeometryDrawing>
+      <GeometryDrawing>
+        <GeometryDrawing.Pen>
+          <Pen Brush="#ffff0000" LineJoin="Miter" Thickness="16.0"/>
+        </GeometryDrawing.Pen>
+        <GeometryDrawing.Geometry>
+          <RectangleGeometry Rect="300.0,200.0,200.0,100.0"/>
+        </GeometryDrawing.Geometry>
+      </GeometryDrawing>
+      <GeometryDrawing Brush="#ffffff00">
+        <GeometryDrawing.Pen>
+          <Pen Brush="#ff008000" LineJoin="Miter" Thickness="16.0"/>
+        </GeometryDrawing.Pen>
+        <GeometryDrawing.Geometry>
+          <PathGeometry Figures="M 644.943 200 L 755.057 200 A 44.9432 38.9508 0 0 1 800 238.951 L 800 261.049 A 44.9432 38.9508 0 0 1 755.057 300 L 644.943 300 A 44.9432 38.9508 0 0 1 600 261.049 L 600 238.951 A 44.9432 38.9508 0 0 1 644.943 200 z" FillRule="NonZero"/>
+        </GeometryDrawing.Geometry>
+      </GeometryDrawing>
+    </DrawingGroup>
+  </DrawingGroup>
+  <DrawingImage Drawing="{StaticResource input}" x:Key="di_input"/>
+</ResourceDictionary>

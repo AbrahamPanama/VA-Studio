@@ -1,0 +1,28 @@
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Thu, 22 May 2025 14:33:54 -0400
+Subject: Fix a crash in the clipping code
+
+When cairo_is_all_clipped returns true, the clip points to the static const
+__cairo_clip_all and none of its fields may be changed. This is the upstream
+fix referenced by Inkscape issue 5631.
+
+Upstream: https://gitlab.freedesktop.org/cairo/cairo/-/commit/1d3347a6904fd4d9a57e4a5e4819de885fce6e46
+
+diff --git a/src/cairo-clip.c b/src/cairo-clip.c
+index 0822ea90..870a86c2 100644
+--- a/src/cairo-clip.c
++++ b/src/cairo-clip.c
+@@ -340,7 +340,6 @@ _cairo_clip_intersect_clip (cairo_clip_t *clip,
+-    }
+-
+-    if (clip->region) {
+-	cairo_region_destroy (clip->region);
+-	clip->region = NULL;
+-    }
+-    clip->is_region = FALSE;
++        if (clip->region) {
++            cairo_region_destroy (clip->region);
++            clip->region = NULL;
++        }
++        clip->is_region = FALSE;
++    }

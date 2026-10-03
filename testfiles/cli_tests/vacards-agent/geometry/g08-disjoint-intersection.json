@@ -1,0 +1,22 @@
+{
+  "description": "Intersecting two disjoint paths fails, restores the document, and (with halt-on-error off) the export shows every operand still present.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;select-by-id:a,far;vacards-boolean:op=intersection;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 4,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "failed",
+      "mode": "collective-geometry",
+      "reason": "boolean-failed"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": ["id=\"a\"", "id=\"b\"", "id=\"c\"", "id=\"far\"", "id=\"stroked\""]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "description": "remap=current applies the bitmap's own tone before counting.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a;vacards-bitmap-histogram:remap=current",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-bitmap-histogram",
+      "status": "ok",
+      "data": {"remapped": true, "settings": {"brightness": 40}}
+    }
+  ]
+}

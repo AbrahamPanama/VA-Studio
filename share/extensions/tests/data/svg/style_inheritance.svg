@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" height="200" width="750">
+<style type="text/css"><![CDATA[
+.group .shape_under_group,
+.shape_direct
+{
+   opacity:          1;
+   fill-opacity:     1;
+   fill-rule:        evenodd;
+   stroke:           #000000;
+   stroke-width:     2px;
+   stroke-linecap:   round;
+   stroke-linejoin:  miter;
+   stroke-miterlimit:   4;
+   stroke-dasharray: none;
+   stroke-opacity:   1;
+   fill:             #ff0000;
+}
+.square
+{
+   fill:             #0000ff !important;
+}
+.group #square_id
+{
+   fill:             #0000ff;
+}
+.force_inherit
+{
+   fill:             inherit;
+   stroke:           inherit;
+   stroke-width:     inherit;
+   opacity:          inherit !important;
+}
+text>tspan 
+{
+   stroke: none;
+   fill:   #000;
+}
+text {font-size:12pt}
+]]></style>
+<g id="group_default">
+	<circle cx="33" cy="32.5" fill="#f00" r="16" stroke="#000" stroke-width="2"/>
+	<rect fill="#00f" height="31" stroke="#000" stroke-width="2" width="31" x="56" y="17"/>
+	<text x="98" y="28">1. Using style attribute</text>
+	<text x="98" y="43">directly</text>
+</g>
+<g id="group_classes" transform="translate(0,50)">
+	<circle cx="33" cy="32.5" r="16" class="shape_direct"/>
+	<rect class="shape_direct square" height="31" width="31" x="56" y="17"/>
+	<text x="98" y="28">2. Using class "shape_direct"</text>
+	<text x="98" y="43">directly on path and rect</text>
+</g>
+<g id="group_inherit" class="group" transform="translate(0,100)">
+	<circle cx="33" cy="32.5" r="16" class="shape_under_group"/>
+	<rect class="shape_under_group square" height="31" width="31" x="56" y="17"/>
+	<text x="98" y="28">3. Using class "shape_under_group"</text>
+	<text x="98" y="43">which inherits from class "group"</text>
+</g>
+<g id="group_inherit_ref_square_by_id" class="group" transform="translate(400)">
+	<circle cx="33" cy="32.5" r="16" class="shape_under_group"/>
+	<rect class="shape_under_group" height="31" id="square_id" width="31" x="56" y="17"/>
+	<text x="98" y="28">4. Inheriting from "group", but</text>
+	<text x="98" y="43">referencing square by id</text>
+</g>
+<g id="group_apply_style_rules_to_group" transform="translate(400,50)" class="shape_direct">
+	<circle cx="33" cy="32.5" r="16"/>
+	<rect class="square" height="31" width="31" x="56" y="17"/>
+	<text><tspan x="98" y="28">5. Apply style rules at group</tspan><tspan x="98" y="43">level</tspan></text>
+</g>
+<g id="group_force_inherit" transform="translate(400,100)" class="shape_direct">
+	<circle cx="33" cy="32.5" opacity=".5" r="16" class="force_inherit"/>
+	<rect class="force_inherit square" height="31" opacity=".5" width="31" x="56" y="17"/>
+	<text><tspan x="98" y="28">6. Apply style rules to group</tspan><tspan x="98" y="43">and force inheritance</tspan></text>
+</g>
+</svg>

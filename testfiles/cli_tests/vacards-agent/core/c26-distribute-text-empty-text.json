@@ -1,0 +1,24 @@
+{
+  "description": "object-distribute-text with an empty <text/> in the selection used to crash (no layout to anchor on). The empty text stays where it was and the real texts still distribute: tc moves from x=30 to the midpoint x=55 of ta (10) and tb (100).",
+  "input": "{FIXTURES}/commands-no-target.svg",
+  "actions": "select-by-id:ta,tb,tc,te;object-distribute-text:horizontal;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"box\"",
+        "id=\"ta\"",
+        "id=\"tb\"",
+        "id=\"tc\"",
+        "id=\"te\"",
+        "x=\"55\"",
+        "x=\"70\"",
+        "x=\"100\""
+      ],
+      "not_contains": [
+        "x=\"30\""
+      ]
+    }
+  }
+}

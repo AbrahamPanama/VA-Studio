@@ -1,0 +1,5 @@
+include(CMakeFindDependencyMacro)
+find_dependency(Boost 1.60 CONFIG REQUIRED)
+find_dependency(double-conversion CONFIG REQUIRED)
+find_dependency(GSL REQUIRED)
+include("${CMAKE_CURRENT_LIST_DIR}/2GeomTargets.cmake")

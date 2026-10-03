@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <style>.base{fill:#000}</style>
+  <path opacity="0" d="M0 0h16v16H0z"/>
+  <path class="base" fill-rule="evenodd" d="M1 4h9v10H1zm1.5 1.5v7h6v-7z"/>
+  <path class="base" d="m3 11 1.7-2.2 1.25 1.5L7.2 8.8 9 11z"/>
+  <path class="base" d="m11.25 1.1 3.65 3.65a.75.75 0 0 1 0 1.06L11.7 9H8V5.3l3.2-3.2a.75.75 0 0 1 1.05 0zm-1.75 7h1.58l2.23-2.23-2.18-2.18L9.5 5.92z"/>
+</svg>

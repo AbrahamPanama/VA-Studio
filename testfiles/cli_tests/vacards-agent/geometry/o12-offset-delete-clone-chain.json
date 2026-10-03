@@ -1,0 +1,12 @@
+{
+  "description": "delete-originals on a selected clone chain (chain2 clones chain1, which clones ci): the deepest clone is deleted first, so neither selected clone survives as an unlinked copy.",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:chain1,chain2;vacards-offset:distance=2,delete-originals;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-offset", "status": "changed", "undo": "one-step"}
+  ],
+  "expect_records_text_contains": ["\"deleted\":[\"chain1\",\"chain2\"]"],
+  "expect_files": {"out.svg": {"exists": true, "contains": ["id=\"ci\""], "not_contains": ["id=\"chain1\"", "id=\"chain2\""]}}
+}

@@ -1,0 +1,15 @@
+{
+  "description": "The histogram of a bitmap with a missing source is rejected.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:missing;vacards-bitmap-histogram",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-bitmap-histogram",
+      "status": "rejected",
+      "reason": "missing-source",
+      "targets": {"excluded": [{"id": "missing", "reason": "missing-source"}]}
+    }
+  ]
+}

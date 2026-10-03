@@ -1,0 +1,21 @@
+{
+  "description": "object-trace without an image selected used to abort (g_error, SIGTRAP); it reports the problem and leaves the document unchanged.",
+  "input": "{FIXTURES}/commands-no-target.svg",
+  "actions": "select-all:all;object-trace:2,true,true,false,2,1,0.2;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_stderr_contains": [
+    "Select an"
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"box\"",
+        "id=\"ta\"",
+        "id=\"tb\"",
+        "id=\"tc\"",
+        "id=\"te\""
+      ]
+    }
+  }
+}

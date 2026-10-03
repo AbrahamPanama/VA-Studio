@@ -1,0 +1,22 @@
+{
+  "description": "A selected group is not one native shape (single-object exception): rejected requires-single-shape, no member is chosen, nothing changes (atomic no-op).",
+  "input": "{FIXTURES}/corners-refusals.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:g;vacards-corners:radius=2mm",
+  "expect_exit": 3,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "vacards-corners",
+      "status": "rejected",
+      "mode": "single-object",
+      "reason": "requires-single-shape",
+      "undo": "none",
+      "targets": {
+        "selected": 1
+      }
+    }
+  ]
+}

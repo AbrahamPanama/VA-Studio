@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="240" viewBox="0 0 120 60">
+  <rect id="r" x="0" y="0" width="20" height="10" style="fill:#ff0000"/>
+  <path id="p" d="M 30,0 h 20 v 10 h -20 z" style="fill:#00ff00"/>
+  <circle id="c" cx="70" cy="10" r="5" style="fill:#0000ff"/>
+  <polygon id="poly" points="80,0 90,0 90,10" style="fill:#ffff00"/>
+</svg>

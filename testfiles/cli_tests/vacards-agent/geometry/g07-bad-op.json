@@ -1,0 +1,16 @@
+{
+  "description": "An unknown op value is rejected by the parameter parser before the body runs.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,b;vacards-boolean:op=xor",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "rejected",
+      "mode": "collective-geometry",
+      "reason": "invalid-argument",
+      "error": {"code": "not-a-choice", "key": "op"}
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "description": "selection-link on a selection without a desktop used to crash opening the dialog; it wraps the object in one anchor and one vacards-undo removes it.",
+  "input": "{FIXTURES}/commands-no-target.svg",
+  "actions": "select-by-id:box;selection-link;export-filename:{WORK}/linked.svg;export-do;vacards-undo;export-filename:{WORK}/undone.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "linked.svg": {
+      "exists": true,
+      "contains": [
+        "<a",
+        "id=\"box\""
+      ]
+    },
+    "undone.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"box\"",
+        "id=\"ta\"",
+        "id=\"tb\"",
+        "id=\"tc\"",
+        "id=\"te\""
+      ],
+      "not_contains": [
+        "<a"
+      ]
+    }
+  }
+}

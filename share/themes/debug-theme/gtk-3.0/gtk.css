@@ -1,0 +1,190 @@
+
+* {
+  color: black;
+  background: white;
+  outline-color: green;
+  outline-style: solid;
+  outline-width: 1px; 
+  outline-style: dashed;
+}
+
+/*
+ * Debug the in-focus widget
+ */
+*:focus {
+  color: red;
+  background: yellow;
+  outline-color: yellow; 
+}
+
+*:hover {
+  color: white;
+  background: red;
+  outline-color: yellow;
+}
+
+*:selected,
+*:active {
+  color: white;
+  background: blue;
+  outline-color: black;
+}
+
+*:backdrop {
+  color: #999;
+  background-color: #eee;
+}
+
+flowbox flowboxchild {
+  padding: 2px;
+}
+
+flowbox flowboxchild:selected {
+  outline-offset: -2px;
+}
+
+/*********
+ * Menus *
+ *********/
+menubar,
+.menubar {
+  -GtkWidget-window-dragging: true;
+  padding: 0px;
+  box-shadow: inset 0 -1px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+menubar:backdrop,
+.menubar:backdrop {
+  background-color: #f5f5f4;
+}
+
+menubar > menuitem,
+.menubar > menuitem {
+  color: #2e3436;
+  min-height: 16px;
+  padding: 4px 8px;
+}
+
+menubar > menuitem:hover,
+.menubar > menuitem:hover {
+  box-shadow: inset 0 -3px #4a90d9;
+  color: #2a76c6;
+}
+
+menubar > menuitem:disabled,
+.menubar > menuitem:disabled {
+  color: #313739;
+  box-shadow: none;
+}
+
+menubar > menuitem:backdrop,
+.menubar > menuitem:backdrop {
+  color: #313739;
+}
+
+menu,
+.menu,
+.context-menu, .gtk-combobox-popup-menu {
+  margin: 4px;
+  padding: 2px 0px;
+  border: 1px solid #c4c4bf;
+}
+
+.csd menu, .csd
+.menu, .csd
+.context-menu, .csd .gtk-combobox-popup-menu {
+  border: none;
+}
+
+menu:backdrop,
+.menu:backdrop,
+.context-menu:backdrop, .gtk-combobox-popup-menu:backdrop {
+  background-color: #fcfcfc;
+}
+
+menu menuitem,
+.menu menuitem,
+.context-menu menuitem, .gtk-combobox-popup-menu menuitem {
+  color: #2e3436;
+  min-height: 16px;
+  min-width: 40px;
+  padding: 4px 6px;
+  text-shadow: none;
+}
+
+menu menuitem:hover,
+.menu menuitem:hover,
+.context-menu menuitem:hover, .gtk-combobox-popup-menu menuitem:hover {
+  color: #ffffff;
+  background-color: #4a90d9;
+}
+
+menu menuitem:disabled,
+.menu menuitem:disabled,
+.context-menu menuitem:disabled, .gtk-combobox-popup-menu menuitem:disabled {
+  color: #313739;
+}
+
+menu menuitem:disabled:backdrop,
+.menu menuitem:disabled:backdrop,
+.context-menu menuitem:disabled:backdrop, .gtk-combobox-popup-menu menuitem:disabled:backdrop {
+  color: #566164;
+}
+
+menu menuitem:backdrop, menu menuitem:backdrop:hover,
+.menu menuitem:backdrop,
+.menu menuitem:backdrop:hover,
+.context-menu menuitem:backdrop,
+.context-menu menuitem:backdrop:hover, .gtk-combobox-popup-menu menuitem:backdrop, .gtk-combobox-popup-menu menuitem:backdrop:hover {
+  color: #313739;
+  background-color: transparent;
+}
+
+menu menuitem arrow,
+.menu menuitem arrow,
+.context-menu menuitem arrow, .gtk-combobox-popup-menu menuitem arrow {
+  min-height: 16px;
+  min-width: 16px;
+}
+
+menu > arrow:hover,
+.menu > arrow:hover,
+.context-menu > arrow:hover, .gtk-combobox-popup-menu > arrow:hover {
+  background-color: #eaebeb;
+}
+
+menu > arrow:backdrop,
+.menu > arrow:backdrop,
+.context-menu > arrow:backdrop, .gtk-combobox-popup-menu > arrow:backdrop {
+  background-color: #fcfcfc;
+}
+
+menu > arrow:disabled,
+.menu > arrow:disabled,
+.context-menu > arrow:disabled, .gtk-combobox-popup-menu > arrow:disabled {
+  color: transparent;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+menuitem accelerator {
+  color: alpha(currentColor,0.55);
+}
+
+menuitem check,
+menuitem radio {
+  min-height: 16px;
+  min-width: 16px;
+}
+
+menuitem check:dir(ltr),
+menuitem radio:dir(ltr) {
+  margin-right: 7px;
+}
+
+menuitem check:dir(rtl),
+menuitem radio:dir(rtl) {
+  margin-left: 7px;
+}
+

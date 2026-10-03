@@ -1,0 +1,9 @@
+{
+  "description": "An upstream parameter rejection notes a rejection (exit 3) without halting: the export still runs.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "transform-rotate:abc;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [],
+  "expect_stderr_contains": ["Invalid number value"],
+  "expect_files": {"out.svg": {"exists": true}}
+}

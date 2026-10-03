@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg13556"
+   inkscape:version="1.1-dev (d1a926bd5e, 2020-11-14)"
+   sodipodi:docname="clips_and_masks.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs13552">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath13846">
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="M 40.565583,169.25411 125.00155,213.98274 95.588201,270.21716 47.572909,191.02479 Z"
+         id="path13848" />
+    </clipPath>
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath14259">
+      <path
+         id="path14261"
+         style="stroke:#ff00ff;stroke-width:0.264583"
+         d="M 126.20114,40.02528 A 23.801659,23.801659 0 0 1 102.39948,63.826938 23.801659,23.801659 0 0 1 78.597818,40.02528 23.801659,23.801659 0 0 1 102.39948,16.223621 23.801659,23.801659 0 0 1 126.20114,40.02528 Z" />
+    </clipPath>
+    <mask
+       maskUnits="userSpaceOnUse"
+       id="mask5225">
+      <path
+         style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="m 104.29088,196.45513 -0.7464,-49.07734 25.25593,28.33562 31.39136,-29.83103 0.79046,50.34807 -5.60361,1.25689 -2.46557,-33.69356 -22.69324,19.90202 -22.05043,-16.72667 z"
+         id="path5227" />
+    </mask>
+    <mask
+       maskUnits="userSpaceOnUse"
+       id="mask5460">
+      <path
+         id="path5462"
+         style="fill:#ffffff;stroke:#ff00ff;stroke-width:0.264583"
+         inkscape:transform-center-x="2.5828768"
+         inkscape:transform-center-y="0.0811432"
+         d="m 169.64048,220.5459 -8.45374,16.45466 8.7624,16.29237 -18.26165,-2.95521 -12.78723,13.36816 -2.83259,-18.28108 -16.66535,-8.03039 16.51102,-8.34312 2.48748,-18.33121 13.03696,13.12474 z" />
+    </mask>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="367.14286"
+     inkscape:cy="492.85714"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1366"
+     inkscape:window-height="717"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:snap-global="false" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="path14112"
+       style="stroke-width:0.264583;stroke:#ff00ff"
+       d="M 103.01046,57.276211 A 23.801659,23.801659 0 0 1 79.208801,81.077869 23.801659,23.801659 0 0 1 55.407143,57.276211 23.801659,23.801659 0 0 1 79.208801,33.474552 23.801659,23.801659 0 0 1 103.01046,57.276211 Z"
+       clip-path="url(#clipPath14259)" />
+    <path
+       id="path5331"
+       style="stroke:#ff00ff;stroke-width:0.264583"
+       inkscape:transform-center-x="-1.2994782"
+       inkscape:transform-center-y="-1.3937968"
+       d="m 160.04313,261.88254 -14.88713,-10.98156 -17.48608,6.03804 5.84371,-17.55198 -11.14602,-14.76439 18.49874,0.13383 10.59746,-15.16294 5.58914,17.6347 17.69561,5.39318 -15.04446,10.76501 z"
+       mask="url(#mask5460)" />
+  </g>
+</svg>

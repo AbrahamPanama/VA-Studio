@@ -1,0 +1,17 @@
+{
+  "description": "vacards-destructive-clip dry-run predicts the coverage step's cheap refusal: a filtered bitmap is UnsupportedEffect -> unsupported-effects-or-references.",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:img5,cut5;vacards-destructive-clip:dry-run",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-destructive-clip",
+      "status": "rejected",
+      "reason": "unsupported-effects-or-references",
+      "dry_run": true,
+      "params": {"dry-run": "true"},
+      "data": {"image": "img5", "cutter": "cut5"}
+    }
+  ]
+}

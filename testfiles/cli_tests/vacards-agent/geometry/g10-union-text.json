@@ -1,0 +1,21 @@
+{
+  "description": "Union accepts text as an operand (eligible like Boolean Assist) and commits one path.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,txt;vacards-boolean:op=union",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "created": [],
+      "modified": ["a"],
+      "deleted": ["txt"],
+      "selection_after": ["a"],
+      "undo": "one-step",
+      "targets": {"selected": 2, "excluded": []}
+    }
+  ]
+}

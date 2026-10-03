@@ -1,0 +1,18 @@
+{
+  "description": "PDF5: a soft-mask group /BBox with a non-number must not abort the process.",
+  "input": "{FIXTURES}/pdf5-smask-bbox.pdf",
+  "args": [
+    "--export-type=svg",
+    "--export-filename={WORK}/out.svg"
+  ],
+  "timeout": 90,
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "<svg"
+      ]
+    }
+  }
+}

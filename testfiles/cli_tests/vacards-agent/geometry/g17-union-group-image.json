@@ -1,0 +1,22 @@
+{
+  "description": "A group holding a non-shape member (an image) is refused; the offending descendant is reported and no operand is consumed.",
+  "input": "{FIXTURES}/groups-boolean.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;select-by-id:r1,g2;vacards-boolean:op=union;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "rejected",
+      "mode": "collective-geometry",
+      "reason": "incompatible-operands",
+      "message": "Boolean operations need visible, unlocked paths, shapes or text; see excluded.",
+      "targets": {"selected": 2, "excluded": [{"id": "g2img", "reason": "not-a-shape"}]},
+      "undo": "none"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "contains": ["id=\"r1\"", "id=\"g2\"", "id=\"g2img\""]}
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "description": "select-results=false with delete-originals on a rectangle and a clone <use> that references it. Both selected originals are deleted by the commit loop (the clone is itself a selected source, not unlinked), so observed: two offsets (path1 for the rect, path2 for the clone translated by y=40), deleted ['sq','sqclone'], selection_after empty, one Undo step and no crash.",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:sq,sqclone;vacards-offset:distance=2,delete-originals,select-results=false;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-offset",
+      "status": "changed",
+      "mode": "per-selected-root",
+      "reason": "success",
+      "targets": {"selected": 2, "eligible": 2},
+      "created": ["path1", "path2"],
+      "deleted": ["sq", "sqclone"],
+      "selection_after": [],
+      "undo": "one-step",
+      "metrics": {"skipped": 0, "open_subpaths_skipped": 0, "results": 2}
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": ["id=\"path1\"", "id=\"path2\""],
+      "not_contains": ["id=\"sq\"", "id=\"sqclone\""]
+    }
+  }
+}

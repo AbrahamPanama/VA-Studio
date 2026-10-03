@@ -1,0 +1,20 @@
+{
+  "description": "transform-grow on a zero-extent path (single point) used to compute amount = 1 + 2/0 = inf and moved the path to the origin (d=\"M 0,0 V 0\"); it is a no-op and the path stays at 50,50.",
+  "input": "{FIXTURES}/degenerate-geometry.svg",
+  "actions": "select-by-id:zp;transform-grow:2;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "d=\"M 50,50 L 50,50\""
+      ],
+      "not_contains": [
+        "nan",
+        "inf",
+        "M 0,0",
+        "transform="
+      ]
+    }
+  }
+}

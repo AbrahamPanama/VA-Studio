@@ -1,0 +1,28 @@
+{
+  "description": "Bottom-minus-rest whose bottom anchor is a group: groups are now supported, so the group's leaves are combined into one shape (the anchor) and it consumes the rest. Was previously refused; the change is that a selected group is accepted as one combined operand.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;select-by-id:grp,a,b;vacards-boolean:op=bottom-minus-rest;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "targets": {"selected": 3, "excluded": []},
+      "modified": ["ga"],
+      "deleted": ["gb", "a", "b"],
+      "selection_after": ["ga"],
+      "undo": "one-step"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": ["id=\"grp\"", "id=\"ga\""],
+      "not_contains": ["id=\"gb\"", "id=\"a\"", "id=\"b\""]
+    }
+  }
+}

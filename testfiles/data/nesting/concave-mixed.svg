@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="220">
+  <path id="container" d="M0 0H140V45H105V100H55V125H0Z" fill="none" stroke="black"/>
+  <path id="part-1" d="M180 10h35v12h-20v24h-15z"/>
+  <path id="part-2" d="M230 10h28v10h-10v22h-18z"/>
+  <rect id="part-3" x="280" y="10" width="30" height="24"/>
+  <rect id="part-4" x="180" y="70" width="9" height="9"/>
+  <rect id="part-5" x="200" y="70" width="11" height="7"/>
+  <path id="part-6" d="M230 70h20v8h-7v16h-13z"/>
+</svg>

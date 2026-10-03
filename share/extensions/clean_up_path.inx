@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+    <name>Clean up path</name>
+    <id>org.cutlings.clean_up_path</id>
+    <dependency type="executable" location="inx">clean_up_path.py</dependency>
+    <param name="name" type="notebook">
+        <page name="options" gui-text="Options">
+            <label>Clean up path by removing duplicate nodes and joining close nodes from selected paths.</label>
+            <spacer />
+            <param name="minUse" type="bool" gui-text="Interpolate nodes of segments with total length less than specified length">false</param>
+                <param name="minlength" indent="4" type="float" precision="2" min="0" max="100" appearance="full" gui-text="Minimum segment length">1.0</param>
+            <param name="minUseSub" type="bool" gui-text="Remove subpaths with total length less than specified length">false</param>
+                <param name="minlengthSub" indent="4" type="float" precision="2" min="0" max="100" appearance="full" gui-text="Minimum subpath length">1.0</param>
+            <param name="closeSub" type="bool" gui-text="Close subpaths where start and end node have a distance of less than">false</param>
+                <param name="maxdistClose" indent="4" type="float" precision="2" min="0" max="100" appearance="full" gui-text="Limit">1.0</param>
+            <param name="joinEndSub" type="bool" gui-text="Join end nodes of separate subpaths where distance less than">false</param>
+                <param name="maxdistJoin" indent="4" type="float" precision="2" min="0" max="100" appearance="full" gui-text="Limit">1.0</param>
+                <param name="allow_reverse" indent="4" type="bool" gui-text="Allow reversing direction of subpaths">true</param>
+                <param name="option_join" type="optiongroup" appearance="radio" gui-text="Join / merge subpaths by">
+                    <option value="1">interpolating nodes</option>
+                    <option value="2">adding straight line segment</option>
+                </param>
+            <spacer />
+            <label>All parameters in user units (as defined in File->Document Properties).</label>
+            <spacer />
+        </page>
+        <page name="help" gui-text="Information">
+            <label xml:space="preserve">Intended to clean up paths for cutters/plotters by removing excessive nodes or small gaps.
+
+True duplicate nodes (exact same coordinates) and subpaths with zero length will always be removed.
+To join paths, make sure that the paths to consider are already combined (subpath of the same path).
+To combine paths, select them and click Path->Combine.</label>
+        </page>
+    </param>
+    <effect>
+        <object-type>path</object-type>
+        <effects-menu>
+            <submenu name="Modify Path"/>
+        	</effects-menu>
+    </effect>
+    <script>
+        <command location="inx" interpreter="python">clean_up_path.py</command>
+    </script>
+</inkscape-extension>

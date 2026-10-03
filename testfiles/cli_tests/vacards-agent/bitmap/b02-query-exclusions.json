@@ -1,0 +1,30 @@
+{
+  "description": "Tone query exclusions: a hidden image, an image in a locked group and a missing source; the group's child is not in the selection.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,hidden,inlocked,missing,grp,ingroup;vacards-bitmap-tone-query",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-bitmap-tone-query",
+      "status": "ok",
+      "mode": "read-only",
+      "targets": {
+        "selected": 5,
+        "eligible": 2,
+        "covered": 0,
+        "excluded": [
+          {"id": "hidden", "reason": "unavailable"},
+          {"id": "inlocked", "reason": "unavailable"},
+          {"id": "missing", "reason": "missing-source"}
+        ]
+      },
+      "data": {
+        "targets": [
+          {"id": "a"},
+          {"id": "grp", "type": "item", "managed": false}
+        ]
+      }
+    }
+  ]
+}

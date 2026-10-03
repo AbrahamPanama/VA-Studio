@@ -1,0 +1,21 @@
+{
+  "description": "PDF4: a tiling pattern that paints with itself must not recurse without bound (stack overflow).",
+  "input": "{FIXTURES}/pdf4-pattern-cycle.pdf",
+  "args": [
+    "--export-type=svg",
+    "--export-filename={WORK}/out.svg"
+  ],
+  "timeout": 90,
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "<svg"
+      ]
+    }
+  },
+  "expect_stderr_contains": [
+    "tiling patterns nested"
+  ]
+}

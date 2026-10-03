@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <menu id="collection-menu">
+    <section>
+      <item><attribute name="label" translatable="yes">New collection…</attribute><attribute name="action">library.new</attribute></item>
+      <item><attribute name="label" translatable="yes">Open collection…</attribute><attribute name="action">library.open</attribute></item>
+    </section>
+    <section id="open-collections"/>
+    <section>
+      <item><attribute name="label" translatable="yes">Review import results…</attribute><attribute name="action">library.review-import</attribute></item>
+      <submenu>
+        <attribute name="label" translatable="yes">Recovery</attribute>
+        <section>
+          <item><attribute name="label" translatable="yes">Find recovery copies…</attribute><attribute name="action">library.find-recovery</attribute></item>
+          <item><attribute name="label" translatable="yes">Review recovery results…</attribute><attribute name="action">library.review-recovery</attribute></item>
+          <item><attribute name="label" translatable="yes">Open recovery file…</attribute><attribute name="action">library.recover</attribute></item>
+          <item><attribute name="label" translatable="yes">Remove stale lock…</attribute><attribute name="action">library.remove-lock</attribute></item>
+        </section>
+      </submenu>
+      <item><attribute name="label" translatable="yes">Cancel pending operation</attribute><attribute name="action">library.cancel</attribute></item>
+    </section>
+    <section>
+      <item><attribute name="label" translatable="yes">Save as…</attribute><attribute name="action">library.save-as</attribute></item>
+      <item><attribute name="label" translatable="yes">Unload collection</attribute><attribute name="action">library.unload</attribute></item>
+    </section>
+  </menu>
+  <menu id="artwork-menu">
+    <section>
+      <item><attribute name="label" translatable="yes">Rename…</attribute><attribute name="action">library.rename</attribute></item>
+      <item><attribute name="label" translatable="yes">Edit tags…</attribute><attribute name="action">library.tags</attribute></item>
+      <item><attribute name="label" translatable="yes">Export artwork…</attribute><attribute name="action">library.export</attribute></item>
+    </section>
+    <section>
+      <item><attribute name="label" translatable="yes">Remove artwork</attribute><attribute name="action">library.remove</attribute></item>
+      <item><attribute name="label" translatable="yes">Restore removed artwork…</attribute><attribute name="action">library.restore</attribute></item>
+    </section>
+  </menu>
+  <object class="GtkAdjustment" id="thumbnail-adjustment">
+    <property name="lower">48</property>
+    <property name="upper">160</property>
+    <property name="value">80</property>
+    <property name="step-increment">8</property>
+    <property name="page-increment">16</property>
+  </object>
+  <object class="GtkBox" id="artwork-library">
+    <property name="orientation">vertical</property>
+    <property name="spacing">6</property>
+    <property name="margin-start">8</property>
+    <property name="margin-end">8</property>
+    <property name="margin-top">8</property>
+    <property name="margin-bottom">8</property>
+    <child>
+      <object class="GtkBox">
+        <property name="spacing">6</property>
+        <child>
+          <object class="GtkLabel" id="collection-name">
+            <property name="label" translatable="yes">Artwork Library</property>
+            <property name="hexpand">True</property>
+            <property name="xalign">0</property>
+            <property name="ellipsize">end</property>
+            <property name="width-chars">18</property>
+            <property name="max-width-chars">18</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="save-collection">
+            <property name="icon-name">document-save-symbolic</property>
+            <property name="tooltip-text" translatable="yes">Save library changes</property>
+            <accessibility><property name="label" translatable="yes">Save library changes</property></accessibility>
+          </object>
+        </child>
+        <child>
+          <object class="GtkMenuButton" id="collection-picker">
+            <property name="icon-name">view-more-symbolic</property>
+            <property name="tooltip-text" translatable="yes">Library options</property>
+            <accessibility><property name="label" translatable="yes">Library options</property></accessibility>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkPaned" id="library-split">
+        <property name="orientation">horizontal</property>
+        <property name="position">145</property>
+        <property name="resize-start-child">False</property>
+        <property name="shrink-start-child">False</property>
+        <property name="shrink-end-child">False</property>
+        <property name="vexpand">True</property>
+        <property name="start-child">
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <property name="spacing">6</property>
+            <property name="margin-end">6</property>
+            <child>
+              <object class="GtkScrolledWindow" id="collection-scroller">
+                <property name="vexpand">True</property>
+                <property name="hscrollbar-policy">never</property>
+                <property name="vscrollbar-policy">automatic</property>
+                <property name="propagate-natural-width">False</property>
+                <property name="min-content-width">120</property>
+                <property name="child">
+                  <object class="GtkListBox" id="collection-list">
+                    <property name="selection-mode">single</property>
+                    <property name="activate-on-single-click">True</property>
+                    <style><class name="navigation-sidebar"/></style>
+                    <accessibility><property name="label" translatable="yes">Open artwork libraries</property></accessibility>
+                  </object>
+                </property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="new-collection">
+                <property name="label" translatable="yes">New</property>
+                <property name="tooltip-text" translatable="yes">Create a new artwork library</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="open-collection">
+                <property name="label" translatable="yes">Open…</property>
+                <property name="tooltip-text" translatable="yes">Open a library without replacing the libraries already loaded</property>
+              </object>
+            </child>
+          </object>
+        </property>
+        <property name="end-child">
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <property name="spacing">6</property>
+            <property name="margin-start">6</property>
+            <child>
+              <object class="GtkSearchEntry" id="artwork-search">
+                <property name="placeholder-text" translatable="yes">Search artwork or tags</property>
+                <property name="hexpand">True</property>
+                <accessibility><property name="label" translatable="yes">Search artwork or tags</property></accessibility>
+              </object>
+            </child>
+            <child>
+              <object class="GtkOverlay" id="artwork-overlay">
+                <property name="vexpand">True</property>
+                <property name="child">
+                  <object class="GtkScrolledWindow" id="artwork-scroller">
+                    <property name="hscrollbar-policy">never</property>
+                    <property name="vscrollbar-policy">automatic</property>
+                    <property name="min-content-height">160</property>
+                    <property name="propagate-natural-width">False</property>
+                    <property name="child">
+                      <object class="GtkGridView" id="artwork-grid">
+                        <property name="min-columns">1</property>
+                        <property name="max-columns">5</property>
+                        <property name="single-click-activate">False</property>
+                        <style><class name="grid-view-compact"/><class name="artwork-library-grid"/></style>
+                        <accessibility><property name="label" translatable="yes">Artwork in this collection</property></accessibility>
+                      </object>
+                    </property>
+                  </object>
+                </property>
+                <child type="overlay">
+                  <object class="GtkLabel" id="empty-message">
+                    <property name="label" translatable="yes">Open a collection or add your selection.</property>
+                    <property name="wrap">True</property>
+                    <property name="max-width-chars">24</property>
+                    <property name="justify">center</property>
+                    <property name="halign">center</property>
+                    <property name="valign">center</property>
+                    <property name="can-target">False</property>
+                    <style><class name="dim-label"/></style>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="spacing">8</property>
+                <child><object class="GtkLabel"><property name="label" translatable="yes">Size</property></object></child>
+                <child>
+                  <object class="GtkScale" id="thumbnail-size">
+                    <property name="adjustment">thumbnail-adjustment</property>
+                    <property name="draw-value">False</property>
+                    <property name="width-request">96</property>
+                    <property name="hexpand">True</property>
+                    <property name="tooltip-text" translatable="yes">Thumbnail size</property>
+                    <accessibility><property name="label" translatable="yes">Thumbnail size</property></accessibility>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="thumbnail-size-value">
+                    <property name="label">80 px</property>
+                    <property name="width-chars">6</property>
+                    <property name="xalign">1</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox" id="library-tools">
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkButton" id="add-selection">
+                    <property name="label" translatable="yes">Add selection</property>
+                    <property name="tooltip-text" translatable="yes">Store the selected objects as one editable artwork</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="import-artwork">
+                    <property name="label" translatable="yes">Import…</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="insert-artwork">
+                    <property name="label" translatable="yes">Insert</property>
+                    <property name="hexpand">True</property>
+                    <property name="tooltip-text" translatable="yes">Insert an independent editable copy on the canvas, or drag an artwork to place it</property>
+                    <style><class name="suggested-action"/></style>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel" id="library-status">
+        <property name="hexpand">True</property>
+        <property name="xalign">0</property>
+        <property name="ellipsize">end</property>
+        <property name="max-width-chars">18</property>
+        <style><class name="dim-label"/></style>
+      </object>
+    </child>
+  </object>
+</interface>

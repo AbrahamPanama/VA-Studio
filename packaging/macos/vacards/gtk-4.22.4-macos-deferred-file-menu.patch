@@ -1,0 +1,266 @@
+--- a/gtk/gtkapplication-quartz-menu.c
++++ b/gtk/gtkapplication-quartz-menu.c
+@@ -74,9 +74,227 @@
+         [item didChangeToggled];
+       else if (g_str_equal (name, "accel"))
+         [item didChangeAccel];
++    }
++}
++
++/*
++ * VACards macOS native-menu freeze fix (2026-09-20; Save-family extension
++ * 2026-09-22): defer a strict allowlist of native-menu actions out of Cocoa's
++ * menu-tracking callback.
++ *
++ * GNSMenuItem's normal path runs the GTK action synchronously from
++ * -didSelectItem:, while Cocoa is still tracking the menu. Opening a modal
++ * file dialog from there re-enters the main context from inside the nested
++ * NSMenu tracking loop, which leaves the native File menu unresponsive on the
++ * tested macOS 26.7/27.0 hosts. This scoped workaround defers ONLY these exact
++ * action names to a one-shot G_PRIORITY_DEFAULT_IDLE source on the default main
++ * context:
++ *
++ *   win.document-open
++ *   win.document-import
++ *   win.document-save
++ *   win.document-save-as
++ *   win.document-save-copy
++ *   app.file-open-window   (recent-files items, which carry a target)
++ *
++ * The Save family (win.document-save, win.document-save-as,
++ * win.document-save-copy) was added on 2026-09-22 after a native Save As
++ * sample on macOS 26.7 showed the same accessibilityPerformAction ->
++ * didSelectItem -> sp_file_save_dialog nested-main-loop path. Ordinary Save
++ * can open the chooser for an untitled document, so it is deferred too.
++ *
++ * Every other native action keeps the exact synchronous behavior. There is one
++ * request per click (no coalescing), no arbitrary timeout and no
++ * CFRunLoopPerformBlock. Each request snapshots weak references to the original
++ * focus widget and its original GtkRoot; at dispatch it is discarded unless the
++ * widget is still alive, still rooted at that same live, realized root. The
++ * request never retargets to whatever window happens to be active later. When
++ * there was no focus widget, the item's own tracker activation is retained and
++ * queued instead.
++ *
++ * This is a narrow workaround for the tested macos-backend menu interaction. It
++ * is not a general deferral policy and does not change other actions/platforms.
++ */
++typedef struct
++{
++  char               *action_name;    /* owned copy; never logged with a path */
++  GVariant           *action_target;  /* owned: get_action_target returns a ref */
++  GtkMenuTrackerItem *tracker_item;   /* strong ref for the no-focus fallback */
++  GWeakRef            widget;         /* weak: original focus widget */
++  GWeakRef            root;           /* weak: original GtkRoot */
++  gboolean            has_widget;     /* whether widget/root weak refs are set */
++} GtkQuartzDeferredMenuAction;
++
++static gint deferred_menu_callback_depth = 0;
++
++static gboolean
++deferred_menu_trace_enabled (void)
++{
++  static gint enabled = -1;
++
++  if (enabled < 0)
++    enabled = (g_getenv ("VACARDS_MACOS_MENU_TRACE") != NULL) ? 1 : 0;
++
++  return enabled == 1;
++}
++
++static void
++deferred_menu_trace (const char *event,
++                     const char *action_name,
++                     const char *reason)
++{
++  if (!deferred_menu_trace_enabled ())
++    return;
++
++  if (reason != NULL)
++    g_printerr ("VACARDS_MACOS_MENU_TRACE %s action=%s reason=%s callback_depth=%d g_main_depth=%d\n",
++                event, action_name != NULL ? action_name : "(null)", reason,
++                deferred_menu_callback_depth, g_main_depth ());
++  else
++    g_printerr ("VACARDS_MACOS_MENU_TRACE %s action=%s callback_depth=%d g_main_depth=%d\n",
++                event, action_name != NULL ? action_name : "(null)",
++                deferred_menu_callback_depth, g_main_depth ());
++}
++
++static gboolean
++deferred_menu_action_is_allowlisted (const char *action_name)
++{
++  return action_name != NULL &&
++         (g_str_equal (action_name, "win.document-open") ||
++          g_str_equal (action_name, "win.document-import") ||
++          g_str_equal (action_name, "app.file-open-window") ||
++          g_str_equal (action_name, "win.document-save") ||
++          g_str_equal (action_name, "win.document-save-as") ||
++          g_str_equal (action_name, "win.document-save-copy"));
++}
++
++static void
++deferred_menu_action_free (gpointer data)
++{
++  GtkQuartzDeferredMenuAction *request = data;
++
++  g_free (request->action_name);
++  g_clear_pointer (&request->action_target, g_variant_unref);
++  g_clear_object (&request->tracker_item);
++
++  if (request->has_widget)
++    {
++      g_weak_ref_clear (&request->widget);
++      g_weak_ref_clear (&request->root);
++    }
++
++  g_free (request);
++}
++
++static gboolean
++deferred_menu_action_dispatch (gpointer data)
++{
++  GtkQuartzDeferredMenuAction *request = data;
++
++  if (request->tracker_item != NULL)
++    {
++      /* No focus widget at request time: keep the tracker fallback. */
++      deferred_menu_trace ("dispatched", request->action_name, "tracker");
++      gtk_menu_tracker_item_activated (request->tracker_item);
+     }
++  else
++    {
++      GObject *widget_object = g_weak_ref_get (&request->widget);
++      GObject *root_object = g_weak_ref_get (&request->root);
++      gboolean live = FALSE;
++
++      if (widget_object != NULL && GTK_IS_WIDGET (widget_object) &&
++          root_object != NULL && GTK_IS_ROOT (root_object))
++        {
++          GtkWidget *widget = GTK_WIDGET (widget_object);
++          GtkWidget *root_widget = GTK_WIDGET (root_object);
++
++          /*
++           * Require the same live root and a realized root. This rejects the
++           * original window having been destroyed or unrealized (or the widget
++           * having been reparented) while the request was queued. Never
++           * substitute the currently active window.
++           */
++          live = gtk_widget_get_root (widget) == GTK_ROOT (root_object) &&
++                 gtk_widget_get_realized (root_widget);
++        }
++
++      if (live)
++        {
++          deferred_menu_trace ("dispatched", request->action_name, "widget");
++          gtk_widget_activate_action_variant (GTK_WIDGET (widget_object),
++                                              request->action_name,
++                                              request->action_target);
++        }
++      else
++        {
++          deferred_menu_trace ("dropped", request->action_name,
++                               "target-window-gone");
++        }
++
++      g_clear_object (&widget_object);
++      g_clear_object (&root_object);
++    }
++
++  return G_SOURCE_REMOVE;
+ }
+ 
++/*
++ * Queue one deferred request. Returns TRUE when the request was handed to the
++ * main context, FALSE when the caller must keep its exact synchronous path.
++ */
++static gboolean
++deferred_menu_action_queue (const char          *action_name,
++                            GtkWidget           *focus_widget,
++                            GtkMenuTrackerItem  *tracker_item)
++{
++  GtkQuartzDeferredMenuAction *request;
++  GtkRoot *root = NULL;
++  guint source_id;
++
++  request = g_new0 (GtkQuartzDeferredMenuAction, 1);
++  request->action_name = g_strdup (action_name);
++
++  if (focus_widget != NULL)
++    {
++      root = gtk_widget_get_root (focus_widget);
++
++      /* A focus widget without a root cannot be validated at dispatch time. */
++      if (root == NULL)
++        {
++          g_free (request->action_name);
++          g_free (request);
++          return FALSE;
++        }
++
++      request->action_target = gtk_menu_tracker_item_get_action_target (tracker_item);
++      g_weak_ref_init (&request->widget, focus_widget);
++      g_weak_ref_init (&request->root, root);
++      request->has_widget = TRUE;
++    }
++  else
++    {
++      request->tracker_item = g_object_ref (tracker_item);
++    }
++
++  source_id = g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
++                               deferred_menu_action_dispatch,
++                               request,
++                               deferred_menu_action_free);
++
++  /*
++   * On failure g_idle_add_full's g_source_unref has already run the destroy
++   * notify, so the request is freed exactly once and must not be touched here.
++   */
++  if (source_id == 0)
++    return FALSE;
++
++  deferred_menu_trace ("queued", action_name,
++                       request->tracker_item != NULL ? "tracker" : "widget");
++
++  return TRUE;
++}
++
+ @implementation GNSMenuItem
+ 
+ - (id)initWithTrackerItem:(GtkMenuTrackerItem *)aTrackerItem
+@@ -305,6 +523,26 @@
+   GtkWidget *focus_widget = [self findFocusWidget];
+   const char *action_name = gtk_menu_tracker_item_get_action_name (trackerItem);
+ 
++  /*
++   * Instrumentation: track the native Cocoa -> GTK callback depth at its true
++   * boundary so "queued" is logged while still inside -didSelectItem: and the
++   * later idle "dispatched" is logged after it has unwound.
++   */
++  deferred_menu_callback_depth++;
++
++  /*
++   * Only the allowlisted native actions are deferred by one main-context idle.
++   * Everything else, including the text/clipboard/selection actions that reach
++   * this selector through maybeActivateAction:, keeps the exact synchronous
++   * behavior below.
++   */
++  if (deferred_menu_action_is_allowlisted (action_name) &&
++      deferred_menu_action_queue (action_name, focus_widget, trackerItem))
++    {
++      deferred_menu_callback_depth--;
++      return;
++    }
++
+   if (focus_widget != NULL && action_name != NULL)
+     {
+       GVariant *action_target = gtk_menu_tracker_item_get_action_target (trackerItem);
+@@ -314,6 +552,8 @@
+     }
+   else
+     gtk_menu_tracker_item_activated (trackerItem);
++
++  deferred_menu_callback_depth--;
+ }
+ 
+ - (BOOL)validateMenuItem:(NSMenuItem *)menuItem

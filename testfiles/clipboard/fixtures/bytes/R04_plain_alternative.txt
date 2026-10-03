@@ -1,0 +1,2 @@
+R04 fallback plain: the complete alternative text
+second line stays intact

@@ -1,0 +1,19 @@
+{
+  "description": "Top-minus-rest anchors on the top-most object (c) and consumes the rest (a, b) in one Undo step.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,b,c;vacards-boolean:op=top-minus-rest",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "modified": ["c"],
+      "deleted": ["a", "b"],
+      "selection_after": ["c"],
+      "undo": "one-step"
+    }
+  ]
+}

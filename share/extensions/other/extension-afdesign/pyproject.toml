@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2023 Software Freedom Conservancy <info@sfconservancy.org>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+[tool.poetry]
+name = "inkaf"
+version = "0.1.0"
+description = "Inkscape extension to import afdesign files"
+authors = ["Inkscape Authors <inkscape-devel@lists.inkscape.org>"]
+license = "GPL-2.0-or-later"
+readme = "README.md"
+repository = "https://gitlab.com/inkscape/extras/extension-afdesign"
+keywords = ["extensions", "graphics", "inkscape", "svg", "vector"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.13"
+zstandard = "^0.20.0"
+inkex = {git = "https://gitlab.com/inkscape/extensions", rev = "master"}
+pillow = ">=7.0.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.2.1"
+pytest-cov = "^3.0.0"
+coverage = "^6.2"
+tox = "^3.24.5"
+black = "^24.4.2"
+
+[tool.poetry.group.dev.dependencies]
+reuse = "^4.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+# see https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+filterwarnings = [
+    "ignore::pytest.PytestDeprecationWarning",
+]
+
+[tool.coverage.run]
+omit = [
+    "inkaf/extract.py",
+]

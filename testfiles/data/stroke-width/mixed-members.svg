@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+     width="160" height="80" viewBox="0 0 160 80">
+  <g id="mixed">
+    <rect id="thin" x="2" y="2" width="12" height="12"
+          style="fill:none;stroke:#123456;stroke-width:2;stroke-dasharray:4,2"/>
+    <g id="nested">
+      <rect id="thick" x="20" y="2" width="12" height="12"
+            style="fill:none;stroke:#654321;stroke-width:8;stroke-dasharray:8,4"/>
+      <rect id="protected" x="36" y="2" width="12" height="12"
+            sodipodi:insensitive="true" style="fill:none;stroke:black;stroke-width:3"/>
+    </g>
+    <image id="bitmap" x="52" y="2" width="1" height="1"
+           xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lXcAAAAASUVORK5CYII="/>
+    <text id="text" x="2" y="45" style="font-family:sans-serif;font-size:20px;fill:none;stroke:black"><tspan id="zero" style="stroke-width:0">A</tspan><tspan id="two" style="stroke-width:2">B</tspan><tspan id="eight" style="stroke-width:8">C</tspan></text>
+    <rect id="non-scaling" x="70" y="2" width="12" height="12"
+          style="fill:none;stroke:black;stroke-width:2;vector-effect:non-scaling-stroke"/>
+    <rect id="hairline" x="86" y="2" width="12" height="12"
+          style="fill:none;stroke:black;stroke-width:1;vector-effect:non-scaling-stroke;-inkscape-stroke:hairline"/>
+  </g>
+  <rect id="outside" x="110" y="2" width="12" height="12"
+        style="fill:none;stroke:#abc;stroke-width:4"/>
+</svg>

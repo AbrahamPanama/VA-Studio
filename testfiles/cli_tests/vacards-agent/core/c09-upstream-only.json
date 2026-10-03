@@ -1,0 +1,9 @@
+{
+  "description": "Upstream-only actions emit no VACards records and succeed.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "select-all;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [],
+  "expect_stderr_not_contains": ["VASTUDIO-RESULT"],
+  "expect_files": {"out.svg": {"exists": true, "contains": ["<svg"]}}
+}

@@ -1,0 +1,14 @@
+{
+  "description": "In --shell mode a VACards rejection on an earlier line still vetoes the automatic --export-filename export after later successful lines.",
+  "input": "{TESTCASES}/shapes.svg",
+  "args": ["--shell", "--export-filename={WORK}/auto.svg"],
+  "stdin": "vacards-result-file:{RESULT}\nvacards-options:bogus=1\nvacards-options\n",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "rejected", "reason": "invalid-argument"},
+    {"action": "vacards-options", "status": "ok"},
+    {"action": "export", "status": "skipped", "reason": "halted-after-error"}
+  ],
+  "expect_files": {"auto.svg": {"exists": false}}
+}

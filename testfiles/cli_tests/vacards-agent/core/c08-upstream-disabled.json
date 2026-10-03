@@ -1,0 +1,9 @@
+{
+  "description": "A disabled upstream action notes a rejection (exit 3) without halting: the export still runs.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "object-destructive-clip;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [],
+  "expect_stderr_contains": ["is disabled"],
+  "expect_files": {"out.svg": {"exists": true}}
+}

@@ -1,0 +1,20 @@
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+  xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+  xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" width="153.349mm"
+  height="50.855999mm" viewBox="0 0 153.349 50.855999" version="1.1" id="svg1"
+  inkscape:version="1.4.2 (ebf0e940, 2025-05-08)" sodipodi:docname="test_mojibake.svg">
+  <sodipodi:namedview id="namedview1" pagecolor="#505050" bordercolor="#eeeeee" borderopacity="1"
+    inkscape:showpageshadow="0" inkscape:pageopacity="0" inkscape:pagecheckerboard="0"
+    inkscape:deskcolor="#505050" inkscape:document-units="mm" inkscape:zoom="1.3261004"
+    inkscape:cx="234.14517" inkscape:cy="157.22791" inkscape:current-layer="layer1" showgrid="false" />
+  <defs id="defs1" />
+  <g inkscape:label="Layer 1" inkscape:groupmode="layer" id="layer1">
+    <text xml:space="preserve"
+      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1;font-family:sans-serif;-inkscape-font-specification:sans-serif;font-variant-ligatures:none;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:start;white-space:pre;inline-size:154.11;fill:#000000;stroke-width:0.264583;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3"
+      x="17.202438" y="27.106873" id="text1" transform="translate(-17.541089,-21.780066)"><tspan x="17.202438" y="27.106873" id="tspan1">&#32314;&#12421;&#65533;&#65390;&#32359;&#65380;&#32349;&#65404;&#32349;&#19978;&#12520;&#32349;&#65404;&#32349;&#65396;&#32359;&#65385;&#32314;&#65390;&#32314;&#21558;&#8243;&#32314;&#65384;&#32314;&#32747;&#9650;&#32314;&#28356;&#65378;&#65384;&#32306;&#65533;
+</tspan><tspan x="17.202438" y="33.527814" id="tspan15">&#34719;&#19978;&#12306;&#32359;&#12423;&#65402;&#36628;&#8595;&#34560;&#65399;&#32314;&#28312;&#65286;&#32359;&#20597;&#65346;&#32314;&#65380;<tspan style="fill:#0000ff" id="tspan2">&#39665;&#65533;</tspan><tspan style="fill:#0000ff" id="tspan3">&#32314;&#65533;&#32314;&#26164;&#65353;</tspan>&#32306;&#65533;
+</tspan><tspan x="17.202438" y="39.948759" id="tspan16">&#32314;&#65533;&#32314;&#65380;&#32314;&#19978;&#65312;&#32314;&#65533;&#35709;&#65390;&#32314;&#65383;&#39711;&#65406;&#32359;&#23784;&#65356;&#32314;&#28312;&#916;&#32349;&#65386;&#32349;&#65404;&#32359;&#65386;&#34806;&#12421;&#128;&#65533;
+</tspan><tspan x="17.202438" y="46.369703" id="tspan22"><tspan style="letter-spacing:1.77271px" id="tspan17">&#39515;&#38593;&#65380;&#65533;</tspan><tspan style="letter-spacing:1.77271px" id="tspan18">&#32314;&#65390;&#32314;&#24369;&#65353;&#32314;&#24369;&#65353;&#32314;&#65394;&#32314;&#20061;&#65355;</tspan><tspan style="letter-spacing:1.77271px" id="tspan19">&#38357;&#65533;</tspan><tspan style="letter-spacing:1.77271px" id="tspan20">&#32314;&#65390;</tspan><tspan style="letter-spacing:1.77271px" id="tspan21">&#35925;&#65378;&#32306;&#65533;</tspan></tspan></text>
+  </g>
+</svg>

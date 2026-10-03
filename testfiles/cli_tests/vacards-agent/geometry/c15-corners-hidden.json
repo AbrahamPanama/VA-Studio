@@ -1,0 +1,22 @@
+{
+  "description": "A hidden shape is not a visible, unlocked native shape: rejected requires-single-shape, nothing changes.",
+  "input": "{FIXTURES}/corners-refusals.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:hidden;vacards-corners:radius=2mm",
+  "expect_exit": 3,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "vacards-corners",
+      "status": "rejected",
+      "mode": "single-object",
+      "reason": "requires-single-shape",
+      "undo": "none",
+      "targets": {
+        "selected": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "description": "A dry run reports the offset that would be created without touching the document: the exports before and after are byte-identical.",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};export-filename:{WORK}/before.svg;export-do;select-by-id:sq;vacards-offset:distance=2,dry-run;export-filename:{WORK}/after.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-offset",
+      "status": "ok",
+      "mode": "per-selected-root",
+      "reason": "success",
+      "dry_run": true,
+      "message": "Dry run: 1 offset path(s) would be created.",
+      "targets": {"selected": 1, "eligible": 1},
+      "created": [],
+      "selection_after": ["sq"],
+      "undo": "none",
+      "metrics": {"skipped": 0, "open_subpaths_skipped": 0, "results": 1}
+    }
+  ],
+  "expect_same_files": [["before.svg", "after.svg"]]
+}

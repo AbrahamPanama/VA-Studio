@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2-dev (1:1.0+devel+202201200004+c1616499b1)"
+   sodipodi:docname="three_pages_and_two_grids.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:blackoutopacity="0.0"
+     inkscape:document-units="mm"
+     showgrid="true"
+     showguides="true"
+     inkscape:zoom="0.5946522"
+     inkscape:cx="1251.9923"
+     inkscape:cy="1194.8161"
+     inkscape:window-width="1852"
+     inkscape:window-height="1016"
+     inkscape:window-x="68"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <sodipodi:guide
+       position="26.696277,284.09681"
+       orientation="0,1"
+       id="guide9" />
+    <sodipodi:guide
+       position="-76.974264,413.12882"
+       orientation="0,1"
+       id="guide61" />
+    <sodipodi:guide
+       position="26.696276,284.09682"
+       orientation="1,0"
+       id="guide115" />
+    <inkscape:grid
+       type="xygrid"
+       id="grid169"
+       units="cm"
+       spacingx="1"
+       spacingy="1" />
+    <inkscape:grid
+       type="axonomgrid"
+       id="grid171"
+       color="#ff8f3f"
+       opacity="0.1254902"
+       empcolor="#ff8f3f"
+       empopacity="0.25098039"
+       units="in"
+       spacingy="12.7"
+       empspacing="1" />
+    <inkscape:page
+       x="0"
+       y="0"
+       width="210"
+       height="297"
+       id="page417" />
+    <inkscape:page
+       x="220"
+       y="0"
+       width="210"
+       height="297"
+       id="page419" />
+    <inkscape:page
+       x="0"
+       y="305"
+       width="430"
+       height="107.75"
+       id="page520" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1" />
+</svg>

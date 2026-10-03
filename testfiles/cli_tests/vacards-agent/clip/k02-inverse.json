@@ -1,0 +1,30 @@
+{
+  "description": "object-destructive-inverse-clip reports Changed under its own action name. The cutter is kept (CLIP-1).",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:img1,cut1;object-destructive-inverse-clip;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "object-destructive-inverse-clip",
+      "status": "changed",
+      "reason": "success",
+      "modified": [
+        "img1"
+      ],
+      "undo": "one-step"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"img1\"",
+        "id=\"cut1\""
+      ]
+    }
+  }
+}

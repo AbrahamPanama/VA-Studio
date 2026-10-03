@@ -1,0 +1,20 @@
+{
+  "description": "object-align on two objects, one with a boolean-operation path effect, hides the effect while measuring and never gave it back: is_visible stayed \"false\" in the saved file. The effect must be enabled again and the operand opb must actually have moved left by 10 (translate(-10)) to the left edge of opa.",
+  "input": "{FIXTURES}/degenerate-geometry.svg",
+  "actions": "select-by-id:opa,opb;object-align:left;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "is_visible=\"true\"",
+        "id=\"lpe-bool\"",
+        "transform=\"translate(-10)\""
+      ],
+      "not_contains": [
+        "is_visible=\"false\"",
+        "nan"
+      ]
+    }
+  }
+}

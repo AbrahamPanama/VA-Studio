@@ -1,0 +1,99 @@
+<svg viewBox="0 0 240 40" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    text {
+      font: italic 12px serif;
+    }
+    tspan {
+      font: bold 10px sans-serif;
+      fill: red;
+    }
+  </style>
+
+  <text id="main">Text Base
+<title>Title text</title>
+<desc>Desc text</desc>
+<tspan>tspan 1</tspan>
+tail 1
+<tspan>tspan 2</tspan>
+<tspan>tspan 3</tspan>
+<tspan>tspan 4</tspan>
+tail 4
+<tspan>Parent 1 tspan
+<tspan>Child 1 tspan</tspan>
+<tspan>Child 2 tspan</tspan>
+Child 2 tail</tspan>
+Parent 1 tail
+<tspan>Grandparent 1 tspan
+<tspan>Parent 2 tspan</tspan>
+<tspan>Parent 3 tspan
+<tspan>Child 3 tspan</tspan>
+<tspan>Child 4 tspan</tspan>
+Child 4 tail</tspan>
+Parent 3 tail</tspan>
+Grandparent 1 tail
+<tspan>tspan 5<title>Title tspan</title><desc>Desc tspan</desc></tspan>
+<tspan>tspan 6</tspan>
+tail 6
+<tspan><tspan>Child 5 tspan</tspan>
+Parent 4 tail</tspan>
+The end
+</text>
+
+<!-- Word of warning, these are higly sensitive and picky about whitespace -->
+<text id="zero_length_string"></text>
+<text id="level1_oneline">one</text>
+<text id="level1_oneline_spaced">  one  </text>
+<text id="level1_oneline_trailing_spaces">one  </text>
+<text id="level1_oneline_trailing_newlines">one
+
+</text>
+
+<text id="level1_multiline">one
+two</text>
+<text id="level1_multiline_spaced"> one
+
+two </text>
+<text id="level1_multiline_trailing_spaces">one
+
+two  </text>
+<text id="level1_multiline_trailing_newline">one
+
+two
+
+</text>
+
+<!-- Similar to above but has 1 nested element -->
+<text id="level2_oneline">one<tspan>two</tspan></text>
+<text id="level2_oneline_spaced">  one  <tspan>  two  </tspan></text>
+<text id="level2_oneline_trailing_spaces">one  <tspan>two  </tspan></text>
+<text id="level2_oneline_trailing_newlines">one
+
+<tspan>two
+
+</tspan></text>
+
+<text id="level2_multiline">one
+two<tspan>three
+four</tspan></text>
+<text id="level2_multiline_spaced"> one
+
+two <tspan>three 
+
+four </tspan></text>
+
+<text id="level2_multiline_trailing_spaces">one
+
+two  <tspan>three </tspan></text>
+<text id="level2_multiline_trailing_newline">one
+
+two
+<tspan>three</tspan>
+
+</text>
+
+<text id="level2_oneline_middle_element">one <tspan> two </tspan>  three  <title>  four  </title> <desc>  five  </desc>  <tspan>six </tspan> </text>
+
+
+
+
+</svg>

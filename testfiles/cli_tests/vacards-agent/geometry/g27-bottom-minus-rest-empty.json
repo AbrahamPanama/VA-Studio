@@ -1,0 +1,22 @@
+{
+  "description": "Bottom-minus-rest whose bottom anchor a is fully covered by a rect above it produces an empty result: the boolean fails, restores the document, and the export keeps a, b and cover.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;select-by-id:a,b,cover;vacards-boolean:op=bottom-minus-rest;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 4,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "failed",
+      "mode": "collective-geometry",
+      "reason": "boolean-failed"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": ["id=\"a\"", "id=\"b\"", "id=\"cover\""]
+    }
+  }
+}

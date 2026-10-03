@@ -1,0 +1,16 @@
+BasedOnStyle: LLVM
+
+AlwaysBreakAfterDefinitionReturnType: All
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterEnum: true
+  AfterCaseLabel: true
+  AfterStruct: true
+  AfterFunction: true
+
+BinPackParameters: false
+ColumnLimit: 80
+IndentWidth: 8
+SpaceAfterCStyleCast: true
+SpaceBeforeParens: Always

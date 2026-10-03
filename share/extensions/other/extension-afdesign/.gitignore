@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: 2022 Jonathan Neuhauser <jonathan.neuhauser@outlook.com>
+# SPDX-FileCopyrightText: 2023 Software Freedom Conservancy <info@sfconservancy.org>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+# Copied from main extensions repository
+
+*.pyc
+*.swp
+*.tmp
+*egg-info
+.eggs/
+old_tests
+.coverage
+htmlcov/
+TODO
+docs/source/**/*
+!**/docs/source/index.rst
+build
+old
+.mypy_cache
+.pytest_cache
+.idea
+dist
+cov.xml
+coverage.xml
+.vscode/
+tests/data/refs/*
+!tests/data/refs/*.out
+.tox/
+.coverage-py*
+.venv
+*.json
+
+tests/data/cmd/*/*.msg.output
+__pycache__
+
+# ignore auto generated file
+requirements.txt
+
+# ignore PDF files that can be downloaded from somewhere else
+5001.DSC_Spec.pdf
+Adobe Illustrator File Format.pdf
+/ignore

@@ -1,0 +1,26 @@
+{
+  "description": "Union of two overlapping paths keeps the bottom object's id, deletes the other, and leaves one fewer object.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,b;vacards-boolean:op=union;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "modified": ["a"],
+      "deleted": ["b"],
+      "selection_after": ["a"],
+      "undo": "one-step"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": ["id=\"a\"", "id=\"c\"", "id=\"far\"", "id=\"stroked\""],
+      "not_contains": ["id=\"b\""]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "description": "selection-release-nesting-contour clears the markers and reports Changed.",
+  "input": "{FIXTURES}/contour.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:marked;selection-release-nesting-contour;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "selection-release-nesting-contour",
+      "status": "changed",
+      "reason": "success",
+      "targets": {"selected": 1, "eligible": 2},
+      "modified": ["marked", "cut3"]
+    }
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "not_contains": ["nesting-contour"]}
+  }
+}

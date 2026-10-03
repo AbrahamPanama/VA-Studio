@@ -1,0 +1,154 @@
+# Dependencies are managed in the Dockerfile in the inkscape-ci-docker
+# Git repository. Change them there, wait a bit, and then we'll use
+# the new ones here in these builds.
+image: ${IMAGE}
+
+stages:
+  - build
+  - test
+  - coverage
+  - deploy
+variables:
+  GIT_DEPTH: "10"
+  GIT_SUBMODULE_STRATEGY: recursive
+  IMAGE: registry.gitlab.com/inkscape/inkscape-ci-docker/extensions
+
+before_script:
+  - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/inkscape/extensions.git
+  - sed -i 's|\(--cov-report term\)|\1 --ignore-glob=extensions/*|' tox.ini
+  - sed -i "/COVERAGE_FILE/a\ \ \ \ PYTHONPATH=$(realpath .):$(realpath extensions)" tox.ini
+  - cat tox.ini
+
+
+.tests:
+  artifacts:
+    name: "coverage"
+    when: always
+    paths:
+      - .coverage-*
+      - htmlcov
+
+codestyle:black:
+  stage: test
+  script:
+    - source /root/pyenv-init
+    - pyenv shell 3.11.0
+    - pip install black
+    - black . --check --verbose --diff --color --extend-exclude="/gcodetools.py"
+    
+test:python38:
+  extends: .tests
+  script:
+    - source /root/pyenv-init
+    - pyenv shell 3.8.0
+    - tox -e py38-normal
+
+test:python39:
+  extends: .tests
+  script:
+    - source /root/pyenv-init
+    - pyenv shell 3.9.0
+    - tox -e py39-normal
+
+test:python310:
+  extends: .tests
+  script:
+    - source /root/pyenv-init
+    - pyenv shell 3.10.0
+    - tox -e py310-normal
+
+test:python311:
+  extends: .tests
+  script:
+    - source /root/pyenv-init
+    - pyenv shell 3.11.0
+    - tox -e py311-normal
+
+test:python312:
+  extends: .tests
+  script:
+    - source /root/pyenv-init
+    - pyenv shell 3.12.0
+    - tox -e py312-normal
+
+test:coverage:
+  stage: coverage
+  script:
+    - source /root/pyenv-init
+    - pyenv shell 3.11.0
+    - pip install coverage
+    - coverage3 combine .coverage-*
+    - coverage3 report -m --precision=2
+    - coverage3 html --ignore-errors --title="Coverage for Inkscape Extensions (${CI_COMMIT_REF_NAME} branch)"
+    - echo -e "\n\n"
+      "Coverage report successfully created; you can access the full HTML report at\n"
+      "  https://inkscape.gitlab.io/-/extras/extensions-gcodetools/-/jobs/${CI_JOB_ID}/artifacts/htmlcov/index.html"
+      "\n\n"
+    - pip install pylint==2.17.4
+    - python3 extensions/tests/add_pylint.py htmlcov/index.html
+    - pip install anybadge
+    - pylintscore=$(grep -Eo "[0-9]+.[0-9]+</td></tr></tfoot>" htmlcov/index.html | grep -Eo "[0-9]+.[0-9]+")
+    - anybadge -l pylint -v $pylintscore -f htmlcov/pylint.svg 2=red 4=orange 8=yellow 10=green
+  dependencies:
+    - test:python38
+    - test:python39
+    - test:python310
+    - test:python311
+  when: always
+  coverage: '/TOTAL.+?(\d+.\d+%)/'
+  artifacts:
+    paths:
+      - htmlcov/
+
+
+test:validate-inx:
+  script:
+    - apt-get update && apt-get install libxml2-utils
+    - xmllint --noout --relaxng extensions/inkex/tester/inkscape.extension.rng *.inx
+    - xmllint --noout --schematron extensions/inkex/tester/inkscape.extension.schema *.inx
+
+
+# mypy:
+#   stage: test
+#   when: always
+#   script:
+#     - source /root/pyenv-init
+#     - pyenv shell 3.7.2
+#     - pip install mypy
+#     - mypy inkex --ignore-missing-imports
+
+# sphinx:
+#   stage: test
+#   when: always
+#   script:
+#     - source /root/pyenv-init
+#     - pyenv shell 3.9.0
+#     - pip3 install Sphinx==4.2.0
+#     - pip3 install sphinx-autodoc-typehints
+#     - pip3 install typed-ast
+#     - pip3 install lxml
+#     - pip3 install cssselect
+#     - pip3 install numpy
+#     - pip3 install pytest
+#     - pip3 install sphinx-rtd-theme
+#     - sphinx-apidoc -F -f -e -P -o docs/source inkex */deprecated.py
+#     - python3 setup.py build_sphinx -s docs
+#     - echo -e "\n\n"
+#       "Documentation for inkex module successfully created; you can access the HTML version at\n"
+#       "  https://${CI_PROJECT_NAMESPACE}.gitlab.io/-/${CI_PROJECT_NAME}/-/jobs/${CI_JOB_ID}/artifacts/build/sphinx/html/index.html"
+#       "\n\n"
+#   artifacts:
+#     paths:
+#       - build/sphinx/
+# pages:
+#   stage: deploy
+#   only:
+#     - master@inkscape/extensions
+#   when: always
+#   script:
+#     - mkdir -p public
+#     - if test -e htmlcov; then cp -r htmlcov public/coverage; fi
+#     - if test -e build/sphinx/html; then cp -r build/sphinx/html public/documentation; fi
+#   artifacts:
+#     paths:
+#       - public

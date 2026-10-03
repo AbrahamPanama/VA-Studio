@@ -1,0 +1,12 @@
+{
+  "description": "One vacards-undo after the c01 edit restores the document completely: the exports taken before the edit and after the undo are byte-identical, so the corner edit is exactly one Undo step.",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};export-filename:{WORK}/before.svg;export-do;select-by-id:r;vacards-corners:radius=2mm;vacards-undo;export-filename:{WORK}/after.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-corners", "status": "changed", "undo": "one-step"},
+    {"action": "vacards-undo", "status": "changed"}
+  ],
+  "expect_same_files": [["before.svg", "after.svg"]]
+}

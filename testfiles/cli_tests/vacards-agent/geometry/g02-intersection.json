@@ -1,0 +1,18 @@
+{
+  "description": "Intersection of two overlapping paths is one committed change with one Undo step.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,b;vacards-boolean:op=intersection",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "modified": ["a"],
+      "deleted": ["b"],
+      "undo": "one-step"
+    }
+  ]
+}

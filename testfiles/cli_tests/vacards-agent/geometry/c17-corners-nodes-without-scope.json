@@ -1,0 +1,23 @@
+{
+  "description": "nodes given with the default scope=all is refused rather than widened to every corner.",
+  "input": "{FIXTURES}/corners-refusals.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r;vacards-corners:radius=2mm,nodes=0:1",
+  "expect_exit": 3,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "vacards-corners",
+      "status": "rejected",
+      "mode": "single-object",
+      "reason": "invalid-argument",
+      "undo": "none",
+      "error": {
+        "code": "missing-required",
+        "key": "scope"
+      }
+    }
+  ]
+}

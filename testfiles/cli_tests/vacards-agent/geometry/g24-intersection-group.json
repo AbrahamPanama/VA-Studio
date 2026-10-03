@@ -1,0 +1,23 @@
+{
+  "description": "Intersection of a rect and an overlapping group: the group acts as one combined shape and the overlap becomes one path. The emptied group is removed.",
+  "input": "{FIXTURES}/groups-boolean.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r1,gover;vacards-boolean:op=intersection;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "targets": {"selected": 2, "excluded": []},
+      "modified": ["r1"],
+      "deleted": ["gover", "govera"],
+      "selection_after": ["r1"],
+      "undo": "one-step"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "contains": ["id=\"r1\""], "not_contains": ["id=\"gover\""]}
+  }
+}

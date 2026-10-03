@@ -1,0 +1,12 @@
+{
+  "description": "One vacards-undo after delete-originals restores the original and re-links the clones the delete had unlinked: the export is byte-identical to the one before the action.",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};export-filename:{WORK}/before.svg;export-do;select-by-id:sq;vacards-offset:distance=2,delete-originals;vacards-undo;export-filename:{WORK}/after.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-offset", "status": "changed", "undo": "one-step"},
+    {"action": "vacards-undo", "status": "changed"}
+  ],
+  "expect_same_files": [["before.svg", "after.svg"]]
+}

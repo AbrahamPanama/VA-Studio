@@ -1,0 +1,5 @@
+--- a/gtk/gtkrecentmanager.c
++++ b/gtk/gtkrecentmanager.c
+@@ -969 +969 @@
+-  if (data->groups && ((char*)data->groups)[0] != '\0')
++  if (data->groups && data->groups[0] && data->groups[0][0] != '\0')

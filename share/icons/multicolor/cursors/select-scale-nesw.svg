@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" x="-16" y="-16" style="fill:gray;stroke:black">
+  <style>@import './cursors.css';</style>
+  <g id="cursor" class="drop-shadow" style="fill:none;stroke-linecap:round;stroke-linejoin:round">
+    <g style="stroke:white;stroke-width:4"><path d="M 24,8 L 8,24 M 24,8 L 18,8 M 24,8 L 24,14 M 8,24 L 8,18 M 8,24 L 14,24"/></g>
+    <g style="stroke:black;stroke-width:1.6"><path d="M 24,8 L 8,24 M 24,8 L 18,8 M 24,8 L 24,14 M 8,24 L 8,18 M 8,24 L 14,24"/></g>
+  </g>
+</svg>

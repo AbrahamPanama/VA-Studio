@@ -1,0 +1,414 @@
+{
+  "schema": "va-studio-third-party-components/1",
+  "about": "Curated inventory of the non-Cargo components in VA Studio, read by generate-third-party-notices.py. Cargo crates come from the lockfiles, not from this file. 'path' is relative to the source root. 'license_files' are relative to 'path', or to the source root when they start with '@/'. 'inputs' (root-relative) are the patches and manifests that define a modified external build input. A component whose license files cannot be found is reported as incomplete.",
+  "components": [
+    {
+      "id": "inkscape",
+      "name": "Inkscape (upstream base of VA Studio)",
+      "path": ".",
+      "kind": "source-base",
+      "pin": "Inkscape 1.5 development snapshot d2b9be1c53",
+      "upstream": "https://gitlab.com/inkscape/inkscape",
+      "license": "GPL-2.0-or-later, with the exceptions listed in COPYING; the combined binaries are GPL-3.0-or-later",
+      "license_files": [
+        "COPYING",
+        "LICENSES/GPL-2.0-or-later.txt",
+        "LICENSES/GPL-3.0-or-later.txt",
+        "AUTHORS",
+        "TRANSLATORS"
+      ],
+      "shipped": "compiled into VA Studio",
+      "modified": "yes: VA Studio changes are the history of this repository after the baseline import"
+    },
+    {
+      "id": "lib2geom",
+      "name": "lib2geom",
+      "path": "src/3rdparty/2geom",
+      "kind": "source-submodule",
+      "pin": "c7d8378ccc109bdb2ed30f0c8407725e93ffdd9b",
+      "upstream": "https://gitlab.com/inkscape/lib2geom",
+      "license": "LGPL-2.1-only OR MPL-1.1",
+      "license_files": [
+        "LICENSE.md",
+        "COPYING-LGPL-2.1",
+        "COPYING-MPL-1.1"
+      ],
+      "shipped": "compiled into VA Studio",
+      "modified": "no"
+    },
+    {
+      "id": "libcroco",
+      "name": "libcroco (VA Studio fork)",
+      "path": "src/3rdparty/libcroco",
+      "kind": "fork",
+      "pin": "7369a22273e2d7b7c5ba7b582fd52759649f5425",
+      "upstream": "https://gitlab.com/inkscape/libcroco",
+      "license": "LGPL-2.1-only (source headers; COPYING carries the LGPL-2.0 text)",
+      "license_files": [
+        "COPYING",
+        "COPYING.LIB",
+        "COPYRIGHTS",
+        "AUTHORS"
+      ],
+      "shipped": "compiled into VA Studio",
+      "modified": "yes: one VA commit on top of upstream d851af79660943cb8b6feaa9c7cc9d39eb3b4686 (Unicode Windows CSS file names)"
+    },
+    {
+      "id": "libdepixelize",
+      "name": "libdepixelize",
+      "path": "src/3rdparty/libdepixelize",
+      "kind": "source-submodule",
+      "pin": "73b07a45f01cf7c4b179d1e65cef22609e000419",
+      "upstream": "https://gitlab.com/inkscape/devel/libdepixelize",
+      "license": "LGPL-2.1-or-later OR GPL-2.0-or-later",
+      "license_files": [
+        "COPYING",
+        "COPYING.LESSER"
+      ],
+      "shipped": "compiled into VA Studio",
+      "modified": "no"
+    },
+    {
+      "id": "libuemf",
+      "name": "libUEMF",
+      "path": "src/3rdparty/libuemf",
+      "kind": "source-submodule",
+      "pin": "71aba3710b4548bd6df7b7bddcd17096a813efa5",
+      "upstream": "https://gitlab.com/inkscape/devel/libuemf",
+      "license": "GPL-2.0 (README; see COPYING)",
+      "license_files": [
+        "COPYING",
+        "README"
+      ],
+      "shipped": "source only: VA Studio retired EMF/WMF support and does not compile or link it",
+      "modified": "no"
+    },
+    {
+      "id": "capypdf",
+      "name": "CapyPDF (VA Studio fork)",
+      "path": "src/3rdparty/capypdf",
+      "kind": "fork",
+      "pin": "a4b222b9690f593a28bed2f01260b713ed315620",
+      "upstream": "https://github.com/jpakkane/capypdf",
+      "license": "Apache-2.0",
+      "license_files": [
+        "COPYING"
+      ],
+      "shipped": "compiled into VA Studio",
+      "modified": "yes: one VA commit on top of upstream d789f48b43518bcd190e9d845c943e3978014f61 (UTF-8 PDF output paths on Windows)"
+    },
+    {
+      "id": "adaptagrams",
+      "name": "Adaptagrams (libavoid, libcola, libvpsc)",
+      "path": "src/3rdparty/adaptagrams",
+      "kind": "source-in-tree",
+      "pin": "as imported by Inkscape",
+      "upstream": "https://github.com/mjwybrow/adaptagrams",
+      "license": "LGPL-2.1-or-later",
+      "license_files": [
+        "libavoid/LICENSE.LGPL",
+        "libvpsc/COPYING"
+      ],
+      "shipped": "compiled into VA Studio",
+      "modified": "no VA changes"
+    },
+    {
+      "id": "autotrace",
+      "name": "AutoTrace (subset)",
+      "path": "src/3rdparty/autotrace",
+      "kind": "source-in-tree",
+      "pin": "as imported by Inkscape",
+      "upstream": "https://github.com/autotrace/autotrace",
+      "license": "GPL-2.0-or-later AND LGPL-2.1-or-later (per-file headers)",
+      "license_files": [
+        "@/LICENSES/GPL-2.0-or-later.txt",
+        "@/LICENSES/LGPL-2.1-or-later.txt"
+      ],
+      "shipped": "compiled into VA Studio",
+      "modified": "no VA changes"
+    },
+    {
+      "id": "vacards-nesting-rs",
+      "name": "VA Studio nesting engine (Rust static library)",
+      "path": "src/3rdparty/vacards-nesting-rs",
+      "kind": "source-in-tree",
+      "pin": "this repository",
+      "upstream": "VA Studio (original code); uses jagua-rs and the crates listed in section 2",
+      "license": "GPL-2.0-or-later",
+      "license_files": [
+        "LICENSES/README.md",
+        "LICENSES/jagua-rs-MPL-2.0.txt",
+        "LICENSES/sparrow-MIT.txt"
+      ],
+      "shipped": "compiled into VA Studio",
+      "modified": "original VA Studio code"
+    },
+    {
+      "id": "extensions",
+      "name": "Inkscape extensions (VA Studio fork)",
+      "path": "share/extensions",
+      "kind": "fork",
+      "pin": "569514b42d8fbc890bf61adbdf16ffee9fdc632e",
+      "upstream": "https://gitlab.com/inkscape/extensions",
+      "license": "GPL-2.0-or-later (some files GPL-3.0-or-later, see per-file headers)",
+      "license_files": [
+        "LICENSE.txt"
+      ],
+      "shipped": "installed as Python extensions",
+      "modified": "yes: two VA commits on top of upstream 87ece23a2fac1a8174d93e35354b84e9465f57e1 (pin the Affinity importer fork)"
+    },
+    {
+      "id": "extension-afdesign",
+      "name": "Affinity Designer importer (VA Studio fork)",
+      "path": "share/extensions/other/extension-afdesign",
+      "kind": "fork",
+      "pin": "13562e6bf55a9a180434b7824e07f5ede4b3f0fc",
+      "upstream": "https://gitlab.com/inkscape/extras/extension-afdesign",
+      "license": "GPL-2.0-or-later",
+      "license_files": [
+        "LICENSE",
+        "LICENSES/GPL-2.0-or-later.txt",
+        "REUSE.toml"
+      ],
+      "shipped": "installed as a Python extension",
+      "modified": "yes: one VA commit on top of upstream b2288b5f371685161ff87b70788a5cddccf7f4a8 (color compatibility with current inkex)"
+    },
+    {
+      "id": "extension-manager",
+      "name": "Inkscape Extension Manager (inkman)",
+      "path": "share/extensions/other/inkman",
+      "kind": "source-submodule",
+      "pin": "267734e94609fe9041a3c69da6430e7a90b8cd6f",
+      "upstream": "https://gitlab.com/inkscape/extras/extension-manager",
+      "license": "GPL-3.0-or-later",
+      "license_files": [
+        "LICENSE.txt"
+      ],
+      "shipped": "installed as a Python extension (online feature, see PRIVACY.md)",
+      "modified": "no"
+    },
+    {
+      "id": "import-web-image",
+      "name": "Import Web Image (inkscape-import-clipart)",
+      "path": "share/extensions/other/clipart",
+      "kind": "source-submodule",
+      "pin": "8d2948ce2fe82b195fec99f909049a8fdd64298e",
+      "upstream": "https://gitlab.com/inkscape/extras/inkscape-import-clipart",
+      "license": "GPL-3.0-or-later",
+      "license_files": [
+        "LICENSE.txt"
+      ],
+      "shipped": "installed as a Python extension (online feature, see PRIVACY.md)",
+      "modified": "no"
+    },
+    {
+      "id": "gcodetools",
+      "name": "Gcodetools",
+      "path": "share/extensions/other/gcodetools",
+      "kind": "source-submodule",
+      "pin": "f799a9ac8707cb08f2b04602c22a12c6d7acb9c7",
+      "upstream": "https://gitlab.com/inkscape/extras/extensions-gcodetools",
+      "license": "GPL-2.0-or-later",
+      "license_files": [
+        "LICENSE.txt"
+      ],
+      "shipped": "installed as a Python extension",
+      "modified": "no"
+    },
+    {
+      "id": "extension-xaml",
+      "name": "XAML extension",
+      "path": "share/extensions/other/extension-xaml",
+      "kind": "source-submodule",
+      "pin": "3a16aa7372c96559a6af918f54e096dc5de16081",
+      "upstream": "https://gitlab.com/inkscape/extras/extension-xaml",
+      "license": "GPL-2.0-or-later",
+      "license_files": [
+        "LICENSE.txt"
+      ],
+      "shipped": "installed as a Python extension",
+      "modified": "no"
+    },
+    {
+      "id": "themes",
+      "name": "Inkscape GTK themes",
+      "path": "share/themes",
+      "kind": "source-submodule",
+      "pin": "a8a8375fbe8672bb1a273be7aa32c06564936e29",
+      "upstream": "https://gitlab.com/inkscape/themes",
+      "license": "GPL-2.0-or-later",
+      "license_files": [
+        "LICENSE.txt"
+      ],
+      "shipped": "installed data",
+      "modified": "no"
+    },
+    {
+      "id": "translations",
+      "name": "Inkscape translations (VA Studio fork)",
+      "path": "po",
+      "kind": "fork",
+      "pin": "a4b32e22401fb35a6b51e310d12af465187bbb52",
+      "upstream": "https://gitlab.com/inkscape/translations",
+      "license": "GPL-2.0-or-later (same terms as Inkscape)",
+      "license_files": [
+        "@/COPYING"
+      ],
+      "shipped": "compiled message catalogs",
+      "modified": "yes: nine VA commits (Spanish strings for VA Studio features) on top of upstream 4a4241de4b7fa4f71160b628487369a42320e9ff"
+    },
+    {
+      "id": "libcdr",
+      "name": "libcdr (VA Studio fork, CorelDRAW import)",
+      "path": "third_party/libcdr-vacards",
+      "kind": "fork",
+      "pin": "297ad1ad0b8e1772633abd7553649714b173f7e4",
+      "upstream": "https://git.libreoffice.org/libcdr (mirror: https://github.com/LibreOffice/libcdr)",
+      "license": "MPL-2.0",
+      "license_files": [
+        "COPYING.MPL",
+        "AUTHORS"
+      ],
+      "shipped": "built as a shared library and bundled",
+      "modified": "yes: libcdr 0.1.10 baseline import plus nine VA commits (CorelDRAW 2023/v27 fills, bitmap alpha and crop, text styles)",
+      "private_tree_note": "In the development repository this source is fetched from the pinned fork commit by packaging/*/vacards/build-vacards-libcdr.sh; the public tree carries it under third_party/libcdr-vacards."
+    },
+    {
+      "id": "librevenge",
+      "name": "librevenge 0.0.6 with the VA Studio patch",
+      "path": "packaging/dependencies/librevenge-0.0.6",
+      "kind": "external-build-input",
+      "pin": "librevenge-0.0.6.tar.xz SHA-256 19eacf5ce55d7fe6a990a45142589cdf7da0c7b68701797f133482cb44f189fa + vacards-librevenge-0.0.6.patch",
+      "upstream": "https://sourceforge.net/projects/libwpd/files/librevenge/",
+      "license": "MPL-2.0 OR LGPL-2.1-or-later",
+      "license_files": [
+        "README.md",
+        "@/LICENSES/MPL-2.0.txt",
+        "@/LICENSES/LGPL-2.1-or-later.txt"
+      ],
+      "shipped": "built as a shared library and bundled",
+      "modified": "yes: the patch in this directory",
+      "inputs": [
+        "packaging/dependencies/librevenge-0.0.6/vacards-librevenge-0.0.6.patch",
+        "packaging/dependencies/librevenge-0.0.6/VACARDS-LIBREVENGE-BUNDLE.env"
+      ]
+    },
+    {
+      "id": "cairo",
+      "name": "Cairo 1.18.4 with the upstream clip fix",
+      "path": ".",
+      "kind": "external-build-input",
+      "pin": "cairo-1.18.4.tar.xz SHA-256 445ed8208a6e4823de1226a74ca319d3600e83f6369f99b14265006599c32ccb + cairo-1.18.4-clip-all.patch (upstream commit 1d3347a6904fd4d9a57e4a5e4819de885fce6e46)",
+      "upstream": "https://cairographics.org/releases/",
+      "license": "LGPL-2.1-only OR MPL-1.1",
+      "license_files": [
+        "@/LICENSES/LGPL-2.1.txt",
+        "@/LICENSES/MPL-1.1.txt"
+      ],
+      "shipped": "built as a shared library and bundled",
+      "modified": "yes: one upstream fix applied to the release",
+      "inputs": [
+        "packaging/macos/vacards/cairo-1.18.4-clip-all.patch",
+        "VACARDS-DEPENDENCIES.env"
+      ]
+    },
+    {
+      "id": "gtk",
+      "name": "GTK 4.22.4 with VA Studio patches",
+      "path": ".",
+      "kind": "external-build-input",
+      "pin": "gtk-4.22.4.tar.xz SHA-256 51bd9f60c7d23a665a556c7364c21fb2e4e282566b3e7e092455e8f910330893; macOS patches packaging/macos/vacards/gtk-4.22.4-*.patch; Windows patch packaging/windows/vacards/gtk-4.22.4-win32-cairo-buffer.patch plus the MSYS2 mingw-w64-gtk4 recipe at MINGW-packages d07b8dabb92443fd1daed511ad7b406825964b0d",
+      "upstream": "https://download.gnome.org/sources/gtk/4.22/",
+      "license": "LGPL-2.1-or-later",
+      "license_files": [
+        "@/LICENSES/LGPL-2.1-or-later.txt"
+      ],
+      "shipped": "built as a shared library and bundled",
+      "modified": "yes: the patches listed",
+      "inputs": [
+        "packaging/macos/vacards/gtk-4.22.4-macos-unmapped-freeze.patch",
+        "packaging/macos/vacards/gtk-4.22.4-icon-cache-dispose.patch",
+        "packaging/macos/vacards/gtk-4.22.4-macos-deferred-file-menu.patch",
+        "packaging/macos/vacards/gtk-4.22.4-recent-groups.patch",
+        "packaging/windows/vacards/gtk-4.22.4-win32-cairo-buffer.patch",
+        "packaging/dependencies/gtk-4.22.4-win32-cairo-buffer/VACARDS-GTK-BUNDLE.env"
+      ]
+    },
+    {
+      "id": "sparrow",
+      "name": "Sparrow nesting helper (vacards-sparrow)",
+      "path": "src/3rdparty/sparrow",
+      "kind": "helper-binary",
+      "pin": "upstream commit 57c45cd295f5d2ce2a11edf6e765318a51d2b41e; executables pinned by SHA-256 in VACARDS-DEPENDENCIES.env",
+      "upstream": "https://github.com/JeroenGar/sparrow",
+      "license": "MIT (the executable also contains the Rust crates listed in section 3, including jagua-rs under MPL-2.0)",
+      "license_files": [
+        "LICENSE",
+        "README.md"
+      ],
+      "shipped": "separate executable installed beside VA Studio",
+      "modified": "no source changes; built with the only_final_svg feature"
+    },
+    {
+      "id": "alphakiller",
+      "name": "AlphaKiller alpha threshold and softness formula",
+      "path": "testfiles/explode-bitmap/oracle",
+      "kind": "source-in-tree",
+      "pin": "imageProcessing.js formula",
+      "upstream": "AlphaKiller, Copyright (c) 2026 Abraham Saenz",
+      "license": "MIT",
+      "license_files": [
+        "README.md"
+      ],
+      "shipped": "the formula is reimplemented in the Explode Bitmap engine compiled into VA Studio",
+      "modified": "reimplemented in C++; the MIT notice is in the README listed"
+    }
+  ],
+  "assets": [
+    {
+      "id": "va-artwork",
+      "name": "VA Studio artwork (application icon, about screen, VA tool icons)",
+      "paths": [
+        "share/branding/VACards-AppIcon.ico",
+        "packaging/macos/res/VACards-AppIcon.icns",
+        "packaging/macos/res/VACards-AppIcon.png",
+        "share/icons/com.vacards.Inkscape.png",
+        "share/screens/va-studio-about.svg"
+      ],
+      "license": "OWNER DECISION PENDING (LEGAL-CHECK): copyright of the VA Studio marks and their license are not yet recorded",
+      "status": "needs-owner"
+    },
+    {
+      "id": "inkscape-data",
+      "name": "Upstream Inkscape data (symbols, palettes, templates, tutorials, examples, about screens, icons)",
+      "paths": [
+        "share"
+      ],
+      "license": "As in upstream Inkscape: GPL-2.0-or-later unless the file's own metadata states otherwise (for example public-domain symbol sets)",
+      "status": "documented"
+    },
+    {
+      "id": "tiff-icc",
+      "name": "TIFF export RGB profile (TheBest.icc)",
+      "paths": [
+        "(external build input, not in the repository)"
+      ],
+      "license": "UNKNOWN: no source or redistribution permission recorded (VACARDS-DEPENDENCIES.env pins only its SHA-256 f3ae51fbbeb717b46b20a6f7eac769ae5c4c2b4fa1e2fc6816bb22283772b8e8)",
+      "status": "blocked"
+    },
+    {
+      "id": "hyphenation",
+      "name": "Hyphenation dictionaries (en_US, es)",
+      "paths": [
+        "(external build input on Windows: hyph_en_US.dic, hyph_es.dic with README_hyph_en_US.txt, README_hyph_es.txt, LICENSE-es.md, GPLv3-es.txt)"
+      ],
+      "license": "As stated in the README and license files shipped beside each dictionary in share/inkscape/hyphen; the source and version of each dictionary are not yet recorded",
+      "status": "needs-provenance"
+    }
+  ],
+  "crate_license_files": {
+    "jagua-rs@0.8.0": [
+      "src/3rdparty/vacards-nesting-rs/LICENSES/jagua-rs-MPL-2.0.txt"
+    ]
+  }
+}

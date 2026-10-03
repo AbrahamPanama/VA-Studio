@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:ns1="https://launchpad.net/jessyink"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+  <defs
+     id="defs33">
+    <symbol
+      transform="translate(5,5)"
+      id="AirTransportation_Inv">
+      <title
+        id="title1727">Air Transportation</title>
+      <rect
+         x="0.5"
+         y="0.5"
+         width="71"
+         height="71"
+         ry="6"
+         style="stroke:white"
+         id="rect1729" />
+      <path
+         d="m 39,10 0,18 25,15 0,7 -25,-9 0,14 6,4 0,6 -9,-3 -9,3 0,-6 6,-4 0,-14 -25,9 0,-7 25,-15 0,-18 a 3,3 0 0 1 6,0 z"
+         style="fill:white;stroke:none"
+         id="path1731" />
+    </symbol>
+  </defs>
+  <g id="body">
+    <use
+       transform="translate(13,11)"
+       height="100%"
+       width="100%"
+       y="0"
+       x="0"
+       id="plane01"
+       style="fill:#000000;stroke:#000000"
+       xlink:href="#AirTransportation_Inv" />
+  </g>
+</svg>

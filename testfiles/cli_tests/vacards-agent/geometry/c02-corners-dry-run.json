@@ -1,0 +1,21 @@
+{
+  "description": "A dry run calls CE::prepare only: status ok, dry_run true, metrics {count:4, approximate:false}, and data {'status':'would-change'}; a dry run never changes the document. The exports taken before and after the dry run are byte-identical.",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};export-filename:{WORK}/before.svg;export-do;select-by-id:r;vacards-corners:radius=2mm,dry-run;export-filename:{WORK}/after.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "ok",
+      "mode": "single-object",
+      "reason": "success",
+      "dry_run": true,
+      "targets": {"selected": 1},
+      "undo": "none",
+      "metrics": {"count": 4, "approximate": false},
+      "data": {"status": "would-change"}
+    }
+  ],
+  "expect_same_files": [["before.svg", "after.svg"]]
+}

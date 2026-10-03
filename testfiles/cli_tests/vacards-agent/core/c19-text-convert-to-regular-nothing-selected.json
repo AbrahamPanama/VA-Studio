@@ -1,0 +1,18 @@
+{
+  "description": "text-convert-to-regular with nothing selected used to crash (no desktop); it is a no-op that keeps every object.",
+  "input": "{FIXTURES}/commands-no-target.svg",
+  "actions": "text-convert-to-regular;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"box\"",
+        "id=\"ta\"",
+        "id=\"tb\"",
+        "id=\"tc\"",
+        "id=\"te\""
+      ]
+    }
+  }
+}

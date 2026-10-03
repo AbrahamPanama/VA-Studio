@@ -1,0 +1,22 @@
+{
+  "description": "object-distribute on two empty groups (no bounding box) used to index an empty vector; it is a refusal and every object stays as it was.",
+  "input": "{FIXTURES}/degenerate-geometry.svg",
+  "actions": "select-by-id:eg1,eg2;object-distribute:left;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"eg1\"",
+        "id=\"eg2\"",
+        "x=\"0\"",
+        "d=\"M 50,50 L 50,50\""
+      ],
+      "not_contains": [
+        "nan",
+        "inf",
+        "transform="
+      ]
+    }
+  }
+}

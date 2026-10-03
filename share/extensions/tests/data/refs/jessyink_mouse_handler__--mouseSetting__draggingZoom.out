@@ -1,0 +1,475 @@
+<!-- Created with Inkscape (http://www.inkscape.org/) --><svg xmlns:ns1="https://launchpad.net/jessyink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="1000" height="1000" viewBox="0 0 1000 1000" version="1.1" id="svg8" inkscape:version="0.92.4 5da689c313, 2019-01-14" sodipodi:docname="test.svg">
+  <defs id="defs33">
+    <marker inkscape:stockid="Arrow2Lstart" orient="auto" refY="0.0" refX="0.0" id="Arrow2Lstart" style="overflow:visible" inkscape:isstock="true">
+      <path id="path859" style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round;stroke:#000000;stroke-opacity:1;fill:#000000;fill-opacity:1" d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z " transform="scale(1.1) translate(1,0)"/>
+    </marker>
+  </defs>
+  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666" borderopacity="1" objecttolerance="10" gridtolerance="10" guidetolerance="10" inkscape:pageopacity="0" inkscape:pageshadow="2" inkscape:window-width="1920" inkscape:window-height="1017" id="base" showgrid="true" inkscape:snap-text-baseline="true" inkscape:zoom="0.6675088" inkscape:cx="202.7349" inkscape:cy="481.16986" inkscape:window-x="0" inkscape:window-y="0" inkscape:window-maximized="1" inkscape:current-layer="webslicer-layer">
+    <inkscape:grid type="xygrid" id="grid27" spacingx="10" spacingy="10" empspacing="10" color="#8080ff" opacity="0.25098039" empcolor="#0000ff" empopacity="0.25098039"/>
+  </sodipodi:namedview>
+  <g inkscape:groupmode="layer" id="webslicer-layer" inkscape:label="Slide3" style="display:inline">
+    <rect height="201.49811" width="248.69112" y="353.92661" x="651.3089" id="slicerect1" style="opacity:0.5;fill:#ff0000;stroke-width:1.11927199">
+      <desc id="desc51">format: png
+dpi: 96
+layout-disposition: bg-el-norepeat
+layout-position-anchor: tl</desc>
+    </rect>
+  </g>
+  <g inkscape:groupmode="layer" id="layer2" inkscape:label="Slide2" style="display:inline">
+    <circle style="display:inline;fill:#000080;stroke:none" id="c1" cx="150" cy="450" r="50" inkscape:label="#path3736"/>
+    <ellipse style="display:inline;fill:none;stroke:#ff0000;stroke-width:16" id="c2" cx="400" cy="450" rx="100" ry="50" inkscape:label="#path3738"/>
+    <path style="display:inline;fill:#ffff00;stroke:#008000;stroke-width:16" id="c3" sodipodi:type="arc" sodipodi:cx="700" sodipodi:cy="450" sodipodi:rx="100" sodipodi:ry="50" sodipodi:start="0.59013865" sodipodi:end="5.6484511" d="m 783.08635,477.82381 a 100,50 0 0 1 -111.09848,20.17442 100,50 0 0 1 -71.96301,-46.88343 100,50 0 0 1 67.71127,-48.44091 100,50 0 0 1 112.7868,17.67793 L 700,450 Z" inkscape:label="#path3740"/>
+    <path style="display:inline;fill:none;stroke:#000000;stroke-width:10;marker-start:url(#Arrow2Lstart)" d="M 100,600 200,700 300,600 400,700" id="p1" inkscape:connector-curvature="0" inkscape:label="#path3746"/>
+    <path style="display:inline;fill:none;stroke:#000000;stroke-width:10" d="m 500,600 c 0,0 0,100 100,100 100,0 0,-100 100,-100 100,0 100,100 100,100" id="p2" inkscape:connector-curvature="0" inkscape:label="#path3748"/>
+    <path sodipodi:type="star" style="display:inline;fill:#ffff00;stroke:#008000;stroke-width:10" id="s1" sodipodi:sides="5" sodipodi:cx="189.03001" sodipodi:cy="847.93945" sodipodi:r1="69.364868" sodipodi:r2="34.682434" sodipodi:arg1="0.63598373" sodipodi:arg2="1.2643023" inkscape:flatsided="false" inkscape:rounded="0" inkscape:randomized="0" d="m 244.8332,889.14005 -45.33887,-8.13446 -32.40428,32.73753 -6.27415,-45.63352 -41.14872,-20.70184 41.46124,-20.06861 6.97297,-45.53197 31.89861,33.23044 45.45824,-7.43847 -21.74681,40.60615 z" inkscape:transform-center-x="6.4673011" inkscape:transform-center-y="-0.16430137"/>
+    <use style="display:inline" x="0" y="0" xlink:href="#s1" inkscape:transform-center-x="6.4673011" inkscape:transform-center-y="-0.16430137" id="u1" transform="translate(200,2.9962152)" width="100%" height="100%" inkscape:label="#use3808"/>
+  </g>
+  <g inkscape:label="Slide1" inkscape:groupmode="layer" id="layer1" style="display:inline">
+    <text xml:space="preserve" style="font-size:14.66666698px;line-height:1.25;font-family:sans-serif;fill:#000000;stroke:none" x="100" y="100" id="t1" inkscape:label="#text12"><tspan sodipodi:role="line" id="tspan10" x="100" y="100">Hello World</tspan></text>
+    <flowRoot xml:space="preserve" id="t4" style="font-size:40px;line-height:1.25;font-family:sans-serif;fill:#000000;stroke:none" transform="matrix(0.26458333,0,0,0.26458333,372.02961,28.904505)" inkscape:label="#flowRoot14"><flowRegion id="flowRegion16"><rect id="rect18" width="264.5675" height="262.16187" x="105.71429" y="219.66254"/></flowRegion><flowPara id="flowPara20" style="font-size:55.43307114px">flow text which wraps</flowPara></flowRoot>    <text xml:space="preserve" style="font-size:14.66666698px;line-height:1.25;font-family:sans-serif;fill:#000000;stroke:none" x="200" y="100" id="t2" inkscape:label="#text3727"><tspan sodipodi:role="line" id="tspan3725" x="200" y="100" style="font-size:14.66666698px">UPPER</tspan></text>
+    <text xml:space="preserve" style="font-size:10.58333302px;line-height:1.25;font-family:sans-serif;fill:#000000;stroke:none" x="300" y="100" id="t3" inkscape:label="#text3735"><tspan sodipodi:role="line" id="tspan3733" x="300" y="100" style="font-size:14.66666698px">Multi line</tspan><tspan sodipodi:role="line" x="300" y="118.33334" id="tspan3737" style="font-size:14.66666698px">text</tspan><tspan sodipodi:role="line" x="300" y="136.66667" id="tspan3739" style="font-size:14.66666698px">FOO</tspan></text>
+    <g id="t5" transform="translate(445.71038,-129.64807)" inkscape:label="#g3772">
+      <text id="text3762" y="229.64807" x="54.289616" style="font-size:10.58333302px;line-height:1.25;font-family:sans-serif;fill:#000000;stroke:none" xml:space="preserve"><tspan y="229.64807" x="54.289616" id="tspan3760" sodipodi:role="line" style="font-size:14.66666698px">Grouped</tspan></text>
+      <text id="text3766" y="259.64807" x="54.289619" style="font-size:14.66666698px;line-height:1.25;font-family:sans-serif;fill:#000000;stroke:none" xml:space="preserve"><tspan y="259.64807" x="54.289619" id="tspan3764" sodipodi:role="line" style="font-size:14.66666698px">text</tspan></text>
+    </g>
+    <rect style="fill:#000080;stroke:none" id="r1" width="100" height="100" x="100" y="200" inkscape:label="#rect3732"/>
+    <rect style="fill:none;stroke:#ff0000;stroke-width:16" id="r2" width="200" height="100" x="300" y="200" inkscape:label="#rect3734"/>
+    <rect style="fill:#ffff00;stroke:#008000;stroke-width:16" id="r3" width="200" height="100" x="600" y="200" ry="38.950798" rx="44.943226" inkscape:label="#rect3744"/>
+  </g>
+  <script ns1:version="1.5.5" id="JessyInk">// dummy
+</script>
+<ns1:mousehandler ns1:subtype="jessyInk_core_mouseHandler_zoomControl"><svg:script>// Copyright 2008, 2009 Hannes Hochreiner
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
+
+// Add event listener for initialisation.
+document.addEventListener("DOMContentLoaded",  jessyInk_core_mouseHandler_zoomControl_init, false);
+
+/** Initialisation function.
+ *
+ *  This function looks for the objects of the appropriate sub-type and hands them to another function that will add the required methods.
+ */
+function jessyInk_core_mouseHandler_zoomControl_init()
+{
+    var elems = document.getElementsByTagNameNS("https://launchpad.net/jessyink", "mousehandler");
+
+    for (var counter = 0; counter &lt; elems.length; counter++)
+    {
+        if (elems[counter].getAttributeNS("https://launchpad.net/jessyink", "subtype") == "jessyInk_core_mouseHandler_zoomControl")
+            jessyInk_core_mouseHandler_zoomControl(elems[counter]);
+    }
+}
+
+/** Function to initialise an object.
+ *
+ *  @param obj Object to be initialised.
+ */
+function jessyInk_core_mouseHandler_zoomControl(obj)
+{
+    // Last dragging position.
+    obj.dragging_last;
+    // Flag to indicate whether dragging is active currently.
+    obj.dragging_active = false;
+    // Flag to indicate whether dragging is working currently.
+    obj.dragging_working = false;
+    // Flag to indicate whether the user clicked.
+    obj.click = false;
+
+    /** Function supplying a custom mouse handler.
+     *
+     *  @returns A dictionary containing the new mouse handler functions.
+     */
+    obj.getMouseHandler = function ()
+    {
+        var handlerDictio = new Object();
+
+        handlerDictio[SLIDE_MODE] = new Object();
+        handlerDictio[SLIDE_MODE][MOUSE_DOWN] = obj.mousedown;
+        handlerDictio[SLIDE_MODE][MOUSE_MOVE] = obj.mousemove;
+        handlerDictio[SLIDE_MODE][MOUSE_UP] = obj.mouseup;
+        handlerDictio[SLIDE_MODE][MOUSE_WHEEL] = obj.mousewheel;
+
+        return handlerDictio;
+    }
+
+    /** Event handler for mouse clicks.
+     *
+     *  @param e Event object.
+     */
+    obj.mouseclick = function (e)
+    {
+        var elem = obj.getAdHocViewBbox(slides[activeSlide]["viewGroup"], obj.getCoords(e));
+
+        processingEffect = true;
+
+        effectArray = new Array();
+
+        effectArray[0] = new Object();
+        effectArray[0]["effect"] = "view";
+        effectArray[0]["dir"] = 1;
+        effectArray[0]["element"] = slides[activeSlide]["viewGroup"];
+        effectArray[0]["options"] = new Object();
+        effectArray[0]["options"]["length"] = 200;
+
+        if (elem == null)
+            effectArray[0]["options"]["matrixNew"] = (new matrixSVG()).fromSVGElements(1, 0, 0, 1, 0, 0);
+        else
+            effectArray[0]["options"]["matrixNew"] = obj.pointMatrixToTransformation(obj.rectToMatrix(elem)).mult((new matrixSVG()).fromSVGMatrix(slides[activeSlide].viewGroup.getScreenCTM()).inv().mult((new matrixSVG()).fromSVGMatrix(elem.parentNode.getScreenCTM())).inv());
+
+        transCounter = 0;
+        startTime = (new Date()).getTime();
+        lastFrameTime = null;
+        effect(1);
+
+        return false;
+    }
+
+    /** Function to search for the element the user clicked on.
+     *
+     *    This function searches for the element with the highest z-order, which encloses the point the user clicked on
+     *    and which view box fits entierly into the currently visible part of the slide.
+     *
+     *  @param elem Element to start the search from.
+     *  @param pnt Point where the user clicked.
+     *  @returns The element the user clicked on or null, if no element could be found.
+     */
+    obj.getAdHocViewBbox = function (elem, pnt)
+    {
+        var children = elem.childNodes;
+
+        for (var counter = 0; counter &lt; children.length; counter++)
+        {
+            if (children[counter].getBBox)
+            {
+                var childPointList = obj.projectRect(children[counter].getBBox(), children[counter].getScreenCTM());
+
+                var viewBbox = document.documentElement.createSVGRect();
+
+                viewBbox.x = 0.0;
+                viewBbox.y = 0.0;
+                viewBbox.width = WIDTH;
+                viewBbox.height = HEIGHT;
+
+                var screenPointList = obj.projectRect(viewBbox, slides[activeSlide]["element"].getScreenCTM());
+
+                if (obj.pointsWithinRect([pnt], childPointList) &amp;&amp; obj.pointsWithinRect(childPointList, screenPointList))
+                    return children[counter];
+
+                child = obj.getAdHocViewBbox(children[counter], pnt);
+
+                if (child != null)
+                    return child;
+            }
+        }
+
+        return null;
+    }
+
+    /** Function to project a rectangle using the projection matrix supplied.
+     *
+     *  @param rect The rectangle to project.
+     *  @param projectionMatrix The projection matrix.
+     *  @returns A list of the four corners of the projected rectangle starting from the upper left corner and going counter-clockwise.
+     */
+    obj.projectRect = function (rect, projectionMatrix)
+    {
+        var pntUL = document.documentElement.createSVGPoint();
+        pntUL.x = rect.x;
+        pntUL.y = rect.y;
+        pntUL = pntUL.matrixTransform(projectionMatrix);
+
+        var pntLL = document.documentElement.createSVGPoint();
+        pntLL.x = rect.x;
+        pntLL.y = rect.y + rect.height;
+        pntLL = pntLL.matrixTransform(projectionMatrix);
+
+        var pntUR = document.documentElement.createSVGPoint();
+        pntUR.x = rect.x + rect.width;
+        pntUR.y = rect.y;
+        pntUR = pntUR.matrixTransform(projectionMatrix);
+
+        var pntLR = document.documentElement.createSVGPoint();
+        pntLR.x = rect.x + rect.width;
+        pntLR.y = rect.y + rect.height;
+        pntLR = pntLR.matrixTransform(projectionMatrix);
+
+        return [pntUL, pntLL, pntUR, pntLR];
+    }
+
+    /** Function to determine whether all the points supplied in a list are within a rectangle.
+     *
+     *  @param pnts List of points to check.
+     *  @param pointList List of points representing the four corners of the rectangle.
+     *  @return True, if all points are within the rectangle; false, otherwise.
+     */
+    obj.pointsWithinRect = function (pnts, pointList)
+    {
+        var pntUL = pointList[0];
+        var pntLL = pointList[1];
+        var pntUR = pointList[2];
+
+        var matrixOrig = (new matrixSVG()).fromElements(pntUL.x, pntLL.x, pntUR.x, pntUL.y, pntLL.y, pntUR.y, 1, 1, 1);
+        var matrixProj = (new matrixSVG()).fromElements(0, 0, 1, 0, 1, 0, 1, 1, 1);
+
+        var matrixProjection = matrixProj.mult(matrixOrig.inv());
+
+        for (var blockCounter = 0; blockCounter &lt; Math.ceil(pnts.length / 3.0); blockCounter++)
+        {
+            var subPnts = new Array();
+
+            for (var pntCounter = 0; pntCounter &lt; 3.0; pntCounter++)
+            {
+                if (blockCounter * 3.0 + pntCounter &lt; pnts.length)
+                    subPnts[pntCounter] = pnts[blockCounter * 3.0 + pntCounter];
+                else
+                {
+                    var tmpPnt = document.documentElement.createSVGPoint();
+
+                    tmpPnt.x = 0.0;
+                    tmpPnt.y = 0.0;
+
+                    subPnts[pntCounter] = tmpPnt;
+                }
+            }
+
+            var matrixPnt = (new matrixSVG).fromElements(subPnts[0].x, subPnts[1].x, subPnts[2].x, subPnts[0].y, subPnts[1].y, subPnts[2].y, 1, 1, 1);
+            var matrixTrans = matrixProjection.mult(matrixPnt);
+
+            for (var pntCounter = 0; pntCounter &lt; 3.0; pntCounter++)
+            {
+                if (blockCounter * 3.0 + pntCounter &lt; pnts.length)
+                {
+                    if ((pntCounter == 0) &amp;&amp; !((matrixTrans.e11 &gt; 0.01) &amp;&amp; (matrixTrans.e11 &lt; 0.99) &amp;&amp; (matrixTrans.e21 &gt; 0.01) &amp;&amp; (matrixTrans.e21 &lt; 0.99)))
+                        return false;
+                    else if ((pntCounter == 1) &amp;&amp; !((matrixTrans.e12 &gt; 0.01) &amp;&amp; (matrixTrans.e12 &lt; 0.99) &amp;&amp; (matrixTrans.e22 &gt; 0.01) &amp;&amp; (matrixTrans.e22 &lt; 0.99)))
+                        return false;
+                    else if ((pntCounter == 2) &amp;&amp; !((matrixTrans.e13 &gt; 0.01) &amp;&amp; (matrixTrans.e13 &lt; 0.99) &amp;&amp; (matrixTrans.e23 &gt; 0.01) &amp;&amp; (matrixTrans.e23 &lt; 0.99)))
+                        return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /** Event handler for mouse movements.
+     *
+     *  @param e Event object.
+     */
+    obj.mousemove = function (e)
+    {
+        obj.click = false;
+
+        if (!obj.dragging_active || obj.dragging_working)
+            return false;
+
+        obj.dragging_working = true;
+
+        var p = obj.getCoords(e);
+
+        if (slides[activeSlide].viewGroup.transform.baseVal.numberOfItems &lt; 1)
+        {
+            var matrix = (new matrixSVG()).fromElements(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        }
+        else
+        {
+            var matrix = (new matrixSVG()).fromSVGMatrix(slides[activeSlide].viewGroup.transform.baseVal.consolidate().matrix);
+        }
+
+        matrix.e13 += p.x - obj.dragging_last.x;
+        matrix.e23 += p.y - obj.dragging_last.y;
+
+        slides[activeSlide]["viewGroup"].setAttribute("transform", matrix.toAttribute());
+
+        obj.dragging_last = p;
+        obj.dragging_working = false;
+
+        return false;
+    }
+
+    /** Event handler for mouse down.
+     *
+     *  @param e Event object.
+     */
+    obj.mousedown = function (e)
+    {
+        if (obj.dragging_active)
+            return false;
+
+        var value = 0;
+
+        if (e.button)
+            value = e.button;
+        else if (e.which)
+            value = e.which;
+
+        if (value == 1)
+        {
+            obj.dragging_last = obj.getCoords(e);
+            obj.dragging_active = true;
+            obj.click = true;
+        }
+
+        return false;
+    }
+
+    /** Event handler for mouse up.
+     *
+     *  @param e Event object.
+     */
+    obj.mouseup = function (e)
+    {
+        obj.dragging_active = false;
+
+        if (obj.click)
+            return obj.mouseclick(e);
+        else
+            return false;
+    }
+
+    /** Function to get the coordinates of a point corrected for the offset of the viewport.
+     *
+     *  @param e Point.
+     *  @returns Coordinates of the point corrected for the offset of the viewport.
+     */
+    obj.getCoords = function (e)
+    {
+        var svgPoint = document.documentElement.createSVGPoint();
+        svgPoint.x = e.clientX + window.pageXOffset;
+        svgPoint.y = e.clientY + window.pageYOffset;
+
+        return svgPoint;
+    }
+
+    /** Event handler for scrolling.
+     *
+     *  @param e Event object.
+     */
+    obj.mousewheel = function(e)
+    {
+        var p = obj.projectCoords(obj.getCoords(e));
+
+        if (slides[activeSlide].viewGroup.transform.baseVal.numberOfItems &lt; 1)
+        {
+            var matrix = (new matrixSVG()).fromElements(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        }
+        else
+        {
+            var matrix = (new matrixSVG()).fromSVGMatrix(slides[activeSlide].viewGroup.transform.baseVal.consolidate().matrix);
+        }
+
+        if (e.wheelDelta)
+        { // IE Opera
+            delta = e.wheelDelta/120;
+        }
+        else if (e.detail)
+        { // MOZ
+            delta = -e.detail/3;
+        }
+
+        var widthOld = p.x * matrix.e11 + p.y * matrix.e12;
+        var heightOld = p.x * matrix.e21 + p.y * matrix.e22;
+
+        matrix.e11 *= (1.0 - delta / 20.0);
+        matrix.e12 *= (1.0 - delta / 20.0);
+        matrix.e21 *= (1.0 - delta / 20.0);
+        matrix.e22 *= (1.0 - delta / 20.0);
+
+        var widthNew = p.x * matrix.e11 + p.y * matrix.e12;
+        var heightNew = p.x * matrix.e21 + p.y * matrix.e22;
+
+        matrix.e13 += (widthOld - widthNew);
+        matrix.e23 += (heightOld - heightNew);
+
+        slides[activeSlide]["viewGroup"].setAttribute("transform", matrix.toAttribute());
+
+        return false;
+    }
+
+    /** Function to project a point to screen coordinates.
+     *
+     *    @param Point.
+     *    @returns The point projected to screen coordinates.
+     */
+    obj.projectCoords = function(pnt)
+    {
+        var matrix = slides[activeSlide]["element"].getScreenCTM();
+
+        if (slides[activeSlide]["viewGroup"])
+            matrix = slides[activeSlide]["viewGroup"].getScreenCTM();
+
+        pnt = pnt.matrixTransform(matrix.inverse());
+        return pnt;
+    }
+
+    /** Function to convert a rectangle into a point matrix.
+     *
+     *    The function figures out a rectangle that encloses the rectangle given and has the same width/height ratio as the viewport of the presentation.
+     *
+     *  @param rect Rectangle.
+     *  @return The upper left, upper right and lower right corner of the rectangle in a point matrix.
+     */
+    obj.rectToMatrix = function(rect)
+    {
+        rectWidth = rect.getBBox().width;
+        rectHeight = rect.getBBox().height;
+        rectX = rect.getBBox().x;
+        rectY = rect.getBBox().y;
+        rectXcorr = 0;
+        rectYcorr = 0;
+
+        scaleX = WIDTH / rectWidth;
+        scaleY = HEIGHT / rectHeight;
+
+        if (scaleX &gt; scaleY)
+        {
+            scaleX = scaleY;
+            rectXcorr -= (WIDTH / scaleX - rectWidth) / 2;
+            rectWidth = WIDTH / scaleX;
+        }
+        else
+        {
+            scaleY = scaleX;
+            rectYcorr -= (HEIGHT / scaleY - rectHeight) / 2;
+            rectHeight = HEIGHT / scaleY;
+        }
+
+        if (rect.transform.baseVal.numberOfItems &lt; 1)
+        {
+            mRectTrans = (new matrixSVG()).fromElements(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        }
+        else
+        {
+            mRectTrans = (new matrixSVG()).fromSVGMatrix(rect.transform.baseVal.consolidate().matrix);
+        }
+
+        newBasePoints = (new matrixSVG()).fromElements(rectX, rectX, rectX, rectY, rectY, rectY, 1, 1, 1);
+        newVectors = (new matrixSVG()).fromElements(rectXcorr, rectXcorr + rectWidth, rectXcorr + rectWidth, rectYcorr, rectYcorr, rectYcorr + rectHeight, 0, 0, 0);
+
+        return mRectTrans.mult(newBasePoints.add(newVectors));
+    }
+
+    /** Function to return a transformation matrix from a point matrix.
+     *
+     *    @param mPoints The point matrix.
+     *    @returns The transformation matrix.
+     */
+    obj.pointMatrixToTransformation = function(mPoints)
+    {
+        mPointsOld = (new matrixSVG()).fromElements(0, WIDTH, WIDTH, 0, 0, HEIGHT, 1, 1, 1);
+
+        return mPointsOld.mult(mPoints.inv());
+    }
+}
+
+</svg:script></ns1:mousehandler></svg>

@@ -1,0 +1,233 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inkscape Output</title>
+</head>
+<body>
+    <canvas id='canvas' width='480' height='360'></canvas>
+    <script>
+    var ctx = document.getElementById("canvas").getContext("2d");
+    	
+// #testContent
+	
+// #text5815
+	ctx.fillStyle = '#000000';
+	ctx.font = "20.0px Arial, Helvetica, sans-serif";
+	
+// #alpha
+	
+// #A1
+	ctx.beginPath();
+	ctx.fillStyle = '#0000ff';
+	ctx.strokeStyle = '#000000';
+	ctx.miterLimit = 4;
+	ctx.rect(30.000000, 70.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #alpha-1
+	
+// #B1
+	ctx.beginPath();
+	ctx.fillStyle = '#008000';
+	ctx.rect(100.000000, 70.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #alpha-2
+	
+// #C1
+	ctx.beginPath();
+	ctx.fillStyle = '#ffa500';
+	ctx.rect(170.000000, 70.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #beta
+	
+// #g8555
+	
+// #g5392
+	
+// #g9603
+	
+// #g4306
+	
+// #g7856
+	
+// #D1
+	ctx.beginPath();
+	ctx.fillStyle = '#ffd700';
+	ctx.rect(240.000000, 70.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #gamma
+	
+// #g5654
+	
+// #g6457
+	
+// #E1
+	ctx.beginPath();
+	ctx.fillStyle = '#800080';
+	ctx.rect(310.000000, 70.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #g2304
+	
+// #g5347
+	
+// #F1
+	ctx.beginPath();
+	ctx.fillStyle = '#ff0000';
+	ctx.rect(380.000000, 70.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #delta
+	
+// #A2
+	ctx.beginPath();
+	ctx.fillStyle = '#0000ff';
+	ctx.lineWidth = 1.0001;
+	ctx.rect(30.000000, 140.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #B2
+	ctx.beginPath();
+	ctx.fillStyle = '#008000';
+	ctx.lineWidth = 1.0002;
+	ctx.rect(100.000000, 140.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #C2
+	ctx.beginPath();
+	ctx.fillStyle = '#ffa500';
+	ctx.lineWidth = 1.0003;
+	ctx.rect(170.000000, 140.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #epsilon
+	
+// #D2
+	ctx.beginPath();
+	ctx.fillStyle = '#ffd700';
+	ctx.lineWidth = 1.0;
+	ctx.rect(240.000000, 140.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #E2
+	ctx.beginPath();
+	ctx.fillStyle = '#800080';
+	ctx.rect(310.000000, 140.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #g266
+	
+// #F2
+	ctx.beginPath();
+	ctx.fillStyle = '#ff0000';
+	ctx.rect(380.000000, 140.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #zeta
+	
+// #A3
+	ctx.beginPath();
+	ctx.fillStyle = '#0000ff';
+	ctx.rect(30.000000, 210.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #B3
+	ctx.beginPath();
+	ctx.fillStyle = '#008000';
+	ctx.rect(100.000000, 210.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #C3
+	ctx.beginPath();
+	ctx.fillStyle = '#ffa500';
+	ctx.rect(170.000000, 210.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #D3
+	ctx.beginPath();
+	ctx.fillStyle = '#ffd700';
+	ctx.moveTo(240.000003, 210.000000);
+	ctx.lineTo(307.499997, 210.000000);
+	ctx.bezierCurveTo(307.499998, 210.000000, 307.499999, 210.000000, 307.499999, 210.000001);
+	ctx.bezierCurveTo(307.500000, 210.000001, 307.500000, 210.000002, 307.500000, 210.000003);
+	ctx.lineTo(307.500000, 277.499997);
+	ctx.bezierCurveTo(307.500000, 277.499998, 307.500000, 277.499999, 307.499999, 277.499999);
+	ctx.bezierCurveTo(307.499999, 277.500000, 307.499998, 277.500000, 307.499997, 277.500000);
+	ctx.lineTo(240.000003, 277.500000);
+	ctx.bezierCurveTo(240.000002, 277.500000, 240.000001, 277.500000, 240.000001, 277.499999);
+	ctx.bezierCurveTo(240.000000, 277.499999, 240.000000, 277.499998, 240.000000, 277.499997);
+	ctx.lineTo(240.000000, 210.000003);
+	ctx.bezierCurveTo(240.000000, 210.000002, 240.000000, 210.000001, 240.000001, 210.000001);
+	ctx.bezierCurveTo(240.000001, 210.000000, 240.000002, 210.000000, 240.000003, 210.000000);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+	
+// #E3
+	ctx.beginPath();
+	ctx.fillStyle = '#800080';
+	ctx.rect(310.000000, 210.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #eta
+	
+// #F3
+	ctx.beginPath();
+	ctx.fillStyle = '#ff0000';
+	ctx.rect(380.000000, 210.000000, 67.500000, 67.500000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #labels
+	
+// #text5447
+	ctx.fillStyle = '#000000';
+	ctx.font = "16.0px Arial, Helvetica, sans-serif";
+	
+// #text4780
+	
+// #text6654
+	
+// #text2036
+	
+// #text2897
+	
+// #text167
+	
+// #text3847
+	
+// #text3066
+	
+// #text9549
+	
+// #revision
+	ctx.font = "30.0px";
+	
+// #test-frame
+	ctx.beginPath();
+	ctx.rect(1.000000, 1.000000, 478.000000, 358.000000);
+	ctx.stroke();
+
+    </script>
+</body>
+</html>

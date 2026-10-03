@@ -1,0 +1,19 @@
+{
+  "description": "object-distribute:hgap with one rect and one empty group is a refusal (step = 0/0 before); the rect stays at x=0.",
+  "input": "{FIXTURES}/degenerate-geometry.svg",
+  "actions": "select-by-id:r1,eg1;object-distribute:hgap;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "x=\"0\"",
+        "y=\"0\""
+      ],
+      "not_contains": [
+        "nan",
+        "inf"
+      ]
+    }
+  }
+}

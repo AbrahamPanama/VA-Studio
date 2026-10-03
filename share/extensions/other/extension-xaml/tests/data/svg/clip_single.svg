@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%"
+	viewBox="0 0 480 360">
+	<!-- Derived from masking-path-08-b.svg
+         from the SVG unit test suite under the 3-clause BSD license-->
+
+
+	<defs>
+		<clipPath id="emptyclip">
+		</clipPath>
+		<clipPath id="hiddenclip">
+			<rect x="40" y="40" width="20" height="20" visibility="hidden" />
+		</clipPath>
+		<clipPath id="displayclip">
+			<rect x="40" y="40" width="20" height="20" display="none" />
+		</clipPath>
+		<clipPath id="opacityclip">
+			<rect x="40" y="40" width="20" height="20" opacity="0" />
+		</clipPath>
+		<clipPath id="strokefillclip">
+			<rect x="40" y="40" width="20" height="20" stroke="none" fill="none" />
+		</clipPath>
+		<clipPath id="strokewidthclip">
+			<rect x="40" y="40" width="20" height="20" stroke="black" stroke-width="80" />
+		</clipPath>
+		<clipPath id="strokeopacityclip">
+			<rect x="40" y="40" width="20" height="20" stroke="black" stroke-opacity="0" stroke-width="80" />
+		</clipPath>
+		<clipPath id="fillopacityclip">
+			<rect x="40" y="40" width="20" height="20" fill-opacity="0" />
+		</clipPath>
+	</defs>
+
+	<g>
+		<rect width="100" height="100" fill="red" clip-path="url(#emptyclip)" />
+	</g>
+
+	<g transform="translate(110 0)">
+		<rect width="100" height="100" fill="red" clip-path="url(#hiddenclip)" />
+	</g>
+
+	<g transform="translate(220 0)">
+		<rect width="100" height="100" fill="red" clip-path="url(#displayclip)" />
+	</g>
+
+	<!-- This has an intentionally broken clip-path url -->
+	<g transform="translate(0 110)">
+		<rect width="100" height="100" fill="red" clip-path="url(#unknown)" />
+	</g>
+
+	<g transform="translate(110 110)">
+		<rect width="100" height="100" fill="red" clip-path="url(#opacityclip)" />
+	</g>
+
+	<g transform="translate(220 110)">
+		<rect width="100" height="100" fill="red" clip-path="url(#strokefillclip)" />
+	</g>
+
+	<g transform="translate(0 220)">
+		<rect width="100" height="100" fill="red" clip-path="url(#strokewidthclip)" />
+	</g>
+
+	<g transform="translate(110 220)">
+		<rect width="100" height="100" fill="red" clip-path="url(#strokeopacityclip)" />
+	</g>
+
+	<g transform="translate(220 220)">
+		<rect width="100" height="100" fill="red" clip-path="url(#fillopacityclip)" />
+	</g>
+
+
+
+</svg>

@@ -1,0 +1,21 @@
+{
+  "description": "A zero radius on a plain rect is a legitimate no-op: unchanged, and a zero radius never installs an invisible fresh effect (the exported document has no path-effect).",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r;vacards-corners:radius=0;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "unchanged",
+      "mode": "single-object",
+      "reason": "unchanged",
+      "targets": {"selected": 1},
+      "undo": "none",
+      "metrics": {"count": 4, "approximate": false}
+    }
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "not_contains": ["inkscape:path-effect", "fillet_chamfer"]}
+  }
+}

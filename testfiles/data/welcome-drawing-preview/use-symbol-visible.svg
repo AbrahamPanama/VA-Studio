@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="120" height="80" viewBox="0 0 120 80">
+  <defs>
+    <symbol id="sym" width="20" height="20">
+      <rect x="0" y="0" width="20" height="20" fill="#ff0000"/>
+    </symbol>
+    <rect id="unused" x="0" y="0" width="10" height="10" fill="none" stroke="none"/>
+  </defs>
+  <use xlink:href="#sym" x="10" y="10"/>
+</svg>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkAdjustment" id="nesting-spacing-adjustment">
+    <property name="lower">0</property>
+    <property name="upper">100000</property>
+    <property name="step-increment">0.1</property>
+    <property name="page-increment">1</property>
+  </object>
+  <object class="GtkAdjustment" id="nesting-margin-adjustment">
+    <property name="lower">0</property>
+    <property name="upper">100000</property>
+    <property name="step-increment">0.1</property>
+    <property name="page-increment">1</property>
+  </object>
+  <object class="GtkAdjustment" id="nesting-step-adjustment">
+    <property name="lower">0.1</property>
+    <property name="upper">360</property>
+    <property name="step-increment">1</property>
+    <property name="page-increment">15</property>
+    <property name="value">15</property>
+  </object>
+  <object class="GtkAdjustment" id="nesting-custom-time-adjustment">
+    <property name="lower">0.1</property>
+    <property name="upper">600</property>
+    <property name="step-increment">0.1</property>
+    <property name="page-increment">1</property>
+    <property name="value">30</property>
+  </object>
+  <object class="GtkBox" id="nesting-toolbar">
+    <property name="halign">start</property>
+    <property name="valign">center</property>
+    <property name="hexpand">True</property>
+    <property name="spacing">3</property>
+    <child>
+      <object class="GtkBox" id="nesting-settings">
+        <property name="spacing">3</property>
+        <child>
+          <object class="GtkBox">
+            <property name="spacing">4</property>
+            <style><class name="priority1"/><class name="groupsize3"/></style>
+            <child><object class="GtkLabel"><property name="label" translatable="yes">Spacing</property></object></child>
+            <child>
+              <object class="GtkSpinButton" id="nesting-spacing">
+                <property name="focusable">True</property>
+                <property name="adjustment">nesting-spacing-adjustment</property>
+                <property name="climb-rate">0.1</property>
+                <property name="digits">2</property>
+                <property name="width-chars">6</property>
+                <property name="tooltip-text" translatable="yes">Minimum edge-to-edge clearance between nested parts</property>
+              </object>
+            </child>
+            <child><object class="GtkLabel"><property name="label" translatable="yes">Margin</property></object></child>
+            <child>
+              <object class="GtkSpinButton" id="nesting-margin">
+                <property name="focusable">True</property>
+                <property name="adjustment">nesting-margin-adjustment</property>
+                <property name="climb-rate">0.1</property>
+                <property name="digits">2</property>
+                <property name="width-chars">6</property>
+                <property name="tooltip-text" translatable="yes">Minimum distance from the sheet edge and holes</property>
+              </object>
+            </child>
+            <child><object class="GtkBox" id="nesting-unit-box"/></child>
+          </object>
+        </child>
+        <child><object class="GtkSeparator"/></child>
+        <child>
+          <object class="GtkBox" id="nesting-rotation-box">
+            <property name="spacing">4</property>
+            <style><class name="priority1"/><class name="groupsize2"/></style>
+            <child><object class="GtkLabel"><property name="label" translatable="yes">Rotation</property></object></child>
+            <child>
+              <object class="GtkSpinButton" id="nesting-step">
+                <property name="focusable">True</property>
+                <property name="adjustment">nesting-step-adjustment</property>
+                <property name="digits">1</property>
+                <property name="width-chars">5</property>
+                <property name="tooltip-text" translatable="yes">Rotation step in degrees</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child><object class="GtkSeparator"><style><class name="priority2"/></style></object></child>
+        <child>
+          <object class="GtkBox" id="nesting-time-box">
+            <property name="spacing">4</property>
+            <style><class name="priority2"/><class name="groupsize2"/></style>
+            <child><object class="GtkLabel"><property name="label" translatable="yes">Time</property></object></child>
+            <child>
+              <object class="GtkSpinButton" id="nesting-custom-time">
+                <property name="focusable">True</property>
+                <property name="adjustment">nesting-custom-time-adjustment</property>
+                <property name="digits">1</property>
+                <property name="width-chars">5</property>
+                <property name="tooltip-text" translatable="yes">Custom optimization time in seconds</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child><object class="GtkSeparator"/></child>
+        <child>
+          <object class="GtkCheckButton" id="nesting-show-labels">
+            <property name="label" translatable="yes">Labels</property>
+            <property name="active">True</property>
+            <property name="tooltip-text" translatable="yes">Show nesting labels on the canvas</property>
+            <style><class name="priority3"/></style>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child><object class="GtkSeparator"/></child>
+    <child>
+      <object class="GtkButton" id="nesting-nest">
+        <property name="tooltip-text" translatable="yes">Nest the selection into the last sheet (Enter)</property>
+        <child>
+          <object class="GtkBox">
+            <property name="spacing">4</property>
+            <child><object class="GtkImage"><property name="icon-name">tool-nesting</property></object></child>
+            <child><object class="GtkLabel"><property name="label" translatable="yes">Nest</property></object></child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkLabel" id="nesting-sheet">
+        <property name="ellipsize">end</property>
+        <property name="max-width-chars">28</property>
+      </object>
+    </child>
+    <style><class name="inkscape-toolbar"/></style>
+  </object>
+</interface>

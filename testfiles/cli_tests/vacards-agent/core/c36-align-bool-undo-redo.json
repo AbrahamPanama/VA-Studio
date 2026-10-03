@@ -1,0 +1,20 @@
+{
+  "description": "Align (bool-effect object + operand), Undo, Redo: the effect stays enabled and opb is moved again (translate(-10)).",
+  "input": "{FIXTURES}/degenerate-geometry.svg",
+  "actions": "select-by-id:opa,opb;object-align:left;vacards-undo;vacards-redo;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "is_visible=\"true\"",
+        "id=\"lpe-bool\"",
+        "transform=\"translate(-10)\""
+      ],
+      "not_contains": [
+        "is_visible=\"false\"",
+        "nan"
+      ]
+    }
+  }
+}

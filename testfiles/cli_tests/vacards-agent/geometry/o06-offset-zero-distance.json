@@ -1,0 +1,16 @@
+{
+  "description": "A zero distance is below the parameter minimum and is rejected by the parser before the body runs.",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:sq;vacards-offset:distance=0",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-offset",
+      "status": "rejected",
+      "mode": "per-selected-root",
+      "reason": "invalid-argument",
+      "error": {"code": "out-of-range", "key": "distance"}
+    }
+  ]
+}

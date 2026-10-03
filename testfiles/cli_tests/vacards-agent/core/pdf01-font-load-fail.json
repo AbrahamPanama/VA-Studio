@@ -1,0 +1,18 @@
+{
+  "description": "PDF1: a font that fails to load (missing CMap, non-dictionary resource) is skipped by the font scan instead of dereferencing null; the page still imports.",
+  "input": "{FIXTURES}/pdf1-font-load-fail.pdf",
+  "args": [
+    "--export-type=svg",
+    "--export-filename={WORK}/out.svg"
+  ],
+  "timeout": 90,
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "<svg"
+      ]
+    }
+  }
+}

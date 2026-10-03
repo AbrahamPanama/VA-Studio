@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="40" height="20" viewBox="0 0 40 20">
+  <defs>
+    <filter id="blur"><feGaussianBlur stdDeviation="0.5"/></filter>
+  </defs>
+  <image id="img1" x="0" y="0" width="10" height="10" preserveAspectRatio="none"
+         href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAgMAAAAP2OW3AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAMUExURQAAAIBAIEBAQMDAwLgSRQ4AAAACdFJOUwCAmytOGAAAAAd0SU1FB+oIHREEEmM5K8wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDgtMjlUMTc6MDQ6MTgrMDA6MDBoWbZDAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA4LTI5VDE3OjA0OjE4KzAwOjAwGQQO/wAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wOC0yOVQxNzowNDoxOCswMDowME4RLyAAAAAMSURBVAjXY1BguAAAATQA8bBD2hMAAAAASUVORK5CYII="/>
+  <rect id="cut1" x="2" y="2" width="4" height="4" style="fill:#000000"/>
+  <g id="glocked" sodipodi:insensitive="true">
+    <image id="img2" x="20" y="0" width="10" height="10" preserveAspectRatio="none"
+           href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAgMAAAAP2OW3AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAMUExURQAAAIBAIEBAQMDAwLgSRQ4AAAACdFJOUwCAmytOGAAAAAd0SU1FB+oIHREEEmM5K8wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDgtMjlUMTc6MDQ6MTgrMDA6MDBoWbZDAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA4LTI5VDE3OjA0OjE4KzAwOjAwGQQO/wAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wOC0yOVQxNzowNDoxOCswMDowME4RLyAAAAAMSURBVAjXY1BguAAAATQA8bBD2hMAAAAASUVORK5CYII="/>
+  </g>
+  <rect id="cut2" x="22" y="2" width="4" height="4" style="fill:#000000"/>
+  <rect id="plain" x="12" y="12" width="4" height="4" style="fill:#ff0000"/>
+  <g id="wrap">
+    <image id="img3" x="0" y="12" width="6" height="6" preserveAspectRatio="none"
+           href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAgMAAAAP2OW3AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAMUExURQAAAIBAIEBAQMDAwLgSRQ4AAAACdFJOUwCAmytOGAAAAAd0SU1FB+oIHREEEmM5K8wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDgtMjlUMTc6MDQ6MTgrMDA6MDBoWbZDAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA4LTI5VDE3OjA0OjE4KzAwOjAwGQQO/wAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wOC0yOVQxNzowNDoxOCswMDowME4RLyAAAAAMSURBVAjXY1BguAAAATQA8bBD2hMAAAAASUVORK5CYII="/>
+  </g>
+  <rect id="cut3" x="1" y="13" width="2" height="2" style="fill:#000000"/>
+  <image id="img5" x="20" y="20" width="6" height="6" preserveAspectRatio="none" style="filter:url(#blur)" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAgMAAAAP2OW3AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAMUExURQAAAIBAIEBAQMDAwLgSRQ4AAAACdFJOUwCAmytOGAAAAAd0SU1FB+oIHREEEmM5K8wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDgtMjlUMTc6MDQ6MTgrMDA6MDBoWbZDAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA4LTI5VDE3OjA0OjE4KzAwOjAwGQQO/wAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wOC0yOVQxNzowNDoxOCswMDowME4RLyAAAAAMSURBVAjXY1BguAAAATQA8bBD2hMAAAAASUVORK5CYII="/>
+  <rect id="cut5" x="21" y="21" width="2" height="2" style="fill:#000000"/>
+  <image id="img6" x="30" y="20" width="6" height="6" preserveAspectRatio="none" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAgMAAAAP2OW3AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAMUExURQAAAIBAIEBAQMDAwLgSRQ4AAAACdFJOUwCAmytOGAAAAAd0SU1FB+oIHREEEmM5K8wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDgtMjlUMTc6MDQ6MTgrMDA6MDBoWbZDAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA4LTI5VDE3OjA0OjE4KzAwOjAwGQQO/wAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wOC0yOVQxNzowNDoxOCswMDowME4RLyAAAAAMSURBVAjXY1BguAAAATQA8bBD2hMAAAAASUVORK5CYII="/>
+  <rect id="cut6" x="31" y="21" width="2" height="2" style="fill:#000000"/>
+  <use id="cut6clone" href="#cut6" x="0" y="10"/>
+</svg>
+

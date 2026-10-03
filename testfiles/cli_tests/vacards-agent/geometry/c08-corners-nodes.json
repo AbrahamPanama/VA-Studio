@@ -1,0 +1,26 @@
+{
+  "description": "scope=nodes with the single address 0:1 rounds exactly that one corner: changed, metrics.count 1, and only satellite index 1 carries a nonzero amount in the exported effect.",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r;vacards-corners:radius=2mm,scope=nodes,nodes=0:1;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "changed",
+      "mode": "single-object",
+      "reason": "success",
+      "modified": ["r"],
+      "undo": "one-step",
+      "metrics": {"count": 1, "approximate": false}
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "nodesatellites_param=\"F,0,0,1,0,0,100,1 @ F,0,0,1,0,1.88976378,100,1 @ F,0,0,1,0,0,100,1 @ F,0,0,1,0,0,100,1\""
+      ]
+    }
+  }
+}

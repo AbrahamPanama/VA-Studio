@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+     width="1200" height="760" viewBox="0 0 1200 760">
+  <title>Bitmap adjustments multi-object GUI fixture</title>
+  <defs>
+    <pattern id="checker" width="32" height="32" patternUnits="userSpaceOnUse">
+      <rect width="32" height="32" fill="#f4f4f4"/>
+      <rect width="16" height="16" fill="#d8d8d8"/>
+      <rect x="16" y="16" width="16" height="16" fill="#d8d8d8"/>
+    </pattern>
+    <linearGradient id="vector-gradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#29b6f6"/>
+      <stop offset="0.55" stop-color="#7e57c2"/>
+      <stop offset="1" stop-color="#ef5350"/>
+    </linearGradient>
+    <clipPath id="vector-clip">
+      <circle cx="0" cy="0" r="118"/>
+    </clipPath>
+    <mask id="alpha-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse"
+          x="420" y="145" width="280" height="190">
+      <linearGradient id="mask-gradient" gradientUnits="userSpaceOnUse"
+                      x1="420" y1="145" x2="700" y2="145">
+        <stop offset="0" stop-color="white"/>
+        <stop offset="0.72" stop-color="white"/>
+        <stop offset="1" stop-color="black"/>
+      </linearGradient>
+      <rect x="420" y="145" width="280" height="190" fill="url(#mask-gradient)"/>
+    </mask>
+    <filter id="tone-positive" x="0" y="0" width="1" height="1"
+            color-interpolation-filters="sRGB">
+      <feComponentTransfer inkscape:bitmap-adjustment="tone-v1"
+                           inkscape:brightness="35"
+                           inkscape:contrast="0"
+                           inkscape:intensity="0"
+                           inkscape:highlights="0"
+                           inkscape:shadows="0"
+                           inkscape:midtones="0">
+        <feFuncR type="table" tableValues="0.0875 0.9125"/>
+        <feFuncG type="table" tableValues="0.0875 0.9125"/>
+        <feFuncB type="table" tableValues="0.0875 0.9125"/>
+        <feFuncA type="identity"/>
+      </feComponentTransfer>
+    </filter>
+    <filter id="tone-negative" x="0" y="0" width="1" height="1"
+            color-interpolation-filters="sRGB">
+      <feComponentTransfer inkscape:bitmap-adjustment="tone-v1"
+                           inkscape:brightness="-25"
+                           inkscape:contrast="15"
+                           inkscape:intensity="0"
+                           inkscape:highlights="0"
+                           inkscape:shadows="0"
+                           inkscape:midtones="0">
+        <feFuncR type="table" tableValues="0 0.78125"/>
+        <feFuncG type="table" tableValues="0 0.78125"/>
+        <feFuncB type="table" tableValues="0 0.78125"/>
+        <feFuncA type="identity"/>
+      </feComponentTransfer>
+    </filter>
+    <filter id="tone-vector" x="-0.1" y="-0.1" width="1.2" height="1.2"
+            color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="1.5" result="soft"/>
+      <feComponentTransfer in="soft" result="tone"
+                           inkscape:bitmap-adjustment="tone-v1"
+                           inkscape:brightness="0"
+                           inkscape:contrast="0"
+                           inkscape:intensity="20"
+                           inkscape:highlights="0"
+                           inkscape:shadows="0"
+                           inkscape:midtones="0">
+        <feFuncR type="table" tableValues="0 1"/>
+        <feFuncG type="table" tableValues="0 1"/>
+        <feFuncB type="table" tableValues="0 1"/>
+        <feFuncA type="identity"/>
+      </feComponentTransfer>
+      <feBlend in="SourceGraphic" in2="tone" mode="screen"/>
+    </filter>
+  </defs>
+
+  <sodipodi:namedview pagecolor="#ffffff" bordercolor="#666666"
+                      inkscape:document-units="px"/>
+
+  <g inkscape:groupmode="layer" inkscape:label="Background" sodipodi:insensitive="true">
+    <rect width="1200" height="760" fill="#24272d"/>
+    <text x="48" y="58" fill="#ffffff" font-family="sans-serif" font-size="30"
+          font-weight="600">Multi-object tone adjustment GUI fixture</text>
+    <text x="48" y="91" fill="#b9c0cc" font-family="sans-serif" font-size="18">
+      Bitmaps preserve alpha; vectors remain editable SVG; one property changes atomically.
+    </text>
+  </g>
+
+  <g inkscape:groupmode="layer" inkscape:label="Targets">
+    <rect x="48" y="125" width="320" height="245" rx="18" fill="url(#checker)"/>
+    <image id="bitmap-positive" x="68" y="145" width="280" height="190"
+           preserveAspectRatio="none" style="image-rendering:pixelated;filter:url(#tone-positive)"
+           href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAgMAAAAP2OW3AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAMUExURQAAAIBAIEBAQMDAwLgSRQ4AAAACdFJOUwCAmytOGAAAAAd0SU1FB+oIHREEEmM5K8wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDgtMjlUMTc6MDQ6MTgrMDA6MDBoWbZDAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA4LTI5VDE3OjA0OjE4KzAwOjAwGQQO/wAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wOC0yOVQxNzowNDoxOCswMDowME4RLyAAAAAMSURBVAjXY1BguAAAATQA8bBD2hMAAAAASUVORK5CYII="/>
+    <text x="68" y="360" fill="#ffffff" font-family="sans-serif" font-size="17">Bitmap A · brightness +35 · alpha</text>
+
+    <rect x="400" y="125" width="320" height="245" rx="18" fill="url(#checker)"/>
+    <image id="bitmap-negative" x="420" y="145" width="280" height="190"
+           preserveAspectRatio="none" mask="url(#alpha-mask)"
+           style="image-rendering:pixelated;filter:url(#tone-negative)"
+           href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAgMAAAAP2OW3AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAMUExURQAAAIBAIEBAQMDAwLgSRQ4AAAACdFJOUwCAmytOGAAAAAd0SU1FB+oIHREEEmM5K8wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDgtMjlUMTc6MDQ6MTgrMDA6MDBoWbZDAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA4LTI5VDE3OjA0OjE4KzAwOjAwGQQO/wAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wOC0yOVQxNzowNDoxOCswMDowME4RLyAAAAAMSURBVAjXY1BguAAAATQA8bBD2hMAAAAASUVORK5CYII="/>
+    <text x="420" y="360" fill="#ffffff" font-family="sans-serif" font-size="17">Bitmap B · −25 / contrast +15 · mask</text>
+
+    <rect id="vector-rect" x="754" y="125" width="380" height="245" rx="38"
+          fill="url(#vector-gradient)" stroke="#ffffff" stroke-width="8"/>
+    <text x="784" y="350" fill="#ffffff" font-family="sans-serif" font-size="17">Vector rectangle · gradient + stroke</text>
+
+    <path id="vector-star" d="m 202,431 31,91 97,2 -77,58 28,92 -79,-55 -79,55 28,-92 -77,-58 97,-2 z"
+          fill="#ffd54f" stroke="#f57f17" stroke-width="10" stroke-linejoin="round"
+          style="filter:url(#tone-vector)"/>
+    <text x="78" y="710" fill="#ffffff" font-family="sans-serif" font-size="17">Vector path · existing blur/blend chain</text>
+
+    <g id="clipped-group" transform="translate(540 555)" clip-path="url(#vector-clip)">
+      <rect x="-150" y="-135" width="300" height="270" fill="#26a69a"/>
+      <circle cx="-75" cy="-35" r="95" fill="#ec407a"/>
+      <circle cx="85" cy="60" r="115" fill="#5c6bc0"/>
+      <path d="M -145,105 0,-120 145,105 Z" fill="#ffee58" fill-opacity="0.8"/>
+    </g>
+    <text x="410" y="710" fill="#ffffff" font-family="sans-serif" font-size="17">Vector group · circular clip</text>
+
+    <text id="text-target" x="756" y="520" fill="#ffffff" font-family="sans-serif"
+          font-size="44" font-weight="700">Editable vector text</text>
+    <text x="756" y="557" fill="#b9c0cc" font-family="sans-serif" font-size="18">
+      Must remain text after tone adjustment
+    </text>
+
+    <use id="vector-clone" xlink:href="#vector-rect"
+         transform="translate(240 500) scale(0.72)"/>
+    <text x="790" y="718" fill="#ffffff" font-family="sans-serif" font-size="17">Clone of vector rectangle</text>
+  </g>
+</svg>

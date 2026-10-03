@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="10in"
+   height="10in"
+   viewBox="0 0 960 960"
+   version="1.1"
+   id="svg8"
+   inkscape:version="1.0 (4035a4f, 2020-05-01)"
+   sodipodi:docname="docscale.svg">
+  <metadata
+     id="metadata5813">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1680"
+     inkscape:window-height="1005"
+     id="base"
+     showgrid="true"
+     inkscape:snap-text-baseline="true"
+     inkscape:zoom="0.83020833"
+     inkscape:cx="480"
+     inkscape:cy="480"
+     inkscape:window-x="0"
+     inkscape:window-y="23"
+     inkscape:window-maximized="1"
+     inkscape:document-units="in"
+     inkscape:current-layer="trans_group"
+     inkscape:document-rotation="0">
+    <inkscape:grid
+       type="xygrid"
+       id="grid27"
+       spacingx="96"
+       spacingy="96"
+       empspacing="10"
+       color="#8080ff"
+       opacity="0.25098039"
+       empcolor="#0000ff"
+       empopacity="0.25098039" />
+  </sodipodi:namedview>
+  <defs
+     id="defs5787">
+    <rect
+       id="abs_rect"
+       width="96"
+       height="96" />
+  </defs>
+  <rect
+     id="root_rect_uu"
+     x="192"
+     y="96"
+     width="96"
+     height="96"
+     style="fill:purple;fill-opacity:0.5;stroke:purple;stroke-width:1" />
+  <rect
+     height="25.4mm"
+     width="25.4mm"
+     y="25.4mm"
+     x="76.2mm"
+     id="root_rect_mm"
+     style="opacity:1.0;fill:#00ff00;stroke-width:1;fill-opacity:0.5;" />
+  <rect
+     height="1in"
+     width="1in"
+     y="1in"
+     x="4in"
+     id="root_rect_in"
+     style="opacity:1.0;fill:#ffff00;stroke-width:1;fill-opacity:0.5;" />
+  <g
+     style="stroke:#000000;stroke-opacity:1;stroke-width:2"
+     transform="translate(768, 384) rotate(180)"
+     id="root_group_transform">
+    <rect
+       id="root_group_rect_uu"
+       x="192"
+       y="96"
+       width="96"
+       height="96"
+       style="fill:purple;fill-opacity:0.9;stroke:purple;" />
+    <rect
+       height="25.4mm"
+       width="25.4mm"
+       y="25.4mm"
+       x="76.2mm"
+       id="root_group_rect_mm"
+       style="opacity:1.0;fill:#00ff00;fill-opacity:0.9;" />
+    <rect
+       transform="translate(96,0)"
+       height="1in"
+       width="1in"
+       y="1in"
+       x="4in"
+       id="root_group_rect_in"
+       style="opacity:1.0;fill:#ffff00;fill-opacity:0.9;" />
+  </g>
+  <use
+     style="fill:green;fill-opacity:0.5;stroke:purple;stroke-width:1"
+     xlink:href="#abs_rect"
+     y="288"
+     x="96"
+     id="root_use_1" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer-1"
+     inkscape:label="layer 1"
+     style="display:inline">
+    <g
+       transform="rotate(-45)"
+       id="rot_group2">
+      <g
+         transform="scale(0.5)"
+         id="scale_group2">
+        <g
+           transform="rotate(45)"
+           id="rot_group">
+          <g
+             transform="translate(576, 384)"
+             id="trans_group">
+            <g
+               transform="scale(2)"
+               id="scale_group">
+              <rect
+                 id="layer_group_rect_uu2"
+                 x="192"
+                 y="96"
+                 width="96"
+                 height="96"
+                 style="fill:purple;fill-opacity:0.5;stroke:purple;stroke-width:1" />
+              <path
+                 id="layer_group_path"
+                 style="opacity:1;fill:#00ff00;fill-opacity:0.5;stroke-width:1"
+                 d="m 288,96 h 96 v 96 h -96 z" />
+              <rect
+                 height="1in"
+                 width="1in"
+                 y="1in"
+                 x="4in"
+                 id="layer_group_rect_in2"
+                 style="opacity:1.0;fill:#ffff00;stroke-width:1;fill-opacity:0.5;"
+                 transform="translate(96,0)" />
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

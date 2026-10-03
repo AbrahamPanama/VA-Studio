@@ -1,0 +1,26 @@
+{
+  "description": "Tone query of two images: per-target settings and the aggregate first-value/mixed flags.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,b;vacards-bitmap-tone-query",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-bitmap-tone-query",
+      "status": "ok",
+      "mode": "read-only",
+      "undo": "none",
+      "targets": {"selected": 2, "eligible": 2, "covered": 0, "excluded": []},
+      "data": {
+        "targets": [
+          {"id": "a", "type": "image", "managed": true, "brightness": 40, "contrast": 0},
+          {"id": "b", "type": "image", "managed": true, "brightness": 40, "contrast": 10}
+        ],
+        "aggregate": {
+          "brightness": {"value": 40, "mixed": false},
+          "contrast": {"value": 0, "mixed": true}
+        }
+      }
+    }
+  ]
+}

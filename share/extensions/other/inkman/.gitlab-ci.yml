@@ -1,0 +1,21 @@
+# Dependencies are managed in the Dockerfile in the inkscape-ci-docker
+# Git repository. Change them there, wait a bit, and then we'll use
+# the new ones here in these builds.
+image: ${IMAGE}
+
+workflow:
+  rules:
+    - when: always
+
+stages:
+  - lint
+variables:
+  GIT_DEPTH: "1"
+  IMAGE: registry.gitlab.com/inkscape/inkscape-ci-docker/extensions
+
+ruff:
+  stage: lint
+  script:
+    - source /root/pyenv-init
+    - pyenv shell 3.11.0
+    - tox -e ruff

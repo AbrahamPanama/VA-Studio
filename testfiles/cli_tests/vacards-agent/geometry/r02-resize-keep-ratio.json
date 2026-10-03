@@ -1,0 +1,15 @@
+{
+  "description": "keep-ratio scales the missing dimension by the same factor.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a;vacards-transform-resize:width=40,keep-ratio",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "changed",
+      "reason": "success",
+      "metrics": {"new_width": 40.0, "new_height": 40.0}
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "description": "An out-of-range tone override is rejected by the parameter grammar.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:plain;vacards-bitmap-histogram:brightness=101",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-bitmap-histogram",
+      "status": "rejected",
+      "reason": "invalid-argument",
+      "error": {"code": "out-of-range", "key": "brightness"}
+    }
+  ]
+}

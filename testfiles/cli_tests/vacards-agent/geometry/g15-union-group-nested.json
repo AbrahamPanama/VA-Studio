@@ -1,0 +1,28 @@
+{
+  "description": "The user scenario: union of a shape, a text and a nested group. Each selected group acts as one combined shape; the emptied group and its leaves are removed in the same single Undo step.",
+  "input": "{FIXTURES}/groups-boolean.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r1,t1,g1;vacards-boolean:op=union;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "targets": {"selected": 3, "excluded": []},
+      "created": [],
+      "modified": ["r1"],
+      "deleted": ["t1", "g1", "g1a", "g1b", "g1c", "g1inner"],
+      "selection_after": ["r1"],
+      "undo": "one-step"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": ["id=\"r1\""],
+      "not_contains": ["id=\"g1\"", "<text"]
+    }
+  }
+}

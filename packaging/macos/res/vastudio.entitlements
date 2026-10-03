@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<!--
+  DRAFT, not used by any packaging script yet: hardened-runtime entitlements
+  for signing VA Studio with a Developer ID (see
+  packaging/macos/vacards/notarize-va-studio.sh, also a draft).
+
+  VA Studio is not sandboxed (extensions run as separate Python processes and
+  documents are opened anywhere), so only hardened-runtime exceptions belong
+  here, each as narrow as tests allow:
+
+  - disable-library-validation: the bundled Python (python3-bin) loads native
+    extension modules that users install with Extensions > Manage Extensions;
+    those are not signed with VA's Team ID. If the main executable does not
+    need it, sign inkscape-bin without this file and keep it for python3-bin.
+
+  Not included, add only if a signed test build proves the need:
+  - com.apple.security.cs.allow-unsigned-executable-memory (libffi/ctypes
+    closures on older libffi builds);
+  - com.apple.security.cs.allow-jit;
+  - com.apple.security.cs.allow-dyld-environment-variables (the launchers do
+    not rely on DYLD_* variables).
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+</dict>
+</plist>

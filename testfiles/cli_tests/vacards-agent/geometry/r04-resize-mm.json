@@ -1,0 +1,22 @@
+{
+  "description": "Resizing a stroked object to height=20mm uses the visual (stroke) bounds and reports stroke scaling on.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:stroked;vacards-transform-resize:height=20mm",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "changed",
+      "reason": "success",
+      "undo": "one-step",
+      "metrics": {
+        "old_width": 22.0,
+        "old_height": 12.0,
+        "new_width": 22.0,
+        "new_height": 75.5905511811
+      },
+      "data": {"transform_stroke": true, "preserve_transform": false}
+    }
+  ]
+}

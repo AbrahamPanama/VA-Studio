@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2-dev (bf4f53e38c, 2021-05-21)"
+   sodipodi:docname="guides_millimeter.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.77771465"
+     inkscape:cx="396.67505"
+     inkscape:cy="459.03726"
+     inkscape:window-width="1920"
+     inkscape:window-height="1043"
+     inkscape:window-x="0"
+     inkscape:window-y="360"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     showguides="true"
+     inkscape:guide-bbox="true">
+    <sodipodi:guide
+       position="96.278348,137.1031"
+       orientation="1,0"
+       id="guide12045" />
+    <sodipodi:guide
+       position="115.6701,166.02062"
+       orientation="0,-1"
+       id="guide12047" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="stroke:#000000;stroke-width:0.264583"
+       id="rect47"
+       width="59.654335"
+       height="48.655983"
+       x="18.775503"
+       y="38.309345" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:25.4px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="29.674892"
+       y="138.25467"
+       id="text8147"><tspan
+         sodipodi:role="line"
+         id="tspan8145"
+         style="font-size:25.4px;stroke-width:0.264583"
+         x="29.674892"
+         y="138.25467">Hello World!</tspan></text>
+    <path
+       sodipodi:type="star"
+       style="stroke:#000000"
+       id="path11963"
+       inkscape:flatsided="false"
+       sodipodi:sides="5"
+       sodipodi:cx="452.35947"
+       sodipodi:cy="732.82294"
+       sodipodi:r1="124.43255"
+       sodipodi:r2="62.216274"
+       sodipodi:arg1="0.52124329"
+       sodipodi:arg2="1.1495618"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       d="m 560.26747,794.78521 -82.46855,-5.18464 -51.02367,64.99637 -20.5533,-80.0344 -77.5824,-28.4414 69.76592,-44.27934 3.0751,-82.57412 63.671,52.66826 79.48292,-22.59221 -30.41507,76.83011 z"
+       transform="matrix(0.26458333,0,0,0.26458333,10.770067,15.092102)"
+       inkscape:transform-center-x="2.091786"
+       inkscape:transform-center-y="1.0872684" />
+  </g>
+</svg>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" height="100" width="300" id="color_svg" version="1.1">
+  <defs id="defs6">
+    <linearGradient id="lg1">
+      <stop id="stop849" offset="0" style="stop-color:#729fcf;stop-opacity:1"/>
+      <stop id="stop851" offset="1" style="stop-color:#3465a4;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="lg2">
+      <stop id="stop841" offset="0" style="stop-color:#75507b;stop-opacity:1"/>
+      <stop id="stop843" offset="1" style="stop-color:#cc0000;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="ColorName" inkscape:swatch="solid">
+      <stop id="stop844" offset="0" style="stop-color:#123456;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient gradientUnits="userSpaceOnUse" y2="55" x2="235" y1="15" x1="195" id="slg1" xlink:href="#lg2"/>
+    <linearGradient gradientUnits="userSpaceOnUse" y2="15" x2="235" y1="55" x1="195" id="slg2" xlink:href="#lg1"/>
+    <linearGradient gradientUnits="userSpaceOnUse" y2="15" x2="265" y1="55" x1="195" id="slg3" xlink:href="#lg1"/>
+    <linearGradient gradientUnits="userSpaceOnUse" y2="15" x2="265" y1="55" x1="195" id="slg4" xlink:href="#ColorName"/>
+    <style id="style0"><![CDATA[
+#r2 {
+  fill:#3465a4;
+  stroke:#729fcf;
+  stop-color:blue;
+}
+    ]]></style>
+  </defs>
+  <!--Regular shape with style properties-->
+  <rect y="15" x="10" height="40" width="40" id="r1" style="opacity:1;fill:#75507b;fill-opacity:0.9;stroke:#5c3566;stroke-width:10;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.5;paint-order:markers fill stroke;stop-color:red"/>
+  <!--Regular shape with css styles-->
+  <rect y="15" x="60" height="40" width="40" id="r2" style="opacity:1;fill-opacity:1;stroke-width:10;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers fill stroke"/>
+  <!--Regular shape with element attributes-->
+  <rect y="15" x="110" height="40" width="40" id="r3" fill="#cc0000" fill-opacity="0.9" stroke="#2e3436" stroke-opacity="0.5" style="opacity:0.81;stroke:#2e3436;stroke-width:10;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers fill stroke;stop-color:red"/>
+  <!--Regular shape with swatch-->
+  <rect y="15" x="160" height="40" width="40" id="r4" style="opacity:1;fill:url(#slg4);fill-opacity:1;stroke:url(#slg2);stroke-width:10;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.5;paint-order:markers fill stroke;stop-color:#000000"/>
+  <!--Regular shape with gradients-->
+  <rect y="15" x="210" height="40" width="40" id="r6" style="opacity:1;fill:url(#slg1);fill-opacity:1;stroke:url(#slg2);stroke-width:10;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.5;paint-order:markers fill stroke;stop-color:#000000"/>
+  <!--A copy of the gradient to test url hygiene-->
+  <rect y="15" x="260" height="40" width="40" id="r5" style="opacity:1;fill:url(#slg1);fill-opacity:1;stroke:url(#slg3);stroke-width:10;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.5;paint-order:markers fill stroke;stop-color:#000000"/>
+</svg>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
+   sodipodi:docname="filter_example.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2">
+    <filter
+       style="color-interpolation-filters:sRGB"
+       id="filter186"
+       inkscape:label="filter0"
+       x="-0"
+       y="-0"
+       width="2"
+       height="2">
+      <feGaussianBlur
+         stdDeviation="1"
+         id="feGaussianBlur188" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       id="filter190"
+       inkscape:label="filter1"
+       x="0"
+       y="0"
+       width="1"
+       height="1">
+      <feColorMatrix
+         id="feColorMatrix192"
+         values="1 0 1 0 0 0 1 1 0 1 0 0 1 0 1 0 0 1 1 0 " />
+    </filter>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="opacity:0.6;fill:#000000;stroke-width:1;stroke-linejoin:bevel;stroke-dashoffset:5.00001;-inkscape-stroke:none;stop-color:#000000;filter:url(#filter186)  url(#filter190) url(#filter186)"
+       id="multifilter"
+       width="28"
+       height="36"
+       x="58"
+       y="52" />
+    <ellipse
+       style="opacity:0.6;fill:#000000;stroke-width:1;stroke-linejoin:bevel;stroke-dashoffset:5.00001;-inkscape-stroke:none;stop-color:#000000; filter:url(#filter186)"
+       id="onefilter"
+       cx="126"
+       cy="65"
+       rx="13"
+       ry="15" />
+    <rect
+       style="opacity:0.6;fill:#000000;stroke-width:1;stroke-linejoin:bevel;stroke-dashoffset:5.00001;-inkscape-stroke:none;stop-color:#000000; filter:url(#filter10)"
+       id="missingfilter"
+       width="26"
+       height="18"
+       x="8"
+       y="17" />
+
+      <rect
+       style="opacity:0.6;fill:#000000;stroke-width:1;stroke-linejoin:bevel;stroke-dashoffset:5.00001;-inkscape-stroke:none;stop-color:#000000;"
+       id="nofilter"
+       width="26"
+       height="18"
+       x="50"
+       y="17" />
+  </g>
+</svg>

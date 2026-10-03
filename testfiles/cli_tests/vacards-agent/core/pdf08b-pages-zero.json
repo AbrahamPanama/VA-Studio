@@ -1,0 +1,20 @@
+{
+  "description": "PDF8: --pages=0 fails cleanly (no abort) and writes nothing.",
+  "input": "{FIXTURES}/pdf-simple.pdf",
+  "args": [
+    "--export-type=svg",
+    "--export-filename={WORK}/out.svg",
+    "--pages=0"
+  ],
+  "timeout": 60,
+  "expect_exit": 1,
+  "expect_files": {
+    "out.svg": {
+      "exists": false
+    }
+  },
+  "expect_stderr_contains": [
+    "No page of the PDF matches the page selection",
+    "failed to create document"
+  ]
+}

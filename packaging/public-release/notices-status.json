@@ -1,0 +1,38 @@
+{
+  "schema": "va-studio-notices-status/1",
+  "complete": false,
+  "issues": [
+    {
+      "area": "sparrow-crates",
+      "issue": "61 crate license texts not captured; rerun with --sparrow-vendor on a host with `cargo vendor` output for the lockfile"
+    },
+    {
+      "area": "sparrow-crates",
+      "issue": "macOS arm64 Sparrow build has no recorded lockfile; rebuild it from a recorded lock (and with --remap-path-prefix) or record its crate list"
+    },
+    {
+      "area": "assets",
+      "issue": "va-artwork: needs-owner"
+    },
+    {
+      "area": "assets",
+      "issue": "tiff-icc: blocked"
+    },
+    {
+      "area": "assets",
+      "issue": "hyphenation: needs-provenance"
+    },
+    {
+      "area": "platform",
+      "issue": "platform libraries: generated at release time from the SBOM (no --sbom given)"
+    }
+  ],
+  "nesting_crates": 78,
+  "sparrow_crates": 127,
+  "sparrow_darwin_observed": 30,
+  "sparrow_darwin_not_in_windows_lock": [
+    "crossbeam-deque 0.8.7",
+    "crossbeam-epoch 0.9.20",
+    "jagua-rs 0.8.0"
+  ]
+}

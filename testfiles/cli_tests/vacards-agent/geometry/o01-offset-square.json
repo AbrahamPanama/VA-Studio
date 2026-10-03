@@ -1,0 +1,28 @@
+{
+  "description": "Offset of one rectangle inserts one new path right after its source in the same parent and one Undo step; observed created id 'path1'.",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:sq;vacards-offset:distance=2;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-offset",
+      "status": "changed",
+      "mode": "per-selected-root",
+      "reason": "success",
+      "targets": {"selected": 1, "eligible": 1},
+      "created": ["path1"],
+      "selection_after": ["path1"],
+      "undo": "one-step",
+      "metrics": {"skipped": 0, "open_subpaths_skipped": 0, "results": 1}
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "  <rect\n     id=\"sq\"\n     x=\"10\"\n     y=\"10\"\n     width=\"20\"\n     height=\"20\"\n     style=\"fill:#ff0000\" />\n  <path\n     d=\"M 8,8 V 32 H 32 V 8 Z\"\n     style=\"fill:#ff0000\"\n     id=\"path1\" />"
+      ]
+    }
+  }
+}

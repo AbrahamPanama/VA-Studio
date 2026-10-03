@@ -1,0 +1,19 @@
+{
+  "description": "Bottom-minus-rest anchors on the bottom-most object (a) and consumes the rest (b, c) in one Undo step.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,b,c;vacards-boolean:op=bottom-minus-rest",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "modified": ["a"],
+      "deleted": ["b", "c"],
+      "selection_after": ["a"],
+      "undo": "one-step"
+    }
+  ]
+}

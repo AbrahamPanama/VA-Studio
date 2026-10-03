@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+     width="1200" height="900" viewBox="0 0 1200 900">
+  <sodipodi:namedview pagecolor="#d7d7d7" inkscape:document-units="px"/>
+  <defs>
+    <path id="test-path" d="M 650,610 C 760,520 920,700 1080,600"/>
+    <linearGradient id="test-linear-gradient">
+      <stop offset="0" stop-color="#0057b8"/>
+      <stop offset="1" stop-color="#ffd700"/>
+    </linearGradient>
+    <radialGradient id="test-radial-gradient">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#8b2bd6"/>
+    </radialGradient>
+    <linearGradient id="test-swatch" inkscape:swatch="solid">
+      <stop offset="0" stop-color="#d4380d"/>
+    </linearGradient>
+    <pattern id="test-pattern" patternUnits="userSpaceOnUse" width="16" height="16">
+      <rect width="16" height="16" fill="#f6d365"/>
+      <path d="M 0,16 16,0" stroke="#7b2cbf" stroke-width="4"/>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="1200" height="900" fill="#ffffff"/>
+
+  <g id="text-panel-battery-layer"
+     inkscape:groupmode="layer"
+     inkscape:label="Text panel battery"
+     font-family="sans-serif" fill="#222222">
+    <text id="short-text" x="70" y="105" font-size="44">Quick brown fox</text>
+
+    <text id="mixed-runs" x="70" y="180" font-size="32">
+      <tspan font-family="serif" font-weight="bold">Mixed</tspan>
+      <tspan font-family="sans-serif" font-style="italic"> style runs</tspan>
+    </text>
+
+    <text id="partial-range" x="70" y="250" font-size="34">Select only these words for a partial-range edit</text>
+
+    <text id="paragraph-text" x="70" y="330"
+          font-size="24" line-height="1.25" inline-size="470" white-space="pre-wrap">
+      <tspan sodipodi:role="paragraph">First paragraph contains enough words to wrap across several lines and exercise alignment, indentation, spacing, lists, hyphenation, and drop caps.</tspan>
+      <tspan sodipodi:role="paragraph">Second paragraph verifies that a caret or a partial selection targets only its logical paragraph.</tspan>
+    </text>
+
+    <text id="long-unicode" x="650" y="105" font-size="25" inline-size="450" white-space="pre-wrap">Café naïve ﬁ ligature, office affinity fi ffi — Straße İstanbul — Ελληνικά — العربية ١٢٣ — हिन्दी — 中文 日本語 한글 — emoji 😀. ABC中文DEF 123한글456.</text>
+
+    <text id="rtl-text" x="1080" y="250" font-size="30" direction="rtl" text-anchor="end">مرحبا بالعالم 123</text>
+
+    <text id="vertical-text" x="1110" y="310" font-size="26"
+          writing-mode="vertical-rl" text-orientation="mixed">Vertical 日本語 ABC</text>
+
+    <text id="path-text" font-size="28">
+      <textPath xlink:href="#test-path">Editable text follows a curved path</textPath>
+    </text>
+
+    <text id="feature-text" x="650" y="700" font-size="28"
+          style="font-feature-settings:'ss01' 1">office affinity fi ffi</text>
+    <text id="multi-a" x="650" y="760" font-size="28">Multi-object A</text>
+    <text id="multi-b" x="650" y="815" font-size="28">Multi-object B</text>
+  </g>
+</svg>

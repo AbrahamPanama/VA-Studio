@@ -1,0 +1,16 @@
+{
+  "description": "Resize without width or height is rejected with a parameter error.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a;vacards-transform-resize:",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "rejected",
+      "mode": "collective-geometry",
+      "reason": "invalid-argument",
+      "error": {"code": "missing-required", "key": "width"}
+    }
+  ]
+}

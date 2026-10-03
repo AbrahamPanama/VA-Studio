@@ -1,0 +1,19 @@
+{
+  "description": "With both width and height given, keep-ratio is ignored (both used as given) and a warning records why.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a;vacards-transform-resize:width=40,height=10,keep-ratio",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "modified": ["a"],
+      "undo": "one-step",
+      "warnings": ["keep-ratio ignored because both width and height were given"],
+      "metrics": {"old_width": 20.0, "old_height": 20.0, "new_width": 40.0, "new_height": 10.0}
+    }
+  ]
+}

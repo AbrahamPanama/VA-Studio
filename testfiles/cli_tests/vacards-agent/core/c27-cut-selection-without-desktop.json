@@ -1,0 +1,28 @@
+{
+  "description": "cut on a selection without a desktop used to crash dereferencing the missing desktop; it removes the object, and one vacards-undo brings it back.",
+  "input": "{FIXTURES}/commands-no-target.svg",
+  "actions": "select-by-id:box;cut;export-filename:{WORK}/cut.svg;export-do;vacards-undo;export-filename:{WORK}/undone.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "cut.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"ta\"",
+        "id=\"te\""
+      ],
+      "not_contains": [
+        "id=\"box\""
+      ]
+    },
+    "undone.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"box\"",
+        "id=\"ta\"",
+        "id=\"tb\"",
+        "id=\"tc\"",
+        "id=\"te\""
+      ]
+    }
+  }
+}

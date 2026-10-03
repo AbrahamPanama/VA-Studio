@@ -1,0 +1,12 @@
+{
+  "description": "A single image wrapped in a selected group resolves as a pair, but the commit refuses to collapse the wrapper; the dry run must predict the same refusal.",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:wrap,cut3;vacards-destructive-clip:dry-run;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-destructive-clip", "status": "rejected", "reason": "unsupported-effects-or-references"},
+    {"action": "export-filename", "status": "skipped"},
+    {"action": "export-do", "status": "skipped"}
+  ]
+}

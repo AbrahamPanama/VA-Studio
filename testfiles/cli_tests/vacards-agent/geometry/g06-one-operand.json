@@ -1,0 +1,16 @@
+{
+  "description": "A boolean with a single operand is rejected atomically.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a;vacards-boolean:op=union",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "rejected",
+      "mode": "collective-geometry",
+      "reason": "needs-two-operands",
+      "targets": {"selected": 1}
+    }
+  ]
+}

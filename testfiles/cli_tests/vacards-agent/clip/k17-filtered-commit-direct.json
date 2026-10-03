@@ -1,0 +1,20 @@
+{
+  "description": "object-destructive-clip calls commit_selection directly (bypassing the vacards-destructive-clip dry-run preflight that refuses k14 first), so the filtered bitmap img5 is refused by the commit's own coverage step with the same status and reason; halt-on-error=false lets the export run and the unchanged cutter cut5 survives. Observed: the action is enabled for this pair (selection_is_eligible == true), so the commit path is exercised.",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;select-by-id:img5,cut5;object-destructive-clip;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "ok", "data": {"halt-on-error": false}},
+    {
+      "action": "object-destructive-clip",
+      "status": "rejected",
+      "reason": "unsupported-effects-or-references",
+      "mode": "paired",
+      "data": {"image": "img5", "cutter": "cut5"}
+    }
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "contains": ["id=\"cut5\""]}
+  }
+}

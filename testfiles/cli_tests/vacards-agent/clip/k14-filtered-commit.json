@@ -1,0 +1,14 @@
+{
+  "description": "A filtered bitmap is refused by the commit with the same status and reason the dry run predicted; halt-on-error=false lets the export run and the document is unchanged (cut5 survives).",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;select-by-id:img5,cut5;vacards-destructive-clip;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "ok", "data": {"halt-on-error": false}},
+    {"action": "vacards-destructive-clip", "status": "rejected", "reason": "unsupported-effects-or-references"}
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "contains": ["id=\"cut5\""]}
+  }
+}

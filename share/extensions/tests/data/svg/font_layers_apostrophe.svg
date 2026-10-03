@@ -1,0 +1,12 @@
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:cc="http://creativecommons.org/ns#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+    xmlns:svg="http://www.w3.org/2000/svg" width="1200">
+    <g inkscape:label="GlyphLayer-'" inkscape:groupmode="layer">
+        <path d="M 100 700 L 100 500 L 359 500 l -183 -183 l 141 -141 l 183 183 L 500 100 L 700 100 L 700 359 l 183 -183 l 141 141 l -183 183 L 1100 500 L 1100 700 L 841 700 l 183 183 l -141 141 l -183 -183 L 700 1100 L 500 1100 L 500 841 l -183 183 l -141 -141 l 183 -183 L 100 700 z"/>
+    </g>
+</svg>

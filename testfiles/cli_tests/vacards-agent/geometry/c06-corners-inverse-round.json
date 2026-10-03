@@ -1,0 +1,27 @@
+{
+  "description": "mode=inverse-round rounds the same four corners as an inward concave cutout: changed, one Undo step. The persisted satellites carry the INVERSE_FILLET prefix (IF).",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r;vacards-corners:radius=2mm,mode=inverse-round;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "changed",
+      "mode": "single-object",
+      "reason": "success",
+      "modified": ["r"],
+      "undo": "one-step",
+      "metrics": {"count": 4, "approximate": false}
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "effect=\"fillet_chamfer\"",
+        "nodesatellites_param=\"IF,0,0,1,0,1.88976378,100,1"
+      ]
+    }
+  }
+}

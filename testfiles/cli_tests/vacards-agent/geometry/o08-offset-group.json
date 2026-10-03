@@ -1,0 +1,26 @@
+{
+  "description": "Selecting a group makes the group itself one source: its combined silhouette is offset as one closed shape (members are not offset individually), and the result is inserted after the group in the shared parent.",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:grp;vacards-offset:distance=2;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-offset",
+      "status": "changed",
+      "mode": "per-selected-root",
+      "reason": "success",
+      "targets": {"selected": 1, "eligible": 1},
+      "created": ["path1"],
+      "selection_after": ["path1"],
+      "undo": "one-step",
+      "metrics": {"skipped": 0, "open_subpaths_skipped": 0, "results": 1}
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": ["id=\"grp\"", "id=\"ing\"", "id=\"path1\"", "d=\"M 58,58 V 72 H 72 V 58 Z\""]
+    }
+  }
+}

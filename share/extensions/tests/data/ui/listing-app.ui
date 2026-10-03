@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkWindow" id="listing_app">
+    <property name="can-focus">False</property>
+    <child>
+      <object class="GtkBox">
+        <property name="can-focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">10</property>
+        <child>
+          <object class="GtkTreeView" id="tree1">
+            <property name="can-focus">True</property>
+            <signal name="realize" handler="realized" swapped="no"/>
+            <child internal-child="selection">
+              <object class="GtkTreeSelection"/>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkComboBox" id="combo1">
+            <property name="can-focus">False</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkIconView" id="icon1">
+            <property name="can-focus">True</property>
+            <property name="margin">6</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton">
+            <property name="label">gtk-quit</property>
+            <property name="can-focus">True</property>
+            <property name="receives-default">True</property>
+            <signal name="clicked" handler="close"/>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

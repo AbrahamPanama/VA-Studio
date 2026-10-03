@@ -1,0 +1,14 @@
+{
+  "description": "One vacards-undo restores both union operands: the boolean was exactly one Undo step.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,b;vacards-boolean:op=union;vacards-undo;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-boolean", "status": "changed", "undo": "one-step"},
+    {"action": "vacards-undo", "status": "changed"}
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "contains": ["id=\"a\"", "id=\"b\""]}
+  }
+}

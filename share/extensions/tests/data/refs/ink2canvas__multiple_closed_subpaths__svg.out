@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inkscape Output</title>
+</head>
+<body>
+    <canvas id='canvas' width='210' height='297'></canvas>
+    <script>
+    var ctx = document.getElementById("canvas").getContext("2d");
+    	
+// #layer1
+	
+// #path31
+	ctx.save();
+	ctx.beginPath();
+	ctx.transform(0.264583, 0.000000, 0.000000, 0.264583, 0.000000, 0.000000);
+	ctx.fillStyle = 'rgba(0, 128, 0, 88%)';
+	ctx.strokeStyle = '#0000ff';
+	ctx.lineWidth = 5.03747;
+	ctx.miterLimit = 4;
+	ctx.moveTo(255.585940, 41.617188);
+	ctx.lineTo(163.349610, 84.337891);
+	ctx.lineTo(175.478520, 185.261720);
+	ctx.lineTo(275.208980, 204.914060);
+	ctx.lineTo(324.718750, 116.136720);
+	ctx.lineTo(255.585940, 41.617188);
+	ctx.closePath();
+	ctx.moveTo(141.849610, 180.671880);
+	ctx.lineTo(73.015625, 235.933590);
+	ctx.lineTo(104.302730, 318.474610);
+	ctx.lineTo(192.470700, 314.226560);
+	ctx.lineTo(215.677730, 229.058590);
+	ctx.lineTo(141.849610, 180.671880);
+	ctx.closePath();
+	ctx.moveTo(318.000000, 220.609380);
+	ctx.bezierCurveTo(297.807911, 220.609167, 278.442744, 226.873686, 264.164677, 238.024795);
+	ctx.bezierCurveTo(249.886611, 249.175904, 241.865250, 264.300146, 241.865230, 280.070310);
+	ctx.bezierCurveTo(241.865247, 295.840476, 249.886606, 310.964720, 264.164673, 322.115831);
+	ctx.bezierCurveTo(278.442739, 333.266942, 297.807909, 339.531463, 318.000000, 339.531250);
+	ctx.bezierCurveTo(360.047116, 339.530849, 394.132775, 312.909405, 394.132810, 280.070310);
+	ctx.bezierCurveTo(394.132768, 247.231219, 360.047111, 220.609781, 318.000000, 220.609380);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+	ctx.restore();
+
+    </script>
+</body>
+</html>

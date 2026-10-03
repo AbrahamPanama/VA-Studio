@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="142.15878"
+   height="96.270485"
+   viewBox="0 0 142.15879 96.270485"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   sodipodi:docname="text_types.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     objecttolerance="10.0"
+     gridtolerance="10.0"
+     guidetolerance="10.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="false"
+     inkscape:zoom="8"
+     inkscape:cx="77.4375"
+     inkscape:cy="80.6875"
+     inkscape:window-width="1368"
+     inkscape:window-height="850"
+     inkscape:window-x="-6"
+     inkscape:window-y="-6"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     units="px"
+     lock-margins="true"
+     fit-margin-top="5"
+     fit-margin-left="5"
+     fit-margin-right="5"
+     fit-margin-bottom="5"
+     inkscape:showpageshadow="2"
+     inkscape:deskcolor="#d1d1d1" />
+  <defs
+     id="defs2">
+    <rect
+       x="106.75"
+       y="60.125001"
+       width="33.25"
+       height="13"
+       id="rect405" />
+    <rect
+       x="100"
+       y="300"
+       width="200"
+       height="90"
+       id="rect127697" />
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter4223"
+       x="-0.014790819"
+       y="-0.10231475"
+       width="1.0295816"
+       height="1.2046295">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.16541762"
+         id="feGaussianBlur4225" />
+    </filter>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-8.0187893,28.437623)">
+    <text
+       xml:space="preserve"
+       id="regular"
+       style="font-size:3px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;stroke-width:0.499999;stroke-linecap:round;stroke-linejoin:round"
+       x="13"
+       y="5"><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.5"
+         x="13"
+         y="5"
+         id="tspan107965">This is a regular text</tspan><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.5"
+         x="13"
+         y="8.75"
+         id="tspan753">With a <tspan
+   style="font-style:normal;font-variant:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:'Arial Bold';text-decoration:underline;text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:#ff0000"
+   id="tspan426">line break.</tspan></tspan></text>
+    <text
+       xml:space="preserve"
+       id="regular-transform"
+       style="font-size:3px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;stroke-width:0.499999;stroke-linecap:round;stroke-linejoin:round"
+       x="80"
+       y="-6"
+       transform="matrix(1.2,0.5,-0.4,0.7,0,0)"><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.5"
+         x="80"
+         y="-6"
+         id="tspan890">This is regular text</tspan><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.5"
+         x="80"
+         y="-2.25"
+         id="tspan894">with a line break</tspan><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.5"
+         x="80"
+         y="1.5"
+         id="tspan166626">and some transforms.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;white-space:pre;inline-size:25.75;display:inline;fill:#000000;stroke-width:0.499999;stroke-linecap:round;stroke-linejoin:round"
+       id="inline-size"
+       transform="translate(13,3)"><tspan
+         x="0"
+         y="11.480255"
+         id="tspan2116"><tspan
+           style="stroke-width:0.5"
+           id="tspan2114">This is an SVG2 </tspan></tspan><tspan
+         x="0"
+         y="15.230256"
+         id="tspan2124"><tspan
+           style="stroke-width:0.5"
+           id="tspan2118">flowed text </tspan><tspan
+           style="stroke-width:0.5"
+           id="tspan2120">(inlin</tspan><tspan
+           id="tspan2122">e </tspan></tspan><tspan
+         x="0"
+         y="18.980256"
+         id="tspan2130"><tspan
+           id="tspan2126">siz</tspan><tspan
+           style="stroke-width:0.5"
+           id="tspan2128">e).
+</tspan></tspan><tspan
+         x="0"
+         y="22.730256"
+         id="tspan2136"><tspan
+           style="stroke-width:0.5"
+           id="tspan2132">This is a line </tspan><tspan
+           style="stroke-width:0.5"
+           id="tspan2134">break </tspan></tspan><tspan
+         x="0"
+         y="26.480256"
+         id="tspan2146"><tspan
+           style="font-weight:bold;-inkscape-font-specification:'Arial Bold'"
+           id="tspan2138">inside</tspan><tspan
+           style="stroke-width:0.5"
+           id="tspan2140"> </tspan><tspan
+           style="stroke-width:0.5"
+           id="tspan2142">that </tspan><tspan
+           style="stroke-width:0.5"
+           id="tspan2144">text.</tspan></tspan></text>
+      <text
+        xml:space="preserve"
+        id="shape-inside"
+        style="font-size:20px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect127697);display:inline;fill:#000000;stroke-width:1.88976;stroke-linecap:round;stroke-linejoin:round"
+        transform="matrix(0.15,0,0,0.15,-3,-3)"><tspan
+          x="100"
+          y="318.01509"
+          id="tspan2148">This is an SVG2 </tspan><tspan
+          x="100"
+          y="343.01509"
+          id="tspan2150">flowed text (shape </tspan><tspan
+          x="100"
+          y="368.01509"
+          id="tspan2152">inside)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.175px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;letter-spacing:0.0343958px;fill:#000000;stroke-width:0.499999;stroke-linecap:round;stroke-linejoin:round"
+       x="13"
+       y="58"
+       id="kerning"><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.5"
+         x="13"
+         y="58"
+         id="tspan19510">This is a <tspan
+   style="letter-spacing:0.320146px"
+   id="tspan25400">text</tspan> with kerns adjusted in tspans</tspan><tspan
+         sodipodi:role="line"
+         style="stroke-width:0.5"
+         x="13"
+         y="61.96875"
+         id="tspan1285">(as Inkscape does it)</tspan></text>
+    <flowRoot
+       xml:space="preserve"
+       style="font-size:12px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;stroke-width:1.88976;stroke-linecap:round;stroke-linejoin:round"
+       id="flowroot"
+       transform="translate(-32,-8)scale(0.25)"><flowRegion
+         id="flowRegion92145"><rect
+           id="rect92147"
+           width="150"
+           height="80.5"
+           x="314"
+           y="70" /></flowRegion><flowPara
+         id="flowPara92157"
+         style="font-size:10px">This is an SVG1.2 flowed text (flowroot)</flowPara><flowPara
+         id="flowPara92168">And this is a linebreak <flowSpan
+   style="font-size:20.5px"
+   id="flowSpan323">inside.</flowSpan></flowPara></flowRoot>
+    <flowRoot
+       xml:space="preserve"
+       style="font-size:12px;line-height:20px;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;stroke-width:1.88976;stroke-linecap:round;stroke-linejoin:round"
+       id="flowroot-abs-lineheight"
+       transform="translate(10, -10)scale(0.25)"><flowRegion
+         id="flowRegion92145-9"><rect
+           id="rect92147-2"
+           width="150"
+           height="81.669708"
+           x="300"
+           y="70" /></flowRegion><flowPara
+         id="flowPara92157-6"
+         style="font-size:10px">This is an SVG1.2 flowed text</flowPara><flowPara
+         style="font-size:10px"
+         id="flowPara181051">With absolute line-height</flowPara><flowPara
+         id="flowPara92168-7" /></flowRoot>
+    <flowRoot
+       xml:space="preserve"
+       style="font-size:12px;font-family:Arial;-inkscape-font-specification:Arial;fill:#000000;stroke-width:1.88976;stroke-linecap:round;stroke-linejoin:round"
+       id="flowroot-no-lineheight"
+       transform="translate(10, 0)scale(0.25)"><flowRegion
+         id="flowRegion92145-9-5"><rect
+           id="rect92147-2-1"
+           width="170"
+           height="66.55159"
+           x="300"
+           y="70" /></flowRegion><flowPara
+         id="flowPara178978">This is an SVG1.2 flowed text</flowPara><flowPara
+         id="flowPara191038">without line height.</flowPara></flowRoot>
+    <text
+       y="4.9445772"
+       x="51.84655"
+       style="font-variant:normal;font-weight:normal;font-stretch:normal;font-size:1.37276px;font-family:Helvetica;-inkscape-font-specification:Helvetica;writing-mode:lr-tb;fill:#110f0d;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.352777"
+       id="manual-kerns"><tspan
+         style="stroke-width:0.352777"
+         x="51.84655 52.646873 52.99144 58.482491 59.282814 59.627373 71.752998 72.553322 72.897888 75.069603 75.869919 76.214493 78.387573 79.187889 79.532463 82.391922 83.192253 83.536812 103.09733 103.89765 104.24221 109.73325 110.53359 110.87815 116.36782 117.16816 117.51272 119.68581 120.48612 120.83068"
+         y="4.9445772"
+         sodipodi:role="line"
+         id="tspan5688">0.50.10.10.10.34.20.54.30.14.5</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.33333px;line-height:125%;font-family:Arial;-inkscape-font-specification:Arial;writing-mode:lr-tb;direction:ltr;fill:#000000;stroke-width:1.88976;stroke-linecap:round;stroke-linejoin:round"
+       x="13.65625"
+       y="-19.117189"
+       id="title"><tspan
+         sodipodi:role="line"
+         id="tspan156918"
+         x="13.65625"
+         y="-19.117189"
+         style="font-size:5.33333px;direction:ltr">This is a test document containing different transformed </tspan><tspan
+         sodipodi:role="line"
+         x="13.65625"
+         y="-12.450527"
+         style="font-size:5.33333px;direction:ltr"
+         id="tspan163610">text elements that were created using different methods.</tspan><tspan
+         sodipodi:role="line"
+         x="13.65625"
+         y="-5.7838631"
+         style="font-size:5.33333px;direction:ltr"
+         id="tspan168431">The containing layer has a transform applied as well.</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.33333px;font-family:Arial, Verdana;-inkscape-font-specification:'Arial, Verdana';fill:#000000;filter:url(#filter4223)"
+       x="50"
+       y="40"
+       id="text4221"><tspan
+         sodipodi:role="line"
+         id="tspan4219"
+         x="52.03619"
+         y="44.747932">Blurred text</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:5.33333px;font-family:Arial, Verdana;-inkscape-font-specification:'Arial, Verdana';display:none;fill:#000000"
+       x="86.330864"
+       y="60.657829"
+       id="text7345"><tspan
+         sodipodi:role="line"
+         id="tspan7343"
+         x="86.330864"
+         y="60.657829">This text should be invisible</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:900;font-stretch:50%;font-size:normal;font-family:Arial;fill:#000000;stroke-width:0.192272"
+       x="400"
+       y="300"
+       id="text7457"
+       transform="scale(0.2)"><tspan
+         sodipodi:role="line"
+         style="text-decoration:red overline blink;"
+         id="tspan7455"
+         x="81.044586"
+         y="55.852364">Non-Inkscape properties</tspan></text>
+    <text
+       xml:space="preserve"
+       transform="translate(21.143789,-30.187623)"
+       id="text403"
+       style="font-weight:bold;font-size:2px;line-height:125%;font-family:Verdana;-inkscape-font-specification:'Verdana Bold';white-space:pre;shape-inside:url(#rect405);display:inline;fill:#000000"><tspan
+         x="106.75"
+         y="61.949661"
+         id="tspan2154">This is a text 
+</tspan><tspan
+         x="106.75"
+         y="65.199661"
+         id="tspan2158"><tspan
+           style="line-height:2"
+           id="tspan2156">which changes
+</tspan></tspan><tspan
+         x="106.75"
+         y="69.199661"
+         id="tspan2162"><tspan
+   style="line-height:2"
+   id="tspan2160">line-height</tspan>
+</tspan><tspan
+         x="106.75"
+         y="72.449661"
+         id="tspan2164">midway twice.</tspan></text>
+  </g>
+</svg>

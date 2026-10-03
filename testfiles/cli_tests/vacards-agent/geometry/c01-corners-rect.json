@@ -1,0 +1,31 @@
+{
+  "description": "vacards-corners radius=2mm rounds all four corners of the native rect r via the shared corner engine: changed, one Undo step, modified ['r']. The persisted effect is a fillet_chamfer LPE in defs referenced by the rect, which stays a native sodipodi rect. Observed radius amount 1.88976378 user units = 2mm at this fixture's 4 user-units-per-css-px scale (radius_px 7.559 / 4).",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r;vacards-corners:radius=2mm;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "changed",
+      "mode": "single-object",
+      "reason": "success",
+      "targets": {"selected": 1, "eligible": 1},
+      "modified": ["r"],
+      "selection_after": ["r"],
+      "undo": "one-step",
+      "metrics": {"count": 4, "approximate": false}
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "effect=\"fillet_chamfer\"",
+        "inkscape:path-effect=\"#path-effect",
+        "sodipodi:type=\"rect\"",
+        "nodesatellites_param=\"F,0,0,1,0,1.88976378,100,1"
+      ]
+    }
+  }
+}

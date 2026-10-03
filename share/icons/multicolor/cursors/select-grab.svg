@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" x="-16" y="-16" style="fill:gray;stroke:black">
+  <style>@import './cursors.css';</style>
+  <!-- Move/grab: four-way arrow with solid heads (distinct from the open-chevron resize cursors). -->
+  <g id="cursor" class="drop-shadow" style="stroke-linecap:round;stroke-linejoin:round">
+    <g style="fill:white;stroke:white;stroke-width:2.6">
+      <path d="M 16,8 V 24 M 8,16 H 24" style="fill:none;stroke-width:3.2"/>
+      <path d="M 16,3 L 20.5,8.5 H 11.5 Z M 16,29 L 11.5,23.5 H 20.5 Z M 3,16 L 8.5,11.5 V 20.5 Z M 29,16 L 23.5,20.5 V 11.5 Z"/>
+    </g>
+    <g style="fill:black;stroke:black;stroke-width:1.6">
+      <path d="M 16,8 V 24 M 8,16 H 24" style="fill:none"/>
+      <path d="M 16,3 L 20.5,8.5 H 11.5 Z M 16,29 L 11.5,23.5 H 20.5 Z M 3,16 L 8.5,11.5 V 20.5 Z M 29,16 L 23.5,20.5 V 11.5 Z" style="stroke-width:0.8"/>
+    </g>
+  </g>
+</svg>

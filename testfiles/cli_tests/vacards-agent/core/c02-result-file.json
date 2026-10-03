@@ -1,0 +1,24 @@
+{
+  "description": "vacards-result-file:{RESULT} writes bare lines to the file; vacards-options sets a session option.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=true",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok",
+      "params_text": "{RESULT}",
+      "data": {"target": "{RESULT}"}
+    },
+    {
+      "action": "vacards-options",
+      "status": "ok",
+      "mode": "session",
+      "params": {"halt-on-error": "true"},
+      "data": {"halt-on-error": true},
+      "undo": "none"
+    }
+  ],
+  "expect_stdout_contains": [],
+  "expect_stderr_not_contains": ["VASTUDIO-RESULT"]
+}

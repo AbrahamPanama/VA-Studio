@@ -1,0 +1,20 @@
+{
+  "description": "A single image wrapped in a selected group resolves as a pair, but the commit refuses to collapse the wrapper (unsupported-effects-or-references). With halt-on-error=false the export still runs, so out.svg exists and the unchanged wrapper image and cutter are both present.",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;select-by-id:wrap,cut3;vacards-destructive-clip;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "ok", "data": {"halt-on-error": false}},
+    {"action": "vacards-destructive-clip", "status": "rejected", "reason": "unsupported-effects-or-references"}
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"cut3\"",
+        "href=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAgMAAAAP2OW3AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAMUExURQAAAIBAIEBAQMDAwLgSRQ4AAAACdFJOUwCAmytOGAAAAAd0SU1FB+oIHREEEmM5K8wAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjYtMDgtMjlUMTc6MDQ6MTgrMDA6MDBoWbZDAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDI2LTA4LTI5VDE3OjA0OjE4KzAwOjAwGQQO/wAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyNi0wOC0yOVQxNzowNDoxOCswMDowME4RLyAAAAAMSURBVAjXY1BguAAAATQA8bBD2hMAAAAASUVORK5CYII=\""
+      ]
+    }
+  }
+}

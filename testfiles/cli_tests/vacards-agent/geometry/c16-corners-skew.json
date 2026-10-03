@@ -1,0 +1,22 @@
+{
+  "description": "A skewed shape makes a circular document radius ambiguous: rejected non-similarity-transform, unchanged.",
+  "input": "{FIXTURES}/corners-refusals.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:skewed;vacards-corners:radius=2mm",
+  "expect_exit": 3,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "vacards-corners",
+      "status": "rejected",
+      "mode": "single-object",
+      "reason": "non-similarity-transform",
+      "undo": "none",
+      "targets": {
+        "selected": 1
+      }
+    }
+  ]
+}

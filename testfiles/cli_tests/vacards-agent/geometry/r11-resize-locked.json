@@ -1,0 +1,17 @@
+{
+  "description": "A locked object cannot be resized: the whole action is refused as unavailable.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:locked;vacards-transform-resize:width=20",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "rejected",
+      "mode": "collective-geometry",
+      "reason": "unavailable",
+      "targets": {"excluded": [{"id": "locked", "reason": "unavailable"}]},
+      "undo": "none"
+    }
+  ]
+}

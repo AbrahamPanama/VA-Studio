@@ -1,0 +1,21 @@
+{
+  "description": "element-image-crop with only a rectangle selected crops nothing and must keep the rectangle (it is deleted only after a crop).",
+  "input": "{FIXTURES}/commands-no-target.svg",
+  "actions": "select-by-id:box;element-image-crop;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_stderr_contains": [
+    "no images cropped"
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"box\"",
+        "id=\"ta\"",
+        "id=\"tb\"",
+        "id=\"tc\"",
+        "id=\"te\""
+      ]
+    }
+  }
+}

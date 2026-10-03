@@ -1,0 +1,19 @@
+{
+  "description": "A dry run applies the same no-change checks as the real run: a zero radius on a plain rect reports unchanged (not 'would change'), and the document is untouched.",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};export-filename:{WORK}/before.svg;export-do;select-by-id:r;vacards-corners:radius=0,dry-run;export-filename:{WORK}/after.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "unchanged",
+      "mode": "single-object",
+      "reason": "unchanged",
+      "dry_run": true,
+      "targets": {"selected": 1},
+      "undo": "none"
+    }
+  ],
+  "expect_same_files": [["before.svg", "after.svg"]]
+}

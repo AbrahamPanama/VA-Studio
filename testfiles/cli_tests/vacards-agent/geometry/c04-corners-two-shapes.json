@@ -1,0 +1,17 @@
+{
+  "description": "Two selected shapes are not one single object (the GUI's singleItem contract): the action rejects requires-single-shape, reports both as selected, and changes nothing.",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r,poly;vacards-corners:radius=2mm",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "rejected",
+      "mode": "single-object",
+      "reason": "requires-single-shape",
+      "targets": {"selected": 2},
+      "undo": "none"
+    }
+  ]
+}

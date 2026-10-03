@@ -1,0 +1,18 @@
+{
+  "description": "Control for c31: a flat hairline has a non-zero maximum extent, so transform-grow:2 still grows it by 2 (100 wide -> 102, x from -1 to 101).",
+  "input": "{FIXTURES}/degenerate-geometry.svg",
+  "actions": "select-by-id:hl;transform-grow:2;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "d=\"M -1,80 H 101\""
+      ],
+      "not_contains": [
+        "nan",
+        "inf"
+      ]
+    }
+  }
+}

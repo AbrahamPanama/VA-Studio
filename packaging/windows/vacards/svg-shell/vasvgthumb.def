@@ -1,0 +1,5 @@
+; SPDX-License-Identifier: GPL-2.0-or-later
+LIBRARY vasvgthumb
+EXPORTS
+    DllGetClassObject PRIVATE
+    DllCanUnloadNow PRIVATE

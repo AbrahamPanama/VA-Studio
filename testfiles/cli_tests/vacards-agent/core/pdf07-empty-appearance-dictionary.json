@@ -1,0 +1,18 @@
+{
+  "description": "PDF7: an annotation /AP /N that is an empty dictionary must not read out of range.",
+  "input": "{FIXTURES}/pdf7-empty-ap.pdf",
+  "args": [
+    "--export-type=svg",
+    "--export-filename={WORK}/out.svg"
+  ],
+  "timeout": 90,
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "<svg"
+      ]
+    }
+  }
+}

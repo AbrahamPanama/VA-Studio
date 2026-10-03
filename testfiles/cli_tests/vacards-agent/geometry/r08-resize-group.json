@@ -1,0 +1,18 @@
+{
+  "description": "Resizing a real <g> treats the whole group as one collective-geometry target.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:grp;vacards-transform-resize:width=50",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "modified": ["grp"],
+      "undo": "one-step",
+      "metrics": {"old_width": 25.0, "new_width": 50.0}
+    }
+  ]
+}

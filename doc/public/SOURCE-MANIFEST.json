@@ -1,0 +1,84 @@
+{
+  "schema": "va-studio-public-source-manifest/1",
+  "about": "Inputs of this public source tree. The modules were flattened from their pinned commits; the libcdr fork is in third_party/libcdr-vacards.",
+  "source_commit": "265cca5406979d134646b61ec90a0427f2fbee8c",
+  "inkscape_baseline": "d2b9be1c53",
+  "modules": [
+    {
+      "path": "po",
+      "commit": "a4b32e22401fb35a6b51e310d12af465187bbb52",
+      "upstream": "https://gitlab.com/inkscape/translations"
+    },
+    {
+      "path": "share/extensions",
+      "commit": "569514b42d8fbc890bf61adbdf16ffee9fdc632e",
+      "upstream": "https://gitlab.com/inkscape/extensions"
+    },
+    {
+      "path": "share/extensions/other/clipart",
+      "commit": "8d2948ce2fe82b195fec99f909049a8fdd64298e",
+      "upstream": "https://gitlab.com/inkscape/extras/inkscape-import-clipart"
+    },
+    {
+      "path": "share/extensions/other/extension-afdesign",
+      "commit": "13562e6bf55a9a180434b7824e07f5ede4b3f0fc",
+      "upstream": "https://gitlab.com/inkscape/extras/extension-afdesign"
+    },
+    {
+      "path": "share/extensions/other/extension-xaml",
+      "commit": "3a16aa7372c96559a6af918f54e096dc5de16081",
+      "upstream": "https://gitlab.com/inkscape/extras/extension-xaml"
+    },
+    {
+      "path": "share/extensions/other/gcodetools",
+      "commit": "f799a9ac8707cb08f2b04602c22a12c6d7acb9c7",
+      "upstream": "https://gitlab.com/inkscape/extras/extensions-gcodetools"
+    },
+    {
+      "path": "share/extensions/other/inkman",
+      "commit": "267734e94609fe9041a3c69da6430e7a90b8cd6f",
+      "upstream": "https://gitlab.com/inkscape/extras/extension-manager"
+    },
+    {
+      "path": "share/themes",
+      "commit": "a8a8375fbe8672bb1a273be7aa32c06564936e29",
+      "upstream": "https://gitlab.com/inkscape/themes"
+    },
+    {
+      "path": "src/3rdparty/2geom",
+      "commit": "c7d8378ccc109bdb2ed30f0c8407725e93ffdd9b",
+      "upstream": "https://gitlab.com/inkscape/lib2geom"
+    },
+    {
+      "path": "src/3rdparty/capypdf",
+      "commit": "a4b222b9690f593a28bed2f01260b713ed315620",
+      "upstream": "https://github.com/jpakkane/capypdf"
+    },
+    {
+      "path": "src/3rdparty/libcroco",
+      "commit": "7369a22273e2d7b7c5ba7b582fd52759649f5425",
+      "upstream": "https://gitlab.com/inkscape/libcroco"
+    },
+    {
+      "path": "src/3rdparty/libdepixelize",
+      "commit": "73b07a45f01cf7c4b179d1e65cef22609e000419",
+      "upstream": "https://gitlab.com/inkscape/devel/libdepixelize"
+    },
+    {
+      "path": "src/3rdparty/libuemf",
+      "commit": "71aba3710b4548bd6df7b7bddcd17096a813efa5",
+      "upstream": "https://gitlab.com/inkscape/devel/libuemf"
+    }
+  ],
+  "libcdr": {
+    "path": "third_party/libcdr-vacards",
+    "commit": "297ad1ad0b8e1772633abd7553649714b173f7e4",
+    "files": 111,
+    "tree_manifest_sha256": "4679d14823652ea67be257ae7985b6707361bb5a9a0ed34b1ebb2b1c27421f67",
+    "upstream": "https://git.libreoffice.org/libcdr (mirror: https://github.com/LibreOffice/libcdr)"
+  },
+  "exclude_manifest_sha256": "4e8642b7770241217854d937575342be04c499a6e5ee290b3bc990398e8e5b54",
+  "substitutions_sha256": "434ec795e37e50ee6a2924fda8fca010903567ef2480e41c2152df5389708753",
+  "excluded_file_count": 182,
+  "rules_source": "commit"
+}

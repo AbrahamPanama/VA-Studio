@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="153.349mm"
+   height="50.855999mm"
+   viewBox="0 0 153.349 50.855999"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (ebf0e940, 2025-05-08)"
+   sodipodi:docname="test_mojibake.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.3261004"
+     inkscape:cx="234.14517"
+     inkscape:cy="157.22791"
+     inkscape:current-layer="layer1"
+     showgrid="false" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.35px;line-height:1;font-family:sans-serif;-inkscape-font-specification:sans-serif;font-variant-ligatures:none;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;direction:ltr;text-orientation:upright;text-anchor:start;white-space:pre;inline-size:154.11;fill:#000000;stroke-width:0.264583;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:3"
+       x="17.202438"
+       y="27.106873"
+       id="text1"
+       transform="translate(-17.541089,-21.780066)"><tspan
+         x="17.202438"
+         y="27.106873"
+         id="tspan1">あのイーハトーヴォのすきとおった風、
+</tspan><tspan
+         x="17.202438"
+         y="33.527814"
+         id="tspan15">夏でも底に冷たさをもつ<tspan
+   style="fill:#0000ff"
+   id="tspan2">青</tspan><tspan
+   style="fill:#0000ff"
+   id="tspan3">いそら</tspan>、
+</tspan><tspan
+         x="17.202438"
+         y="39.948759"
+         id="tspan16">うつくしい森で飾られたモリーオ市、
+</tspan><tspan
+         x="17.202438"
+         y="46.369703"
+         id="tspan22"><tspan
+           style="letter-spacing:1.77271px"
+           id="tspan17">郊外</tspan><tspan
+           style="letter-spacing:1.77271px"
+           id="tspan18">のぎらぎらひかる</tspan><tspan
+           style="letter-spacing:1.77271px"
+           id="tspan19">草</tspan><tspan
+           style="letter-spacing:1.77271px"
+           id="tspan20">の</tspan><tspan
+           style="letter-spacing:1.77271px"
+           id="tspan21">波。</tspan></tspan></text>
+  </g>
+</svg>

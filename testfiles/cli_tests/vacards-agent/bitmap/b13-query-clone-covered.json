@@ -1,0 +1,21 @@
+{
+  "description": "Tone query: a selected clone of another selected image is covered, not a second eligible target.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,clone;vacards-bitmap-tone-query",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-bitmap-tone-query",
+      "status": "ok",
+      "mode": "read-only",
+      "undo": "none",
+      "targets": {"selected": 2, "eligible": 1, "covered": 1, "excluded": []},
+      "data": {
+        "targets": [
+          {"id": "a", "type": "image", "managed": true, "brightness": 40, "contrast": 0}
+        ]
+      }
+    }
+  ]
+}

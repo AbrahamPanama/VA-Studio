@@ -1,0 +1,13 @@
+# All source files whose translatable messages should not be seen as of now
+../src/3rdparty/autotrace/autotrace.c
+../src/3rdparty/autotrace/autotrace.h
+../src/3rdparty/autotrace/color.c
+../src/3rdparty/autotrace/config.h
+../src/3rdparty/autotrace/intl.h
+../src/live_effects/lpe-dynastroke.cpp
+../src/live_effects/lpe-lattice.cpp
+../src/live_effects/lpe-path_length.cpp
+../src/live_effects/lpe-recursiveskeleton.cpp
+../src/live_effects/lpe-skeleton.cpp
+../src/live_effects/lpe-test-doEffect-stack.cpp
+../src/live_effects/lpe-text_label.cpp

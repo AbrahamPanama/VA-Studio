@@ -1,0 +1,18 @@
+{
+  "description": "Resizing two selected objects treats them as one collective bounding box.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,b;vacards-transform-resize:width=60",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "modified": ["a", "b"],
+      "undo": "one-step",
+      "metrics": {"old_width": 30.0, "old_height": 30.0, "new_width": 60.0, "new_height": 30.0}
+    }
+  ]
+}

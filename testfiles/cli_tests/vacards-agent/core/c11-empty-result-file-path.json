@@ -1,0 +1,11 @@
+{
+  "description": "An empty result-file target is rejected as invalid-argument; the chain halts and the next action is skipped.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "vacards-result-file:;vacards-options",
+  "records_from": "stderr",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "rejected", "reason": "invalid-argument"},
+    {"action": "vacards-options", "status": "skipped"}
+  ]
+}

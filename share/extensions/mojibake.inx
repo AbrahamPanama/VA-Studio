@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<inkscape-extension xmlns="http://www.inkscape.org/namespace/inkscape/extension">
+  <name>Mojibake</name>
+  <id>org.inkscape.text.mojibake</id>
+  <param name="source" type="optiongroup" appearance="combo" gui-text="Source encoding:">
+    <option value="utf_8">UTF-8</option>
+    <option value="cp932">Shift-JIS</option>
+    <option value="euc_jp">EUC-JP</option>
+    <option value="cp1252">Windows-1252</option>
+    <option value="gbk">GBK</option>
+  </param>
+  <param name="target" type="optiongroup" appearance="combo" gui-text="Target encoding:">
+    <option value="cp932">Shift-JIS</option>
+    <option value="utf_8">UTF-8</option>
+    <option value="euc_jp">EUC-JP</option>
+    <option value="cp1252">Windows-1252</option>
+    <option value="gbk">GBK</option>
+  </param>
+  <effect>
+    <object-type>all</object-type>
+    <effects-menu>
+      <submenu name="Text"></submenu>
+    </effects-menu>
+  </effect>
+  <script>
+    <command location="inx" interpreter="python">mojibake.py</command>
+  </script>
+</inkscape-extension>

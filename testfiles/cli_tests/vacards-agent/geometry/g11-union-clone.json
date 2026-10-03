@@ -1,0 +1,18 @@
+{
+  "description": "Union refuses a clone operand: a <use> is not a path, shape or text, and refusing the whole action keeps the other operand intact.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;select-by-id:a,clone;vacards-boolean:op=union;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "rejected",
+      "reason": "incompatible-operands",
+      "targets": {"selected": 2, "excluded": [{"id": "clone", "reason": "not-a-shape"}]},
+      "undo": "none"
+    }
+  ],
+  "expect_files": {"out.svg": {"exists": true, "contains": ["id=\"a\"", "id=\"clone\""]}}
+}

@@ -1,0 +1,20 @@
+{
+  "description": "vacards-destructive-clip dry-run resolves the pair, reports Ok and changes nothing.",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:img1,cut1;vacards-destructive-clip:dry-run;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-destructive-clip",
+      "status": "ok",
+      "dry_run": true,
+      "params": {"dry-run": "true"},
+      "data": {"image": "img1", "cutter": "cut1"},
+      "undo": "none"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "contains": ["id=\"cut1\""]}
+  }
+}

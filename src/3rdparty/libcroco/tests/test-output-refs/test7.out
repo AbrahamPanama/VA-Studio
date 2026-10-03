@@ -1,0 +1,43 @@
+.exp1n1 {
+  stroke-width : 4000000
+}
+
+.exp1n2 {
+  stroke-width : 4000000
+}
+
+.exp1n3 {
+  stroke-width : 4000000
+}
+
+.exp2n1 {
+  stroke-width : 0.000004
+}
+
+.exp2n2 {
+  stroke-width : 0.000004
+}
+
+.exp3n1 {
+  stroke-width : 4000000em
+}
+
+.exp3n2 {
+  stroke-width : 4000000ex
+}
+
+.exp3n3 {
+  stroke-width : 4000000in
+}
+
+.exp4n1 {
+  stroke-width : 31400
+}
+
+.exp4n2 {
+  stroke-width : 0.000314
+}
+
+.e4n2 {
+  stroke-width : 0.000024
+}

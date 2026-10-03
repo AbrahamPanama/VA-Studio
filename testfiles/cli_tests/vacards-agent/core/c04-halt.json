@@ -1,0 +1,24 @@
+{
+  "description": "With halt-on-error (default), a rejection halts the chain: later actions are skipped.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:bogus=1;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-options",
+      "status": "rejected",
+      "reason": "invalid-argument",
+      "params_text": "bogus=1",
+      "error": {"code": "unknown-key", "key": "bogus"}
+    },
+    {
+      "action": "export-filename",
+      "status": "skipped",
+      "reason": "halted-after-error",
+      "params_text": "{WORK}/out.svg"
+    },
+    {"action": "export-do", "status": "skipped", "reason": "halted-after-error"}
+  ],
+  "expect_files": {"out.svg": {"exists": false}}
+}

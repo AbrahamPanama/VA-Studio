@@ -1,0 +1,18 @@
+{
+  "description": "Union refuses a display:none operand as unavailable and changes nothing.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;select-by-id:a,hidden;vacards-boolean:op=union;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "rejected",
+      "reason": "incompatible-operands",
+      "targets": {"selected": 2, "excluded": [{"id": "hidden", "reason": "unavailable"}]},
+      "undo": "none"
+    }
+  ],
+  "expect_files": {"out.svg": {"exists": true, "contains": ["id=\"a\"", "id=\"hidden\""]}}
+}

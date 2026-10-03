@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="140">
+  <rect id="container" x="0" y="0" width="100" height="80" fill="none" stroke="black"/>
+  <image id="part-1" x="140" y="10" width="40" height="40"
+    href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAEAQMAAACTPww9AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURQAAAP8AABv/jSIAAAABdFJOUwBA5thmAAAAB3RJTUUH6gkCFhQBnRAAvwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyNi0wOS0wMlQyMjoyMDowMSswMDowMFinR18AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjYtMDktMDJUMjI6MjA6MDErMDA6MDAp+v/jAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDI2LTA5LTAyVDIyOjIwOjAxKzAwOjAwfu/ePAAAAA5JREFUCNdjYGBIAEIGAAMIAMEmXw9bAAAAAElFTkSuQmCC"/>
+</svg>

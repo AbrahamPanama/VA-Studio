@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="8.5in"
+   height="11in"
+   viewBox="0 0 215.9 279.4"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   sodipodi:docname="layergroups.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="in"
+     showgrid="true"
+     inkscape:zoom="1.1849198"
+     inkscape:cx="655.3186"
+     inkscape:cy="541.38684"
+     inkscape:window-width="2256"
+     inkscape:window-height="1422"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid132"
+       originx="0"
+       originy="0"
+       units="in"
+       spacingx="6.35"
+       spacingy="6.35"
+       empspacing="4"
+       visible="true" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g7">
+      <rect
+         style="fill:#00ff80;fill-opacity:0.3;stroke:#00910f;stroke-width:0.705556;stroke-opacity:1"
+         id="rect1"
+         width="44.450001"
+         height="44.450001"
+         x="31.75"
+         y="82.549995" />
+      <ellipse
+         style="fill:#00ff80;fill-opacity:0.3;stroke:#00910f;stroke-width:0.705556;stroke-opacity:1"
+         id="path1"
+         cx="85.053185"
+         cy="129.01237"
+         rx="24.532448"
+         ry="21.06237" />
+      <g
+         id="g8">
+        <text
+           xml:space="preserve"
+           style="font-size:7.05556px;font-family:'Noto Sans Mono';-inkscape-font-specification:'Noto Sans Mono, Normal';text-align:center;text-anchor:middle;fill:#00910f;fill-opacity:1;stroke:#00910f;stroke-width:0.705556;stroke-opacity:1"
+           x="53.971474"
+           y="93.813004"
+           id="text7"><tspan
+             sodipodi:role="line"
+             id="tspan7"
+             style="fill:#00910f;fill-opacity:1;stroke:none;stroke-width:0.705556"
+             x="53.971474"
+             y="93.813004">Some text</tspan></text>
+        <text
+           xml:space="preserve"
+           style="font-size:7.05556px;font-family:'Noto Sans Mono';-inkscape-font-specification:'Noto Sans Mono, Normal';text-align:center;text-anchor:middle;fill:#00910f;fill-opacity:1;stroke:none;stroke-width:0.705556;stroke-opacity:1"
+           id="text8"
+           x="-3.0820944"
+           y="122.3769"
+           transform="rotate(-30)"><tspan
+             id="tspan8"
+             style="stroke-width:0.705556">And more</tspan></text>
+      </g>
+    </g>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 2">
+    <g
+       id="g6">
+      <path
+         sodipodi:type="star"
+         style="fill:#ff0000;fill-opacity:0.3;stroke:#ff0000;stroke-width:0.705556"
+         id="path3"
+         inkscape:flatsided="false"
+         sodipodi:sides="5"
+         sodipodi:cx="114.3"
+         sodipodi:cy="156.92554"
+         sodipodi:r1="30.941742"
+         sodipodi:r2="15.470871"
+         sodipodi:arg1="0.60781545"
+         sodipodi:arg2="1.236134"
+         inkscape:rounded="0"
+         inkscape:randomized="0"
+         d="M 139.7,174.59561 119.38141,171.5381 105.3438,186.54272 101.97287,166.27378 83.364764,157.55989 101.6,148.0905 l 2.53718,-20.3901 14.64093,14.41654 20.17616,-3.88789 -9.18665,18.37931 z"
+         inkscape:transform-center-x="2.7676212"
+         inkscape:transform-center-y="0.19602495"
+         transform="translate(25.027129,-58.32378)" />
+      <ellipse
+         style="fill:#ff0000;fill-opacity:0.3;stroke:#ff0000;stroke-width:0.705556"
+         id="path4"
+         cx="85.053185"
+         cy="129.01237"
+         rx="27.000023"
+         ry="28.574999" />
+    </g>
+    <g
+       inkscape:groupmode="layer"
+       id="layer4"
+       inkscape:label="Layer 3">
+      <g
+         id="g5">
+        <path
+           style="fill:#0000ff;fill-opacity:0.3;stroke:#000000;stroke-width:0.705556;stroke-opacity:1"
+           d="M 136.48821,170.56895 158.75,139.7 l 12.7,38.1 z"
+           id="path2" />
+        <path
+           style="fill:#0000ff;fill-opacity:0.3;stroke:#000000;stroke-width:0.705556;stroke-opacity:1"
+           d="m 127,160.70141 52.40737,-3.67647"
+           id="path5" />
+      </g>
+    </g>
+  </g>
+</svg>

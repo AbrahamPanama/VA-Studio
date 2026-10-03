@@ -1,0 +1,39 @@
+{
+  "description": "vacards-result-file:- moves records to stdout; vacards-describe lists the registry.",
+  "actions": "vacards-result-file:-;vacards-describe",
+  "records_from": "stdout",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "seq": 1,
+      "action": "vacards-result-file",
+      "status": "ok",
+      "params_text": "-",
+      "data": {"target": "-"}
+    },
+    {
+      "seq": 2,
+      "action": "vacards-describe",
+      "status": "ok",
+      "reason": "success",
+      "mode": "read-only",
+      "data": {
+        "schema": "va-studio.cli-result/1",
+        "exit_codes": {
+          "0": "success",
+          "1": "export-failure",
+          "3": "rejected",
+          "4": "failed-or-uncertain"
+        }
+      }
+    }
+  ],
+  "expect_records_text_contains": [
+    "\"name\":\"vacards-describe\"",
+    "\"name\":\"vacards-options\"",
+    "\"name\":\"vacards-result-file\"",
+    "\"key\":\"halt-on-error\"",
+    "\"features\":{"
+  ],
+  "expect_stderr_not_contains": ["VASTUDIO-RESULT"]
+}

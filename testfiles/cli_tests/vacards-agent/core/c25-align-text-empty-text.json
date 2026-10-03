@@ -1,0 +1,23 @@
+{
+  "description": "object-align-text with an empty <text/> in the selection used to crash (no layout to anchor on). The empty text stays where it was and the real texts still align: tb leaves x=100 for the left edge of the selection.",
+  "input": "{FIXTURES}/commands-no-target.svg",
+  "actions": "select-by-id:ta,tb,te;object-align-text:horizontal selection;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"box\"",
+        "id=\"ta\"",
+        "id=\"tb\"",
+        "id=\"tc\"",
+        "id=\"te\"",
+        "x=\"70\"",
+        "x=\"30\""
+      ],
+      "not_contains": [
+        "x=\"100\""
+      ]
+    }
+  }
+}

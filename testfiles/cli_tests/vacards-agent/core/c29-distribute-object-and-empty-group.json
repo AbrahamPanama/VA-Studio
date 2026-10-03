@@ -1,0 +1,19 @@
+{
+  "description": "object-distribute:left with one rect and one empty group used to divide by zero (step = 0/0) and wrote x=\"nan\" into the rect; with fewer than two objects that have a bounding box it is a refusal and the rect stays at x=0.",
+  "input": "{FIXTURES}/degenerate-geometry.svg",
+  "actions": "select-by-id:r1,eg1;object-distribute:left;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "x=\"0\"",
+        "y=\"0\""
+      ],
+      "not_contains": [
+        "nan",
+        "inf"
+      ]
+    }
+  }
+}

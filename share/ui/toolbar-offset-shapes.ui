@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkAdjustment" id="offset-distance-adjustment">
+    <property name="lower">0.001</property>
+    <property name="upper">10000</property>
+    <property name="step-increment">0.1</property>
+    <property name="page-increment">1</property>
+    <property name="value">1</property>
+  </object>
+  <object class="GtkAdjustment" id="offset-miter-adjustment">
+    <property name="lower">1</property>
+    <property name="upper">100</property>
+    <property name="step-increment">0.25</property>
+    <property name="page-increment">1</property>
+    <property name="value">4</property>
+  </object>
+  <object class="GtkBox" id="offset-shapes-toolbar">
+    <property name="halign">start</property>
+    <property name="valign">center</property>
+    <property name="hexpand">True</property>
+    <property name="spacing">3</property>
+    <child>
+      <object class="GtkBox">
+        <property name="spacing">4</property>
+        <style><class name="priority1"/><class name="groupsize3"/></style>
+        <child><object class="GtkLabel"><property name="label" translatable="yes">Distance</property></object></child>
+        <child>
+          <object class="GtkSpinButton" id="offset-distance">
+            <property name="focusable">True</property>
+            <property name="adjustment">offset-distance-adjustment</property>
+            <property name="climb-rate">0.1</property>
+            <property name="digits">3</property>
+            <property name="width-chars">7</property>
+            <property name="tooltip-text" translatable="yes">Distance from the vector path; stroke width is not included</property>
+          </object>
+        </child>
+        <child><object class="GtkBox" id="offset-unit-box"/></child>
+      </object>
+    </child>
+    <child><object class="GtkSeparator"/></child>
+    <child>
+      <object class="GtkBox">
+        <property name="spacing">2</property>
+        <style><class name="priority1"/><class name="groupsize3"/></style>
+        <child><object class="GtkLabel"><property name="label" translatable="yes">Direction</property></object></child>
+        <child>
+          <object class="GtkToggleButton" id="offset-outward">
+            <property name="label" translatable="yes">Outward</property><property name="active">True</property>
+            <property name="tooltip-text" translatable="yes">Create an offset outside each selected region</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="offset-inward">
+            <property name="group">offset-outward</property><property name="label" translatable="yes">Inward</property>
+            <property name="tooltip-text" translatable="yes">Create an offset inside each selected region</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="offset-both">
+            <property name="group">offset-outward</property><property name="label" translatable="yes">Both</property>
+            <property name="tooltip-text" translatable="yes">Create outward and inward offsets</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child><object class="GtkSeparator"><style><class name="priority1"/></style></object></child>
+    <child>
+      <object class="GtkBox">
+        <property name="spacing">2</property>
+        <style><class name="priority1"/><class name="groupsize3"/></style>
+        <child><object class="GtkLabel"><property name="label" translatable="yes">Corners</property></object></child>
+        <child>
+          <object class="GtkToggleButton" id="offset-round">
+            <property name="label" translatable="yes">Round</property>
+          </object>
+        </child>
+        <child><object class="GtkToggleButton" id="offset-bevel"><property name="group">offset-round</property><property name="label" translatable="yes">Bevel</property></object></child>
+        <child><object class="GtkToggleButton" id="offset-miter"><property name="group">offset-round</property><property name="label" translatable="yes">Miter</property><property name="active">True</property></object></child>
+        <child>
+          <object class="GtkSpinButton" id="offset-miter-limit">
+            <property name="focusable">True</property><property name="adjustment">offset-miter-adjustment</property>
+            <property name="digits">2</property><property name="width-chars">5</property>
+            <property name="tooltip-text" translatable="yes">Miter limit</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child><object class="GtkSeparator"><style><class name="priority2"/></style></object></child>
+    <child>
+      <object class="GtkCheckButton" id="offset-outer-only">
+        <property name="label" translatable="yes">Outer only</property>
+        <property name="tooltip-text" translatable="yes">Union the selected regions before creating the offset</property>
+        <style><class name="priority2"/></style>
+      </object>
+    </child>
+    <child>
+      <object class="GtkCheckButton" id="offset-select-results">
+        <property name="label" translatable="yes">Select results</property><property name="active">True</property>
+        <style><class name="priority2"/></style>
+      </object>
+    </child>
+    <child>
+      <object class="GtkCheckButton" id="offset-delete-originals">
+        <property name="label" translatable="yes">Delete originals</property>
+        <style><class name="priority3"/></style>
+      </object>
+    </child>
+    <child>
+      <object class="GtkCheckButton" id="offset-simplify-results">
+        <property name="label" translatable="yes">Simplify</property>
+        <property name="tooltip-text" translatable="yes">Reduce redundant nodes in generated paths</property>
+        <style><class name="priority3"/></style>
+      </object>
+    </child>
+    <child><object class="GtkSeparator"/></child>
+    <child>
+      <object class="GtkButton" id="offset-cancel">
+        <property name="label" translatable="yes">Cancel</property>
+        <property name="tooltip-text" translatable="yes">Cancel without changing the document (Esc)</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkButton" id="offset-apply">
+        <property name="label" translatable="yes">Apply</property>
+        <property name="tooltip-text" translatable="yes">Create the previewed offset paths (Enter)</property>
+        <style><class name="suggested-action"/></style>
+      </object>
+    </child>
+    <style><class name="inkscape-toolbar"/></style>
+  </object>
+</interface>

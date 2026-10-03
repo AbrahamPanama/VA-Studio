@@ -1,0 +1,14 @@
+{
+  "description": "selection-release-nesting-contour with no markers is a legitimate Unchanged no-op.",
+  "input": "{FIXTURES}/contour.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:art;selection-release-nesting-contour",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "selection-release-nesting-contour",
+      "status": "unchanged",
+      "reason": "no-markers"
+    }
+  ]
+}

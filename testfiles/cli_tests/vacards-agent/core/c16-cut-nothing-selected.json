@@ -1,0 +1,21 @@
+{
+  "description": "cut with nothing selected (command line, no desktop) used to crash in ObjectSet::cut(); it is a no-op that keeps every object.",
+  "input": "{FIXTURES}/commands-no-target.svg",
+  "actions": "cut;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_stderr_contains": [
+    "Nothing"
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"box\"",
+        "id=\"ta\"",
+        "id=\"tb\"",
+        "id=\"tc\"",
+        "id=\"te\""
+      ]
+    }
+  }
+}

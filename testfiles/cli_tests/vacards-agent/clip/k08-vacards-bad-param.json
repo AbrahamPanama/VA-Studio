@@ -1,0 +1,20 @@
+{
+  "description": "vacards-destructive-clip rejects a malformed boolean before running and halts the export.",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:img1,cut1;vacards-destructive-clip:inverse=maybe;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-destructive-clip",
+      "status": "rejected",
+      "reason": "invalid-argument",
+      "error": {"code": "malformed-value", "key": "inverse"}
+    },
+    {"action": "export-filename", "status": "skipped"},
+    {"action": "export-do", "status": "skipped"}
+  ],
+  "expect_files": {
+    "out.svg": {"exists": false}
+  }
+}

@@ -1,0 +1,16 @@
+/.vscode
+/dist
+/tmp
+*~
+*.swp
+*.orig
+.settings
+.project
+.cproject
+.pydevproject
+/build*
+*.user
+*.user.*
+__pycache__
+subprojects/.wraplock
+

@@ -1,0 +1,22 @@
+<?xml version="1.0" standalone="no"?>
+<!-- Creator: fig2dev Version 3.2.6a -->
+<!-- CreationDate: 2019-04-25 10:36:41 -->
+<!-- Magnification: 1.05 -->
+<svg	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="305pt" height="217pt"
+	viewBox="1878 1743 4839 3444">
+<g fill="none">
+<!-- Circle -->
+<circle cx="2700" cy="3285" r="587"
+	stroke="#000000" stroke-width="8px"/>
+<!-- Line -->
+<rect x="1890" y="2565" width="3060" height="2610"
+	stroke="#000000" stroke-width="8px"/>
+<!-- Line -->
+<rect x="5220" y="2610" width="1485" height="1710" rx="105"
+	stroke="#000000" stroke-width="8px"/>
+<!-- Text -->
+<text xml:space="preserve" x="2520" y="1890" fill="#000000" font-family="Times" font-style="normal" font-weight="normal" font-size="144" text-anchor="start">Hello Inkscape</text>
+</g>
+</svg>

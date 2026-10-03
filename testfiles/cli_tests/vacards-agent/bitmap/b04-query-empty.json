@@ -1,0 +1,15 @@
+{
+  "description": "Tone query with nothing selected is rejected with empty-selection.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-bitmap-tone-query",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-bitmap-tone-query",
+      "status": "rejected",
+      "reason": "empty-selection",
+      "message": "Select at least one object."
+    }
+  ]
+}

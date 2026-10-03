@@ -1,0 +1,29 @@
+Content-Type: multipart/mixed; boundary="--CALLDATA--//--CALLDATA--"
+MIME-Version: 1.0
+Program: fig2dev
+Arguments: -L io/test.fig output.svg svg
+
+----CALLDATA--//--CALLDATA--
+Content-Type: application/octet-stream; Name="output.svg"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment
+Filename: output.svg
+
+PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IS0tIENyZWF0b3I6IGZpZzJk
+ZXYgVmVyc2lvbiAzLjIuNmEgLS0+CjwhLS0gQ3JlYXRpb25EYXRlOiAyMDE5LTA0LTI1IDEwOjUx
+OjIyIC0tPgo8IS0tIE1hZ25pZmljYXRpb246IDEuMDUgLS0+CjxzdmcJeG1sbnM9Imh0dHA6Ly93
+d3cudzMub3JnLzIwMDAvc3ZnIgoJeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkv
+eGxpbmsiCgl3aWR0aD0iMzA1cHQiIGhlaWdodD0iMjE3cHQiCgl2aWV3Qm94PSIxODc4IDE3NDMg
+NDgzOSAzNDQ0Ij4KPGcgZmlsbD0ibm9uZSI+CjwhLS0gQ2lyY2xlIC0tPgo8Y2lyY2xlIGN4PSIy
+NzAwIiBjeT0iMzI4NSIgcj0iNTg3IgoJc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9Ijhw
+eCIvPgo8IS0tIExpbmUgLS0+CjxyZWN0IHg9IjE4OTAiIHk9IjI1NjUiIHdpZHRoPSIzMDYwIiBo
+ZWlnaHQ9IjI2MTAiCglzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS13aWR0aD0iOHB4Ii8+CjwhLS0g
+TGluZSAtLT4KPHJlY3QgeD0iNTIyMCIgeT0iMjYxMCIgd2lkdGg9IjE0ODUiIGhlaWdodD0iMTcx
+MCIgcng9IjEwNSIKCXN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSI4cHgiLz4KPCEtLSBU
+ZXh0IC0tPgo8dGV4dCB4bWw6c3BhY2U9InByZXNlcnZlIiB4PSIyNTIwIiB5PSIxODkwIiBmaWxs
+PSIjMDAwMDAwIiBmb250LWZhbWlseT0iVGltZXMiIGZvbnQtc3R5bGU9Im5vcm1hbCIgZm9udC13
+ZWlnaHQ9Im5vcm1hbCIgZm9udC1zaXplPSIxNDQiIHRleHQtYW5jaG9yPSJzdGFydCI+SGVsbG8g
+SW5rc2NhcGU8L3RleHQ+CjwvZz4KPC9zdmc+Cg==
+
+----CALLDATA--//--CALLDATA----

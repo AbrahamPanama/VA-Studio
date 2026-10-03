@@ -1,0 +1,16 @@
+{
+  "description": "Without a result file, records go to stderr as prefixed lines.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "vacards-options",
+  "records_from": "stderr",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "action": "vacards-options",
+      "status": "ok",
+      "params_text": "",
+      "params": {},
+      "data": {"halt-on-error": true}
+    }
+  ]
+}

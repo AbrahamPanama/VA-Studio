@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900" version="1.1" xml:space="preserve">
+<sodipodi:namedview pagecolor="#a9a9a9" bordercolor="#292929" borderopacity="1" inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#232323"/>
+<style type="text/css">
+g.prefab path {
+  vector-effect:non-scaling-stroke;
+  -inkscape-stroke:hairline;
+  fill: none;
+  fill-opacity: 1;
+  stroke-opacity: 1;
+  stroke: #00349c;
+}
+</style>
+<g inkscape:label="Very Cross" style="fill: white; stroke-width: 2; stroke: black;" class="prefab">
+  <path d="M 99,99 99,801 801,801, 801,99 Z"/>
+  <path d="M 99,99.0 801,99.0 Z" />
+  <path d="M 99,157.5 801,157.5 Z" />
+  <path d="M 99,216.0 801,216.0 Z" />
+  <path d="M 99,274.5 801,274.5 Z" />
+  <path d="M 99,333.0 801,333.0 Z" />
+  <path d="M 99,391.5 801,391.5 Z" />
+  <path d="M 99,450.0 801,450.0 Z" />
+  <path d="M 99,508.5 801,508.5 Z" />
+  <path d="M 99,567.0 801,567.0 Z" />
+  <path d="M 99,625.5 801,625.5 Z" />
+  <path d="M 99,684.0 801,684.0 Z" />
+  <path d="M 99,742.5 801,742.5 Z" />
+  <path d="M 99,801.0 801,801.0 Z" />
+  <path d="M 99.0,99 99.0,801 Z" />
+  <path d="M 157.5,99 157.5,801 Z" />
+  <path d="M 216.0,99 216.0,801 Z" />
+  <path d="M 274.5,99 274.5,801 Z" />
+  <path d="M 333.0,99 333.0,801 Z" />
+  <path d="M 391.5,99 391.5,801 Z" />
+  <path d="M 450.0,99 450.0,801 Z" />
+  <path d="M 508.5,99 508.5,801 Z" />
+  <path d="M 567.0,99 567.0,801 Z" />
+  <path d="M 625.5,99 625.5,801 Z" />
+  <path d="M 684.0,99 684.0,801 Z" />
+  <path d="M 742.5,99 742.5,801 Z" />
+  <path d="M 801.0,99 801.0,801 Z" />
+  <path d="M 157.5,99 99,157.5 Z" />
+  <path d="M 216.0,99 99,216.0 Z" />
+  <path d="M 274.5,99 99,274.5 Z" />
+  <path d="M 333.0,99 99,333.0 Z" />
+  <path d="M 391.5,99 99,391.5 Z" />
+  <path d="M 450.0,99 99,450.0 Z" />
+  <path d="M 508.5,99 99,508.5 Z" />
+  <path d="M 567.0,99 99,567.0 Z" />
+  <path d="M 625.5,99 99,625.5 Z" />
+  <path d="M 684.0,99 99,684.0 Z" />
+  <path d="M 742.5,99 99,742.5 Z" />
+  <path d="M 801.0,99 99,801.0 Z" />
+  <path d="M 801,157.5 157.5,801 Z" />
+  <path d="M 801,216.0 216.0,801 Z" />
+  <path d="M 801,274.5 274.5,801 Z" />
+  <path d="M 801,333.0 333.0,801 Z" />
+  <path d="M 801,391.5 391.5,801 Z" />
+  <path d="M 801,450.0 450.0,801 Z" />
+  <path d="M 801,508.5 508.5,801 Z" />
+  <path d="M 801,567.0 567.0,801 Z" />
+  <path d="M 801,625.5 625.5,801 Z" />
+  <path d="M 801,684.0 684.0,801 Z" />
+  <path d="M 801,742.5 742.5,801 Z" />
+  <path d="M 99,99.0 801.0,801 Z" />
+  <path d="M 99,157.5 742.5,801 Z" />
+  <path d="M 99,216.0 684.0,801 Z" />
+  <path d="M 99,274.5 625.5,801 Z" />
+  <path d="M 99,333.0 567.0,801 Z" />
+  <path d="M 99,391.5 508.5,801 Z" />
+  <path d="M 99,450.0 450.0,801 Z" />
+  <path d="M 99,508.5 391.5,801 Z" />
+  <path d="M 99,567.0 333.0,801 Z" />
+  <path d="M 99,625.5 274.5,801 Z" />
+  <path d="M 99,684.0 216.0,801 Z" />
+  <path d="M 99,742.5 157.5,801 Z" />
+  <path d="M 157.5,99 801,742.5 Z" />
+  <path d="M 216.0,99 801,684.0 Z" />
+  <path d="M 274.5,99 801,625.5 Z" />
+  <path d="M 333.0,99 801,567.0 Z" />
+  <path d="M 391.5,99 801,508.5 Z" />
+  <path d="M 450.0,99 801,450.0 Z" />
+  <path d="M 508.5,99 801,391.5 Z" />
+  <path d="M 567.0,99 801,333.0 Z" />
+  <path d="M 625.5,99 801,274.5 Z" />
+  <path d="M 684.0,99 801,216.0 Z" />
+</g>
+</svg>

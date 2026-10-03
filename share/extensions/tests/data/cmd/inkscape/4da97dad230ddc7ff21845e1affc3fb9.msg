@@ -1,0 +1,29 @@
+Content-Type: multipart/mixed; boundary="--CALLDATA--//--CALLDATA--"
+MIME-Version: 1.0
+Program: inkscape
+Arguments: --actions=None --batch-process --export-id=path1 --export-id-only --export-overwrite input.svg
+
+----CALLDATA--//--CALLDATA--
+Content-Type: application/octet-stream; Name="input.svg"
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment
+Filename: input.svg
+
+PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxz
+dmcKICAgd2lkdGg9IjEwMG1tIgogICBoZWlnaHQ9IjEwMG1tIgogICB2aWV3Qm94PSIwIDAgMTAw
+IDEwMCIKICAgdmVyc2lvbj0iMS4xIgogICBpZD0ic3ZnNCIKICAgc29kaXBvZGk6ZG9jbmFtZT0i
+aW5wdXQuc3ZnIgogICB4bWxuczppbmtzY2FwZT0iaHR0cDovL3d3dy5pbmtzY2FwZS5vcmcvbmFt
+ZXNwYWNlcy9pbmtzY2FwZSIKICAgeG1sbnM6c29kaXBvZGk9Imh0dHA6Ly9zb2RpcG9kaS5zb3Vy
+Y2Vmb3JnZS5uZXQvRFREL3NvZGlwb2RpLTAuZHRkIgogICB4bWxucz0iaHR0cDovL3d3dy53My5v
+cmcvMjAwMC9zdmciCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgog
+IDxkZWZzCiAgICAgaWQ9ImRlZnM4IiAvPgogIDxzb2RpcG9kaTpuYW1lZHZpZXcKICAgICBpZD0i
+bmFtZWR2aWV3NiIKICAgICBwYWdlY29sb3I9IiNmZmZmZmYiCiAgICAgYm9yZGVyY29sb3I9IiM5
+OTk5OTkiCiAgICAgYm9yZGVyb3BhY2l0eT0iMSIKICAgICBpbmtzY2FwZTpzaG93cGFnZXNoYWRv
+dz0iMCIKICAgICBpbmtzY2FwZTpwYWdlb3BhY2l0eT0iMCIKICAgICBpbmtzY2FwZTpwYWdlY2hl
+Y2tlcmJvYXJkPSIwIgogICAgIGlua3NjYXBlOmRlc2tjb2xvcj0iI2QxZDFkMSIKICAgICBpbmtz
+Y2FwZTpkb2N1bWVudC11bml0cz0ibW0iCiAgICAgc2hvd2dyaWQ9ImZhbHNlIiAvPgogIDxwYXRo
+CiAgICAgaWQ9InBhdGgxIgogICAgIGQ9Ik0gMCwwIFYgMTAwIEwgMTAwLDUwIFoiIC8+Cjwvc3Zn
+Pgo=
+
+----CALLDATA--//--CALLDATA----

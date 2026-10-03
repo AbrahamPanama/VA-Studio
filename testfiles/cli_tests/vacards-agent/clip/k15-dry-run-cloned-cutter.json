@@ -1,0 +1,25 @@
+{
+  "description": "vacards-destructive-clip dry-run resolves a pair whose cutter cut6 is cloned by cut6clone: the cutter is kept (CLIP-1), so the clone is unaffected and the pair is accepted.",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:img6,cut6;vacards-destructive-clip:dry-run",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "vacards-destructive-clip",
+      "status": "ok",
+      "dry_run": true,
+      "params": {
+        "dry-run": "true"
+      },
+      "data": {
+        "image": "img6",
+        "cutter": "cut6"
+      },
+      "undo": "none"
+    }
+  ]
+}

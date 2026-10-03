@@ -1,0 +1,13 @@
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/JeroenGar/jagua-rs.git?rev=9a19409bd38f3643c3d6d2d7571cddfba548ee17"]
+git = "https://github.com/JeroenGar/jagua-rs.git"
+rev = "9a19409bd38f3643c3d6d2d7571cddfba548ee17"
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"
+
+[net]
+offline = true

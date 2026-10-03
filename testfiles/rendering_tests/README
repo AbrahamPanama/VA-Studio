@@ -1,0 +1,40 @@
+HOWTO
+
+# Add a rendering test:
+  - create the svg file
+  - 0.92:
+  	- inkscape <yourfile>.svg -d 96  -e expected_rendering/<yourfile>.png
+  	- inkscape <yourfile>.svg -d 384 -e expected_rendering/<yourfile>-large.png
+  - 1.0:
+	- inkscape -d  96 --export-filename=expected_rendering/<yourfile>.png <yourfile>.svg
+	- inkscape -d 384 --export-filename=expected_rendering/<yourfile>-large.png <yourfile>.svg
+  - add the test in CMakeLists.txt
+  - use stable if possible to generate the reference png files
+  - git add <yourfile>.svg expected_rendering/<yourfile>-large.png expected_rendering/<yourfile>.png
+
+# Add a deterministic alternate rendering:
+  - first reproduce the image in a clean upstream worktree on the same platform
+  - confirm that the alternate is caused by a rendering dependency or platform,
+    not by the branch under test
+  - keep the primary reference unchanged
+  - name the additional image
+    expected_rendering/<yourfile>.reference-<stack-or-platform>.png
+  - for a large reference, use
+    expected_rendering/<yourfile>-large.reference-<stack-or-platform>.png
+  - do not increase FUZZ merely to cover two materially different renderings
+
+The test passes only when the output satisfies the existing comparison metric
+and tolerance against at least one explicit reference.
+
+# Fix a failing test (due to a change in code):
+  - DO *NOT* MODIFY the expected rendering (or the svg) before getting advice from inkscape-devel@
+  - fix your code if possible
+  - IF you change introduces a greater compatibility with css or browsers
+    - AND you cannot reasonably "update" files from older versions to match the appearance
+      - AND inkscape-devel@ has a consensus that it's the only way
+        -> do as you must
+  - manually double check the changes
+
+# Fix a failing test (due to a change in pixman or cairo):
+  - update renderings. Use a *stable* version to generate the renderings, NOT TRUNK
+  - manually check appearances

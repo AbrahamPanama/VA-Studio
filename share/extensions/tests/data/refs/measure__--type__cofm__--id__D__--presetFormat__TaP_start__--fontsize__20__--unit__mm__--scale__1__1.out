@@ -1,0 +1,34 @@
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="210mm" height="297mm" id="mydoc" version="1.1">
+  <defs>
+    <path d="M 0 0 L 10 10 Z" id="path1"/>
+    <pattern patternTransform="scale(2.0, 1.0)"/>
+  </defs>
+  <sodipodi:namedview id="base" pagecolor="#ffffff" bordercolor="#666666" borderopacity="1.0" inkscape:pageopacity="0.0" inkscape:pageshadow="2" inkscape:zoom="1.9494022" inkscape:cx="337.21073" inkscape:cy="650.51398" inkscape:document-units="px" inkscape:current-layer="layer1" showgrid="false" inkscape:window-width="3060" inkscape:window-height="1685" inkscape:window-x="140" inkscape:window-y="41" inkscape:window-maximized="1"/>
+  <metadata id="metadata7">
+    <rdf:RDF>
+      <cc:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <dc:title/>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+    <g transform="matrix(1.44985 0 0 1.36417 -107.03 -167.362)" style="fill:#fff;stroke:#d88;" id="A" inkscape:groupmode="layer">
+      <g transform="matrix(0.697666 -0.716423 0.716423 0.697666 -164.912 374.829)" style="fill:#eee;joker:url(#path1)" id="B">
+        <g transform="matrix(1 0 0.506421 1 -193.861 0)" style="fill:#ddd;" id="C">
+          <path id="D" fill="#C00" opacity="0.2" transform="translate(30, 10)" d="M30,130 L60,130 L60,120 L70,140 L60,160 L60,150 L30,150"/>
+          <rect transform="rotate(16.097889)" y="200" x="200" height="100" width="100" style="fill:#0000ff;stroke-width:1px;" id="E"/>
+          <circle cx="100" cy="100" r="50" style="stroke:#f00;" id="F"/>
+          <use xlink:href="#path1" id="G"/>
+          <line x1="0" y1="80" x2="100" y2="20" id="H"/>
+          <polyline points="0,100 50,25 50,75 100,0" id="I"/>
+          <polygon points="0,100 50,25 50,75 100,0" id="J"/>
+        <path id="MassCenter_D" d="m -232.07777200518518,524.1721238829563 3.0,0 3.0,0 m -3.0,-3.0 0,3.0 0,3.0" style="stroke:#000000;fill:none;stroke-width:0.5" transform="matrix(0.230958 0.494136 -0.784166 0.511422 543.53 -4.87879)"/></g>
+      </g>
+      <g id="K" inkscape:label="Key">
+        <g id="L" inkscape:label="Elm">
+          <line x1="5" y1="5" x2="5.5" y2="10" id="M" transform="translate(10, 10);" inkscape:label="Mine"/>
+        </g>
+      </g>
+    </g>
+</svg>

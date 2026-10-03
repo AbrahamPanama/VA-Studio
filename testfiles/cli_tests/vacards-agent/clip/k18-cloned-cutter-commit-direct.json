@@ -1,0 +1,39 @@
+{
+  "description": "object-destructive-clip commits a pair whose cutter cut6 is cloned by cut6clone: the cutter is kept unchanged (CLIP-1), so the clone still renders as before; the bitmap img6 is replaced in one Undo step. In this fixture cut6 does not overlap img6, so the kept-inside result is fully transparent.",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;select-by-id:img6,cut6;object-destructive-clip;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "vacards-options",
+      "status": "ok",
+      "data": {
+        "halt-on-error": false
+      }
+    },
+    {
+      "action": "object-destructive-clip",
+      "status": "changed",
+      "reason": "success-fully-transparent",
+      "mode": "paired",
+      "modified": [
+        "img6"
+      ],
+      "undo": "one-step"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"img6\"",
+        "id=\"cut6\"",
+        "id=\"cut6clone\""
+      ]
+    }
+  }
+}

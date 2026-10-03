@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inkscape Output</title>
+</head>
+<body>
+    <canvas id='canvas' width='210' height='297'></canvas>
+    <script>
+    var ctx = document.getElementById("canvas").getContext("2d");
+    	
+// #layer1
+	
+// #path14112
+	ctx.save();
+	ctx.beginPath();
+	let clipPath14259 = new Path2D();
+	clipPath14259.moveTo(126.201140, 40.025280);
+	clipPath14259.bezierCurveTo(126.201139, 53.170573, 115.544773, 63.826939, 102.399480, 63.826938);
+	clipPath14259.bezierCurveTo(96.086887, 63.826939, 90.032841, 61.319272, 85.569164, 56.855595);
+	clipPath14259.bezierCurveTo(81.105486, 52.391918, 78.597818, 46.337873, 78.597818, 40.025280);
+	clipPath14259.bezierCurveTo(78.597818, 33.712687, 81.105486, 27.658641, 85.569164, 23.194964);
+	clipPath14259.bezierCurveTo(90.032841, 18.731287, 96.086887, 16.223620, 102.399480, 16.223621);
+	clipPath14259.bezierCurveTo(108.712073, 16.223621, 114.766118, 18.731288, 119.229795, 23.194965);
+	clipPath14259.bezierCurveTo(123.693472, 27.658642, 126.201140, 33.712687, 126.201140, 40.025280);
+	clipPath14259.closePath();
+	ctx.clip(clipPath14259)
+	ctx.fillStyle = '#000000';
+	ctx.strokeStyle = '#ff00ff';
+	ctx.lineWidth = 0.264583;
+	ctx.miterLimit = 4;
+	ctx.moveTo(103.010460, 57.276211);
+	ctx.bezierCurveTo(103.010459, 70.421504, 92.354094, 81.077869, 79.208801, 81.077869);
+	ctx.bezierCurveTo(66.063508, 81.077868, 55.407144, 70.421504, 55.407143, 57.276211);
+	ctx.bezierCurveTo(55.407143, 44.130918, 66.063508, 33.474553, 79.208801, 33.474552);
+	ctx.bezierCurveTo(85.521393, 33.474552, 91.575439, 35.982220, 96.039115, 40.445897);
+	ctx.bezierCurveTo(100.502792, 44.909573, 103.010460, 50.963619, 103.010460, 57.276211);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+	ctx.restore();
+	
+// #path5331
+	ctx.beginPath();
+	ctx.fillStyle = '#000000';
+	ctx.strokeStyle = '#ff00ff';
+	ctx.lineWidth = 0.264583;
+	ctx.miterLimit = 4;
+	ctx.moveTo(160.043130, 261.882540);
+	ctx.lineTo(145.156000, 250.900980);
+	ctx.lineTo(127.669920, 256.939020);
+	ctx.lineTo(133.513630, 239.387040);
+	ctx.lineTo(122.367610, 224.622650);
+	ctx.lineTo(140.866350, 224.756480);
+	ctx.lineTo(151.463810, 209.593540);
+	ctx.lineTo(157.052950, 227.228240);
+	ctx.lineTo(174.748560, 232.621420);
+	ctx.lineTo(159.704100, 243.386430);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+
+    </script>
+</body>
+</html>

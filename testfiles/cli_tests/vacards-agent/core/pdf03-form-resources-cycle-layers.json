@@ -1,0 +1,19 @@
+{
+  "description": "PDF3: a form whose resources reference itself must not recurse forever in loadOptionalContentLayers (group by layer).",
+  "input": "{FIXTURES}/pdf3-form-cycle.pdf",
+  "args": [
+    "--export-type=svg",
+    "--export-filename={WORK}/out.svg",
+    "--pdf-group-by=layer"
+  ],
+  "timeout": 90,
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "<svg"
+      ]
+    }
+  }
+}

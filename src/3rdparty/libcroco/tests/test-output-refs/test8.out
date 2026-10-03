@@ -1,0 +1,15 @@
+****************
+Parsing 'foo'
+foo
+****************
+Parsing 'foo,bar'
+foo, bar
+****************
+Parsing 'foo , bar '
+foo, bar
+****************
+Parsing 'foo > bar'
+foo>bar
+****************
+Parsing '.foo .bar'
+.foo.bar

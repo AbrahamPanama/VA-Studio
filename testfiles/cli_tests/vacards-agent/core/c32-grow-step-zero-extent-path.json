@@ -1,0 +1,20 @@
+{
+  "description": "transform-grow-step (the > key) on a zero-extent path used to move it to the origin; it is a no-op.",
+  "input": "{FIXTURES}/degenerate-geometry.svg",
+  "actions": "select-by-id:zp;transform-grow-step:1;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "d=\"M 50,50 L 50,50\""
+      ],
+      "not_contains": [
+        "nan",
+        "inf",
+        "M 0,0",
+        "transform="
+      ]
+    }
+  }
+}

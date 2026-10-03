@@ -1,0 +1,17 @@
+{
+  "description": "Resizing the width of a zero-width selection (a vertical line, geometric bounds) is refused as zero-dimension instead of just moving it.",
+  "input": "{FIXTURES}/geometry.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:vline;vacards-transform-resize:width=5,bbox=geometric",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-transform-resize",
+      "status": "rejected",
+      "mode": "collective-geometry",
+      "reason": "zero-dimension",
+      "message": "The selection has no size along the requested axis.",
+      "undo": "none"
+    }
+  ]
+}

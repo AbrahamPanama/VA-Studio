@@ -1,0 +1,42 @@
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="210mm" height="297mm" id="mydoc" version="1.1">
+  <defs>
+    <path d="M 0 0 L 10 10 Z" id="path1"/>
+    <pattern patternTransform="scale(2.0, 1.0)"/>
+  </defs>
+  <sodipodi:namedview id="base" pagecolor="#ffffff" bordercolor="#666666" borderopacity="1.0" inkscape:pageopacity="0.0" inkscape:pageshadow="2" inkscape:zoom="1.9494022" inkscape:cx="337.21073" inkscape:cy="650.51398" inkscape:document-units="px" inkscape:current-layer="layer1" showgrid="false" inkscape:window-width="3060" inkscape:window-height="1685" inkscape:window-x="140" inkscape:window-y="41" inkscape:window-maximized="1"/>
+  <metadata id="metadata7">
+    <rdf:RDF>
+      <cc:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <dc:title/>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+    <g transform="matrix(1.4498514,0,0,1.3641667,-107.03035,-167.3624)" style="fill:#fff;stroke:#d88;" id="A" inkscape:groupmode="layer">
+      <g transform="rotate(-45.759928,361.64932,382.80575)" style="fill:#eee;joker:url(#path1)" id="B">
+        <g transform="matrix(1,0,0.50642107,1,-193.8609,0)" style="fill:#ddd;" id="C">
+          <path id="D" fill="#C00" opacity="0.2" transform="translate(30,10)" d="M30,130 L60,130 L60,120 L70,140 L60,160 L60,150 L30,150"/>
+          <rect transform="rotate(16.097889)" y="200" x="200" height="100" width="100" style="fill:#0000ff;stroke-width:1px;" id="E"/>
+          <circle cx="100" cy="100" r="50" style="stroke:#f00;" id="F"/>
+          <use xlink:href="#path1" id="G"/>
+          <line x1="0" y1="80" x2="100" y2="20" id="H"/>
+          <polyline points="0,100 50,25 50,75 100,0" id="I"/>
+          <polygon points="0,100 50,25 50,75 100,0" id="J"/>
+        </g>
+      </g>
+      <g id="K" inkscape:label="Key">
+        <g id="L" inkscape:label="Elm">
+          <line x1="5" y1="5" x2="5.5" y2="10" id="M" transform="translate(10, 10);" inkscape:label="Mine"/>
+        </g>
+      </g>
+    </g>
+<svg:text style="inline-size:793.7007874015748;white-space:pre;font-size:10.666666666666666"><svg:tspan>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nam molestie nisl at metus. Mauris ac massa vestibulum nisl facilisis viverra. Aliquam justo lectus, iaculis a, auctor sed, congue in, nisl. Sed quis elit. Mauris sed nulla quis nisi interdum tempor. Proin dolor sapien, adipiscing id, sagittis eu, molestie viverra, mauris. Integer tempus malesuada pede. Maecenas rhoncus rhoncus ipsum. Mauris ac massa vestibulum nisl facilisis viverra. Suspendisse fermentum. Phasellus magna sem, vulputate eget, ornare sed, dignissim sit amet, pede. Nam id neque. Nulla blandit justo a metus. Nam laoreet dui sed magna. Vivamus posuere, ante eu tempor dictum, felis nibh facilisis sem, eu auctor metus nulla non lorem. Phasellus at purus sed purus cursus iaculis. Vivamus feugiat. Integer fringilla. Praesent a eros. Aliquam sed erat. Nam a nunc. Maecenas rhoncus rhoncus ipsum. 
+
+Praesent scelerisque. Proin lectus orci, venenatis pharetra, egestas id, tincidunt vel, eros. Etiam cursus purus interdum libero. Nam massa turpis, nonummy et, consectetuer id, placerat ac, ante. Suspendisse fermentum. Sed at turpis vitae velit euismod aliquet. Aliquam justo lectus, iaculis a, auctor sed, congue in, nisl. Nam massa turpis, nonummy et, consectetuer id, placerat ac, ante. Quisque arcu ante, cursus in, ornare quis, viverra ut, justo. Nam a nunc. Duis sem velit, ultrices et, fermentum auctor, rhoncus ut, ligula. Aliquam metus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Suspendisse potenti. Mauris tincidunt aliquam ante. Mauris et pede. In consectetuer, lorem eu lobortis egestas, velit odio imperdiet eros, sit amet sagittis nunc mi ac neque. Curabitur risus urna, placerat et, luctus pulvinar, auctor vel, orci. Donec ut purus. Integer accumsan. Morbi volutpat. Suspendisse potenti. Vivamus posuere, ante eu tempor dictum, felis nibh facilisis sem, eu auctor metus nulla non lorem. 
+
+Aenean luctus vulputate turpis. Pellentesque convallis dolor vel libero. Quisque arcu ante, cursus in, ornare quis, viverra ut, justo. Etiam non neque ac mi vestibulum placerat. Mauris urna sem, suscipit vitae, dignissim id, ultrices sed, nunc. Phasellus at purus sed purus cursus iaculis. Phasellus lacinia iaculis mi. Mauris tempor ultrices justo. Nam massa turpis, nonummy et, consectetuer id, placerat ac, ante. Nam id neque. Fusce venenatis ligula in pede. Nullam libero nunc, tristique eget, laoreet eu, sagittis id, ante. Suspendisse lectus. Phasellus nisi metus, tempus sit amet, ultrices ac, porta nec, felis. Pellentesque suscipit accumsan massa. Aliquam metus. 
+
+Cras ac enim vel dui vestibulum suscipit. In hac habitasse platea dictumst. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Vivamus eu orci. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Suspendisse potenti. Integer accumsan. Nam id neque. Donec at diam a tellus dignissim vestibulum. Donec ut urna. Pellentesque ac turpis. Phasellus hendrerit. Nulla sed lacus. Aenean justo ipsum, luctus ut, volutpat laoreet, vehicula in, libero. Morbi turpis arcu, egestas congue, condimentum quis, tristique cursus, leo. Nam pharetra. Nulla sagittis condimentum ligula. Nam malesuada sapien eu nibh. Sed a lorem ut est tincidunt consectetuer. Sed dolor. Donec ut purus. Phasellus hendrerit. Mauris et pede. Donec diam eros, tristique sit amet, pretium vel, pellentesque ut, neque. Aenean turpis ipsum, rhoncus vitae, posuere vitae, euismod sed, ligula. Nulla sagittis condimentum ligula. Aliquam imperdiet lobortis metus. Integer accumsan. Donec interdum vestibulum libero. Curabitur risus urna, placerat et, luctus pulvinar, auctor vel, orci. 
+
+Donec interdum vestibulum libero. Nam molestie nisl at metus. In consectetuer, lorem eu lobortis egestas, velit odio imperdiet eros, sit amet sagittis nunc mi ac neque. Phasellus magna sem, vulputate eget, ornare sed, dignissim sit amet, pede. Aliquam imperdiet lobortis metus. Nam consectetuer mollis dolor. Curabitur lorem risus, sagittis vitae, accumsan a, iaculis id, metus. Integer tempus malesuada pede. Nam laoreet dui sed magna. Donec sit amet enim. Mauris et dolor. Ut eu metus id lectus vestibulum ultrices. Quisque aliquam, nulla ac scelerisque convallis, nisi ligula sagittis risus, at nonummy arcu urna pulvinar nibh. Pellentesque sit amet dui vel justo gravida auctor. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Fusce venenatis ligula in pede. Suspendisse potenti. Quisque vehicula porttitor odio. Praesent a lacus vitae turpis consequat semper. Praesent scelerisque. Pellentesque viverra dolor non nunc. Aliquam justo lectus, iaculis a, auctor sed, congue in, nisl. Mauris sed nulla quis nisi interdum tempor. Aliquam velit dui, commodo quis, porttitor eget, convallis et, nisi. Donec ut urna. Morbi turpis arcu, egestas congue, condimentum quis, tristique cursus, leo. </svg:tspan></svg:text></svg>

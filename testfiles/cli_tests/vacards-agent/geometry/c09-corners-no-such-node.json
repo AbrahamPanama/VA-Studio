@@ -1,0 +1,16 @@
+{
+  "description": "A node address that does not exist in the shape's satellites is rejected no-such-node before any change.",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r;vacards-corners:radius=2mm,scope=nodes,nodes=9:9",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "rejected",
+      "mode": "single-object",
+      "reason": "no-such-node",
+      "undo": "none"
+    }
+  ]
+}

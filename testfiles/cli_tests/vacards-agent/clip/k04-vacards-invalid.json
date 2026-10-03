@@ -1,0 +1,20 @@
+{
+  "description": "vacards-destructive-clip reports a Rejected record for one selected bitmap and halts the export.",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:img1;vacards-destructive-clip;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-destructive-clip",
+      "status": "rejected",
+      "reason": "invalid-selection",
+      "targets": {"selected": 1}
+    },
+    {"action": "export-filename", "status": "skipped"},
+    {"action": "export-do", "status": "skipped"}
+  ],
+  "expect_files": {
+    "out.svg": {"exists": false}
+  }
+}

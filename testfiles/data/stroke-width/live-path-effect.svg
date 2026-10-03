@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     width="160" height="100" viewBox="0 0 160 100">
+  <defs>
+    <inkscape:path-effect id="effect" effect="powerstroke" is_visible="true"
+       lpeversion="1" offset_points="0.2,6 | 1,6 | 1.8,6"
+       sort_points="true" interpolator_type="CubicBezierSmooth"
+       interpolator_beta="0.2" start_linecap_type="zerowidth"
+       end_linecap_type="zerowidth" linejoin_type="extrp_arc"
+       miter_limit="4" scale_width="1"/>
+  </defs>
+  <path id="lpe" inkscape:original-d="M 20,50 C 40,10 90,90 140,50"
+        inkscape:path-effect="#effect"
+        d="M 20,50 C 40,10 90,90 140,50"
+        style="fill:none;stroke:#123456;stroke-width:2"/>
+</svg>

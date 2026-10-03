@@ -1,0 +1,26 @@
+{
+  "description": "The reported file: select-all:no-layers (the user's selection of top level objects, groups included) then union. Each selected group acts as one combined shape; the emptied selected groups Layer1000/Layer1002 are removed and no text survives.",
+  "input": "{FIXTURES}/unabletoboolean.svg",
+  "actions": "vacards-result-file:{RESULT};select-all:no-layers;vacards-boolean:op=union;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "targets": {"selected": 8, "excluded": []},
+      "modified": ["path5"],
+      "deleted": ["path7", "text25", "text27", "text31", "text35", "Layer1000", "text36", "text37", "path37", "path38", "Layer1002", "path45", "path46", "path47", "path48", "path49"],
+      "selection_after": ["path5"],
+      "undo": "one-step"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "not_contains": ["<text", "id=\"Layer1000\"", "id=\"Layer1002\""]
+    }
+  }
+}

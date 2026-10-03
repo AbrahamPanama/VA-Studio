@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="284.0 0.0 310.0 310.0"
+    width="310.0" height="310.0">
+    <defs>
+        <inkscape:path-effect effect="fillet_chamfer" lpeversion="1" method="arc" flexible="true"
+            satellites_param="F,1,0,1,0,0.3,0,1 @ F,1,0,1,0,0.5,0,1 @ F,1,0,1,0,0.3,0,1 @ F,1,0,1,0,0.5,0,1"
+            nodesatellites_param="F,1,0,1,0,0.3,0,1 @ F,1,0,1,0,0.5,0,1 @ F,1,0,1,0,0.3,0,1 @ F,1,0,1,0,0.5,0,1"
+            id="path-effect5815" />
+        <clipPath id="clip-path0-g5392">
+            <use xlink:href="#path8555" />
+        </clipPath>
+        <clipPath id="clip-path0-g4306">
+            <use xlink:href="#rect9603" />
+        </clipPath>
+        <linearGradient x1="0" y1="0" x2="1" y2="0" gradientTransform="matrix(76 0 0 41 731 89.5)"
+            gradientUnits="userSpaceOnUse" id="linearGradient7856">
+            <stop offset="0.0" style="stop-color:#f0c2ff;stop-opacity:1.0" />
+            <stop offset="0.5" style="stop-color:#ce72ed;stop-opacity:1.0" />
+            <stop offset="1.0" style="stop-color:#ad23dc;stop-opacity:1.0" />
+        </linearGradient>
+    </defs>
+    <sodipodi:namedview guidecolor="#0080dc" guideopacity="0.8000000715255737">
+        <inkscape:page x="0" y="0" width="310.0" height="310.0" inkscape:label="Artboard1" />
+        <inkscape:page width="316.0" height="316.0" x="395.0" y="175.0" inkscape:label="Artboard2" />
+        <inkscape:page width="190.91883092036784" height="190.91883092036784"
+            x="-249.45941546018392" y="59.54058453981608" inkscape:label="Curve Artboard" />
+        <inkscape:page width="316.00000000000006" height="316.0" x="116.99999999999994" y="576.0"
+            inkscape:label="Artboard3" />
+        <inkscape:page width="316.0" height="316.0" x="-284.0" y="395.0" inkscape:label="Artboard3" />
+        <sodipodi:guide position="178.25,0" orientation="1,0" />
+        <sodipodi:guide position="248.75,0" orientation="1,0" />
+        <sodipodi:guide position="0,-97.75" orientation="0,1" />
+        <sodipodi:guide position="0,-168.25" orientation="0,1" />
+        <inkscape:page width="193.00000000000006" height="96.0" x="116.99999999999994" y="395.0"
+            inkscape:label="Guides" />
+        <inkscape:page width="315.99999999999955" height="110.0" x="395.00000000000045" y="0.0"
+            inkscape:label="Gradient Artboard" />
+    </sodipodi:namedview>
+    <g style="opacity:1.0">
+        <rect x="54.0" y="176.0" width="310.0" height="310.0" rx="0.0" inkscape:label="Artboard1"
+            transform="translate(230, -176)"
+            style="fill:#000000;fill-opacity:0;stroke:none;stroke-opacity:0" />
+    </g>
+    <g style="opacity:1.0">
+        <rect x="444.0" y="-85.0" width="316.0" height="316.0" rx="0.0" inkscape:label="Artboard2"
+            transform="translate(235, 260)"
+            style="fill:#000000;fill-opacity:0;stroke:none;stroke-opacity:0" />
+    </g>
+    <g style="opacity:1.0">
+        <path
+            d="M 217.959 242.5 C 217.959 274.32 154.32 337.959 122.5 337.959 C 90.6802 337.959 27.0406 274.32 27.0406 242.5 C 27.0406 210.68 90.6802 147.041 122.5 147.041 C 154.32 147.041 217.959 210.68 217.959 242.5 Z"
+            inkscape:label="Curve Artboard" transform="translate(7.5, -87.5)"
+            style="fill:#9587cf;fill-opacity:1.0;stroke:none;stroke-opacity:0" id="path8555" />
+        <g style="opacity:1.0" id="g5392" clip-path="url(#clip-path0-g5392)">
+            <rect x="87.0" y="136.0" width="15.0" height="9.0"
+                inkscape:path-effect="#path-effect5815"
+                transform="matrix(-4 4.89859e-16 -3.94608e-16 -3.22222 508 607.722)"
+                style="fill:#ffffff;fill-opacity:1.0;stroke:#000000;stroke-opacity:0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:78.79518072289152;stroke-linejoin:round" />
+        </g>
+    </g>
+    <g style="opacity:1.0">
+        <rect x="392.0" y="510.0" width="316.0" height="316.0" rx="0.0" inkscape:label="Artboard3"
+            transform="translate(9, 66)"
+            style="fill:#000000;fill-opacity:0;stroke:none;stroke-opacity:0" />
+    </g>
+    <g style="opacity:1.0">
+        <rect x="392.0" y="510.0" width="316.0" height="316.0" rx="0.0" inkscape:label="Artboard3"
+            transform="translate(-392, -115)"
+            style="fill:#000000;fill-opacity:0;stroke:none;stroke-opacity:0" />
+    </g>
+    <g style="opacity:1.0">
+        <rect x="766.0" y="601.0" width="193.0" height="96.0" rx="0.0" inkscape:label="Guides"
+            transform="translate(-365, -206)"
+            style="fill:#ffffff;fill-opacity:1.0;stroke:none;stroke-opacity:0" id="rect9603" />
+        <g style="opacity:1.0" id="g4306" clip-path="url(#clip-path0-g4306)">
+            <ellipse cx="555.5" cy="468.5" rx="12.5" ry="12.5"
+                transform="matrix(2.82 0 0 2.82 -1069.01 -878.17)"
+                style="fill:#904cff;fill-opacity:0.7517730593681335;stroke:none;stroke-opacity:0" />
+        </g>
+    </g>
+    <g style="opacity:1.0">
+        <rect x="731.0" y="69.0" width="76.0" height="41.0" rx="0.0"
+            inkscape:label="Gradient Artboard"
+            transform="matrix(4.15789 0 0 2.68293 -2360.42 -185.122)"
+            style="fill:url(#linearGradient7856);fill-opacity:1.0;stroke:none;stroke-opacity:0" />
+    </g>
+    <title>artboards_and_guides.svg</title>
+</svg>

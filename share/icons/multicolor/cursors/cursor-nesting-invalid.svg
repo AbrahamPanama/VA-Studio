@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="32" height="32" x="-4" y="-4">
+  <g id="cursor" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M4.5 4.5 12 12H8l3 7-1 .5-3-7L4.5 15Z"
+          fill="none" stroke="#fff" stroke-width="3"/>
+    <path d="M4.5 4.5 12 12H8l3 7-1 .5-3-7L4.5 15Z"
+          fill="#000" stroke="#000" stroke-width="1"/>
+    <!-- Same sheet, greyed, with a "not allowed" badge. -->
+    <rect x="15.5" y="16.5" width="13" height="12" rx="1"
+          fill="#fff" stroke="#fff" stroke-width="3.5"/>
+    <rect x="15.5" y="16.5" width="13" height="12" rx="1"
+          fill="#eee" stroke="#777" stroke-width="1.25"/>
+    <circle cx="22" cy="22.5" r="4" fill="#fff" stroke="#d0342c" stroke-width="1.6"/>
+    <path d="M19.2 25.3 24.8 19.7" stroke="#d0342c" stroke-width="1.6"/>
+  </g>
+</svg>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <rect id="sq" x="10" y="10" width="20" height="20" style="fill:#ff0000"/>
+  <circle id="ci" cx="60" cy="20" r="10" style="fill:#00ff00"/>
+  <path id="open" d="M 10,60 L 40,60 L 40,80" style="fill:none;stroke:#000"/>
+  <g id="grp"><rect id="ing" x="60" y="60" width="10" height="10"/></g>
+  <use id="sqclone" href="#sq" x="0" y="40"/>
+  <use id="sqclone2" href="#sq" x="0" y="80"/>
+  <use id="chain1" href="#ci" x="0" y="30"/>
+  <use id="chain2" href="#chain1" x="30" y="0"/>
+</svg>

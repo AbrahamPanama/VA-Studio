@@ -1,0 +1,13 @@
+{
+  "description": "object-destructive-clip stays disabled for one selected bitmap: no record, exit 3, export still runs.",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:img1;object-destructive-clip;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"}
+  ],
+  "expect_stderr_contains": ["is disabled"],
+  "expect_files": {
+    "out.svg": {"exists": true, "contains": ["id=\"img1\""]}
+  }
+}

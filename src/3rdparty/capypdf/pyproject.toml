@@ -1,0 +1,31 @@
+# Distro packagers: Do NOT use this for installation.
+# It is only meant for creating PyPI packages.
+[build-system]
+build-backend = 'mesonpy'
+requires = ['meson-python@ git+https://github.com/mesonbuild/meson-python.git']
+
+[tool.meson-python]
+allow-windows-internal-shared-libs = true
+
+[project]
+name = 'capypdf'
+version = '0.21.0'
+description = 'A color managed PDF generation library.'
+readme = 'readme.md'
+requires-python = '>=3.10'
+license = {file = 'COPYING'}
+authors = [
+  {name = 'Jussi Pakkanen', email = 'jussi.pakkanen@mailbox.org'},
+]
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    'Operating System :: POSIX :: Linux',
+    'Operating System :: Microsoft :: Windows',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: C++',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+]
+
+[tool.meson-python.args]
+setup = ['-Ddefault_library=static', '-D:default_library=shared']
+install = ['--skip-subprojects=lcms2', '--tags=runtime,python-runtime']

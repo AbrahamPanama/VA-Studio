@@ -1,0 +1,14 @@
+{
+  "description": "A single tone override on a plain bitmap remaps the histogram.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:plain;vacards-bitmap-histogram:contrast=25",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-bitmap-histogram",
+      "status": "ok",
+      "data": {"remapped": true, "settings": {"brightness": 0, "contrast": 25}}
+    }
+  ]
+}

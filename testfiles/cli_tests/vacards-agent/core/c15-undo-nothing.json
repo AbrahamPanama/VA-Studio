@@ -1,0 +1,11 @@
+{
+  "description": "vacards-undo on a document without history is a legitimate no-op.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-undo;vacards-redo",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-undo", "status": "unchanged", "reason": "nothing-to-undo"},
+    {"action": "vacards-redo", "status": "unchanged", "reason": "nothing-to-redo"}
+  ]
+}

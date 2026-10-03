@@ -1,0 +1,9 @@
+{
+  "description": "An unparsable boolean drops that upstream action with a diagnostic and exit 3; TRUE is accepted.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "export-plain-svg:maybe;export-plain-svg:TRUE;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [],
+  "expect_stderr_contains": ["Invalid boolean value: export-plain-svg:maybe"],
+  "expect_files": {"out.svg": {"exists": true, "not_contains": ["sodipodi:namedview"]}}
+}

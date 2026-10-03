@@ -1,0 +1,17 @@
+{
+  "description": "A plain SPPath is out of scope for AC-8a (AC-8b adds node types): the document capture returns no snapshot and the action rejects path-not-supported with the node-types reason, changing nothing.",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:p;vacards-corners:radius=2mm",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "rejected",
+      "mode": "single-object",
+      "reason": "path-not-supported",
+      "message": "Paths need their node types; use the Node tool or a later version.",
+      "undo": "none"
+    }
+  ]
+}

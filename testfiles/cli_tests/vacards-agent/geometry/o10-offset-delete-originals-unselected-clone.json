@@ -1,0 +1,51 @@
+{
+  "description": "delete-originals with UNSELECTED clones of the deleted original: the original is deleted like Edit > Delete, so its clones follow the orphaned-clone preference (default: unlinked into independent copies that keep their ids) instead of dangling. Record: created ['path1'], deleted ['sq'] (unlinked clones are not deleted).",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:sq;vacards-offset:distance=2,delete-originals;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "vacards-offset",
+      "status": "changed",
+      "mode": "per-selected-root",
+      "reason": "success",
+      "targets": {
+        "selected": 1,
+        "eligible": 1
+      },
+      "created": [
+        "path1"
+      ],
+      "deleted": [
+        "sq"
+      ],
+      "selection_after": [
+        "path1"
+      ],
+      "undo": "one-step",
+      "metrics": {
+        "skipped": 0,
+        "open_subpaths_skipped": 0,
+        "results": 1
+      }
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"path1\"",
+        "id=\"sqclone\"",
+        "id=\"sqclone2\""
+      ],
+      "not_contains": [
+        "id=\"sq\"",
+        "href=\"#sq\""
+      ]
+    }
+  }
+}

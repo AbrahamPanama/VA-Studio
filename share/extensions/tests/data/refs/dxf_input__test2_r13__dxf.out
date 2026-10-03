@@ -1,0 +1,1599 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 793.7007874015749 1122.5196850393702" width="793.7007874015749" height="1122.5196850393702">
+    <desc>test2_r13.dxf - scale = 1.000000, origin = (0.000000, 0.000000), method = manual</desc>
+    <defs>
+        <marker id="DistanceX" orient="auto" refX="0.0" refY="0.0" style="overflow:visible">
+            <path d="M 3,-3 L -3,3 M 0,-5 L  0,5" style="stroke:#000000; stroke-width:0.5"/>
+        </marker>
+        <pattern id="Hatch" patternUnits="userSpaceOnUse" width="8" height="8" x="0" y="0">
+            <path d="M8 4 l-4,4" stroke="#000000" stroke-width="0.25" linecap="square"/>
+            <path d="M6 2 l-4,4" stroke="#000000" stroke-width="0.25" linecap="square"/>
+            <path d="M4 0 l-4,4" stroke="#000000" stroke-width="0.25" linecap="square"/>
+        </pattern>
+        <symbol id="*MODEL_SPACE"/>
+        <symbol id="*PAPER_SPACE"/>
+        <symbol id="*U1">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 -111129 L 0 1122.52"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1122.52 L 158740 1122.52"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 158740 1122.52 L 158740 -111129"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 158740 -111129 L 0 -111129"/>
+        </symbol>
+        <symbol id="*D2">
+            <path style="fill:none;stroke:#000000" d="M 123960 -77217.2 L 122721 -78456"/>
+            <path style="fill:none;stroke:#000000" d="M 137323 -90579.8 L 136084 -91818.7"/>
+            <path style="fill:none;stroke:#000000" d="M 123723 -78790.1 L 135750 -90816.5"/>
+            <path style="fill:none;stroke:#000000" d="M 123612 -78901.4 L 123835 -78678.7 L 123055 -78122 z"/>
+            <path style="fill:none;stroke:#000000" d="M 135639 -90927.8 L 135861 -90705.1 L 136418 -91484.6 z"/>
+            <text x="129168.764239" y="-85371.187752" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (-45.000000 129168.764239 -85371.187752)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">5000</tspan>
+            </text>
+            <path d="M 124127.428687,-77050.125471 A 0.250000,0.250000 0.000000 0, 0 124126.928687,-77050.125471 A 0.250000,0.250000 0.000000 0, 0 124127.428687,-77050.125471 z" style="fill:none;stroke:#000000"/>
+            <path d="M 137490.076520,-90412.773304 A 0.250000,0.250000 0.000000 0, 0 137489.576520,-90412.773304 A 0.250000,0.250000 0.000000 0, 0 137490.076520,-90412.773304 z" style="fill:none;stroke:#000000"/>
+            <path d="M 136418.250689,-91484.599136 A 0.250000,0.250000 0.000000 0, 0 136417.750689,-91484.599136 A 0.250000,0.250000 0.000000 0, 0 136418.250689,-91484.599136 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D3">
+            <path style="fill:none;stroke:#000000" d="M 123960 -76883.1 L 121411 -74333.7"/>
+            <path style="fill:none;stroke:#000000" d="M 127969 -72874.3 L 125420 -70324.9"/>
+            <path style="fill:none;stroke:#000000" d="M 122413 -73999.7 L 125086 -71327.1"/>
+            <path style="fill:none;stroke:#000000" d="M 122524 -74111 L 122302 -73888.3 L 121745 -74667.8 z"/>
+            <path style="fill:none;stroke:#000000" d="M 125197 -71438.5 L 124974 -71215.8 L 125754 -70659 z"/>
+            <text x="124317.159069" y="-73231.311503" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (45.000000 124317.159069 -73231.311503)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">1500</tspan>
+            </text>
+            <path d="M 124127.428687,-77050.125471 A 0.250000,0.250000 0.000000 0, 0 124126.928687,-77050.125471 A 0.250000,0.250000 0.000000 0, 0 124127.428687,-77050.125471 z" style="fill:none;stroke:#000000"/>
+            <path d="M 128136.223037,-73041.331121 A 0.250000,0.250000 0.000000 0, 0 128135.723037,-73041.331121 A 0.250000,0.250000 0.000000 0, 0 128136.223037,-73041.331121 z" style="fill:none;stroke:#000000"/>
+            <path d="M 125753.893711,-70659.001795 A 0.250000,0.250000 0.000000 0, 0 125753.393711,-70659.001795 A 0.250000,0.250000 0.000000 0, 0 125753.893711,-70659.001795 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D4">
+            <path style="fill:none;stroke:#000000" d="M 128737 -106691 L 128737 -108443"/>
+            <path style="fill:none;stroke:#000000" d="M 147634 -106691 L 147634 -108443"/>
+            <path style="fill:none;stroke:#000000" d="M 129682 -107971 L 146690 -107971"/>
+            <path style="fill:none;stroke:#000000" d="M 129682 -108128 L 129682 -107813 L 128737 -107971 z"/>
+            <path style="fill:none;stroke:#000000" d="M 146690 -108128 L 146690 -107813 L 147634 -107971 z"/>
+            <text x="138185.641149" y="-108773.695825" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">5000</tspan>
+            </text>
+            <path d="M 128737.072251,-106454.755592 A 0.250000,0.250000 0.000000 0, 0 128736.572251,-106454.755592 A 0.250000,0.250000 0.000000 0, 0 128737.072251,-106454.755592 z" style="fill:none;stroke:#000000"/>
+            <path d="M 147634.710046,-106454.755592 A 0.250000,0.250000 0.000000 0, 0 147634.210046,-106454.755592 A 0.250000,0.250000 0.000000 0, 0 147634.710046,-106454.755592 z" style="fill:none;stroke:#000000"/>
+            <path d="M 147634.710046,-107970.546219 A 0.250000,0.250000 0.000000 0, 0 147634.210046,-107970.546219 A 0.250000,0.250000 0.000000 0, 0 147634.710046,-107970.546219 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D5">
+            <path style="fill:none;stroke:#000000" d="M 128501 -106455 L 124895 -106455"/>
+            <path style="fill:none;stroke:#000000" d="M 128501 -100785 L 124895 -100785"/>
+            <path style="fill:none;stroke:#000000" d="M 125368 -105510 L 125368 -101730"/>
+            <path style="fill:none;stroke:#000000" d="M 125210 -105510 L 125525 -105510 L 125368 -106455 z"/>
+            <path style="fill:none;stroke:#000000" d="M 125210 -101730 L 125525 -101730 L 125368 -100785 z"/>
+            <text x="124564.550202" y="-103620.109923" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (-90.000000 124564.550202 -103620.109923)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">1500</tspan>
+            </text>
+            <path d="M 128737.072251,-106454.755592 A 0.250000,0.250000 0.000000 0, 0 128736.572251,-106454.755592 A 0.250000,0.250000 0.000000 0, 0 128737.072251,-106454.755592 z" style="fill:none;stroke:#000000"/>
+            <path d="M 128737.072251,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 128736.572251,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 128737.072251,-100785.464253 z" style="fill:none;stroke:#000000"/>
+            <path d="M 125367.949808,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 125367.449808,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 125367.949808,-100785.464253 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D6">
+            <path d="M 141873.122662,-73985.656684 A 13769.569005,13769.569005 0.000000 0 0 138517.343700,-82087.223766" style="fill:none;stroke:#000000"/>
+            <path style="fill:none;stroke:#000000" d="M 142031 -73991.1 L 141716 -73980.3 L 141906 -73041.3 z"/>
+            <path style="fill:none;stroke:#000000" d="M 138402 -81979.8 L 138632 -82194.7 L 137873 -82777.9 z"/>
+            <text x="141599.409495" y="-78618.069098" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (67.500000 141599.409495 -78618.069098)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">45&#129;&#139;</tspan>
+            </text>
+            <path d="M 141436.605356,-76605.157822 A 0.250000,0.250000 0.000000 0, 0 141436.105356,-76605.157822 A 0.250000,0.250000 0.000000 0, 0 141436.605356,-76605.157822 z" style="fill:none;stroke:#000000"/>
+            <path d="M 141498.870870,-86403.978954 A 0.250000,0.250000 0.000000 0, 0 141498.370870,-86403.978954 A 0.250000,0.250000 0.000000 0, 0 141498.870870,-86403.978954 z" style="fill:none;stroke:#000000"/>
+            <path d="M 128136.223037,-73041.331121 A 0.250000,0.250000 0.000000 0, 0 128135.723037,-73041.331121 A 0.250000,0.250000 0.000000 0, 0 128136.223037,-73041.331121 z" style="fill:none;stroke:#000000"/>
+            <path d="M 142589.171551,-73041.331121 A 0.250000,0.250000 0.000000 0, 0 142588.671551,-73041.331121 A 0.250000,0.250000 0.000000 0, 0 142589.171551,-73041.331121 z" style="fill:none;stroke:#000000"/>
+            <path d="M 128136.223037,-73041.331121 A 0.250000,0.250000 0.000000 0, 0 128135.723037,-73041.331121 A 0.250000,0.250000 0.000000 0, 0 128136.223037,-73041.331121 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D7">
+            <path style="fill:none;stroke:#000000" d="M 128397 -70372.9 L 128397 -64231.1"/>
+            <path style="fill:none;stroke:#000000" d="M 128397 -47223.3 L 128397 -46278.4"/>
+            <text x="127593.900987" y="-67774.440970" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (-90.000000 127593.900987 -67774.440970)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">&#8709;4000</tspan>
+            </text>
+            <path style="fill:none;stroke:#000000" d="M 128397 -48168.1 L 128397 -63286.3"/>
+            <path style="fill:none;stroke:#000000" d="M 128240 -47223.3 L 128555 -47223.3 L 128397 -48168.1 z"/>
+            <path style="fill:none;stroke:#000000" d="M 128240 -64231.1 L 128555 -64231.1 L 128397 -63286.3 z"/>
+            <path d="M 128397.300593,-63286.251994 A 0.250000,0.250000 0.000000 0, 0 128396.800593,-63286.251994 A 0.250000,0.250000 0.000000 0, 0 128397.300593,-63286.251994 z" style="fill:none;stroke:#000000"/>
+            <path d="M 128397.300593,-48168.141758 A 0.250000,0.250000 0.000000 0, 0 128396.800593,-48168.141758 A 0.250000,0.250000 0.000000 0, 0 128397.300593,-48168.141758 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D8">
+            <path style="fill:none;stroke:#000000" d="M 140731 -63624.7 L 135559 -60312.8"/>
+            <text x="138109.583874" y="-62899.911622" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (-32.631827 138109.583874 -62899.911622)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">R2000</tspan>
+            </text>
+            <path style="fill:none;stroke:#000000" d="M 128397 -55727.2 L 134763 -59803.3"/>
+            <path style="fill:none;stroke:#000000" d="M 135474 -60445.5 L 135644 -60180.2 L 134763 -59803.3 z"/>
+            <path d="M 134763.181445,-59803.331719 A 0.250000,0.250000 0.000000 0, 0 134762.681445,-59803.331719 A 0.250000,0.250000 0.000000 0, 0 134763.181445,-59803.331719 z" style="fill:none;stroke:#000000"/>
+            <path d="M 128397.300593,-55727.196876 A 0.250000,0.250000 0.000000 0, 0 128396.800593,-55727.196876 A 0.250000,0.250000 0.000000 0, 0 128397.300593,-55727.196876 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="NONAME">
+            <path style="fill:none;stroke:#000000" d="M 91991.6 -17822.3 L 82542.8 -34188.2"/>
+            <path style="fill:none;stroke:#000000" d="M 91991.6 -17822.3 L 73093.9 -17822.3"/>
+            <path style="fill:none;stroke:#000000" d="M 73093.9 -30096.7 L 91991.6 -30096.7"/>
+            <path style="fill:none;stroke:#000000" d="M 73093.9 -30096.7 L 82542.8 -13730.9"/>
+            <path style="fill:none;stroke:#000000" d="M 91991.6 -30096.7 L 82542.8 -13730.9"/>
+            <path style="fill:none;stroke:#000000" d="M 73093.9 -17822.3 L 82542.8 -34188.2"/>
+        </symbol>
+        <symbol id="*D10">
+            <path style="fill:none;stroke:#000000" d="M 3155.27 -11933.4 L 3155.27 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 12604.1 -11933.4 L 12604.1 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 4100.15 -15217.7 L 11659.2 -15217.7"/>
+            <path style="fill:none;stroke:#000000" d="M 4100.15 -15375.2 L 4100.15 -15060.2 L 3155.27 -15217.7 z"/>
+            <path style="fill:none;stroke:#000000" d="M 11659.2 -15375.2 L 11659.2 -15060.2 L 12604.1 -15217.7 z"/>
+            <text x="7879.678753" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 3155.519304,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 3155.019304,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 3155.519304,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 12604.338202,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 12603.838202,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 12604.338202,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 12604.338202,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 12603.838202,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 12604.338202,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_CLOSEDBLANK">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -3.77953 1121.89 L 0 1122.52"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1122.52 L -3.77953 1123.15"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -3.77953 1121.89 L -3.77953 1123.15"/>
+        </symbol>
+        <symbol id="*D12">
+            <path style="fill:none;stroke:#000000" d="M 12604.1 -11933.4 L 12604.1 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 22052.9 -11933.4 L 22052.9 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 13549 -15217.7 L 21108 -15217.7"/>
+            <use xlink:href="#_CLOSEDBLANK" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 12604.1 265412)"/>
+            <use xlink:href="#_CLOSEDBLANK" style="stroke-width:0.002px" transform="matrix(250 0 0 250 22052.9 -295848)"/>
+            <text x="17328.497650" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 12604.338202,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 12603.838202,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 12604.338202,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 22053.157099,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 22052.657099,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 22053.157099,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 22053.157099,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 22052.657099,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 22053.157099,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_CLOSED">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -3.77953 1121.89 L 0 1122.52"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1122.52 L -3.77953 1123.15"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -3.77953 1121.89 L -3.77953 1123.15"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1122.52 L -3.77953 1122.52"/>
+        </symbol>
+        <symbol id="*D14">
+            <path style="fill:none;stroke:#000000" d="M 22052.9 -11933.4 L 22052.9 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 31501.7 -11933.4 L 31501.7 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 22997.8 -15217.7 L 30556.8 -15217.7"/>
+            <use xlink:href="#_CLOSED" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 22052.9 265412)"/>
+            <use xlink:href="#_CLOSED" style="stroke-width:0.002px" transform="matrix(250 0 0 250 31501.7 -295848)"/>
+            <text x="26777.316548" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 22053.157099,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 22052.657099,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 22053.157099,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 31501.975997,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 31501.475997,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 31501.975997,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 31501.975997,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 31501.475997,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 31501.975997,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D15">
+            <path style="fill:none;stroke:#000000" d="M 31501.7 -11933.4 L 31501.7 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 40950.5 -11933.4 L 40950.5 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 32446.6 -15217.7 L 40005.7 -15217.7"/>
+            <use xlink:href="#_DOT" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 31501.7 265412)"/>
+            <use xlink:href="#_DOT" style="stroke-width:0.002px" transform="matrix(250 0 0 250 40950.5 -295848)"/>
+            <text x="36226.135446" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 31501.975997,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 31501.475997,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 31501.975997,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 40950.794895,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 40950.294895,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 40950.794895,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 40950.794895,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 40950.294895,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 40950.794895,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_DOT">
+            <path d="M -0.944882,1122.519685 A 0.944882,0.944882 0.0 0 0 0.944882,1122.519685 A 0.944882,0.944882 0.0 0 0 -0.944882,1122.519685 z" style="fill:none;stroke:#000000;stroke-linecap: round"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -1.88976 1122.52 L -3.77953 1122.52"/>
+        </symbol>
+        <symbol id="*D17">
+            <path style="fill:none;stroke:#000000" d="M 40950.5 -11933.4 L 40950.5 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 50399.4 -11933.4 L 50399.4 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 40950.5 -15217.7 L 50399.4 -15217.7"/>
+            <use xlink:href="#_ARCHTICK" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 40950.5 265412)"/>
+            <use xlink:href="#_ARCHTICK" style="stroke-width:0.002px" transform="matrix(250 0 0 250 50399.4 -295848)"/>
+            <text x="45674.954343" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 40950.794895,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 40950.294895,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 40950.794895,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 50399.613792,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 50399.113792,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 50399.613792,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 50399.613792,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 50399.113792,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 50399.613792,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_ARCHTICK">
+            <path d="M -1.889764,1124.409449 L 1.889764,1120.629921" style="fill:none;stroke:#000000;stroke-linecap: round"/>
+        </symbol>
+        <symbol id="*D19">
+            <path style="fill:none;stroke:#000000" d="M 50399.4 -11933.4 L 50399.4 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 59848.2 -11933.4 L 59848.2 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 50399.4 -15217.7 L 59848.2 -15217.7"/>
+            <use xlink:href="#_OBLIQUE" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 50399.4 265412)"/>
+            <use xlink:href="#_OBLIQUE" style="stroke-width:0.002px" transform="matrix(250 0 0 250 59848.2 -295848)"/>
+            <text x="55123.773241" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 50399.613792,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 50399.113792,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 50399.613792,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 59848.432690,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 59847.932690,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 59848.432690,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 59848.432690,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 59847.932690,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 59848.432690,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_OBLIQUE">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -1.88976 1124.41 L 1.88976 1120.63"/>
+        </symbol>
+        <symbol id="*D21">
+            <path style="fill:none;stroke:#000000" d="M 59848.2 -11933.4 L 59848.2 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 69297 -11933.4 L 69297 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 60793.1 -15217.7 L 68352.1 -15217.7"/>
+            <use xlink:href="#_OPEN" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 59848.2 265412)"/>
+            <use xlink:href="#_OPEN" style="stroke-width:0.002px" transform="matrix(250 0 0 250 69297 -295848)"/>
+            <text x="64572.592139" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 59848.432690,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 59847.932690,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 59848.432690,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 69297.251588,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 69296.751588,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 69297.251588,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 69297.251588,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 69296.751588,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 69297.251588,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_OPEN">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -3.77953 1121.89 L 0 1122.52"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -3.77953 1123.15 L 0 1122.52"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1122.52 L -3.77953 1122.52"/>
+        </symbol>
+        <symbol id="*D23">
+            <path style="fill:none;stroke:#000000" d="M 69297 -11933.4 L 69297 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 78745.8 -11933.4 L 78745.8 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 70241.9 -15217.7 L 77800.9 -15217.7"/>
+            <use xlink:href="#_ORIGIN" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 69297 265412)"/>
+            <use xlink:href="#_ORIGIN" style="stroke-width:0.002px" transform="matrix(250 0 0 250 78745.8 -295848)"/>
+            <text x="74021.411036" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 69297.251588,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 69296.751588,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 69297.251588,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 78746.070485,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 78745.570485,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 78746.070485,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 78746.070485,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 78745.570485,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 78746.070485,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_ORIGIN">
+            <path d="M 1.889764,1122.519685 A 1.889764,1.889764 0.000000 0, 0 -1.889764,1122.519685 A 1.889764,1.889764 0.000000 0, 0 1.889764,1122.519685 z" style="fill:none;stroke:#000000;stroke-linecap: round"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1122.52 L -3.77953 1122.52"/>
+        </symbol>
+        <symbol id="*D25">
+            <path style="fill:none;stroke:#000000" d="M 78745.8 -11933.4 L 78745.8 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 88194.6 -11933.4 L 88194.6 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 79690.7 -15217.7 L 87249.8 -15217.7"/>
+            <use xlink:href="#_ORIGIN2" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 78745.8 265412)"/>
+            <use xlink:href="#_ORIGIN2" style="stroke-width:0.002px" transform="matrix(250 0 0 250 88194.6 -295848)"/>
+            <text x="83470.229934" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 78746.070485,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 78745.570485,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 78746.070485,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 88194.889383,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 88194.389383,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 88194.889383,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 88194.889383,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 88194.389383,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 88194.889383,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_ORIGIN2">
+            <path d="M 1.889764,1122.519685 A 1.889764,1.889764 0.000000 0, 0 -1.889764,1122.519685 A 1.889764,1.889764 0.000000 0, 0 1.889764,1122.519685 z" style="fill:none;stroke:#000000;stroke-linecap: round"/>
+            <path d="M 0.944882,1122.519685 A 0.944882,0.944882 0.000000 0, 0 -0.944882,1122.519685 A 0.944882,0.944882 0.000000 0, 0 0.944882,1122.519685 z" style="fill:none;stroke:#000000;stroke-linecap: round"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -1.88976 1122.52 L -3.77953 1122.52"/>
+        </symbol>
+        <symbol id="*D27">
+            <path style="fill:none;stroke:#000000" d="M 88194.6 -11933.4 L 88194.6 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 97643.5 -11933.4 L 97643.5 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 89139.5 -15217.7 L 96698.6 -15217.7"/>
+            <use xlink:href="#_OPEN90" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 88194.6 265412)"/>
+            <use xlink:href="#_OPEN90" style="stroke-width:0.002px" transform="matrix(250 0 0 250 97643.5 -295848)"/>
+            <text x="92919.048832" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 88194.889383,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 88194.389383,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 88194.889383,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 97643.708280,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 97643.208280,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 97643.708280,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 97643.708280,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 97643.208280,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 97643.708280,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_OPEN90">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -1.88976 1120.63 L 0 1122.52"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1122.52 L -1.88976 1124.41"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1122.52 L -3.77953 1122.52"/>
+        </symbol>
+        <symbol id="*D29">
+            <path style="fill:none;stroke:#000000" d="M 97643.5 -11933.4 L 97643.5 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 107092 -11933.4 L 107092 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 98588.3 -15217.7 L 106147 -15217.7"/>
+            <use xlink:href="#_OPEN30" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 97643.5 265412)"/>
+            <use xlink:href="#_OPEN30" style="stroke-width:0.002px" transform="matrix(250 0 0 250 107092 -295848)"/>
+            <text x="102367.867729" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 97643.708280,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 97643.208280,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 97643.708280,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 107092.527178,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 107092.027178,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 107092.527178,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 107092.527178,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 107092.027178,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 107092.527178,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_OPEN30">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -3.77953 1121.51 L 0 1122.52"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1122.52 L -3.77953 1123.53"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1122.52 L -3.77953 1122.52"/>
+        </symbol>
+        <symbol id="*D31">
+            <path style="fill:none;stroke:#000000" d="M 107092 -11933.4 L 107092 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 116541 -11933.4 L 116541 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 107092 -15217.7 L 116541 -15217.7"/>
+            <use xlink:href="#_DOTSMALL" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 107092 265412)"/>
+            <use xlink:href="#_DOTSMALL" style="stroke-width:0.002px" transform="matrix(250 0 0 250 116541 -295848)"/>
+            <text x="111816.686627" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 107092.527178,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 107092.027178,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 107092.527178,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 116541.346076,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 116540.846076,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 116541.346076,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 116541.346076,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 116540.846076,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 116541.346076,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_DOTSMALL">
+            <path d="M -0.236220,1122.519685 A 0.236220,0.236220 0.0 0 0 0.236220,1122.519685 A 0.236220,0.236220 0.0 0 0 -0.236220,1122.519685 z" style="fill:none;stroke:#000000;stroke-linecap: round"/>
+        </symbol>
+        <symbol id="*D33">
+            <path style="fill:none;stroke:#000000" d="M 116541 -11933.4 L 116541 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 125990 -11933.4 L 125990 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 117486 -15217.7 L 125045 -15217.7"/>
+            <use xlink:href="#_DOTBLANK" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 116541 265412)"/>
+            <use xlink:href="#_DOTBLANK" style="stroke-width:0.002px" transform="matrix(250 0 0 250 125990 -295848)"/>
+            <text x="121265.505525" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 116541.346076,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 116540.846076,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 116541.346076,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 125990.164973,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 125989.664973,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 125990.164973,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 125990.164973,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 125989.664973,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 125990.164973,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_DOTBLANK">
+            <path d="M 1.889764,1122.519685 A 1.889764,1.889764 0.000000 0, 0 -1.889764,1122.519685 A 1.889764,1.889764 0.000000 0, 0 1.889764,1122.519685 z" style="fill:none;stroke:#000000;stroke-linecap: round"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -1.88976 1122.52 L -3.77953 1122.52"/>
+        </symbol>
+        <symbol id="*D35">
+            <path style="fill:none;stroke:#000000" d="M 125990 -11933.4 L 125990 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 135439 -11933.4 L 135439 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 125990 -15217.7 L 135439 -15217.7"/>
+            <use xlink:href="#_SMALL" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 125990 265412)"/>
+            <use xlink:href="#_SMALL" style="stroke-width:0.002px" transform="matrix(250 0 0 250 135439 -295848)"/>
+            <text x="130714.324422" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 125990.164973,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 125989.664973,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 125990.164973,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 135438.983871,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 135438.483871,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 135438.983871,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 135438.983871,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 135438.483871,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 135438.983871,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_SMALL">
+            <path d="M 0.944882,1122.519685 A 0.944882,0.944882 0.000000 0, 0 -0.944882,1122.519685 A 0.944882,0.944882 0.000000 0, 0 0.944882,1122.519685 z" style="fill:none;stroke:#000000;stroke-linecap: round"/>
+        </symbol>
+        <symbol id="*D37">
+            <path style="fill:none;stroke:#000000" d="M 135439 -11933.4 L 135439 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 144888 -11933.4 L 144888 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 136384 -15217.7 L 143943 -15217.7"/>
+            <use xlink:href="#_BOXBLANK" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 135439 265412)"/>
+            <use xlink:href="#_BOXBLANK" style="stroke-width:0.002px" transform="matrix(250 0 0 250 144888 -295848)"/>
+            <text x="140163.143320" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 135438.983871,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 135438.483871,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 135438.983871,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 144887.802769,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 144887.302769,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 144887.802769,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 144887.802769,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 144887.302769,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 144887.802769,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_BOXBLANK">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -1.88976 1124.41 L 1.88976 1124.41"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 1.88976 1124.41 L 1.88976 1120.63"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 1.88976 1120.63 L -1.88976 1120.63"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -1.88976 1120.63 L -1.88976 1124.41"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -1.88976 1122.52 L -3.77953 1122.52"/>
+        </symbol>
+        <symbol id="*D39">
+            <path style="fill:none;stroke:#000000" d="M 144888 -11933.4 L 144888 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 154336 -11933.4 L 154336 -15690.2"/>
+            <path style="fill:none;stroke:#000000" d="M 145832 -15217.7 L 153391 -15217.7"/>
+            <use xlink:href="#_BOXFILLED" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 144888 265412)"/>
+            <use xlink:href="#_BOXFILLED" style="stroke-width:0.002px" transform="matrix(250 0 0 250 154336 -295848)"/>
+            <text x="149611.962217" y="-16020.868912" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 144887.802769,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 144887.302769,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 144887.802769,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 154336.621666,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 154336.121666,-11697.205016 A 0.250000,0.250000 0.000000 0, 0 154336.621666,-11697.205016 z" style="fill:none;stroke:#000000"/>
+            <path d="M 154336.621666,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 154336.121666,-15217.719306 A 0.250000,0.250000 0.000000 0, 0 154336.621666,-15217.719306 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_BOXFILLED">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -1.88976 1120.63 L 1.88976 1120.63 L 1.88976 1124.41 z"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -1.88976 1122.52 L -3.77953 1122.52"/>
+        </symbol>
+        <symbol id="*D41">
+            <path style="fill:none;stroke:#000000" d="M 14642.2 -1881.89 L 14642.2 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 24091 -1881.89 L 24091 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 15587 -5166.19 L 23146.1 -5166.19"/>
+            <use xlink:href="#_DATUMBLANK" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 14642.2 275464)"/>
+            <use xlink:href="#_DATUMBLANK" style="stroke-width:0.002px" transform="matrix(250 0 0 250 24091 -285796)"/>
+            <text x="19366.571345" y="-5969.336950" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 14642.411896,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 14641.911896,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 14642.411896,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 24091.230794,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 24090.730794,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 24091.230794,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 24091.230794,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 24090.730794,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 24091.230794,-5166.187344 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_DATUMBLANK">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1120.34 L -3.77953 1122.52"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M -3.77953 1122.52 L 0 1124.7"/>
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1124.7 L 0 1120.34"/>
+        </symbol>
+        <symbol id="*D43">
+            <path style="fill:none;stroke:#000000" d="M 24091 -1881.89 L 24091 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 33539.8 -1881.89 L 33539.8 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 25035.9 -5166.19 L 32594.9 -5166.19"/>
+            <use xlink:href="#_DATUMFILLED" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 24091 275464)"/>
+            <use xlink:href="#_DATUMFILLED" style="stroke-width:0.002px" transform="matrix(250 0 0 250 33539.8 -285796)"/>
+            <text x="28815.390242" y="-5969.336950" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 24091.230794,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 24090.730794,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 24091.230794,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 33540.049691,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 33539.549691,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 33540.049691,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 33540.049691,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 33539.549691,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 33540.049691,-5166.187344 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_DATUMFILLED">
+            <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 0 1120.34 L -3.77953 1122.52 L 0 1124.7 z"/>
+        </symbol>
+        <symbol id="*D45">
+            <path style="fill:none;stroke:#000000" d="M 33539.8 -1881.89 L 33539.8 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 42988.6 -1881.89 L 42988.6 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 33539.8 -5166.19 L 42988.6 -5166.19"/>
+            <use xlink:href="#_INTEGRAL" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 33539.8 275464)"/>
+            <use xlink:href="#_INTEGRAL" style="stroke-width:0.002px" transform="matrix(250 0 0 250 42988.6 -285796)"/>
+            <text x="38264.209140" y="-5969.336950" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 33540.049691,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 33539.549691,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 33540.049691,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 42988.868589,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 42988.368589,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 42988.868589,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 42988.868589,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 42988.368589,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 42988.868589,-5166.187344 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_INTEGRAL">
+            <path d="M 1.324579,1121.185862 A 1.716535,1.716535 0.000000 0 0 0.002442,1122.507999" style="fill:none;stroke:#000000;stroke-linecap: round"/>
+            <path d="M -1.324579,1123.853508 A 1.716535,1.716535 0.000000 0 0 -0.002442,1122.531371" style="fill:none;stroke:#000000;stroke-linecap: round"/>
+        </symbol>
+        <symbol id="*D47">
+            <path style="fill:none;stroke:#000000" d="M 42988.6 -1881.89 L 42988.6 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 52437.4 -1881.89 L 52437.4 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 42988.6 -5166.19 L 52437.4 -5166.19"/>
+            <text x="47713.028038" y="-5969.336950" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">2500</tspan>
+            </text>
+            <path d="M 42988.868589,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 42988.368589,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 42988.868589,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 52437.687486,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 52437.187486,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 52437.687486,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 52437.687486,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 52437.187486,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 52437.687486,-5166.187344 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="_NONE"/>
+        <symbol id="*D49">
+            <path style="fill:none;stroke:#000000" d="M 55214.5 -1881.89 L 55214.5 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 60883.8 -1881.89 L 60883.8 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 56159.3 -5166.19 L 59938.9 -5166.19"/>
+            <path style="fill:none;stroke:#000000" d="M 60883.8 -5166.19 L 65702.6 -5166.19"/>
+            <use xlink:href="#_OPEN30" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 55214.5 275464)"/>
+            <use xlink:href="#_OPEN30" style="stroke-width:0.002px" transform="matrix(250 0 0 250 60883.8 -285796)"/>
+            <text x="63765.642034" y="-5969.336950" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">1500</tspan>
+            </text>
+            <path d="M 55214.710931,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 55214.210931,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 55214.710931,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 60884.002270,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 60883.502270,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 60884.002270,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 60884.002270,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 60883.502270,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 60884.002270,-5166.187344 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D50">
+            <path style="fill:none;stroke:#000000" d="M 72017.7 -1881.89 L 72017.7 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 73907.5 -1881.89 L 73907.5 -5638.63"/>
+            <path style="fill:none;stroke:#000000" d="M 71072.8 -5166.19 L 70127.9 -5166.19"/>
+            <path style="fill:none;stroke:#000000" d="M 74852.3 -5166.19 L 78915.3 -5166.19"/>
+            <path style="fill:none;stroke:#000000" d="M 72017.7 -5166.19 L 73907.5 -5166.19"/>
+            <use xlink:href="#_OPEN30" style="stroke-width:0.002px" transform="matrix(250 0 0 250 72017.7 -285796)"/>
+            <use xlink:href="#_OPEN30" style="stroke-width:0.002px" transform="matrix(-250 3.06162e-14 -3.06162e-14 -250 73907.5 275464)"/>
+            <text x="77356.274510" y="-5969.336950" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">500</tspan>
+            </text>
+            <path d="M 72017.941833,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 72017.441833,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 72017.941833,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 73907.705612,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 73907.205612,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 73907.705612,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 73907.705612,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 73907.205612,-5166.187344 A 0.250000,0.250000 0.000000 0, 0 73907.705612,-5166.187344 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D51">
+            <path style="fill:none;stroke:#000000" d="M 83040.9 -5302.68 L 85428.1 -5302.68"/>
+            <path style="fill:none;stroke:#000000" d="M 85428.1 -5302.68 L 85447 -1641.38"/>
+            <path style="fill:none;stroke:#000000" d="M 85447 -1641.38 L 91893.5 -1641.38"/>
+            <text x="88680.890771" y="-2210.674989" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">1638.24</tspan>
+            </text>
+            <path d="M 83038.780897,-5302.677165 A 0.250000,0.250000 0.000000 0, 0 83038.280897,-5302.677165 A 0.250000,0.250000 0.000000 0, 0 83038.780897,-5302.677165 z" style="fill:none;stroke:#000000"/>
+            <path d="M 85466.180141,-1641.383651 A 0.250000,0.250000 0.000000 0, 0 85465.680141,-1641.383651 A 0.250000,0.250000 0.000000 0, 0 85466.180141,-1641.383651 z" style="fill:none;stroke:#000000"/>
+            <path d="M 194.745437,889.113782 A 0.250000,0.250000 0.000000 0, 0 194.245437,889.113782 A 0.250000,0.250000 0.000000 0, 0 194.745437,889.113782 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D52">
+            <path style="fill:none;stroke:#000000" d="M 90428 -1457.24 L 90428 -5018.35"/>
+            <path style="fill:none;stroke:#000000" d="M 90428 -5018.35 L 95085.2 -5037.25"/>
+            <path style="fill:none;stroke:#000000" d="M 95085.2 -5037.25 L 95085.2 -12995.5"/>
+            <text x="94515.949758" y="-9027.013817" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (-90.000000 94515.949758 -9027.013817)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">26524.29</tspan>
+            </text>
+            <path d="M 90428.245049,-1454.878194 A 0.250000,0.250000 0.000000 0, 0 90427.745049,-1454.878194 A 0.250000,0.250000 0.000000 0, 0 90428.245049,-1454.878194 z" style="fill:none;stroke:#000000"/>
+            <path d="M 95085.491097,-5056.147675 A 0.250000,0.250000 0.000000 0, 0 95084.991097,-5056.147675 A 0.250000,0.250000 0.000000 0, 0 95085.491097,-5056.147675 z" style="fill:none;stroke:#000000"/>
+            <path d="M -9821.033967,1122.519685 A 0.250000,0.250000 0.000000 0, 0 -9821.533967,1122.519685 A 0.250000,0.250000 0.000000 0, 0 -9821.033967,1122.519685 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D53">
+            <path style="fill:none;stroke:#000000" d="M 128303 -72874.3 L 130893 -70284.4"/>
+            <path style="fill:none;stroke:#000000" d="M 141666 -86236.9 L 144256 -83647"/>
+            <path style="fill:none;stroke:#000000" d="M 131227 -71286.6 L 143253 -83313"/>
+            <path style="fill:none;stroke:#000000" d="M 131116 -71397.9 L 131338 -71175.2 L 130559 -70618.4 z"/>
+            <path style="fill:none;stroke:#000000" d="M 143142 -83424.3 L 143365 -83201.6 L 143922 -83981.1 z"/>
+            <text x="136672.272943" y="-77867.679048" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (-45.000000 136672.272943 -77867.679048)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">5000</tspan>
+            </text>
+            <path d="M 128136.223037,-73041.331121 A 0.250000,0.250000 0.000000 0, 0 128135.723037,-73041.331121 A 0.250000,0.250000 0.000000 0, 0 128136.223037,-73041.331121 z" style="fill:none;stroke:#000000"/>
+            <path d="M 141498.870870,-86403.978954 A 0.250000,0.250000 0.000000 0, 0 141498.370870,-86403.978954 A 0.250000,0.250000 0.000000 0, 0 141498.870870,-86403.978954 z" style="fill:none;stroke:#000000"/>
+            <path d="M 143921.759392,-83981.090432 A 0.250000,0.250000 0.000000 0, 0 143921.259392,-83981.090432 A 0.250000,0.250000 0.000000 0, 0 143921.759392,-83981.090432 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D54">
+            <path style="fill:none;stroke:#000000" d="M 137657 -90579.8 L 139969 -92891.7"/>
+            <path style="fill:none;stroke:#000000" d="M 141666 -86571 L 143978 -88882.9"/>
+            <path style="fill:none;stroke:#000000" d="M 140303 -91889.5 L 142975 -89217"/>
+            <path style="fill:none;stroke:#000000" d="M 140414 -92000.8 L 140191 -91778.1 L 139635 -92557.6 z"/>
+            <path style="fill:none;stroke:#000000" d="M 143087 -89328.3 L 142864 -89105.6 L 143643 -88548.8 z"/>
+            <text x="142206.984709" y="-91121.137143" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (45.000000 142206.984709 -91121.137143)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">1500</tspan>
+            </text>
+            <path d="M 137490.076520,-90412.773304 A 0.250000,0.250000 0.000000 0, 0 137489.576520,-90412.773304 A 0.250000,0.250000 0.000000 0, 0 137490.076520,-90412.773304 z" style="fill:none;stroke:#000000"/>
+            <path d="M 141498.870870,-86403.978954 A 0.250000,0.250000 0.000000 0, 0 141498.370870,-86403.978954 A 0.250000,0.250000 0.000000 0, 0 141498.870870,-86403.978954 z" style="fill:none;stroke:#000000"/>
+            <path d="M 143643.719351,-88548.827435 A 0.250000,0.250000 0.000000 0, 0 143643.219351,-88548.827435 A 0.250000,0.250000 0.000000 0, 0 143643.719351,-88548.827435 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D55">
+            <path style="fill:none;stroke:#000000" d="M 128737 -100549 L 128737 -96886.5"/>
+            <path style="fill:none;stroke:#000000" d="M 147634 -100549 L 147634 -96886.5"/>
+            <path style="fill:none;stroke:#000000" d="M 129682 -97359 L 146690 -97359"/>
+            <path style="fill:none;stroke:#000000" d="M 129682 -97516.5 L 129682 -97201.5 L 128737 -97359 z"/>
+            <path style="fill:none;stroke:#000000" d="M 146690 -97516.5 L 146690 -97201.5 L 147634 -97359 z"/>
+            <text x="138185.641149" y="-98162.132051" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">5000</tspan>
+            </text>
+            <path d="M 128737.072251,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 128736.572251,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 128737.072251,-100785.464253 z" style="fill:none;stroke:#000000"/>
+            <path d="M 147634.710046,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 147634.210046,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 147634.710046,-100785.464253 z" style="fill:none;stroke:#000000"/>
+            <path d="M 147634.710046,-97358.982445 A 0.250000,0.250000 0.000000 0, 0 147634.210046,-97358.982445 A 0.250000,0.250000 0.000000 0, 0 147634.710046,-97358.982445 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D56">
+            <path style="fill:none;stroke:#000000" d="M 147871 -106455 L 151140 -106455"/>
+            <path style="fill:none;stroke:#000000" d="M 147871 -100785 L 151140 -100785"/>
+            <path style="fill:none;stroke:#000000" d="M 150668 -105510 L 150668 -101730"/>
+            <path style="fill:none;stroke:#000000" d="M 150510 -105510 L 150825 -105510 L 150668 -106455 z"/>
+            <path style="fill:none;stroke:#000000" d="M 150510 -101730 L 150825 -101730 L 150668 -100785 z"/>
+            <text x="149864.584251" y="-103620.109923" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (-90.000000 149864.584251 -103620.109923)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">1500</tspan>
+            </text>
+            <path d="M 147634.710046,-106454.755592 A 0.250000,0.250000 0.000000 0, 0 147634.210046,-106454.755592 A 0.250000,0.250000 0.000000 0, 0 147634.710046,-106454.755592 z" style="fill:none;stroke:#000000"/>
+            <path d="M 147634.710046,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 147634.210046,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 147634.710046,-100785.464253 z" style="fill:none;stroke:#000000"/>
+            <path d="M 150667.983857,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 150667.483857,-100785.464253 A 0.250000,0.250000 0.000000 0, 0 150667.983857,-100785.464253 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D57">
+            <path style="fill:none;stroke:#000000" d="M 90708.7 -1538.23 L 90708.7 -5139.31"/>
+            <path style="fill:none;stroke:#000000" d="M 90708.7 -5139.31 L 94406.8 -5158.2"/>
+            <path style="fill:none;stroke:#000000" d="M 94406.8 -5158.2 L 94406.8 -9903.87"/>
+            <text x="93837.496204" y="-7541.668698" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" transform="rotate (-90.000000 93837.496204 -7541.668698)" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">24000</tspan>
+            </text>
+            <path d="M 90708.911417,-1535.863970 A 0.250000,0.250000 0.000000 0, 0 90708.411417,-1535.863970 A 0.250000,0.250000 0.000000 0, 0 90708.911417,-1535.863970 z" style="fill:none;stroke:#000000"/>
+            <path d="M 94407.037543,-5177.101769 A 0.250000,0.250000 0.000000 0, 0 94406.537543,-5177.101769 A 0.250000,0.250000 0.000000 0, 0 94407.037543,-5177.101769 z" style="fill:none;stroke:#000000"/>
+            <path d="M 0.250000,1122.519685 A 0.250000,0.250000 0.000000 0, 0 -0.250000,1122.519685 A 0.250000,0.250000 0.000000 0, 0 0.250000,1122.519685 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D58">
+            <path style="fill:none;stroke:#000000" d="M 96175 -1881.89 L 96175 -5600"/>
+            <path style="fill:none;stroke:#000000" d="M 99954.5 -1881.89 L 99954.5 -5600"/>
+            <path style="fill:none;stroke:#000000" d="M 97119.9 -5127.56 L 99009.6 -5127.56"/>
+            <path style="fill:none;stroke:#000000" d="M 99954.5 -5127.56 L 106474 -5127.56"/>
+            <path style="fill:none;stroke:#000000" d="M 97119.9 -5285.04 L 97119.9 -4970.08 L 96175 -5127.56 z"/>
+            <path style="fill:none;stroke:#000000" d="M 99009.6 -5285.04 L 99009.6 -4970.08 L 99954.5 -5127.56 z"/>
+            <text x="103686.783761" y="-5930.707699" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">&lt;1000&gt;</tspan>
+            </text>
+            <path d="M 96175.222737,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 96174.722737,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 96175.222737,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 99954.750296,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 99954.250296,-1645.673054 A 0.250000,0.250000 0.000000 0, 0 99954.750296,-1645.673054 z" style="fill:none;stroke:#000000"/>
+            <path d="M 99954.750296,-5127.558092 A 0.250000,0.250000 0.000000 0, 0 99954.250296,-5127.558092 A 0.250000,0.250000 0.000000 0, 0 99954.750296,-5127.558092 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*D59">
+            <path style="fill:none;stroke:#000000" d="M 82252.1 -1523.15 L 85076 -1523.15"/>
+            <path style="fill:none;stroke:#000000" d="M 85076 -1523.15 L 85094.9 -5153.01"/>
+            <path style="fill:none;stroke:#000000" d="M 85094.9 -5153.01 L 87761.9 -5153.01"/>
+            <text x="86439.032703" y="-5722.303102" style="font-size: 1133.858px; fill: #000000; font-family: Arial; text-anchor: middle" sodipodi:linespacing="125%">
+                <tspan sodipodi:role="line" dx="0.000000" dy="566.929134">700</tspan>
+            </text>
+            <path d="M 82249.980620,-1523.149606 A 0.250000,0.250000 0.000000 0, 0 82249.480620,-1523.149606 A 0.250000,0.250000 0.000000 0, 0 82249.980620,-1523.149606 z" style="fill:none;stroke:#000000"/>
+            <path d="M 85114.085853,-5153.011763 A 0.250000,0.250000 0.000000 0, 0 85113.585853,-5153.011763 A 0.250000,0.250000 0.000000 0, 0 85114.085853,-5153.011763 z" style="fill:none;stroke:#000000"/>
+            <path d="M 0.250000,1122.519685 A 0.250000,0.250000 0.000000 0, 0 -0.250000,1122.519685 A 0.250000,0.250000 0.000000 0, 0 0.250000,1122.519685 z" style="fill:none;stroke:#000000"/>
+        </symbol>
+        <symbol id="*X60">
+            <path style="fill:none;stroke:#000000" d="M 151490 -51333.8 L 153065 -52908.8"/>
+            <path style="fill:none;stroke:#000000" d="M 149793 -51333.8 L 153065 -54605.9"/>
+            <path style="fill:none;stroke:#000000" d="M 148096 -51333.8 L 153065 -56302.9"/>
+            <path style="fill:none;stroke:#000000" d="M 146399 -51333.8 L 153065 -58000"/>
+            <path style="fill:none;stroke:#000000" d="M 144702 -51333.8 L 152261 -58892.8"/>
+            <path style="fill:none;stroke:#000000" d="M 143005 -51333.8 L 150564 -58892.8"/>
+            <path style="fill:none;stroke:#000000" d="M 142299 -52325.3 L 148867 -58892.8"/>
+            <path style="fill:none;stroke:#000000" d="M 142299 -54022.3 L 147170 -58892.8"/>
+            <path style="fill:none;stroke:#000000" d="M 142299 -55719.4 L 145473 -58892.8"/>
+            <path style="fill:none;stroke:#000000" d="M 142299 -57416.5 L 143776 -58892.8"/>
+        </symbol>
+    </defs>
+    <g inkscape:groupmode="layer" inkscape:label="0">
+        <use xlink:href="#*D2" transform="translate(0 0)"/>
+        <use xlink:href="#*D3" transform="translate(0 0)"/>
+        <use xlink:href="#*D4" transform="translate(0 0)"/>
+        <use xlink:href="#*D5" transform="translate(0 0)"/>
+        <path style="fill:none;stroke:#000000" d="M 128136 -73041.3 L 142589 -73041.3"/>
+        <use xlink:href="#*D6" transform="translate(0 0)"/>
+        <path d="M 135233.310101,-55727.196876 A 6836.259508,6836.259508 0.000000 0, 0 121560.791085,-55727.196876 A 6836.259508,6836.259508 0.000000 0, 0 135233.310101,-55727.196876 z" style="fill:none;stroke:#000000"/>
+        <use xlink:href="#*D7" transform="translate(0 0)"/>
+        <use xlink:href="#*D8" transform="translate(0 0)"/>
+        <path d="M 135233.310101,-55727.196876 A 6836.259508,3779.527559 -0.000000 0, 0 121560.791085,-55727.196876 A 6836.259508,3779.527559 -0.000000 0, 0 135233.310101,-55727.196876 z" style="fill:none;stroke:#000000"/>
+        <path style="fill:none;stroke:#000000" d="M 121561 -40022.1 L 151797 -40022.1"/>
+        <path style="fill:none;stroke:#000000" d="M 121561 -43801.7 L 121561 -36242.6"/>
+        <path style="fill:none;stroke:#000000" d="M 125340 -43801.7 L 125340 -36242.6"/>
+        <path style="fill:none;stroke:#000000" d="M 129120 -43801.7 L 129120 -36242.6"/>
+        <path style="fill:none;stroke:#000000" d="M 121561 -43801.7 L 151797 -43801.7"/>
+        <path style="fill:none;stroke:#000000" d="M 121561 -36242.6 L 151797 -36242.6"/>
+        <path style="fill:none;stroke:#000000" d="M 132899 -43801.7 L 132899 -36242.6"/>
+        <path style="fill:none;stroke:#000000" d="M 136679 -43801.7 L 136679 -36242.6"/>
+        <path style="fill:none;stroke:#000000" d="M 140458 -43801.7 L 140458 -36242.6"/>
+        <path style="fill:none;stroke:#000000" d="M 144238 -43801.7 L 144238 -36242.6"/>
+        <path style="fill:none;stroke:#000000" d="M 151797 -43801.7 L 151797 -36242.6"/>
+        <path style="fill:none;stroke:#000000" d="M 148017 -43801.7 L 148017 -36242.6"/>
+        <path d="M 121560.791085,-40022.139408 C 122820.630682,-41911.903333 124080.470279,-43801.667258 125340.318644,-43801.666967 C 126600.167009,-43801.666676 127860.024143,-41911.902168 129119.846203,-40022.139408 C 130379.668263,-38132.376647 131639.455251,-36242.615632 132899.373762,-36242.611848 C 134159.292274,-36242.608065 135419.342310,-38132.361512 136678.901321,-40022.139408 C 137938.460333,-41911.917303 139197.528319,-43801.719648 140458.428880,-43801.666967 C 141719.329441,-43801.614285 142982.062576,-41911.706579 144237.956439,-40022.139408 C 145493.850302,-38132.572236 146742.904893,-36243.345601 148017.483998,-36242.611848 C 149261.126200,-36241.895906 150529.068878,-38039.109489 151797.011557,-39836.323073" style="fill:none;stroke:#000000"/>
+        <text x="121560.791085" y="-43801.666967" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;X&#131;v&#131;&#137;&#131;C&#131;&#147;&#139;&#200;&#144;&#252;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 121561 -32097.7 L 151797 -32097.7"/>
+        <path style="fill:none;stroke:#000000" d="M 121561 -24538.6 L 151630 -24538.6"/>
+        <path d="M 121560.791085,-24538.642496 L 129049.010667,-32097.697614 L 136678.901321,-24538.642496 L 144040.756713,-32097.697614 L 151630.076394,-24538.642496" style="fill:none;stroke:#000000"/>
+        <text x="121560.791085" y="-32097.697614" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;|&#131;&#138;&#131;&#137;&#131;C&#131;&#147;</tspan>
+        </text>
+        <path d="M 142299.155625,-58892.805805 L 153065.021375,-58892.805805 L 153065.021375,-51333.750686 L 142299.155625,-51333.750686 L 142299.155625,-58892.805805 z" style="fill:none;stroke:#000000"/>
+        <use xlink:href="#%2AX60" style="stroke-width:0.500px"/>
+        <text x="142299.155625" y="-61160.522340" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;n&#131;b&#131;`&#131;&#147;&#131;O</tspan>
+        </text>
+        <text x="142299.155625" y="-58892.805805" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">ANSI31</tspan>
+        </text>
+        <path d="M 138901.412761,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 138900.912761,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 138901.412761,-67584.460720 z" style="fill:none;stroke:#000000"/>
+        <path d="M 141716.823837,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 141716.323837,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 141716.823837,-67584.460720 z" style="fill:none;stroke:#000000"/>
+        <path d="M 144532.234913,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 144531.734913,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 144532.234913,-67584.460720 z" style="fill:none;stroke:#000000"/>
+        <path d="M 147347.645989,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 147347.145989,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 147347.645989,-67584.460720 z" style="fill:none;stroke:#000000"/>
+        <path d="M 150163.057065,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 150162.557065,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 150163.057065,-67584.460720 z" style="fill:none;stroke:#000000"/>
+        <text x="138901.162761" y="-68747.675360" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#147;_(&#144;&#226;&#145;&#206;&#146;P&#136;&#202;300)</tspan>
+        </text>
+        <path d="M 152978.468141,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 152977.968141,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 152978.468141,-67584.460720 z" style="fill:none;stroke:#000000"/>
+        <path d="M 155793.879217,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 155793.379217,-67584.460720 A 0.250000,0.250000 0.000000 0, 0 155793.879217,-67584.460720 z" style="fill:none;stroke:#000000"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -48707.2 L 49004.7 -48707.2"/>
+        <path style="fill:none;stroke:#000000" d="M 67048.3 -87761.4 L 67048.3 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 67048.3 -87761.4 L 67048.3 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 67048.3 -87761.4 L 70827.8 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 60270.4 -78570.5 L 60270.4 -55578.9"/>
+        <path style="fill:none;stroke:#000000" d="M 67666.1 -61184.7 L 71445.6 -61184.7"/>
+        <path style="fill:none;stroke:#000000" d="M 107464 -44491.7 L 109354 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 107464 -78570.5 L 109354 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 103685 -78570.5 L 105575 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 99905.4 -78570.5 L 101795 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 96125.9 -78570.5 L 98015.7 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 96125.9 -44617.7 L 98015.7 -44617.7"/>
+        <path style="fill:none;stroke:#000000" d="M 92346.4 -78570.5 L 94236.1 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 103685 -44617.7 L 105575 -44617.7"/>
+        <path style="fill:none;stroke:#000000" d="M 111244 -42350 L 113134 -42350"/>
+        <path style="fill:none;stroke:#000000" d="M 111244 -78570.5 L 113134 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 99905.4 -78570.5 L 101795 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 99905.4 -42224 L 101795 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 92346.4 -42224 L 94236.1 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 92346.4 -78570.5 L 94236.1 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 92346.4 -78570.5 L 94236.1 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 88566.8 -44491.7 L 90456.6 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 88566.8 -78570.5 L 90456.6 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 84787.3 -42224 L 86677.1 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 84787.3 -78570.5 L 86677.1 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 84787.3 -78570.5 L 86677.1 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 84787.3 -78570.5 L 86677.1 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 81007.8 -44491.7 L 82897.5 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 81007.8 -78570.5 L 82897.5 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 77228.3 -42224 L 79118 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 77228.3 -78570.5 L 79118 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 77228.3 -78570.5 L 79118 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 73448.7 -44491.7 L 75338.5 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 73448.7 -78570.5 L 75338.5 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 118803 -49594.1 L 120693 -49594.1"/>
+        <path style="fill:none;stroke:#000000" d="M 118803 -78570.5 L 120693 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 115338 -40082.3 L 116598 -40082.3"/>
+        <path style="fill:none;stroke:#000000" d="M 115338 -78570.5 L 116598 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 116152 -27287.9 L 110483 -37107.4"/>
+        <path style="fill:none;stroke:#000000" d="M 116152 -27287.9 L 104814 -27287.9"/>
+        <path style="fill:none;stroke:#000000" d="M 104814 -27287.9 L 110483 -37107.4"/>
+        <path style="fill:none;stroke:#000000" d="M 104814 -34652.5 L 110483 -24833"/>
+        <path style="fill:none;stroke:#000000" d="M 104814 -34652.5 L 116152 -34652.5"/>
+        <path style="fill:none;stroke:#000000" d="M 116152 -34652.5 L 110483 -24833"/>
+        <text x="103468.290597" y="-37550.657264" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;O&#131;&#139;&#129;[&#131;v&#144;}&#140;`</tspan>
+        </text>
+        <text x="88606.732289" y="-37550.657264" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;u&#131;&#141;&#131;b&#131;N&#144;}&#140;`</tspan>
+        </text>
+        <use xlink:href="#NONAME" style="stroke-width:0.833px" transform="matrix(0.6 0 0 0.6 46109.3 -16592.8)"/>
+        <path style="fill:none;stroke:#000000" d="M 151797 -32097.7 L 151797 -24538.6"/>
+        <path style="fill:none;stroke:#000000" d="M 144041 -32097.7 L 144041 -24538.6"/>
+        <path style="fill:none;stroke:#000000" d="M 136679 -24538.6 L 136679 -32097.7"/>
+        <path style="fill:none;stroke:#000000" d="M 129049 -32097.7 L 129049 -24538.6"/>
+        <path style="fill:none;stroke:#000000" d="M 121561 -32097.7 L 121561 -24538.6"/>
+        <use xlink:href="#*D10" transform="translate(0 0)"/>
+        <use xlink:href="#*D12" transform="translate(0 0)"/>
+        <text x="2588.340170" y="-19724.980266" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#147;h&#130;&#232;&#130;&#194;&#130;&#212;&#130;&#181;</tspan>
+        </text>
+        <text x="5926.922847" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#150;&#238;&#136;&#243;</tspan>
+        </text>
+        <text x="14241.883477" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#139;&#243;&#150;&#238;&#136;&#243;</tspan>
+        </text>
+        <use xlink:href="#*D14" transform="translate(0 0)"/>
+        <text x="23627.710249" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#149;&#194;&#150;&#238;&#136;&#243;</tspan>
+        </text>
+        <use xlink:href="#*D15" transform="translate(0 0)"/>
+        <text x="34210.387414" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#141;&#149;&#138;&#219;</tspan>
+        </text>
+        <text x="43596.214186" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">(&#145;&#190;)</tspan>
+        </text>
+        <use xlink:href="#*D17" transform="translate(0 0)"/>
+        <text x="50903.300800" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;e&#131;B&#131;b&#131;N</tspan>
+        </text>
+        <use xlink:href="#*D19" transform="translate(0 0)"/>
+        <text x="41454.481902" y="-19486.844307" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;e&#131;B&#131;b&#131;N</tspan>
+        </text>
+        <use xlink:href="#*D21" transform="translate(0 0)"/>
+        <text x="61422.985839" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#138;J&#150;&#238;&#136;&#243;</tspan>
+        </text>
+        <use xlink:href="#*D23" transform="translate(0 0)"/>
+        <text x="71312.749619" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#148;&#146;&#138;&#219;1</tspan>
+        </text>
+        <use xlink:href="#*D25" transform="translate(0 0)"/>
+        <text x="80446.607887" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#148;&#146;&#138;&#219;2</tspan>
+        </text>
+        <use xlink:href="#*D27" transform="translate(0 0)"/>
+        <text x="88698.576391" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#146;&#188;&#138;p&#150;&#238;&#136;&#243;</tspan>
+        </text>
+        <use xlink:href="#*D29" transform="translate(0 0)"/>
+        <text x="97548.970091" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">30&#129;&#139;&#150;&#238;&#136;&#243;</tspan>
+        </text>
+        <text x="108667.080328" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#143;&#172;&#141;&#149;&#138;&#219;</tspan>
+        </text>
+        <use xlink:href="#*D31" transform="translate(0 0)"/>
+        <use xlink:href="#*D33" transform="translate(0 0)"/>
+        <text x="118115.899225" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#139;&#243;&#148;&#146;&#138;&#219;</tspan>
+        </text>
+        <use xlink:href="#*D35" transform="translate(0 0)"/>
+        <text x="126430.859855" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#143;&#172;&#139;&#243;&#148;&#146;&#138;&#219;</tspan>
+        </text>
+        <text x="138147.395288" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#142;l&#138;p</tspan>
+        </text>
+        <use xlink:href="#*D37" transform="translate(0 0)"/>
+        <text x="147596.214186" y="-17471.349786" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#142;l&#138;p</tspan>
+        </text>
+        <use xlink:href="#*D39" transform="translate(0 0)"/>
+        <text x="144320.623635" y="-19361.113565" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#147;h&#130;&#232;&#130;&#194;&#130;&#212;&#130;&#181;</tspan>
+        </text>
+        <use xlink:href="#*D41" transform="translate(0 0)"/>
+        <text x="15146.098904" y="-7047.626650" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;f&#129;[&#131;^&#131;&#128;</tspan>
+        </text>
+        <text x="17476.807565" y="-9090.493374" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#139;&#243;&#148;&#146;</tspan>
+        </text>
+        <text x="24594.917801" y="-7047.626650" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;f&#129;[&#131;^&#131;&#128;</tspan>
+        </text>
+        <use xlink:href="#*D43" transform="translate(0 0)"/>
+        <text x="23524.051660" y="-9090.493374" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#147;h&#130;&#232;&#130;&#194;&#130;&#212;&#130;&#181;</tspan>
+        </text>
+        <use xlink:href="#*D45" transform="translate(0 0)"/>
+        <text x="36248.461108" y="-7047.626650" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#148;g&#140;`</tspan>
+        </text>
+        <use xlink:href="#*D47" transform="translate(0 0)"/>
+        <text x="45823.264258" y="-7047.626650" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;&#200;&#130;&#181;</tspan>
+        </text>
+        <use xlink:href="#*D49" transform="translate(0 0)"/>
+        <use xlink:href="#*D50" transform="translate(0 0)"/>
+        <text x="53742.698622" y="-7047.626650" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#138;O&#140;&#252;&#130;&#171;&#130;&#204;&#150;&#238;&#136;&#243;</tspan>
+        </text>
+        <text x="68176.613037" y="-7047.626650" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#147;&#224;&#140;&#252;&#130;&#171;&#130;&#204;&#150;&#238;&#136;&#243;</tspan>
+        </text>
+        <text x="83770.585758" y="-7047.626650" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#141;&#192;&#149;W&#144;&#161;&#150;@</tspan>
+        </text>
+        <use xlink:href="#*D53" transform="translate(0 0)"/>
+        <use xlink:href="#*D54" transform="translate(0 0)"/>
+        <use xlink:href="#*D55" transform="translate(0 0)"/>
+        <use xlink:href="#*D56" transform="translate(0 0)"/>
+        <text x="75981.825620" y="-37550.657264" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;&#138;&#129;[&#131;W&#131;&#135;&#131;&#147;</tspan>
+        </text>
+        <text x="97636.531120" y="-7047.626650" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#143;&#227;&#143;&#145;&#130;&#171;</tspan>
+        </text>
+        <text x="96439.680727" y="-8937.390429" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#144;&#161;&#150;@&#146;l&#130;&#204;</tspan>
+        </text>
+    </g>
+    <g inkscape:groupmode="layer" inkscape:label="1">
+        <path d="M 124127.178687,-77050.125471 L 137489.826520,-90412.773304 L 141498.620870,-86403.978954 L 128135.973037,-73041.331121 L 124127.178687,-77050.125471 z" style="fill:none;stroke:#000000"/>
+        <use xlink:href="#%2AU1" style="stroke-width:0.500px" transform="translate(194.495, -233.406)"/>
+        <text x="156.700161" y="926.909058" style="font-size: 3779.528px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">A3 1/100</tspan>
+        </text>
+        <text x="3155.269304" y="-29237.928626" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">DOT</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -44356 L 29232.6 -44356"/>
+        <text x="3155.269304" y="-44356.038862" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">ByLayer(CONTINUOUS)</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000;stroke-linecap:round" d="M 3155.27 -40576.5 L 29232.6 -40576.5"/>
+        <text x="3155.269304" y="-40576.511303" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">CONTINUOUS</tspan>
+        </text>
+        <text x="3155.269304" y="-36796.983744" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">DASHDOT</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000;stroke-dasharray:11338.5827,3401.5748,944.8819,3401.5748," d="M 3155.27 -36797 L 29232.6 -36797"/>
+        <path style="fill:none;stroke:#000000;stroke-dasharray:11338.5827,3401.5748,944.8819,1889.7638,944.8819,3401.5748," d="M 3155.27 -33017.5 L 29232.6 -33017.5"/>
+        <text x="3155.269304" y="-33017.456185" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">DIVIDE</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000;stroke-dasharray:2267.7165,755.9055," d="M 3155.27 -29237.9 L 29232.6 -29237.9"/>
+        <path style="fill:none;stroke:#000000;stroke-dasharray:3174.8031,1587.4016," d="M 3155.27 -25458.4 L 29232.6 -25458.4"/>
+        <text x="3155.269304" y="-25458.401067" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">HIDDEN</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 59374.4 -107407 L 59374.4 -90275"/>
+        <path style="fill:none;stroke:#000000" d="M 64692 -107407 L 64692 -90275"/>
+        <text x="64691.952155" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (90.000000 64691.952155 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="1889.763780">&#130;Q&#141;s&#130;&#204;</tspan>
+            <tspan sodipodi:role="line" x="64691.9521547686" dy="1889.763780">&#131;}&#131;&#139;&#131;`&#131;e&#131;L&#131;X&#131;g</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 64692 -107407 L 59374.4 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 59374.4 -90275 L 64692 -90275"/>
+        <text x="31872.418153" y="-44356.038862" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">ByLayer(White/Black)</tspan>
+        </text>
+        <path style="fill:none;stroke:#FF0000" d="M 31872.4 -40576.5 L 57949.7 -40576.5"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -44356 L 57949.7 -44356"/>
+        <path style="fill:none;stroke:#FFFF00" d="M 31872.4 -36797 L 57949.7 -36797"/>
+        <path style="fill:none;stroke:#00FF00" d="M 31872.4 -33017.5 L 57949.7 -33017.5"/>
+        <path style="fill:none;stroke:#00FFFF" d="M 31872.4 -29237.9 L 57949.7 -29237.9"/>
+        <path style="fill:none;stroke:#66CC99" d="M 31872.4 -25458.4 L 57949.7 -25458.4"/>
+        <text x="31872.418153" y="-36796.983744" style="font-size: 1889.764px; fill: #FFFF00; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">Yellow</tspan>
+        </text>
+        <text x="31872.418153" y="-25458.401067" style="font-size: 1889.764px; fill: #66CC99; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;p&#131;&#140;&#131;b&#131;g113</tspan>
+        </text>
+        <text x="31872.418153" y="-29237.928626" style="font-size: 1889.764px; fill: #00FFFF; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">Cyan</tspan>
+        </text>
+        <text x="31872.418153" y="-33017.456185" style="font-size: 1889.764px; fill: #00FF00; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">Green</tspan>
+        </text>
+        <text x="31872.418153" y="-40576.511303" style="font-size: 1889.764px; fill: #FF0000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">Red</tspan>
+        </text>
+        <text x="99287.615937" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 99287.615937 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#143;&#227;&#146;&#134;&#144;S</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 70827.8 -87761.4 L 70827.8 -107407"/>
+        <text x="67048.304879" y="-107407.277677" style="font-size: 3779.528px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 67048.304879 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#149;&#157;&#130;&#240;&#138;m&#148;F</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 67048.3 -107407 L 67048.3 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 74720.7 -107407 L 74720.7 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -107407 L 72830.9 -87761.4"/>
+        <text x="72830.923023" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 72830.923023 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#137;E&#137;&#186;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -107407 L 76610.5 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 78500.2 -107407 L 78500.2 -85305.7"/>
+        <text x="76610.450582" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 76610.450582 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#137;&#186;&#146;&#134;&#144;S</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 80390 -107407 L 80390 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 82279.7 -107407 L 82279.7 -87761.4"/>
+        <text x="80389.978141" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 80389.978141 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#141;&#182;&#137;&#186;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 86059.3 -107407 L 86059.3 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -107407 L 84169.5 -85305.7"/>
+        <text x="84169.505701" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 84169.505701 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#137;E&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 89838.8 -107407 L 89838.8 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -107407 L 87949 -87761.4"/>
+        <text x="87949.033260" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 87949.033260 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 93618.3 -107407 L 93618.3 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -107407 L 91728.6 -85305.7"/>
+        <text x="91728.560819" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 91728.560819 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#141;&#182;&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -107407 L 95508.1 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 97397.9 -107407 L 97397.9 -87761.4"/>
+        <text x="95508.088378" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 95508.088378 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#137;E&#143;&#227;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -107407 L 99287.6 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 101177 -107407 L 101177 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 67048.3 -107407 L 70827.8 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -107407 L 74720.7 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -107407 L 78500.2 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -107407 L 82279.7 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -107407 L 93618.3 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -107407 L 89838.8 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -107407 L 86059.3 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -107407 L 97397.9 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -107407 L 101177 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -104952 L 74720.7 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -102496 L 74720.7 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -100040 L 74720.7 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -97584.3 L 74720.7 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -95128.6 L 74720.7 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -102496 L 78500.2 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -104952 L 78500.2 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -100040 L 78500.2 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -102496 L 82279.7 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -104952 L 82279.7 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -100040 L 82279.7 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -97584.3 L 78500.2 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -95128.6 L 78500.2 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -97584.3 L 82279.7 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -95128.6 L 82279.7 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -92672.9 L 72830.9 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -92672.9 L 74720.7 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -90217.1 L 72830.9 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -90217.1 L 74720.7 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -87761.4 L 72830.9 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 72830.9 -87761.4 L 74720.7 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -92672.9 L 78500.2 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -90217.1 L 78500.2 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -92672.9 L 76610.5 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -90217.1 L 76610.5 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -87761.4 L 78500.2 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -87761.4 L 76610.5 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -92672.9 L 82279.7 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -90217.1 L 82279.7 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -92672.9 L 80390 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -90217.1 L 80390 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -87761.4 L 82279.7 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 80390 -87761.4 L 80390 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -85305.7 L 78500.2 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 76610.5 -85305.7 L 76610.5 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -95128.6 L 93618.3 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -97584.3 L 93618.3 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -100040 L 93618.3 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -102496 L 93618.3 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -104952 L 93618.3 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -100040 L 89838.8 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -102496 L 89838.8 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -104952 L 89838.8 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -102496 L 86059.3 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -104952 L 86059.3 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -100040 L 86059.3 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -95128.6 L 89838.8 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -97584.3 L 89838.8 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -97584.3 L 86059.3 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -95128.6 L 86059.3 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -100040 L 97397.9 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -102496 L 97397.9 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -104952 L 97397.9 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -104952 L 101177 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -102496 L 101177 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -100040 L 101177 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -95128.6 L 97397.9 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -97584.3 L 97397.9 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -97584.3 L 101177 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -95128.6 L 101177 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -85305.7 L 93618.3 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -87761.4 L 93618.3 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -90217.1 L 93618.3 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -92672.9 L 93618.3 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -87761.4 L 89838.8 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -90217.1 L 89838.8 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -92672.9 L 89838.8 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -90217.1 L 86059.3 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -92672.9 L 86059.3 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -92672.9 L 84169.5 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -90217.1 L 84169.5 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -92672.9 L 87949 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -90217.1 L 87949 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -87761.4 L 86059.3 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -87761.4 L 84169.5 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 87949 -87761.4 L 87949 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -92672.9 L 91728.6 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -90217.1 L 91728.6 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -87761.4 L 91728.6 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -85305.7 L 86059.3 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 84169.5 -85305.7 L 84169.5 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 91728.6 -85305.7 L 91728.6 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -87761.4 L 97397.9 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -90217.1 L 97397.9 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -92672.9 L 97397.9 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -92672.9 L 95508.1 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -90217.1 L 95508.1 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 95508.1 -87761.4 L 95508.1 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -92672.9 L 99287.6 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -92672.9 L 101177 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -90217.1 L 99287.6 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -90217.1 L 101177 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -87761.4 L 99287.6 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -87761.4 L 101177 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -85305.7 L 99287.6 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 99287.6 -85305.7 L 101177 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 114406 -107407 L 114406 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 116295 -107407 L 116295 -85305.7"/>
+        <text x="114405.726173" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 114405.726173 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#131;t&#131;B&#131;b&#131;g</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 104957 -107407 L 104957 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -107407 L 103067 -87761.4"/>
+        <text x="103067.143496" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 103067.143496 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#141;&#182;&#143;&#227;</tspan>
+        </text>
+        <text x="106822.689281" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 106822.689281 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 108736 -107407 L 108736 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -107407 L 106847 -87761.4"/>
+        <text x="110626.198614" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 110626.198614 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#137;E&#138;&#241;&#130;&#185;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 112516 -107407 L 112516 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -107407 L 110626 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 120075 -107407 L 120075 -92672.9"/>
+        <text x="118185.253732" y="-107407.277677" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-270.000000 118185.253732 -107407.277677)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 118185 -107407 L 118185 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 118185 -107407 L 120075 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -107407 L 104957 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -107407 L 108736 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 114406 -107407 L 116295 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -107407 L 112516 -107407"/>
+        <path style="fill:none;stroke:#000000" d="M 118185 -95128.6 L 120075 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 118185 -97584.3 L 120075 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 118185 -100040 L 120075 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 118185 -92672.9 L 120075 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 118185 -102496 L 120075 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 118185 -104952 L 120075 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -102496 L 104957 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -104952 L 104957 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -100040 L 104957 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -102496 L 108736 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -104952 L 108736 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -100040 L 108736 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -97584.3 L 104957 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -95128.6 L 104957 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -97584.3 L 108736 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -95128.6 L 108736 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -102496 L 112516 -102496"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -104952 L 112516 -104952"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -100040 L 112516 -100040"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -97584.3 L 112516 -97584.3"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -95128.6 L 112516 -95128.6"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -90217.1 L 104957 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -92672.9 L 104957 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -92672.9 L 103067 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -90217.1 L 103067 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -87761.4 L 104957 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 103067 -87761.4 L 103067 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -92672.9 L 108736 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -90217.1 L 108736 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -92672.9 L 106847 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -90217.1 L 106847 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -87761.4 L 108736 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 106847 -87761.4 L 106847 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -90217.1 L 112516 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -92672.9 L 112516 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -92672.9 L 110626 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -90217.1 L 110626 -90217.1"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -87761.4 L 112516 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -87761.4 L 110626 -87761.4"/>
+        <path style="fill:none;stroke:#000000" d="M 118185 -92672.9 L 118185 -92672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 114406 -85305.7 L 116295 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -85305.7 L 112516 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 110626 -85305.7 L 110626 -85305.7"/>
+        <path style="fill:none;stroke:#000000" d="M 114406 -85305.7 L 114406 -85305.7"/>
+        <text x="126510.380959" y="-75671.269192" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-45.000000 126510.380959 -75671.269192)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#142;l&#138;p&#140;`&#130;&#198;&#146;&#183;&#130;&#179;&#144;&#161;&#150;@</tspan>
+        </text>
+        <path d="M 128736.822251,-106454.755592 L 147634.460046,-106454.755592 L 147634.460046,-100785.464253 L 128736.822251,-100785.464253 L 128736.822251,-106454.755592 z" style="fill:none;stroke:#000000"/>
+        <text x="3155.269304" y="-84562.698614" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#137;E&#143;&#227;</tspan>
+        </text>
+        <text x="3155.269304" y="-80783.171055" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#141;&#182;&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -80783.2 L 25256.8 -80783.2"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -82672.9 L 25256.8 -82672.9"/>
+        <text x="3155.269304" y="-77003.643496" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -77003.6 L 22801.1 -77003.6"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -78893.4 L 22801.1 -78893.4"/>
+        <text x="3155.269304" y="-73224.115937" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#137;E&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -73224.1 L 25256.8 -73224.1"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -75113.9 L 25256.8 -75113.9"/>
+        <text x="3155.269304" y="-69444.588378" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#141;&#182;&#137;&#186;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -71334.4 L 22801.1 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -69444.6 L 22801.1 -69444.6"/>
+        <text x="3155.269304" y="-65665.060819" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#137;&#186;&#146;&#134;&#144;S</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -67554.8 L 25256.8 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -65665.1 L 25256.8 -65665.1"/>
+        <text x="3155.269304" y="-61885.533260" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#137;E&#137;&#186;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -61885.5 L 22801.1 -61885.5"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -63775.3 L 22801.1 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -56102.9 L 27712.6 -56102.9"/>
+        <text x="3155.269304" y="-56102.915115" style="font-size: 3779.528px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#141;&#130;&#130;&#179;&#130;&#240;&#138;m&#148;F</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 27712.6 -59882.4 L 3155.27 -59882.4"/>
+        <text x="3155.269304" y="-53746.562391" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="1889.763780">2&#141;s&#130;&#204;</tspan>
+            <tspan sodipodi:role="line" x="3155.2693040415033" dy="1889.763780">&#131;}&#131;&#139;&#131;`&#131;e&#131;L&#131;X&#131;g</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -53746.6 L 20287.5 -53746.6"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -48429 L 20287.5 -48429"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -61885.5 L 3155.27 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -53746.6 L 3155.27 -48429"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -56102.9 L 3155.27 -59882.4"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -73224.1 L 3155.27 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -65665.1 L 3155.27 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -69444.6 L 3155.27 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -77003.6 L 3155.27 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -80783.2 L 3155.27 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -61885.5 L 22801.1 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -61885.5 L 20345.4 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -61885.5 L 17889.7 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -61885.5 L 15433.9 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -61885.5 L 12978.2 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -61885.5 L 10522.5 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -61885.5 L 8066.74 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -61885.5 L 5611 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 20287.5 -48429 L 20287.5 -53746.6"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -61885.5 L 17889.7 -61885.5"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -61885.5 L 20345.4 -61885.5"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -61885.5 L 22801.1 -61885.5"/>
+        <path style="fill:none;stroke:#000000" d="M 27712.6 -56102.9 L 27712.6 -59882.4"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -73224.1 L 15433.9 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -73224.1 L 12978.2 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -73224.1 L 10522.5 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -73224.1 L 5611 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -73224.1 L 8066.74 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -65665.1 L 5611 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -65665.1 L 8066.74 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -65665.1 L 10522.5 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -69444.6 L 5611 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -69444.6 L 8066.74 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -69444.6 L 10522.5 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -65665.1 L 12978.2 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -65665.1 L 15433.9 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -69444.6 L 12978.2 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -69444.6 L 15433.9 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -77003.6 L 5611 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -77003.6 L 8066.74 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -77003.6 L 10522.5 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -80783.2 L 5611 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -80783.2 L 8066.74 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -80783.2 L 10522.5 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -77003.6 L 12978.2 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -77003.6 L 15433.9 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -80783.2 L 12978.2 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -80783.2 L 15433.9 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -73224.1 L 25256.8 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -73224.1 L 22801.1 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -73224.1 L 17889.7 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -73224.1 L 20345.4 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -65665.1 L 17889.7 -65665.1"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -65665.1 L 17889.7 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -65665.1 L 20345.4 -65665.1"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -65665.1 L 20345.4 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -65665.1 L 22801.1 -65665.1"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -65665.1 L 22801.1 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -69444.6 L 20345.4 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -69444.6 L 17889.7 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -69444.6 L 17889.7 -69444.6"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -69444.6 L 20345.4 -69444.6"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -73224.1 L 17889.7 -73224.1"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -73224.1 L 20345.4 -73224.1"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -69444.6 L 22801.1 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -69444.6 L 22801.1 -69444.6"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -73224.1 L 22801.1 -73224.1"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -65665.1 L 25256.8 -65665.1"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -65665.1 L 25256.8 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -73224.1 L 25256.8 -73224.1"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -77003.6 L 17889.7 -77003.6"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -77003.6 L 17889.7 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -77003.6 L 20345.4 -77003.6"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -77003.6 L 20345.4 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -77003.6 L 22801.1 -77003.6"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -77003.6 L 22801.1 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -80783.2 L 17889.7 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -80783.2 L 20345.4 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -80783.2 L 17889.7 -80783.2"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -80783.2 L 20345.4 -80783.2"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -80783.2 L 22801.1 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -80783.2 L 22801.1 -80783.2"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -80783.2 L 25256.8 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -80783.2 L 25256.8 -80783.2"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -107240 L 17889.7 -107240"/>
+        <text x="3155.269304" y="-107239.863968" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -109130 L 17889.7 -109130"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -99680.8 L 25256.8 -99680.8"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -101571 L 25256.8 -101571"/>
+        <text x="3155.269304" y="-99680.808850" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#137;E&#138;&#241;&#130;&#185;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -95901.3 L 22801.1 -95901.3"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -97791 L 22801.1 -97791"/>
+        <text x="3155.269304" y="-95906.077646" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <text x="3155.269304" y="-92121.753732" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#141;&#182;&#143;&#227;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -92121.8 L 22801.1 -92121.8"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -94011.5 L 22801.1 -94011.5"/>
+        <text x="3155.269304" y="-103460.336409" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#131;t&#131;B&#131;b&#131;g</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -105350 L 25256.8 -105350"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -103460 L 25256.8 -103460"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -90232 L 25256.8 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -88342.2 L 25256.8 -88342.2"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -86452.5 L 22801.1 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -84562.7 L 22801.1 -84562.7"/>
+        <text x="3155.269304" y="-88342.226173" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#130;l&#130;r&#131;S&#131;V&#131;b&#131;N&#143;&#227;&#146;&#134;&#144;S</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -88342.2 L 3155.27 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -84562.7 L 3155.27 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -92121.8 L 3155.27 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -99680.8 L 3155.27 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -95901.3 L 3155.27 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -103460 L 3155.27 -105350"/>
+        <path style="fill:none;stroke:#000000" d="M 3155.27 -107240 L 3155.27 -109130"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -88342.2 L 10522.5 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -88342.2 L 8066.74 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -88342.2 L 5611 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -84562.7 L 5611 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -84562.7 L 8066.74 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -84562.7 L 10522.5 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -92121.8 L 5611 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -92121.8 L 8066.74 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -92121.8 L 10522.5 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -88342.2 L 15433.9 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -88342.2 L 12978.2 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -84562.7 L 12978.2 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -84562.7 L 15433.9 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -92121.8 L 12978.2 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -92121.8 L 15433.9 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -99680.8 L 10522.5 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -99680.8 L 5611 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -99680.8 L 8066.74 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -95901.3 L 5611 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -95901.3 L 8066.74 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -95901.3 L 10522.5 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -99680.8 L 15433.9 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -99680.8 L 12978.2 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -95901.3 L 12978.2 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -95901.3 L 15433.9 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -88342.2 L 22801.1 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -88342.2 L 20345.4 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -88342.2 L 17889.7 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -84562.7 L 17889.7 -84562.7"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -84562.7 L 17889.7 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -84562.7 L 20345.4 -84562.7"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -84562.7 L 20345.4 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -88342.2 L 17889.7 -88342.2"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -88342.2 L 20345.4 -88342.2"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -84562.7 L 22801.1 -84562.7"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -84562.7 L 22801.1 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -88342.2 L 22801.1 -88342.2"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -92121.8 L 17889.7 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -92121.8 L 20345.4 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -92121.8 L 17889.7 -92121.8"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -92121.8 L 20345.4 -92121.8"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -92121.8 L 22801.1 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -92121.8 L 22801.1 -92121.8"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -88342.2 L 25256.8 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -88342.2 L 25256.8 -88342.2"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -99680.8 L 22801.1 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -99680.8 L 17889.7 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -99680.8 L 20345.4 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -95901.3 L 17889.7 -95901.3"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -95901.3 L 17889.7 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -95901.3 L 20345.4 -95901.3"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -95901.3 L 20345.4 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -99680.8 L 17889.7 -99680.8"/>
+        <path style="fill:none;stroke:#000000" d="M 20345.4 -99680.8 L 20345.4 -99680.8"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -95901.3 L 22801.1 -95901.3"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -95901.3 L 22801.1 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 22801.1 -99680.8 L 22801.1 -99680.8"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -99680.8 L 25256.8 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -99680.8 L 25256.8 -99680.8"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -103460 L 25256.8 -105350"/>
+        <path style="fill:none;stroke:#000000" d="M 25256.8 -103460 L 25256.8 -103460"/>
+        <path style="fill:none;stroke:#000000" d="M 5611 -107240 L 5611 -109130"/>
+        <path style="fill:none;stroke:#000000" d="M 8066.74 -107240 L 8066.74 -109130"/>
+        <path style="fill:none;stroke:#000000" d="M 10522.5 -107240 L 10522.5 -109130"/>
+        <path style="fill:none;stroke:#000000" d="M 12978.2 -107240 L 12978.2 -109130"/>
+        <path style="fill:none;stroke:#000000" d="M 15433.9 -107240 L 15433.9 -109130"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -107240 L 17889.7 -107240"/>
+        <path style="fill:none;stroke:#000000" d="M 17889.7 -107240 L 17889.7 -109130"/>
+        <text x="31872.418153" y="-84562.698614" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#137;E&#143;&#227;</tspan>
+        </text>
+        <text x="31872.418153" y="-80783.171055" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#141;&#182;&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -82672.9 L 57699.2 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -80783.2 L 57699.2 -80783.2"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -77003.6 L 55431.5 -77003.6"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -78893.4 L 55431.5 -78893.4"/>
+        <text x="31872.418153" y="-77003.643496" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -73224.1 L 57699.2 -73224.1"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -75113.9 L 57699.2 -75113.9"/>
+        <text x="31872.418153" y="-73224.115937" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#137;E&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <text x="31872.418153" y="-69696.556882" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#141;&#182;&#137;&#186;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -71334.4 L 55431.5 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -69444.6 L 55431.5 -69444.6"/>
+        <text x="31872.418153" y="-65665.060819" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#137;&#186;&#146;&#134;&#144;S</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -67554.8 L 57699.2 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -65665.1 L 57699.2 -65665.1"/>
+        <text x="31872.418153" y="-61885.533260" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#137;E&#137;&#186;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -61885.5 L 55431.5 -61885.5"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -63775.3 L 55431.5 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -61885.5 L 31872.4 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -53746.6 L 49004.7 -53746.6"/>
+        <text x="31872.418153" y="-53746.562391" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="1889.763780">2&#141;s&#130;&#204;</tspan>
+            <tspan sodipodi:role="line" x="31872.4181528065" dy="1889.763780">&#131;}&#131;&#139;&#131;`&#131;e&#131;L&#131;X&#131;g</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -56102.9 L 53541.7 -56102.9"/>
+        <text x="31872.418153" y="-56102.915115" style="font-size: 3779.528px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#141;&#130;&#130;&#179;&#130;&#240;&#138;m&#148;F</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -59882.4 L 53541.7 -59882.4"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -53746.6 L 31872.4 -48707.2"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -56102.9 L 31872.4 -59882.4"/>
+        <path style="fill:none;stroke:#000000" d="M 49004.7 -48707.2 L 49004.7 -53746.6"/>
+        <path style="fill:none;stroke:#000000" d="M 53541.7 -56102.9 L 53541.7 -59882.4"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -73224.1 L 31872.4 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -65665.1 L 31872.4 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -69444.6 L 31872.4 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -77003.6 L 31872.4 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -80783.2 L 31872.4 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 55431.5 -61885.5 L 55431.5 -63775.3"/>
+        <path style="fill:none;stroke:#000000" d="M 57699.2 -73224.1 L 57699.2 -75113.9"/>
+        <path style="fill:none;stroke:#000000" d="M 57699.2 -65665.1 L 57699.2 -67554.8"/>
+        <path style="fill:none;stroke:#000000" d="M 55431.5 -69444.6 L 55431.5 -71334.4"/>
+        <path style="fill:none;stroke:#000000" d="M 55431.5 -77003.6 L 55431.5 -78893.4"/>
+        <path style="fill:none;stroke:#000000" d="M 57699.2 -80783.2 L 57699.2 -82672.9"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -99680.8 L 57573.2 -99680.8"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -101571 L 57573.2 -101571"/>
+        <text x="31872.418153" y="-99680.808850" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#137;E&#138;&#241;&#130;&#185;</tspan>
+        </text>
+        <text x="31872.418153" y="-95901.281291" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -95901.3 L 55431.5 -95901.3"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -97791 L 55431.5 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -92121.8 L 55431.5 -92121.8"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -94011.5 L 55431.5 -94011.5"/>
+        <text x="31872.418153" y="-92121.753732" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#141;&#182;&#143;&#227;</tspan>
+        </text>
+        <text x="31872.418153" y="-103460.336409" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#131;t&#131;B&#131;b&#131;g</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -103460 L 57573.2 -103460"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -105350 L 57573.2 -105350"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -84562.7 L 55431.5 -84562.7"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -86452.5 L 55431.5 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -88342.2 L 57699.2 -88342.2"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -90232 L 57699.2 -90232"/>
+        <text x="31872.418153" y="-88342.226173" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont&#143;&#227;&#146;&#134;&#144;S</tspan>
+        </text>
+        <text x="31872.418153" y="-107239.863968" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">txt/bigfont</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -88342.2 L 31872.4 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -84562.7 L 31872.4 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -92121.8 L 31872.4 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -99680.8 L 31872.4 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -95901.3 L 31872.4 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -103460 L 31872.4 -105350"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -109130 L 50770.1 -109130"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -107240 L 50770.1 -107240"/>
+        <path style="fill:none;stroke:#000000" d="M 31872.4 -107240 L 31872.4 -109130"/>
+        <path style="fill:none;stroke:#000000" d="M 50770.1 -107240 L 50770.1 -109130"/>
+        <path style="fill:none;stroke:#000000" d="M 57699.2 -88342.2 L 57699.2 -90232"/>
+        <path style="fill:none;stroke:#000000" d="M 55431.5 -84562.7 L 55431.5 -86452.5"/>
+        <path style="fill:none;stroke:#000000" d="M 55431.5 -92121.8 L 55431.5 -94011.5"/>
+        <path style="fill:none;stroke:#000000" d="M 57573.2 -99680.8 L 57573.2 -101571"/>
+        <path style="fill:none;stroke:#000000" d="M 55431.5 -95901.3 L 55431.5 -97791"/>
+        <path style="fill:none;stroke:#000000" d="M 57573.2 -103460 L 57573.2 -105350"/>
+        <text x="97070.773170" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#137;E&#143;&#227;</tspan>
+        </text>
+        <text x="81952.662934" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#141;&#182;&#137;&#186;</tspan>
+        </text>
+        <text x="85732.190493" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#137;E&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <text x="89511.718052" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <text x="93291.245611" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#141;&#182;&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <text x="100850.300729" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#143;&#227;&#146;&#134;&#144;S</tspan>
+        </text>
+        <text x="115968.410966" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#131;t&#131;B&#131;b&#131;g</tspan>
+        </text>
+        <text x="104629.828288" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#141;&#182;&#143;&#227;</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 109354 -78570.5 L 109354 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 107464 -78570.5 L 107464 -44491.7"/>
+        <text x="108409.355847" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#146;&#134;&#137;&#155;</tspan>
+        </text>
+        <text x="112188.883406" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#137;E&#138;&#241;&#130;&#185;</tspan>
+        </text>
+        <text x="119747.938525" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont</tspan>
+        </text>
+        <text x="74393.607816" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#137;E&#137;&#186;</tspan>
+        </text>
+        <text x="78173.135375" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">txt/bigfont&#137;&#186;&#146;&#134;&#144;S</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 71445.6 -78570.5 L 71445.6 -61184.7"/>
+        <text x="69555.871561" y="-78570.477419" style="font-size: 3779.528px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">&#149;&#157;&#130;&#240;&#138;m&#148;F</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 67666.1 -78570.5 L 67666.1 -61184.7"/>
+        <text x="60270.384979" y="-78570.477419" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start; writing-mode: tb" sodipodi:linespacing="125%">
+            <tspan y="-78570.477419">2&#141;s&#130;&#204;</tspan>
+            <tspan y="-78570.477419" dx="1889.763780">&#131;}&#131;&#139;&#131;`&#131;e&#131;L&#131;X&#131;g</tspan>
+        </text>
+        <path style="fill:none;stroke:#000000" d="M 66065.7 -78570.5 L 66065.7 -55578.9"/>
+        <path style="fill:none;stroke:#000000" d="M 66065.7 -78570.5 L 60270.4 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 67666.1 -78570.5 L 71445.6 -78570.5"/>
+        <path style="fill:none;stroke:#000000" d="M 60270.4 -55578.9 L 66065.7 -55578.9"/>
+        <path style="fill:none;stroke:#000000" d="M 103685 -78570.5 L 103685 -44617.7"/>
+        <path style="fill:none;stroke:#000000" d="M 105575 -78570.5 L 105575 -44617.7"/>
+        <path style="fill:none;stroke:#000000" d="M 96125.9 -78570.5 L 96125.9 -44617.7"/>
+        <path style="fill:none;stroke:#000000" d="M 98015.7 -78570.5 L 98015.7 -44617.7"/>
+        <path style="fill:none;stroke:#000000" d="M 111244 -78570.5 L 111244 -42350"/>
+        <path style="fill:none;stroke:#000000" d="M 113134 -78570.5 L 113134 -42350"/>
+        <path style="fill:none;stroke:#000000" d="M 99905.4 -78570.5 L 99905.4 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 101795 -78570.5 L 101795 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 92346.4 -78570.5 L 92346.4 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 94236.1 -78570.5 L 94236.1 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 88566.8 -78570.5 L 88566.8 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 90456.6 -78570.5 L 90456.6 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 86677.1 -78570.5 L 86677.1 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 84787.3 -78570.5 L 84787.3 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 82897.5 -78570.5 L 82897.5 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 81007.8 -78570.5 L 81007.8 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 77228.3 -78570.5 L 77228.3 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 79118 -78570.5 L 79118 -42224"/>
+        <path style="fill:none;stroke:#000000" d="M 73448.7 -78570.5 L 73448.7 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 75338.5 -78570.5 L 75338.5 -44491.7"/>
+        <path style="fill:none;stroke:#000000" d="M 118803 -78570.5 L 118803 -49594.1"/>
+        <path style="fill:none;stroke:#000000" d="M 120693 -78570.5 L 120693 -49594.1"/>
+        <path style="fill:none;stroke:#000000" d="M 115338 -78570.5 L 115338 -40082.3"/>
+        <path style="fill:none;stroke:#000000" d="M 116598 -78570.5 L 116598 -40082.3"/>
+        <text x="127846.645743" y="-74335.004409" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-45.000000 127846.645743 -74335.004409)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#149;&#189;&#141;s&#144;&#161;&#150;@</tspan>
+        </text>
+        <text x="126510.380959" y="-75671.269192" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-45.000000 126510.380959 -75671.269192)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#142;l&#138;p&#140;`&#130;&#198;&#146;&#183;&#130;&#179;&#144;&#161;&#150;@</tspan>
+        </text>
+        <text x="127846.645743" y="-74335.004409" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" transform="rotate (-45.000000 127846.645743 -74335.004409)" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#149;&#189;&#141;s&#144;&#161;&#150;@</tspan>
+        </text>
+        <text x="129447.002114" y="-103794.578479" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#142;l&#138;p&#140;`&#130;&#198;&#146;&#183;&#130;&#179;&#144;&#161;&#150;@</tspan>
+        </text>
+        <text x="129447.002114" y="-103794.578479" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#142;l&#138;p&#140;`&#130;&#198;&#146;&#183;&#130;&#179;&#144;&#161;&#150;@</tspan>
+        </text>
+        <text x="129447.002114" y="-101904.814699" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#149;&#189;&#141;s&#144;&#161;&#150;@</tspan>
+        </text>
+        <text x="129447.002114" y="-101904.814699" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#149;&#189;&#141;s&#144;&#161;&#150;@</tspan>
+        </text>
+        <text x="60223.221390" y="-37550.657264" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">(&#131;|&#131;&#138;&#131;&#137;&#131;C&#131;&#147;)</tspan>
+        </text>
+        <path d="M 65596.153207,-34809.174787 A 1150.349459,1150.349459 0.0 0 0 63711.530986,-34809.174787 A 967.816599,967.816599 0.0 0 0 62275.627051,-34136.688997 A 941.895251,941.895251 0.0 0 0 61378.187939,-32881.382619 A 967.269693,967.269693 0.0 0 0 60705.107970,-31446.746758 A 967.519973,967.519973 0.0 0 0 60929.467959,-29877.613555 A 926.234559,926.234559 0.0 0 0 61782.035920,-28622.307177 A 1069.028791,1069.028791 0.0 0 0 62903.835023,-27277.335597 A 956.530878,956.530878 0.0 0 0 64339.738111,-26649.682408 A 1112.191624,1112.191624 0.0 0 0 66134.617182,-26335.856044 A 964.854017,964.854017 0.0 0 0 67705.136264,-26515.185526 A 956.530878,956.530878 0.0 0 0 69141.039352,-27142.838715 A 1057.827222,1057.827222 0.0 0 0 70756.430432,-27770.491905 A 953.582500,953.582500 0.0 0 0 71967.974376,-28756.804059 A 930.955405,930.955405 0.0 0 0 72596.181501,-30146.607779 A 943.670710,943.670710 0.0 0 0 73044.901481,-31626.076241 A 961.297103,961.297103 0.0 0 0 73179.517475,-33195.209444 A 958.083375,958.083375 0.0 0 0 72237.206364,-34450.515822 A 934.624606,934.624606 0.0 0 0 70935.918424,-35257.498494 A 1030.938807,1030.938807 0.0 0 0 69320.527344,-35750.654801 A 995.462293,995.462293 0.0 0 0 67705.136264,-35974.816424 A 1470.834543,1470.834543 0.0 0 0 65596.153207,-34809.174787 z" style="fill:none;stroke:#000000"/>
+        <text x="62679.914304" y="-39440.421044" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#137;_&#131;}&#129;[&#131;N</tspan>
+        </text>
+        <use xlink:href="#*D57" transform="translate(0 0)"/>
+        <use xlink:href="#*D58" transform="translate(0 0)"/>
+        <path style="fill:none;stroke:#000000" d="M 96175 -1645.67 L 99954.5 -1645.67"/>
+        <use xlink:href="#*D59" transform="translate(0 0)"/>
+    </g>
+    <g inkscape:groupmode="layer" inkscape:label="DEFPOINTS"/>
+    <g inkscape:groupmode="layer" inkscape:label="NORMAL"/>
+    <g inkscape:groupmode="layer" inkscape:label="&#148;&#241;&#149;\&#142;&#166;&#137;&#230;&#145;w">
+        <text x="110732.146690" y="-5943.451985" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#148;&#241;&#149;\&#142;&#166;&#137;&#230;&#145;w&#130;&#201;&#143;&#145;&#130;&#169;&#130;&#234;&#130;&#189;&#149;&#182;&#142;&#154;</tspan>
+        </text>
+    </g>
+    <g inkscape:groupmode="layer" inkscape:label="&#131;t&#131;&#138;&#129;[&#131;Y&#137;&#230;&#145;w">
+        <text x="110732.146690" y="-7833.215765" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;t&#131;&#138;&#129;[&#131;Y&#130;&#179;&#130;&#234;&#130;&#189;&#137;&#230;&#145;w&#130;&#201;&#143;&#145;&#130;&#169;&#130;&#234;&#130;&#189;&#149;&#182;&#142;&#154;</tspan>
+        </text>
+        <text x="68081.631672" y="-30442.408528" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#137;_&#131;}&#129;[&#131;N</tspan>
+        </text>
+    </g>
+    <g inkscape:groupmode="layer" inkscape:label="&#148;&#241;&#149;\&#142;&#166;&#130;&#169;&#130;&#194;&#131;t&#131;&#138;&#129;[&#131;Y&#137;&#230;&#145;w">
+        <text x="110732.146690" y="-4053.688206" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#148;&#241;&#149;\&#142;&#166;&#130;&#169;&#130;&#194;&#131;t&#131;&#138;&#129;[&#131;Y&#130;&#179;&#130;&#234;&#130;&#189;&#137;&#230;&#145;w&#130;&#201;&#143;&#145;&#130;&#169;&#130;&#234;&#130;&#189;&#149;&#182;&#142;&#154;</tspan>
+        </text>
+    </g>
+    <g inkscape:groupmode="layer" inkscape:label="&#131;&#141;&#131;b&#131;N&#130;&#179;&#130;&#234;&#130;&#189;&#137;&#230;&#145;w">
+        <text x="110732.146690" y="-2163.924426" style="font-size: 1889.764px; fill: #000000; font-family: Arial; text-anchor: start" sodipodi:linespacing="125%">
+            <tspan sodipodi:role="line" dx="0.000000" dy="0.000000">&#131;&#141;&#131;b&#131;N&#130;&#179;&#130;&#234;&#130;&#189;&#137;&#230;&#145;w&#130;&#201;&#143;&#145;&#130;&#169;&#130;&#234;&#130;&#189;&#149;&#182;&#142;&#154;</tspan>
+        </text>
+    </g>
+</svg>

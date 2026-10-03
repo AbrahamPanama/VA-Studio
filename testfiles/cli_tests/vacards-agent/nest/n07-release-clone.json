@@ -1,0 +1,20 @@
+{
+  "description": "selection-release-nesting-contour on a <use> clone must not strip the original's markers; the <use> itself carries none, so the result is Unchanged/no-markers and the original keeps inkscape:nesting-contour=\"true\".",
+  "input": "{FIXTURES}/contour.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:markedclone;selection-release-nesting-contour;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "selection-release-nesting-contour",
+      "status": "unchanged",
+      "reason": "no-markers"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": ["inkscape:nesting-contour=\"true\"", "inkscape:nesting-contour-version=\"1\""]
+    }
+  }
+}

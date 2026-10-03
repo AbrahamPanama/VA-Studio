@@ -1,0 +1,14 @@
+{
+  "description": "selection-set-nesting-contour needs two items and reports Rejected otherwise.",
+  "input": "{FIXTURES}/contour.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:art;selection-set-nesting-contour",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "selection-set-nesting-contour",
+      "status": "rejected",
+      "reason": "needs-two-items"
+    }
+  ]
+}

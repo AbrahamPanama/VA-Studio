@@ -1,0 +1,15 @@
+{
+  "description": "Tone query of only a hidden image is rejected with no-eligible-targets.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:hidden;vacards-bitmap-tone-query",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-bitmap-tone-query",
+      "status": "rejected",
+      "reason": "no-eligible-targets",
+      "mode": "read-only"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inkscape Output</title>
+</head>
+<body>
+    <canvas id='canvas' width='210' height='297'></canvas>
+    <script>
+    var ctx = document.getElementById("canvas").getContext("2d");
+    	
+// #layer1
+	
+// #rect184
+	ctx.beginPath();
+	
+// pattern pattern4405
+    const pattern4405 = document.createElement("canvas");
+    pattern4405.width = 2;
+    pattern4405.height = 1;
+    const pattern4405_ctx = patternCanvas.getContext("2d");
+
+
+	const pattern = ctx.createPattern(pattern4405, "repeat")
+	ctx.fillStyle = pattern;
+	ctx.rect(15.709581, 14.820363, 61.949100, 61.059879);
+	ctx.fill();
+	
+// #rect184-8
+	ctx.beginPath();
+	
+// pattern pattern4405-3
+    const pattern4405_3 = document.createElement("canvas");
+    pattern4405_3.width = 2;
+    pattern4405_3.height = 1;
+    const pattern4405_3_ctx = patternCanvas.getContext("2d");
+
+
+	const pattern = ctx.createPattern(pattern4405_3, "repeat")
+	ctx.rect(113.375750, 14.820363, 61.949100, 61.059879);
+	ctx.fill();
+
+    </script>
+</body>
+</html>

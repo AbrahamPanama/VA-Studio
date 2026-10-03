@@ -1,0 +1,354 @@
+{
+  "manifest_version": 1,
+  "description": "Synthetic fixtures for the external-process clipboard paste protocol (milestone A, E-series). Expected values are authored from deliverables/EXTERNAL_TEXT_PASTE_IMPLEMENTATION_AND_TESTING_HANDOFF.md section 6 and evidence/external-text-paste-swarm/discovery/tests/REPORT.md, never computed by the production helper under test.",
+  "semantics": {
+    "text_sha256": "SHA-256 of the UTF-8 bytes the document text must contain after the paste (success) or of the unchanged document text (reject/abort: the empty string, hash e3b0c442...b855)",
+    "text_bytes": "UTF-8 byte length of that same expected document text",
+    "transport_bytes": "bytes the receiver sees on the clipboard wire: the sum over publish.macos representations of their byte counts plus one terminal NUL per string representation (the macOS public.utf8-plain-text string path appends exactly one), and it must be one of the representations",
+    "object_count": "number of new TEXT objects the case must create (0 when document_unchanged is true and also 0 for import-object, which must create no text object)",
+    "undo_steps": "number of Undo entries the case must add",
+    "required_formats": "GTK MIME names the receiver must observe on the live remote clipboard before pasting",
+    "failure_class": "success | abort-no-mutation | reject-no-mutation | fallback-plain | import-object | no-op",
+    "publish.macos": "legacy {utis[], as} publishes the fixture file under every UTI; extended {representations:[{uti,file,sha256,bytes,as,stall}]} gives each representation its own payload (stall:true = advertised through a data provider that never delivers)",
+    "import_object_id": "import-object only: element id that must appear after the paste and exists ONLY in the SVG/object representation",
+    "forbidden_text_utf8": "distinctive string (or list of strings) from the LOSING representation that must never become document text; required for fallback-plain and import-object, must occur in a published payload and must not occur in the expected text",
+    "max_elapsed_ms": "upper bound on one paste command's wall time, required when a representation declares stall:true and only valid when at least one does"
+  },
+  "fixtures": [
+    {
+      "id": "E01_utf8_only",
+      "requirement": "E01",
+      "title": "Selector normal paste, separate owner publishes only public.utf8-plain-text",
+      "file": "bytes/E01_utf8_only.txt",
+      "sha256": "e7b0a3aa4d42802c49536fc7cd5ad82000fe3ce0e3a37721016b1ade9f0fd991",
+      "bytes": 63,
+      "publish": {
+        "macos": { "utis": ["public.utf8-plain-text"], "as": "string" },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["text/plain;charset=utf-8"],
+      "transport_bytes": 64,
+      "failure_class": "success",
+      "expect": {
+        "text_utf8": "selector route external paste E01: naïve café — Ω\nline two",
+        "text_sha256": "e7b0a3aa4d42802c49536fc7cd5ad82000fe3ce0e3a37721016b1ade9f0fd991",
+        "text_bytes": 63,
+        "object_count": 1,
+        "undo_steps": 1,
+        "document_unchanged": false,
+        "require_nonempty_style": true
+      }
+    },
+    {
+      "id": "E04_terminated",
+      "requirement": "E04",
+      "title": "public.utf8-plain-text string: macOS appends exactly one terminal NUL",
+      "file": "bytes/E04_terminated.txt",
+      "sha256": "bd92531dbf9ab24e598f6aa6264a86454a2ef8a92fd841528229f41a673d4976",
+      "bytes": 55,
+      "publish": {
+        "macos": { "utis": ["public.utf8-plain-text"], "as": "string" },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["text/plain;charset=utf-8"],
+      "transport_bytes": 56,
+      "failure_class": "success",
+      "expect": {
+        "text_utf8": "terminator boundary E04/E05: héllo, wörld\nsecond line",
+        "text_sha256": "bd92531dbf9ab24e598f6aa6264a86454a2ef8a92fd841528229f41a673d4976",
+        "text_bytes": 55,
+        "object_count": 1,
+        "undo_steps": 1,
+        "document_unchanged": false,
+        "require_nonempty_style": true
+      }
+    },
+    {
+      "id": "E05_plain",
+      "requirement": "E05",
+      "title": "public.plain-text raw data: same text without the transport NUL",
+      "file": "bytes/E05_plain.txt",
+      "sha256": "bd92531dbf9ab24e598f6aa6264a86454a2ef8a92fd841528229f41a673d4976",
+      "bytes": 55,
+      "publish": {
+        "macos": { "utis": ["public.plain-text"], "as": "data" },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["text/plain"],
+      "transport_bytes": 55,
+      "failure_class": "success",
+      "expect": {
+        "text_utf8": "terminator boundary E04/E05: héllo, wörld\nsecond line",
+        "text_sha256": "bd92531dbf9ab24e598f6aa6264a86454a2ef8a92fd841528229f41a673d4976",
+        "text_bytes": 55,
+        "object_count": 1,
+        "undo_steps": 1,
+        "document_unchanged": false,
+        "require_nonempty_style": true
+      }
+    },
+    {
+      "id": "E06_embedded_nul",
+      "requirement": "E06",
+      "title": "public.plain-text raw data with an embedded NUL: reject without mutation",
+      "file": "bytes/E06_embedded_nul.bin",
+      "sha256": "6f949a807b15b7a31cd1fa192b120988ec82a5d6d40e25afa8fce070eb682dbc",
+      "bytes": 17,
+      "publish": {
+        "macos": { "utis": ["public.plain-text"], "as": "data" },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["text/plain"],
+      "transport_bytes": 17,
+      "failure_class": "reject-no-mutation",
+      "expect": {
+        "text_utf8": null,
+        "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_bytes": 0,
+        "object_count": 0,
+        "undo_steps": 0,
+        "document_unchanged": true,
+        "require_nonempty_style": false
+      }
+    },
+    {
+      "id": "E07_at_cap_with_terminator",
+      "requirement": "E07",
+      "title": "65,536 ASCII bytes published via the string path: 65,537 transport bytes with the NUL must be accepted exactly once",
+      "file": "bytes/E07_at_cap_with_terminator.txt",
+      "sha256": "bf718b6f653bebc184e1479f1935b8da974d701b893afcf49e701f3e2f9f9c5a",
+      "bytes": 65536,
+      "publish": {
+        "macos": { "utis": ["public.utf8-plain-text"], "as": "string" },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["text/plain;charset=utf-8"],
+      "transport_bytes": 65537,
+      "failure_class": "success",
+      "expect": {
+        "text_utf8": null,
+        "text_sha256": "bf718b6f653bebc184e1479f1935b8da974d701b893afcf49e701f3e2f9f9c5a",
+        "text_bytes": 65536,
+        "object_count": 1,
+        "undo_steps": 1,
+        "document_unchanged": false,
+        "require_nonempty_style": true
+      }
+    },
+    {
+      "id": "E07_at_cap_multibyte_end",
+      "requirement": "E07",
+      "title": "65,534 ASCII bytes plus a two-byte multibyte ending at the cap, string path with the NUL",
+      "file": "bytes/E07_at_cap_multibyte_end.txt",
+      "sha256": "b3f207b765322f9c1f259d7548c8f940f1d6507f1e48f83c6357c11e3a825b6e",
+      "bytes": 65536,
+      "publish": {
+        "macos": { "utis": ["public.utf8-plain-text"], "as": "string" },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["text/plain;charset=utf-8"],
+      "transport_bytes": 65537,
+      "failure_class": "success",
+      "expect": {
+        "text_utf8": null,
+        "text_sha256": "b3f207b765322f9c1f259d7548c8f940f1d6507f1e48f83c6357c11e3a825b6e",
+        "text_bytes": 65536,
+        "object_count": 1,
+        "undo_steps": 1,
+        "document_unchanged": false,
+        "require_nonempty_style": true
+      }
+    },
+    {
+      "id": "E07_over_cap",
+      "requirement": "E07",
+      "title": "65,537 raw bytes without a terminator: abort with no mutation and no truncation",
+      "file": "bytes/E07_over_cap.bin",
+      "sha256": "aab12eb7c93a75d5ab51edfc12012795e6a24a0fd731014e0fbac02dc2c9673f",
+      "bytes": 65537,
+      "publish": {
+        "macos": { "utis": ["public.plain-text"], "as": "data" },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["text/plain"],
+      "transport_bytes": 65537,
+      "failure_class": "abort-no-mutation",
+      "expect": {
+        "text_utf8": null,
+        "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_bytes": 0,
+        "object_count": 0,
+        "undo_steps": 0,
+        "document_unchanged": true,
+        "require_nonempty_style": false
+      }
+    },
+    {
+      "id": "E13_object_priority_svg_plain",
+      "requirement": "E13",
+      "title": "Selector: the SVG object representation wins over a complete plain-text alternative",
+      "file": "bytes/E13_priority.svg",
+      "sha256": "4f5eb12d6fd37b5b2268ab7e8d03003ec94252be0cc745502def3c9a61e2f19c",
+      "bytes": 174,
+      "publish": {
+        "macos": {
+          "representations": [
+            { "uti": "public.svg-image", "file": "bytes/E13_priority.svg", "sha256": "4f5eb12d6fd37b5b2268ab7e8d03003ec94252be0cc745502def3c9a61e2f19c", "bytes": 174, "as": "data" },
+            { "uti": "public.utf8-plain-text", "file": "bytes/E13_plain_alternative.txt", "sha256": "454c0c434efe5a2d2d91ea5ac3af7a604cecd301cf932d4581524535a2b6b539", "bytes": 54, "as": "string" }
+          ]
+        },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["image/svg+xml", "text/plain;charset=utf-8"],
+      "transport_bytes": 229,
+      "failure_class": "import-object",
+      "expect": {
+        "text_utf8": null,
+        "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_bytes": 0,
+        "object_count": 0,
+        "undo_steps": 1,
+        "document_unchanged": false,
+        "require_nonempty_style": false,
+        "import_object_id": "e13-object-priority-marker",
+        "forbidden_text_utf8": "PLAIN-ALTERNATIVE-E13"
+      }
+    },
+    {
+      "id": "B15_object_priority_svg_html",
+      "requirement": "B15",
+      "title": "Selector: the SVG object representation wins over a rich HTML alternative",
+      "file": "bytes/B15_priority.svg",
+      "sha256": "90c832e61d2133a9faa4e5c9149b4e7954c8a7004fcb78e00397ae52c05b3b0f",
+      "bytes": 163,
+      "publish": {
+        "macos": {
+          "representations": [
+            { "uti": "public.html", "file": "bytes/B15_rich_alternative.html", "sha256": "117260c90779b6cedc6fddae9fd21909566630bcf524626736c8324471ee7a22", "bytes": 59, "as": "data" },
+            { "uti": "public.svg-image", "file": "bytes/B15_priority.svg", "sha256": "90c832e61d2133a9faa4e5c9149b4e7954c8a7004fcb78e00397ae52c05b3b0f", "bytes": 163, "as": "data" }
+          ]
+        },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["text/html", "image/svg+xml"],
+      "transport_bytes": 222,
+      "failure_class": "import-object",
+      "expect": {
+        "text_utf8": null,
+        "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_bytes": 0,
+        "object_count": 0,
+        "undo_steps": 1,
+        "document_unchanged": false,
+        "require_nonempty_style": false,
+        "import_object_id": "b15-object-priority-marker",
+        "forbidden_text_utf8": "HTML-RICH-ALTERNATIVE-B15"
+      }
+    },
+    {
+      "id": "F13_plain_svg_object_path",
+      "requirement": "F13",
+      "title": "Selector: plain text whose bytes are an SVG document takes the object import path, never a literal text insert",
+      "file": "bytes/F13_plain_svg.svg",
+      "sha256": "7fecbbf9ddcb646c11544ba0010adb51c38ea575b4846237388a1c15de26ba7b",
+      "bytes": 221,
+      "publish": {
+        "macos": {
+          "representations": [
+            { "uti": "public.utf8-plain-text", "file": "bytes/F13_plain_svg.svg", "sha256": "7fecbbf9ddcb646c11544ba0010adb51c38ea575b4846237388a1c15de26ba7b", "bytes": 221, "as": "string" }
+          ]
+        },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["text/plain;charset=utf-8"],
+      "transport_bytes": 222,
+      "failure_class": "import-object",
+      "expect": {
+        "text_utf8": null,
+        "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_bytes": 0,
+        "object_count": 0,
+        "undo_steps": 1,
+        "document_unchanged": false,
+        "require_nonempty_style": false,
+        "import_object_id": "f13-plain-svg-object-marker",
+        "forbidden_text_utf8": "F13-PLAIN-SVG-SOURCE-TEXT"
+      }
+    },
+    {
+      "id": "E08_object_target_stall",
+      "requirement": "E08",
+      "title": "Selector: a lazily advertised object representation whose data is never delivered must hit the single absolute paste deadline without mutation",
+      "file": "bytes/E08_stall.svg",
+      "sha256": "3cdbe7f1c92ece6876c4881a9c4e553997ad29f20bc89a3ee88c96236e4ea5de",
+      "bytes": 171,
+      "publish": {
+        "macos": {
+          "representations": [
+            { "uti": "public.svg-image", "file": "bytes/E08_stall.svg", "sha256": "3cdbe7f1c92ece6876c4881a9c4e553997ad29f20bc89a3ee88c96236e4ea5de", "bytes": 171, "as": "data", "stall": true }
+          ]
+        },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["image/svg+xml"],
+      "transport_bytes": 171,
+      "failure_class": "abort-no-mutation",
+      "expect": {
+        "text_utf8": null,
+        "text_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text_bytes": 0,
+        "object_count": 0,
+        "undo_steps": 0,
+        "document_unchanged": true,
+        "require_nonempty_style": false,
+        "max_elapsed_ms": 8000
+      }
+    },
+    {
+      "id": "R04_fallback_plain_distinct",
+      "requirement": "R04",
+      "title": "Selector: malformed under-cap HTML and RTF fall back to the complete distinct plain alternative, never splicing a rich marker",
+      "file": "bytes/R04_malformed.html",
+      "sha256": "4585929f5a0f52b7ec8cfebf76619efdf913404be6385df9874b08b40a1e080b",
+      "bytes": 79,
+      "publish": {
+        "macos": {
+          "representations": [
+            { "uti": "public.html", "file": "bytes/R04_malformed.html", "sha256": "4585929f5a0f52b7ec8cfebf76619efdf913404be6385df9874b08b40a1e080b", "bytes": 79, "as": "data" },
+            { "uti": "public.rtf", "file": "bytes/R04_malformed.rtf", "sha256": "f56f004de5d202b41c9d5d92d54e6e8fa5f43b97bc172c91b9d02717bf26c9ef", "bytes": 91, "as": "data" },
+            { "uti": "public.utf8-plain-text", "file": "bytes/R04_plain_alternative.txt", "sha256": "8592705c962d6949e134a119ed18cf2ce3643edc30df9878ac537cc60a337524", "bytes": 75, "as": "string" }
+          ]
+        },
+        "windows": { "status": "not-implemented-on-this-host" }
+      },
+      "required_formats": ["text/html", "text/rtf", "text/plain;charset=utf-8"],
+      "transport_bytes": 246,
+      "failure_class": "fallback-plain",
+      "expect": {
+        "text_utf8": "R04 fallback plain: the complete alternative text\nsecond line stays intact\n",
+        "text_sha256": "8592705c962d6949e134a119ed18cf2ce3643edc30df9878ac537cc60a337524",
+        "text_bytes": 75,
+        "object_count": 1,
+        "undo_steps": 1,
+        "document_unchanged": false,
+        "require_nonempty_style": true,
+        "forbidden_text_utf8": ["R04-MALFORMED-HTML-MARKER", "R04-MALFORMED-RTF-MARKER"]
+      }
+    }
+  ],
+  "cases": [
+    { "id": "E01", "requirement": "E01", "fixture": "E01_utf8_only", "route": "selector", "title": "Selector normal paste of a separate owner's UTF-8-only plain text" },
+    { "id": "E02", "requirement": "E02", "fixture": "E01_utf8_only", "route": "text-tool", "title": "Text tool with no edited object creates editable text, no silent no-op" },
+    { "id": "E04", "requirement": "E04", "fixture": "E04_terminated", "route": "selector", "title": "Exactly one terminal NUL is accepted once and never reaches the document" },
+    { "id": "E05", "requirement": "E05", "fixture": "E05_plain", "route": "selector", "title": "Same text without a terminal NUL gives the identical semantic result" },
+    { "id": "E06", "requirement": "E06", "fixture": "E06_embedded_nul", "route": "selector", "title": "Embedded NUL is rejected without document, preference or Undo mutation" },
+    { "id": "E07_at_cap", "requirement": "E07", "fixture": "E07_at_cap_with_terminator", "route": "selector", "title": "At cap plus the macOS terminator is accepted, no truncation" },
+    { "id": "E07_multibyte", "requirement": "E07", "fixture": "E07_at_cap_multibyte_end", "route": "selector", "title": "Multibyte ending at the cap is not split or truncated" },
+    { "id": "E07_over_cap", "requirement": "E07", "fixture": "E07_over_cap", "route": "selector", "title": "Over cap is aborted whole, no partial insert" },
+    { "id": "E13_object_priority_svg_plain", "requirement": "E13", "fixture": "E13_object_priority_svg_plain", "route": "selector", "title": "SVG object representation wins over a complete plain-text alternative; no text object is created" },
+    { "id": "B15_object_priority_svg_html", "requirement": "B15", "fixture": "B15_object_priority_svg_html", "route": "selector", "title": "SVG object representation wins over a rich HTML alternative on the selector route" },
+    { "id": "F13_plain_svg_object_path", "requirement": "F13", "fixture": "F13_plain_svg_object_path", "route": "selector", "title": "Plain text that is really an SVG document is imported as an object, not inserted literally" },
+    { "id": "E08_object_target_stall", "requirement": "E08", "fixture": "E08_object_target_stall", "route": "selector", "title": "Lazy object representation with no delivered data aborts at the paste deadline with no mutation" },
+    { "id": "R04_fallback_plain_distinct", "requirement": "R04", "fixture": "R04_fallback_plain_distinct", "route": "selector", "title": "Malformed under-cap HTML/RTF paste the complete distinct plain alternative without splicing a rich marker" }
+  ]
+}

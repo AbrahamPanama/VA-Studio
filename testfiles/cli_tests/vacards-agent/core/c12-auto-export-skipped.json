@@ -1,0 +1,13 @@
+{
+  "description": "A halted chain must not run the automatic --export-filename export over a possibly good file.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:bogus=1",
+  "args": ["--export-filename={WORK}/auto.svg"],
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "rejected", "reason": "invalid-argument"},
+    {"action": "export", "status": "skipped", "reason": "halted-after-error"}
+  ],
+  "expect_files": {"auto.svg": {"exists": false}}
+}

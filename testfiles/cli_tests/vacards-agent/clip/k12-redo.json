@@ -1,0 +1,33 @@
+{
+  "description": "vacards-redo re-applies the clip after an undo; the cutter is kept (CLIP-1).",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:img1,cut1;vacards-destructive-clip;vacards-undo;vacards-redo;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "vacards-destructive-clip",
+      "status": "changed"
+    },
+    {
+      "action": "vacards-undo",
+      "status": "changed"
+    },
+    {
+      "action": "vacards-redo",
+      "status": "changed"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"img1\"",
+        "id=\"cut1\""
+      ]
+    }
+  }
+}

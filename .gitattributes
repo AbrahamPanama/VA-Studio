@@ -1,0 +1,9 @@
+*.svg   text eol=lf
+*.xaml  text eol=lf
+*.sh    text eol=lf
+src/3rdparty/vacards-nesting-rs/vendor/** -diff -text
+# The pinned helper build verifies these exact lockfile bytes on Windows too.
+src/3rdparty/sparrow/windows-x64.Cargo.lock text eol=lf
+# Flattened upstream module files whose original bytes use CRLF line endings.
+share/extensions/tests/data/svg/style_inheritance.svg -text
+share/extensions/tests/data/svg/gradient_with_mixed_offsets.svg -text

@@ -1,0 +1,18 @@
+{
+  "description": "PDF6: a soft mask /TR that is not a function must not dereference null.",
+  "input": "{FIXTURES}/pdf6-smask-tr.pdf",
+  "args": [
+    "--export-type=svg",
+    "--export-filename={WORK}/out.svg"
+  ],
+  "timeout": 90,
+  "expect_exit": 0,
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "<svg"
+      ]
+    }
+  }
+}

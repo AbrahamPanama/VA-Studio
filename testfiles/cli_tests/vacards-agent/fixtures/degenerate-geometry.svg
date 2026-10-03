@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="120" viewBox="0 0 200 120" version="1.1"
+     xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+ <defs>
+  <inkscape:path-effect id="lpe-bool" effect="bool_op" is_visible="true" lpeversion="1" operand-path="#opb" operation="union" swap-operands="false" filltype-this="from-curve" filltype-operand="from-curve"/>
+ </defs>
+ <rect id="r1" x="0" y="0" width="10" height="10" fill="#00f"/>
+ <g id="eg1"/>
+ <g id="eg2"/>
+ <path id="zp" d="M 50,50 L 50,50" fill="none" stroke="none"/>
+ <path id="hl" d="M 0,80 H 100" fill="none" stroke="none"/>
+ <path id="vl" d="M 150,20 V 100" fill="none" stroke="none"/>
+ <path id="opa" inkscape:path-effect="#lpe-bool" inkscape:original-d="M 120,0 h 30 v 30 h -30 z" d="M 120,0 h 30 v 30 h -30 z" fill="#0a0"/>
+ <path id="opb" d="M 130,10 h 30 v 30 h -30 z" fill="#a00"/>
+</svg>

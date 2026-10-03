@@ -1,0 +1,23 @@
+{
+  "description": "Bottom-minus-rest with a group on the bottom: the group acts as one combined shape (its union is the anchor) and consumes the rest; the emptied group is removed.",
+  "input": "{FIXTURES}/groups-boolean.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:g1,r1;vacards-boolean:op=bottom-minus-rest;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-boolean",
+      "status": "changed",
+      "mode": "collective-geometry",
+      "reason": "success",
+      "targets": {"selected": 2, "excluded": []},
+      "modified": ["r1"],
+      "deleted": ["g1", "g1a", "g1b", "g1c", "g1inner"],
+      "selection_after": ["r1"],
+      "undo": "one-step"
+    }
+  ],
+  "expect_files": {
+    "out.svg": {"exists": true, "contains": ["id=\"r1\""], "not_contains": ["id=\"g1\""]}
+  }
+}

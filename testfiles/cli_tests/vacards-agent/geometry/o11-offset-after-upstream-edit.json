@@ -1,0 +1,26 @@
+{
+  "description": "A vacards-offset runs normally after an earlier mutating action in the same chain: ci is rotated (its own Undo step), then sq is offset. Without the removed guard the offset is not refused and reports changed; proof that an ordinary earlier edit does not block a VACards action.",
+  "input": "{FIXTURES}/offset.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:ci;transform-rotate:10;unselect-by-id:ci;select-by-id:sq;vacards-offset:distance=2;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-offset",
+      "status": "changed",
+      "mode": "per-selected-root",
+      "reason": "success",
+      "targets": {"selected": 1, "eligible": 1},
+      "created": ["path1"],
+      "selection_after": ["path1"],
+      "undo": "one-step",
+      "metrics": {"skipped": 0, "open_subpaths_skipped": 0, "results": 1}
+    }
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": ["id=\"path1\""]
+    }
+  }
+}

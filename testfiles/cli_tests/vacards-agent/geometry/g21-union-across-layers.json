@@ -1,0 +1,11 @@
+{
+  "description": "Operands from two layers: the result lands in one layer and the emptied layer is kept (only plain groups are cleaned up).",
+  "input": "{FIXTURES}/groups-boolean.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:l1r,l2r;vacards-boolean:op=union;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-boolean", "status": "changed", "undo": "one-step"}
+  ],
+  "expect_files": {"out.svg": {"exists": true, "contains": ["id=\"L1\"", "id=\"L2\""]}}
+}

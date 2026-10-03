@@ -1,0 +1,7 @@
+{
+  "description": "A tone query between two exports does not change the document: both SVG files are byte-identical.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};export-filename:{WORK}/before.svg;export-do;select-by-id:a,b;vacards-bitmap-tone-query;export-filename:{WORK}/after.svg;export-do",
+  "expect_exit": 0,
+  "expect_same_files": [["before.svg", "after.svg"]]
+}

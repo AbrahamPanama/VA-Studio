@@ -1,0 +1,18 @@
+image: registry.gitlab.com/inkscape/inkscape-ci-docker/master
+
+variables:
+  CFLAGS: "-g -fsanitize=address -fno-omit-frame-pointer -std=gnu89 -Werror"
+  LDFLAGS: "-fsanitize=address"
+  ASAN_OPTIONS: "detect_leaks=0"
+
+libcroco:linux:
+  stage: build
+  before_script:
+    - apt-get update -yqq && apt-get install -y gtk-doc-tools
+    - export PATH="$PATH:$PWD"
+  script:
+    - mkdir build && cd build
+    - cmake ..
+    - make
+    - make test
+    - if cat tests/tests-error.log; then false; fi

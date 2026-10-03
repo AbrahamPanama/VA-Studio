@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="32" height="32" x="-4" y="-4">
+  <g id="cursor" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Original selector pointer and hotspot: unchanged between states. -->
+    <path d="M4.5 4.5 12 12H8l3 7-1 .5-3-7L4.5 15Z"
+          fill="none" stroke="#fff" stroke-width="3"/>
+    <path d="M4.5 4.5 12 12H8l3 7-1 .5-3-7L4.5 15Z"
+          fill="#000" stroke="#000" stroke-width="1"/>
+    <!-- White keyline protects the nest on both light and dark artwork. -->
+    <path d="M15 21.5C15 17.8 29 17.8 29 21.5L28 26C26.5 29.5 17.5 29.5 16 26Z"
+          fill="#fff" stroke="#fff" stroke-width="3.5"/>
+    <path d="M15 21.5C15 17.8 29 17.8 29 21.5L28 26C26.5 29.5 17.5 29.5 16 26Z"
+          fill="#fff" stroke="#222" stroke-width="1.25"/>
+    <ellipse cx="22" cy="21.5" rx="7" ry="2.8"
+             fill="#fff" stroke="#222" stroke-width="1.25"/>
+    <!-- Static blue chick; no animation or timer. -->
+    <path d="M24.5 15L28 11.5L27 15.5L29 15L25.2 18"
+          fill="#fff" stroke="#fff" stroke-width="3.5"/>
+    <path d="M24.5 15L28 11.5L27 15.5L29 15L25.2 18"
+          fill="#fff" stroke="#222" stroke-width="1.25"/>
+    <path d="M19 23C19.3 20 20 19.8 19.6 17.8C18.6 12.1 25.8 10.8 26.5 16.4C26.8 18.3 25.4 19.7 26 23Z"
+          fill="#258bea" stroke="#222" stroke-width="1.25"/>
+    <circle cx="23" cy="15.8" r=".85" fill="#fff" stroke="none"/>
+    <!-- Woven front is identical in the empty and occupied nest. -->
+    <path d="M15.3 22.5C18 25 26 25 28.7 22.5L28 26C26.5 29.5 17.5 29.5 16 26Z"
+          fill="#222" stroke="#222" stroke-width="1"/>
+    <path d="M16.4 24.5C19 27 24 28 26.8 27.5M18 27.5C22 27 26 25.9 28 24.6"
+          fill="none" stroke="#fff" stroke-width="1.1"/>
+  </g>
+</svg>

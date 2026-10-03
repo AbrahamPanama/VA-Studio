@@ -1,0 +1,540 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+
+  <object class="GtkBox" id="welcome-root-box">
+    <property name="name">welcome-root</property>
+    <property name="orientation">vertical</property>
+    <style>
+      <class name="welcome-root"/>
+    </style>
+    <child>
+      <object class="GtkBox" id="welcome-body">
+        <property name="orientation">horizontal</property>
+        <property name="vexpand">True</property>
+        <child>
+          <object class="GtkScrolledWindow" id="welcome-sidebar-scroll">
+            <property name="hexpand">False</property>
+            <property name="hscrollbar-policy">never</property>
+            <property name="vscrollbar-policy">automatic</property>
+            <property name="propagate-natural-height">False</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="GtkBox" id="welcome-sidebar">
+                <property name="orientation">vertical</property>
+                <property name="width-request">220</property>
+                <property name="vexpand">True</property>
+                <property name="spacing">6</property>
+                <property name="margin-top">20</property>
+                <property name="margin-bottom">20</property>
+                <property name="margin-start">14</property>
+                <property name="margin-end">14</property>
+                <style>
+                  <class name="welcome-sidebar"/>
+                </style>
+                <child>
+                  <object class="GtkImage" id="welcome-logo">
+                    <property name="halign">center</property>
+                    <property name="pixel-size">96</property>
+                    <property name="margin-bottom">4</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="welcome-brand-label">
+                    <property name="label">VA Studio</property>
+                    <property name="justify">center</property>
+                    <property name="margin-bottom">12</property>
+                    <style>
+                      <class name="welcome-brand"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="welcome-new-button">
+                    <property name="tooltip-text" translatable="yes">Create a new document</property>
+                    <property name="has-frame">False</property>
+                    <property name="focus-on-click">False</property>
+                    <style>
+                      <class name="welcome-nav"/>
+                      <class name="suggested-action"/>
+                    </style>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">horizontal</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="icon-name">document-new-symbolic</property>
+                            <property name="icon-size">large</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="welcome-new-label">
+                            <property name="label" translatable="yes">New Document</property>
+                            <property name="xalign">0</property>
+                            <property name="hexpand">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="welcome-open-button">
+                    <property name="tooltip-text" translatable="yes">Open an existing document</property>
+                    <property name="has-frame">False</property>
+                    <property name="focus-on-click">False</property>
+                    <style>
+                      <class name="welcome-nav"/>
+                      <class name="welcome-secondary"/>
+                    </style>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">horizontal</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="icon-name">document-open-symbolic</property>
+                            <property name="icon-size">large</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="welcome-open-label">
+                            <property name="label" translatable="yes">Open File</property>
+                            <property name="xalign">0</property>
+                            <property name="hexpand">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkSeparator">
+                    <property name="margin-top">8</property>
+                    <property name="margin-bottom">8</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="welcome-recent-button">
+                    <property name="tooltip-text" translatable="yes">Show recent documents</property>
+                    <property name="has-frame">False</property>
+                    <property name="focus-on-click">False</property>
+                    <style>
+                      <class name="welcome-nav"/>
+                    </style>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">horizontal</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="icon-name">edit-undo-history-symbolic</property>
+                            <property name="icon-size">large</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="welcome-recent-label">
+                            <property name="label" translatable="yes">Recent</property>
+                            <property name="xalign">0</property>
+                            <property name="hexpand">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="welcome-templates-button">
+                    <property name="tooltip-text" translatable="yes">Start from a template</property>
+                    <property name="has-frame">False</property>
+                    <property name="focus-on-click">False</property>
+                    <style>
+                      <class name="welcome-nav"/>
+                    </style>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">horizontal</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="icon-name">layout-grid-symbolic</property>
+                            <property name="icon-size">large</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="welcome-templates-label">
+                            <property name="label" translatable="yes">Templates</property>
+                            <property name="xalign">0</property>
+                            <property name="hexpand">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="vexpand">True</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="welcome-preferences-button">
+                    <property name="tooltip-text" translatable="yes">Open application preferences</property>
+                    <property name="has-frame">False</property>
+                    <property name="focus-on-click">False</property>
+                    <style>
+                      <class name="welcome-nav"/>
+                    </style>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">horizontal</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="icon-name">preferences-system-symbolic</property>
+                            <property name="icon-size">large</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="welcome-preferences-label">
+                            <property name="label" translatable="yes">Preferences</property>
+                            <property name="xalign">0</property>
+                            <property name="hexpand">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="welcome-about-button">
+                    <property name="tooltip-text" translatable="yes">About VA Studio</property>
+                    <property name="has-frame">False</property>
+                    <property name="focus-on-click">False</property>
+                    <style>
+                      <class name="welcome-nav"/>
+                    </style>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">horizontal</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkImage">
+                            <property name="icon-name">info-outline-symbolic</property>
+                            <property name="icon-size">large</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="welcome-about-label">
+                            <property name="label" translatable="yes">About</property>
+                            <property name="xalign">0</property>
+                            <property name="hexpand">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox" id="welcome-content">
+            <property name="orientation">vertical</property>
+            <property name="hexpand">True</property>
+            <property name="spacing">12</property>
+            <property name="margin-top">24</property>
+            <property name="margin-bottom">16</property>
+            <property name="margin-start">28</property>
+            <property name="margin-end">28</property>
+            <child>
+              <object class="GtkBox" id="welcome-header">
+                <property name="orientation">horizontal</property>
+                <property name="spacing">16</property>
+                <child>
+                  <object class="GtkBox" id="welcome-title-box">
+                    <property name="orientation">vertical</property>
+                    <property name="hexpand">True</property>
+                    <property name="spacing">4</property>
+                    <property name="valign">center</property>
+                    <child>
+                      <object class="GtkLabel" id="welcome-title">
+                        <property name="label" translatable="yes">Recent documents</property>
+                        <property name="xalign">0</property>
+                        <property name="ellipsize">end</property>
+                        <style>
+                          <class name="welcome-title"/>
+                        </style>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="welcome-subtitle">
+                        <property name="label" translatable="yes">Continue where you left off.</property>
+                        <property name="xalign">0</property>
+                        <property name="wrap">True</property>
+                        <property name="wrap-mode">word-char</property>
+                        <property name="max-width-chars">60</property>
+                        <style>
+                          <class name="welcome-subtitle"/>
+                        </style>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox" id="welcome-search-row">
+                    <property name="orientation">horizontal</property>
+                    <property name="spacing">12</property>
+                    <property name="valign">center</property>
+                    <child>
+                      <object class="GtkSearchEntry" id="welcome-search">
+                        <property name="hexpand">True</property>
+                        <property name="placeholder-text" translatable="yes">Search recent documents</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkToggleButton" id="welcome-recovery-toggle">
+                        <property name="label" translatable="yes">Recovery</property>
+                        <property name="tooltip-text" translatable="yes">Show recovered documents only</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkStack" id="welcome-content-stack">
+                <property name="vexpand">True</property>
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">recent</property>
+                    <property name="child">
+                  <object class="GtkBox" id="welcome-recent-page">
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">12</property>
+                    <child>
+                      <object class="GtkStack" id="welcome-recent-state">
+                        <property name="vexpand">True</property>
+                        <child>
+                          <object class="GtkStackPage">
+                            <property name="name">grid</property>
+                            <property name="child">
+                          <object class="GtkScrolledWindow" id="welcome-recent-scroll">
+                            <property name="vexpand">True</property>
+                            <property name="hscrollbar-policy">never</property>
+                            <property name="child">
+                              <object class="GtkGridView" id="welcome-recent-grid">
+                                <property name="focusable">True</property>
+                                <property name="max-columns">3</property>
+                                <property name="min-columns">1</property>
+                                <property name="single-click-activate">False</property>
+                              </object>
+                            </property>
+                          </object>
+                            </property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkStackPage">
+                            <property name="name">empty</property>
+                            <property name="child">
+                          <object class="GtkBox" id="welcome-recent-empty">
+                            <property name="orientation">vertical</property>
+                            <property name="valign">center</property>
+                            <property name="halign">center</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkImage">
+                                <property name="icon-name">edit-undo-history-symbolic</property>
+                                <property name="icon-size">large</property>
+                                <property name="pixel-size">48</property>
+                                <property name="halign">center</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="label" translatable="yes">No recent documents yet</property>
+                                <property name="wrap">True</property>
+                                <property name="wrap-mode">word-char</property>
+                                <style>
+                                  <class name="welcome-title"/>
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="label" translatable="yes">Documents you open will appear here.</property>
+                                <property name="wrap">True</property>
+                                <property name="justify">center</property>
+                                <style>
+                                  <class name="welcome-subtitle"/>
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="orientation">horizontal</property>
+                                <property name="halign">center</property>
+                                <property name="spacing">8</property>
+                                <child>
+                                  <object class="GtkButton" id="welcome-empty-new">
+                                    <property name="use-underline">True</property>
+                                    <property name="label" translatable="yes">New _Document</property>
+                                    <style>
+                                      <class name="suggested-action"/>
+                                    </style>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="welcome-empty-open">
+                                    <property name="use-underline">True</property>
+                                    <property name="label" translatable="yes">Open _File</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                            </property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkStackPage">
+                            <property name="name">no-match</property>
+                            <property name="child">
+                          <object class="GtkBox" id="welcome-recent-no-match">
+                            <property name="orientation">vertical</property>
+                            <property name="valign">center</property>
+                            <property name="halign">center</property>
+                            <property name="spacing">12</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="label" translatable="yes">No matching documents</property>
+                                <property name="wrap">True</property>
+                                <property name="wrap-mode">word-char</property>
+                                <style>
+                                  <class name="welcome-title"/>
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="label" translatable="yes">Try a different search, or start something new.</property>
+                                <property name="wrap">True</property>
+                                <property name="justify">center</property>
+                                <style>
+                                  <class name="welcome-subtitle"/>
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="orientation">horizontal</property>
+                                <property name="halign">center</property>
+                                <property name="spacing">8</property>
+                                <child>
+                                  <object class="GtkButton" id="welcome-no-match-new">
+                                    <property name="use-underline">True</property>
+                                    <property name="label" translatable="yes">New _Document</property>
+                                    <style>
+                                      <class name="suggested-action"/>
+                                    </style>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="welcome-no-match-open">
+                                    <property name="use-underline">True</property>
+                                    <property name="label" translatable="yes">Open _File</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                            </property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">templates</property>
+                    <property name="child">
+                  <object class="GtkBox" id="welcome-templates-page">
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">12</property>
+                    <child>
+                      <object class="GtkBox" id="template-nav-holder">
+                        <property name="orientation">horizontal</property>
+                        <property name="spacing">8</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox" id="template-list-holder">
+                        <property name="orientation">vertical</property>
+                        <property name="vexpand">True</property>
+                        <property name="hexpand">True</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">horizontal</property>
+                        <property name="halign">end</property>
+                        <child>
+                          <object class="GtkButton" id="welcome-template-create">
+                            <property name="use-underline">True</property>
+                            <property name="label" translatable="yes">_Create</property>
+                            <property name="tooltip-text" translatable="yes">Create a document from the selected template</property>
+                            <style>
+                              <class name="suggested-action"/>
+                            </style>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox" id="welcome-footer">
+        <style>
+          <class name="welcome-footer"/>
+        </style>
+        <property name="orientation">horizontal</property>
+        <property name="spacing">12</property>
+        <property name="margin-top">8</property>
+        <property name="margin-bottom">12</property>
+        <property name="margin-start">16</property>
+        <property name="margin-end">16</property>
+        <child>
+          <object class="GtkCheckButton" id="welcome-show-toggle">
+            <property name="label" translatable="yes">Show welcome at startup</property>
+            <property name="focus-on-click">False</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="hexpand">True</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="welcome-version-label">
+            <property name="xalign">1</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+
+</interface>

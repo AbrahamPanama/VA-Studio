@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 480 360">
+    <!-- Derived from shapes-line-02-t.svg 
+                      shapes-polygon-01-t.svg 
+                      shapes-polygon-03-t.svg 
+                      shapes-polyline-01-t.svg
+        from the SVG unit test suite under the 3-clause BSD license-->
+    <line x1="100" y1="100" x2="200" y2="150" stroke-width="10" stroke="black" fill="red" id="line2" />
+    <polygon id="polygon-07" fill="none" stroke="#00FF00" stroke-width="8"
+        points="270,225 300,245 320,225 340,245 280,280 390,280 420,240 280,185" />
+    <polyline id="polyline-06" fill="#ff00ff" stroke="#000000" stroke-width="8"
+        points="270,75 300,95 320,75 340,95 280,130 390,130 420,90 280,35" />
+    <polyline fill="red" points="80,200 80,300 150,250 80,200 250" id="polyline6" />
+</svg>

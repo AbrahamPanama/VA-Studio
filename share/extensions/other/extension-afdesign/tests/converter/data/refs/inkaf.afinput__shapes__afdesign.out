@@ -1,0 +1,244 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0.0 0.0 1280.0 800.0"
+    width="1280.0" height="800.0">
+    <sodipodi:namedview guidecolor="#0080dc" guideopacity="0.8000000715255737" />
+    <defs>
+        <linearGradient x1="0" y1="0" x2="1" y2="0" gradientTransform="matrix(1262 0 0 782 8 401)"
+            gradientUnits="userSpaceOnUse" id="linearGradient5815">
+            <stop offset="0.0" style="stop-color:#7900ff;stop-opacity:1.0" />
+            <stop offset="0.5" style="stop-color:#8d00f8;stop-opacity:1.0" />
+            <stop offset="1.0" style="stop-color:#a200f1;stop-opacity:1.0" />
+        </linearGradient>
+        <clipPath id="clip-path0-g5392">
+            <use xlink:href="#rect8555" />
+        </clipPath>
+        <clipPath id="clip-path0-g9603">
+            <use xlink:href="#rect8555" />
+        </clipPath>
+        <clipPath id="clip-path0-g4306">
+            <use xlink:href="#rect8555" />
+        </clipPath>
+        <clipPath id="clip-path0-g7856">
+            <use xlink:href="#rect8555" />
+        </clipPath>
+        <clipPath id="clip-path0-g5654">
+            <use xlink:href="#rect8555" />
+        </clipPath>
+        <clipPath id="clip-path0-g6457">
+            <use xlink:href="#rect8555" />
+        </clipPath>
+        <inkscape:path-effect effect="fillet_chamfer" lpeversion="1" method="arc" flexible="true"
+            satellites_param="F,1,0,1,0,0.25,0,1 @ F,1,0,1,0,0.25,0,1 @ F,1,0,1,0,0.25,0,1 @ F,1,0,1,0,0.25,0,1"
+            nodesatellites_param="F,1,0,1,0,0.25,0,1 @ F,1,0,1,0,0.25,0,1 @ F,1,0,1,0,0.25,0,1 @ F,1,0,1,0,0.25,0,1"
+            id="path-effect2304" />
+        <linearGradient x1="0" y1="0" x2="1" y2="0"
+            gradientTransform="matrix(171 -172 172 171 70 255)" gradientUnits="userSpaceOnUse"
+            id="linearGradient5347">
+            <stop offset="0.0" style="stop-color:#a021ff;stop-opacity:1.0" />
+            <stop offset="0.5" style="stop-color:#5a1090;stop-opacity:1.0" />
+            <stop offset="1.0" style="stop-color:#140021;stop-opacity:1.0" />
+        </linearGradient>
+        <linearGradient x1="0" y1="0" x2="1" y2="0"
+            gradientTransform="matrix(171 -172 172 171 70 255)" gradientUnits="userSpaceOnUse"
+            id="linearGradient266">
+            <stop offset="0.0" style="stop-color:#a021ff;stop-opacity:0.3478260934352875" />
+            <stop offset="0.5" style="stop-color:#5a1090;stop-opacity:0.6739130467176437" />
+            <stop offset="1.0" style="stop-color:#140021;stop-opacity:1.0" />
+        </linearGradient>
+        <linearGradient x1="0" y1="0" x2="1" y2="0"
+            gradientTransform="matrix(171 -172 172 171 70 255)" gradientUnits="userSpaceOnUse"
+            id="linearGradient5447">
+            <stop offset="0.0" style="stop-color:#a021ff;stop-opacity:0.3478260934352875" />
+            <stop offset="0.5" style="stop-color:#5a1090;stop-opacity:0.6739130467176437" />
+            <stop offset="1.0" style="stop-color:#140021;stop-opacity:1.0" />
+        </linearGradient>
+        <linearGradient x1="0" y1="0" x2="1" y2="0"
+            gradientTransform="matrix(171 -172 172 171 70 255)" gradientUnits="userSpaceOnUse"
+            id="linearGradient4780">
+            <stop offset="0.0" style="stop-color:#a021ff;stop-opacity:0.3478260934352875" />
+            <stop offset="0.5" style="stop-color:#5a1090;stop-opacity:0.6739130467176437" />
+            <stop offset="1.0" style="stop-color:#140021;stop-opacity:1.0" />
+        </linearGradient>
+        <radialGradient cx="0" cy="0" r="1"
+            gradientTransform="matrix(106.5 -106.5 106.5 106.5 156.5 166.5)"
+            gradientUnits="userSpaceOnUse" id="radialGradient6654">
+            <stop offset="0.0" style="stop-color:#a021ff;stop-opacity:1.0" />
+            <stop offset="0.5" style="stop-color:#591090;stop-opacity:1.0" />
+            <stop offset="1.0" style="stop-color:#140021;stop-opacity:1.0" />
+        </radialGradient>
+        <radialGradient cx="0" cy="0" r="1"
+            gradientTransform="matrix(106.5 -106.5 80.4909 80.4909 156.5 166.5)"
+            gradientUnits="userSpaceOnUse" id="radialGradient2036">
+            <stop offset="0.0" style="stop-color:#a021ff;stop-opacity:1.0" />
+            <stop offset="0.5" style="stop-color:#591090;stop-opacity:1.0" />
+            <stop offset="1.0" style="stop-color:#140021;stop-opacity:1.0" />
+        </radialGradient>
+    </defs>
+    <g inkscape:groupmode="layer" inkscape:label="Out_of_bounds"
+        style="opacity:1.0;fill:#000000;fill-opacity:0;stroke:none;stroke-opacity:0">
+        <g style="opacity:1.0">
+            <rect x="8.0" y="10.0" width="1262.0" height="782.0" rx="0.0"
+                transform="matrix(1.00634 0 0 1.01023 -3.05071 -5.1023)"
+                style="fill:#ffffff;fill-opacity:1.0;stroke:url(#linearGradient5815);stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:5.0;stroke-linejoin:round"
+                id="rect8555" />
+            <g style="opacity:1.0" id="g5392" clip-path="url(#clip-path0-g5392)">
+                <rect x="1062.8004780013384" y="709.0" width="174.28488060349582"
+                    height="174.28488060349582" rx="0.0" transform="translate(-1037.26, 107)"
+                    style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+            </g>
+            <g style="opacity:1.0" id="g9603" clip-path="url(#clip-path0-g9603)">
+                <rect x="1062.8004780013384" y="709.0" width="174.28488060349582"
+                    height="174.28488060349582" rx="0.0" transform="translate(-826.168, 107)"
+                    style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+            </g>
+            <g style="opacity:1.0" id="g4306" clip-path="url(#clip-path0-g4306)">
+                <rect x="1062.8004780013384" y="709.0" width="174.28488060349582"
+                    height="174.28488060349582" rx="0.0" transform="translate(-615.078, 107)"
+                    style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+            </g>
+            <g style="opacity:1.0" id="g7856" clip-path="url(#clip-path0-g7856)">
+                <rect x="1062.8004780013384" y="709.0" width="174.28488060349582"
+                    height="174.28488060349582" rx="0.0" transform="translate(-403.987, 107)"
+                    style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+            </g>
+            <g style="opacity:1.0" id="g5654" clip-path="url(#clip-path0-g5654)">
+                <rect x="1062.8004780013384" y="709.0" width="174.28488060349582"
+                    height="174.28488060349582" rx="0.0" transform="translate(-192.896, 107)"
+                    style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+            </g>
+            <g style="opacity:1.0" id="g6457" clip-path="url(#clip-path0-g6457)">
+                <rect x="1062.8004780013384" y="709.0" width="174.28488060349582"
+                    height="174.28488060349582" rx="0.0" transform="translate(18.1948, 107)"
+                    style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+            </g>
+        </g>
+    </g>
+    <g inkscape:groupmode="layer" inkscape:label="Shapes"
+        style="opacity:1.0;fill:#000000;fill-opacity:0;stroke:none;stroke-opacity:0">
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0"
+                inkscape:path-effect="#path-effect2304"
+                transform="matrix(0.818239 0 0 0.818239 -15.37 -17.9868)"
+                style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+        </g>
+        <g style="opacity:1.0">
+            <ellipse cx="471.5" cy="166.5" rx="106.5" ry="106.5"
+                transform="matrix(0.818239 0 0 0.818239 -62.0246 -17.9868)"
+                style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+        </g>
+        <g style="opacity:1.0">
+            <polygon points="854.75,60 908,273 695,273"
+                transform="matrix(0.818239 0 0 0.818239 -120.953 -17.9868)"
+                style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+        </g>
+        <g style="opacity:1.0">
+            <polygon points="1109.5,60 1216,113.25 1109.5,273 1003,113.25"
+                transform="matrix(0.818239 0 0 0.818239 -161.88 -17.9868)"
+                style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+        </g>
+        <g style="opacity:1.0">
+            <polygon points="263,553 50,553 103.25,340 209.75,340"
+                transform="matrix(0.818239 0 0 0.818239 828.993 -247.094)"
+                style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:1.0;stroke-linejoin:round" />
+        </g>
+    </g>
+    <g inkscape:groupmode="layer" inkscape:label="Strokes"
+        transform="matrix(0.818239 0 0 0.818239 -125.282 47.3628)"
+        style="opacity:1.0;fill:#000000;fill-opacity:0;stroke:none;stroke-opacity:0">
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="translate(134.328, 571.524)"
+                style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:10.0;stroke-linejoin:round" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="translate(392.31, 571.524)"
+                style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:stroke markers fill;stroke-width:10.0;stroke-linejoin:round" />
+        </g>
+        <g inkscape:label="Stroke_Joins"
+            style="opacity:1.0;fill:#000000;fill-opacity:0;stroke:none;stroke-opacity:0">
+            <g style="opacity:1.0">
+                <polygon points="140.5,338 247,550 34,550"
+                    transform="matrix(1.00472 0 0 1.00472 149.163 -33.4036)"
+                    style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:10.0;stroke-linejoin:round" />
+            </g>
+            <g style="opacity:1.0">
+                <polygon points="140.5,338 247,550 34,550"
+                    transform="matrix(1.00472 0 0 1.00472 407.145 -33.4036)"
+                    style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:10.0;stroke-linejoin:bevel" />
+            </g>
+            <g style="opacity:1.0">
+                <polygon points="140.5,338 247,550 34,550"
+                    transform="matrix(1.00472 0 0 1.00472 665.629 -33.4036)"
+                    style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:10.0;stroke-linejoin:miter;stroke-miterlimit:1.5" />
+            </g>
+            <g style="opacity:1.0">
+                <polygon points="140.5,338 247,550 34,550"
+                    transform="matrix(1.00472 0 0 1.00472 923.108 -33.4036)"
+                    style="fill:#ebebeb;fill-opacity:1.0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:10.0;stroke-linejoin:miter;stroke-miterlimit:2.0" />
+            </g>
+        </g>
+    </g>
+    <g inkscape:groupmode="layer" inkscape:label="Fills"
+        transform="matrix(0.818239 0 0 0.818239 -510.264 36.7257)"
+        style="opacity:1.0;fill:#000000;fill-opacity:0;stroke:none;stroke-opacity:0">
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="translate(1120.79, 584.524)"
+                style="fill:#8a00de;fill-opacity:1.0;stroke:none;stroke-opacity:1.0" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="translate(1378.77, 584.524)"
+                style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-opacity:1.0;stroke-linecap:round;paint-order:fill stroke markers;stroke-width:0.4;stroke-linejoin:round" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="translate(1894.74, -66.8662)"
+                style="fill:url(#linearGradient5347);fill-opacity:1.0;stroke:none;stroke-opacity:1.0" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="matrix(0.732051 0 0 0.732051 1678.69 629.137)"
+                style="fill:url(#linearGradient266);fill-opacity:1.0;stroke:none;stroke-opacity:1.0" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="matrix(0.633975 0.366025 -0.366025 0.633975 1754.98 588.184)"
+                style="fill:url(#linearGradient5447);fill-opacity:1.0;stroke:none;stroke-opacity:1.0" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="matrix(0.366025 0.633975 -0.633975 0.366025 1841.53 590.863)"
+                style="fill:url(#linearGradient4780);fill-opacity:1.0;stroke:none;stroke-opacity:1.0" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="translate(1894.74, 259.191)"
+                style="fill:url(#radialGradient6654);fill-opacity:1.0;stroke:none;stroke-opacity:1.0" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="translate(1894.74, 584.524)"
+                style="fill:url(#radialGradient2036);fill-opacity:1.0;stroke:none;stroke-opacity:1.0" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="matrix(-0.366025 0.633975 -0.633975 -0.366025 1956.09 387.417)"
+                style="fill:#0000ff;fill-opacity:0.3617021143436432;stroke:none;stroke-opacity:1.0" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="matrix(-0.366025 -0.633975 0.633975 -0.366025 1744.98 585.851)"
+                style="fill:#00ff00;fill-opacity:0.3617021143436432;stroke:none;stroke-opacity:1.0" />
+        </g>
+        <g style="opacity:1.0">
+            <rect x="50.0" y="60.0" width="213.0" height="213.0" rx="0.0"
+                transform="matrix(0.732051 0 0 0.732051 1678.69 303.804)"
+                style="fill:#ff0000;fill-opacity:0.3617021143436432;stroke:none;stroke-opacity:1.0" />
+        </g>
+    </g>
+    <title>shapes.svg</title>
+</svg>

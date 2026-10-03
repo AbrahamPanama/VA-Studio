@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inkscape Output</title>
+</head>
+<body>
+    <canvas id='canvas' width='300' height='100'></canvas>
+    <script>
+    var ctx = document.getElementById("canvas").getContext("2d");
+    	
+// #r1
+	ctx.beginPath();
+	ctx.fillStyle = 'rgba(117, 80, 123, 90%)';
+	ctx.strokeStyle = 'rgba(92, 53, 102, 50%)';
+	ctx.lineWidth = 10.0;
+	ctx.miterLimit = 4;
+	ctx.rect(10.000000, 15.000000, 40.000000, 40.000000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #r2
+	ctx.beginPath();
+	ctx.fillStyle = '#3465a4';
+	ctx.strokeStyle = '#729fcf';
+	ctx.rect(60.000000, 15.000000, 40.000000, 40.000000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #r3
+	ctx.beginPath();
+	ctx.globalAlpha = 0.81;
+	ctx.fillStyle = 'rgba(204, 0, 0, 90%)';
+	ctx.strokeStyle = 'rgba(46, 52, 54, 50%)';
+	ctx.rect(110.000000, 15.000000, 40.000000, 40.000000);
+	ctx.fill();
+	ctx.stroke();
+	
+// #r4
+	ctx.save();
+	ctx.beginPath();
+	ctx.globalAlpha = 1.0;
+	const slg4 = ctx.createLinearGradient(195.000000, 55.000000, 265.000000, 15.000000);
+	slg4.addColorStop(0.0, '#123456');
+	ctx.fillStyle = slg4;
+	const slg2 = ctx.createLinearGradient(195.000000, 55.000000, 235.000000, 15.000000);
+	slg2.addColorStop(0.0, 'rgba(114, 159, 207, 50%)');
+	slg2.addColorStop(1.0, 'rgba(52, 101, 164, 50%)');
+	ctx.strokeStyle = slg2;
+	ctx.rect(160.000000, 15.000000, 40.000000, 40.000000);
+	ctx.fill();
+	ctx.stroke();
+	ctx.restore();
+	
+// #r6
+	ctx.save();
+	ctx.beginPath();
+	ctx.globalAlpha = 1.0;
+	const slg1 = ctx.createLinearGradient(195.000000, 15.000000, 235.000000, 55.000000);
+	slg1.addColorStop(0.0, '#75507b');
+	slg1.addColorStop(1.0, '#cc0000');
+	ctx.fillStyle = slg1;
+	const slg2_2 = ctx.createLinearGradient(195.000000, 55.000000, 235.000000, 15.000000);
+	slg2_2.addColorStop(0.0, 'rgba(114, 159, 207, 50%)');
+	slg2_2.addColorStop(1.0, 'rgba(52, 101, 164, 50%)');
+	ctx.strokeStyle = slg2_2;
+	ctx.rect(210.000000, 15.000000, 40.000000, 40.000000);
+	ctx.fill();
+	ctx.stroke();
+	ctx.restore();
+	
+// #r5
+	ctx.save();
+	ctx.beginPath();
+	ctx.globalAlpha = 1.0;
+	const slg1_4 = ctx.createLinearGradient(195.000000, 15.000000, 235.000000, 55.000000);
+	slg1_4.addColorStop(0.0, '#75507b');
+	slg1_4.addColorStop(1.0, '#cc0000');
+	ctx.fillStyle = slg1_4;
+	const slg3 = ctx.createLinearGradient(195.000000, 55.000000, 265.000000, 15.000000);
+	slg3.addColorStop(0.0, 'rgba(114, 159, 207, 50%)');
+	slg3.addColorStop(1.0, 'rgba(52, 101, 164, 50%)');
+	ctx.strokeStyle = slg3;
+	ctx.rect(260.000000, 15.000000, 40.000000, 40.000000);
+	ctx.fill();
+	ctx.stroke();
+	ctx.restore();
+
+    </script>
+</body>
+</html>

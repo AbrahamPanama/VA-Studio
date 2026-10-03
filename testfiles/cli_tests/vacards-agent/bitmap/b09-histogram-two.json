@@ -1,0 +1,15 @@
+{
+  "description": "The histogram needs exactly one bitmap: two selected items are rejected.",
+  "input": "{FIXTURES}/tone.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:a,b;vacards-bitmap-histogram",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-bitmap-histogram",
+      "status": "rejected",
+      "reason": "requires-single-bitmap",
+      "message": "Select exactly one bitmap."
+    }
+  ]
+}

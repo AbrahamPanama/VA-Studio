@@ -1,0 +1,27 @@
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:cc="http://creativecommons.org/ns#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns="http://www.w3.org/2000/svg" version="1.1" width="793.7007874" height="1122.519685">
+    <ns0:namedview xmlns:ns0="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd">
+        <ns0:guide position="0,1122.52" orientation="0,1"/>
+        <ns0:guide position="0,1065.83" orientation="0,1"/>
+        <ns0:guide position="0,952.441" orientation="0,1"/>
+    </ns0:namedview>
+    <svg:g id="box5815" transform="translate(-94.4882, 117.165)">
+        <svg:path id="box5815-inner-close-tab" d="M 338.268 0 C 363.78 0 377.953 17.0079 377.953 51.0236 L 377.953 56.6929 L 0 56.6929 L 0 51.0236 C 0 17.0079 14.1732 0 39.685 0 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-upper-close-tab" d="M 0 56.6929 L 377.953 56.6929 L 377.953 170.079 L 0 170.079 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-upper-right-tab" d="M 377.953 56.6929 L 468.661 56.6929 L 491.339 151.181 L 491.339 170.079 L 377.953 170.079 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-upper-left-tab" d="M 982.677 56.6929 L 891.969 56.6929 L 869.291 151.181 L 869.291 170.079 L 982.677 170.079 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-left-tab" d="M 0 170.079 L -56.6929 198.425 L -56.6929 708.661 L 0 737.008 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-front" d="M 0 170.079 L 377.953 170.079 L 377.953 737.008 L 0 737.008 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-right" d="M 377.953 170.079 L 491.339 170.079 L 491.339 737.008 L 377.953 737.008 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-back" d="M 491.339 170.079 L 869.291 170.079 L 869.291 737.008 L 491.339 737.008 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-line" d="M 869.291 170.079 L 982.677 170.079 L 982.677 737.008 L 869.291 737.008 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-bottom-front-tab" d="M 0 737.008 L 0 793.701 L 377.953 793.701 L 377.953 737.008 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-bottom-right-tab" d="M 377.953 737.008 L 377.953 888.189 L 491.339 888.189 L 491.339 737.008 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-bottom-back-tab" d="M 491.339 737.008 L 491.339 793.701 L 869.291 793.701 L 869.291 737.008 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+        <svg:path id="box5815-bottom-left-tab" d="M 869.291 737.008 L 869.291 888.189 L 982.677 888.189 L 982.677 737.008 Z" style="fill:none;stroke:#000000;stroke-width:1.0"/>
+    </svg:g>
+</svg>

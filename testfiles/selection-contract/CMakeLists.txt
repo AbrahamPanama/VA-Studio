@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+cmake_minimum_required(VERSION 3.16)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    project(VACardsSelectionContract LANGUAGES CXX)
+    enable_testing()
+endif()
+add_executable(test_operation-targets ../src/operation-targets-test.cpp)
+target_include_directories(test_operation-targets PRIVATE ../../src)
+target_compile_features(test_operation-targets PRIVATE cxx_std_17)
+add_test(NAME test_operation-targets COMMAND test_operation-targets)
+set_tests_properties(test_operation-targets PROPERTIES TIMEOUT 30 LABELS "selection-contract;vacards-critical")

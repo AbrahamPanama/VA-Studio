@@ -1,0 +1,12 @@
+{
+  "description": "One vacards-undo after the group union restores a byte-identical export: combining a group and its leaves is exactly one Undo step.",
+  "input": "{FIXTURES}/groups-boolean.svg",
+  "actions": "vacards-result-file:{RESULT};export-filename:{WORK}/before.svg;export-do;select-by-id:r1,t1,g1;vacards-boolean:op=union;vacards-undo;export-filename:{WORK}/after.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-boolean", "status": "changed", "undo": "one-step", "deleted": ["t1", "g1", "g1a", "g1b", "g1c", "g1inner"]},
+    {"action": "vacards-undo", "status": "changed"}
+  ],
+  "expect_same_files": [["before.svg", "after.svg"]]
+}

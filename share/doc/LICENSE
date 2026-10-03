@@ -1,0 +1,19 @@
+<big>VA Studio software license:</big>
+
+This program is free software and is distributed under the <b>GNU General Public License, version 3</b>. In short, this means you are free to use and distribute VA Studio for any purpose, commercial or non-commercial, without any restrictions. You are also free to modify the program as you wish, with the only restriction that if you distribute the modified version, you must provide access to its source code.
+
+VA Studio is based on the Inkscape vector graphics editor (https://inkscape.org) and is distributed under the same license. The upstream Inkscape copyright, authorship and license notices are retained in the COPYING, LICENSES, AUTHORS and TRANSLATORS files.
+
+This program is distributed in the hope that it will be useful, but <b>WITHOUT ANY WARRANTY</b>. For more details about the license, read the file COPYING in the folder share/inkscape/doc inside the VA Studio installation folder (on macOS, inside the application bundle under Contents/Resources).
+
+
+<big>Source code and third-party components:</big>
+
+The file SOURCE.md in the same folder explains how to obtain the complete source code of this version of VA Studio. The file THIRD-PARTY-NOTICES.md lists the third-party components that VA Studio contains or is distributed with, together with their licenses; the license texts are in the same folder.
+
+
+<big>Licensing of files made using VA Studio:</big>
+
+All files either saved or exported from VA Studio in any format (SVG, PNG, PDF, etc.) are <b>owned by the creators</b> of the work (that's you!) and/or the original authors in case you use derivative works.
+
+You are responsible for publishing your work <b>under a license of your choosing</b> and for tracking your use of derivative works in the software. You can add and modify your license information for each file in the 'File/Document properties' dialog within VA Studio.

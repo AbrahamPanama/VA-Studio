@@ -1,0 +1,20 @@
+[package]
+name = "vacards-nesting"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "GPL-2.0-or-later"
+publish = false
+
+[lib]
+name = "vacards_nesting"
+crate-type = ["rlib", "staticlib"]
+
+[dependencies]
+jagua-rs = { git = "https://github.com/JeroenGar/jagua-rs.git", rev = "9a19409bd38f3643c3d6d2d7571cddfba548ee17", default-features = false, features = ["bpp"] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+panic = "unwind"
+codegen-units = 1

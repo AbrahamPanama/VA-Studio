@@ -1,0 +1,10 @@
+{
+  "description": "vacards-destructive-clip always reports: a locked bitmap pair is a Rejected record (reason recorded in the AC-5 report).",
+  "input": "{FIXTURES}/clip.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:img2,cut2;vacards-destructive-clip",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-destructive-clip", "status": "rejected", "reason": "protected-object"}
+  ]
+}

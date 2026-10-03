@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inkscape Output</title>
+</head>
+<body>
+    <canvas id='canvas' width='1000' height='1000'></canvas>
+    <script>
+    var ctx = document.getElementById("canvas").getContext("2d");
+    	
+// #webslicer-layer
+	
+// #slicerect1
+	ctx.beginPath();
+	ctx.globalAlpha = 0.5;
+	ctx.fillStyle = 'rgb(255, 0, 0)';
+	ctx.rect(651.308900, 353.926610, 248.691120, 201.498110);
+	ctx.fill();
+	
+// #layer2
+	
+// #c1
+	ctx.beginPath();
+	ctx.globalAlpha = 1.0;
+	ctx.fillStyle = 'rgb(0, 0, 128)';
+	ctx.arc(150.000000, 450.000000, 50.000000, 0.000000, 6.28318531, 1);
+	ctx.fill();
+	
+// #c2
+	ctx.beginPath();
+	ctx.strokeStyle = 'rgb(255, 0, 0)';
+	ctx.lineWidth = 16.0;
+	ctx.miterLimit = 4;
+	ctx.moveTo(400.000000, 400.000000);
+	ctx.bezierCurveTo(359.553776, 400.000000, 323.090147, 412.182109, 307.612047, 430.865828);
+	ctx.bezierCurveTo(292.133947, 449.549548, 300.689522, 471.055439, 329.289322, 485.355339);
+	ctx.bezierCurveTo(357.889121, 499.655239, 400.900904, 503.933027, 438.268343, 496.193977);
+	ctx.bezierCurveTo(475.635782, 488.454927, 500.000000, 470.223112, 500.000000, 450.000000);
+	ctx.bezierCurveTo(500.000000, 436.739176, 489.464316, 424.021480, 470.710678, 414.644661);
+	ctx.bezierCurveTo(451.957040, 405.267842, 426.521649, 400.000000, 400.000000, 400.000000);
+	ctx.closePath();
+	ctx.stroke();
+	
+// #c3
+	ctx.beginPath();
+	ctx.fillStyle = 'rgb(255, 255, 0)';
+	ctx.strokeStyle = 'rgb(0, 128, 0)';
+	ctx.moveTo(783.086350, 477.823810);
+	ctx.bezierCurveTo(758.815382, 495.943059, 713.857171, 504.107039, 671.987870, 497.998230);
+	ctx.bezierCurveTo(630.118574, 491.889420, 600.997311, 472.917108, 600.024860, 451.114800);
+	ctx.bezierCurveTo(599.052409, 429.312488, 626.453123, 409.709909, 667.736130, 402.673890);
+	ctx.bezierCurveTo(709.019129, 395.637872, 754.660551, 402.791598, 780.522930, 420.351820);
+	ctx.lineTo(700.000000, 450.000000);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+	
+// #p1
+	ctx.beginPath();
+	ctx.strokeStyle = 'rgb(0, 0, 0)';
+	ctx.lineWidth = 10.0;
+	ctx.moveTo(100.000000, 600.000000);
+	ctx.lineTo(200.000000, 700.000000);
+	ctx.lineTo(300.000000, 600.000000);
+	ctx.lineTo(400.000000, 700.000000);
+	ctx.stroke();
+	
+// #p2
+	ctx.beginPath();
+	ctx.moveTo(500.000000, 600.000000);
+	ctx.bezierCurveTo(500.000000, 600.000000, 500.000000, 700.000000, 600.000000, 700.000000);
+	ctx.bezierCurveTo(700.000000, 700.000000, 600.000000, 600.000000, 700.000000, 600.000000);
+	ctx.bezierCurveTo(800.000000, 600.000000, 800.000000, 700.000000, 800.000000, 700.000000);
+	ctx.stroke();
+	
+// #s1
+	ctx.beginPath();
+	ctx.strokeStyle = 'rgb(0, 128, 0)';
+	ctx.moveTo(244.833200, 889.140050);
+	ctx.lineTo(199.494330, 881.005590);
+	ctx.lineTo(167.090050, 913.743120);
+	ctx.lineTo(160.815900, 868.109600);
+	ctx.lineTo(119.667180, 847.407760);
+	ctx.lineTo(161.128420, 827.339150);
+	ctx.lineTo(168.101390, 781.807180);
+	ctx.lineTo(200.000000, 815.037620);
+	ctx.lineTo(245.458240, 807.599150);
+	ctx.lineTo(223.711430, 848.205300);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+	
+// #layer1
+	
+// #t1
+	ctx.fillStyle = 'rgb(0, 0, 0)';
+	ctx.font = "14.66666698px sans-serif";
+	ctx.fillText("Hello World", 100.000000, 100.000000);
+	
+// #t2
+	ctx.fillText("UPPER", 200.000000, 100.000000);
+	
+// #t3
+	ctx.font = "10.58333302px sans-serif";
+	ctx.fillText("Multi line", 300.000000, 100.000000);
+	ctx.fillText("text", 300.000000, 118.333340);
+	ctx.fillText("FOO", 300.000000, 136.666670);
+	
+// #t5
+	ctx.save();
+	ctx.transform(1.000000, 0.000000, 0.000000, 1.000000, 445.710000, -129.648000);
+	
+// #text3762
+	ctx.fillText("Grouped", 54.289616, 229.648070);
+	
+// #text3766
+	ctx.font = "14.66666698px sans-serif";
+	ctx.fillText("text", 54.289619, 259.648070);
+	ctx.restore();
+	
+// #r1
+	ctx.beginPath();
+	ctx.fillStyle = 'rgb(0, 0, 128)';
+	ctx.rect(100.000000, 200.000000, 100.000000, 100.000000);
+	ctx.fill();
+	
+// #r2
+	ctx.beginPath();
+	ctx.strokeStyle = 'rgb(255, 0, 0)';
+	ctx.lineWidth = 16.0;
+	ctx.rect(300.000000, 200.000000, 200.000000, 100.000000);
+	ctx.stroke();
+	
+// #r3
+	ctx.beginPath();
+	ctx.fillStyle = 'rgb(255, 255, 0)';
+	ctx.strokeStyle = 'rgb(0, 128, 0)';
+	ctx.moveTo(644.943226, 200.000000);
+	ctx.lineTo(755.056774, 200.000000);
+	ctx.bezierCurveTo(766.976459, 200.000000, 778.407944, 204.103733, 786.836434, 211.408425);
+	ctx.bezierCurveTo(795.264924, 218.713116, 800.000000, 228.620404, 800.000000, 238.950798);
+	ctx.lineTo(800.000000, 261.049202);
+	ctx.bezierCurveTo(800.000000, 271.379596, 795.264924, 281.286884, 786.836434, 288.591575);
+	ctx.bezierCurveTo(778.407944, 295.896267, 766.976459, 300.000000, 755.056774, 300.000000);
+	ctx.lineTo(644.943226, 300.000000);
+	ctx.bezierCurveTo(633.023541, 300.000000, 621.592056, 295.896267, 613.163566, 288.591575);
+	ctx.bezierCurveTo(604.735076, 281.286884, 600.000000, 271.379596, 600.000000, 261.049202);
+	ctx.lineTo(600.000000, 238.950798);
+	ctx.bezierCurveTo(600.000000, 228.620404, 604.735076, 218.713116, 613.163566, 211.408425);
+	ctx.bezierCurveTo(621.592056, 204.103733, 633.023541, 200.000000, 644.943226, 200.000000);
+	ctx.closePath();
+	ctx.fill();
+	ctx.stroke();
+
+    </script>
+</body>
+</html>

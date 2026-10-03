@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600">
+  <!-- Identical glyphs make their shaped advance measurable without a golden
+       image or an assumption about a particular shaping stack's font metrics. -->
+  <g font-family="Noto Sans" font-size="36">
+    <g>
+      <text id="horizontal-one" x="300" y="300">H</text>
+      <text id="horizontal-two" x="300" y="300">HH</text>
+      <text id="horizontal-middle" x="300" y="300" text-anchor="middle">HH</text>
+      <text id="horizontal-end" x="300" y="300" text-anchor="end">HH</text>
+    </g>
+    <g writing-mode="vertical-lr">
+      <text id="mixed-one" x="300" y="300">H</text>
+      <text id="mixed-two" x="300" y="300">HH</text>
+      <text id="mixed-middle" x="300" y="300" text-anchor="middle">HH</text>
+      <text id="mixed-end" x="300" y="300" text-anchor="end">HH</text>
+    </g>
+    <g writing-mode="vertical-lr" text-orientation="sideways">
+      <text id="sideways-one" x="300" y="300">H</text>
+      <text id="sideways-two" x="300" y="300">HH</text>
+      <text id="sideways-middle" x="300" y="300" text-anchor="middle">HH</text>
+      <text id="sideways-end" x="300" y="300" text-anchor="end">HH</text>
+    </g>
+    <g writing-mode="vertical-lr" text-orientation="upright">
+      <text id="upright-lr-one" x="300" y="300">H</text>
+      <text id="upright-lr-two" x="300" y="300">HH</text>
+      <text id="upright-lr-middle" x="300" y="300" text-anchor="middle">HH</text>
+      <text id="upright-lr-end" x="300" y="300" text-anchor="end">HH</text>
+    </g>
+    <g writing-mode="vertical-rl" text-orientation="upright" transform="translate(5 7) scale(1.25 1.5)">
+      <text id="upright-rl-one" x="300" y="300">H</text>
+      <text id="upright-rl-two" x="300" y="300">HH</text>
+      <text id="upright-rl-middle" x="300" y="300" text-anchor="middle">HH</text>
+      <text id="upright-rl-end" x="300" y="300" text-anchor="end">HH</text>
+    </g>
+    <g writing-mode="vertical-lr" text-orientation="upright">
+      <text id="combining-one" x="300" y="300">G̃</text>
+      <text id="combining-two" x="300" y="300">G̃G̃</text>
+      <text id="combining-middle" x="300" y="300" text-anchor="middle">G̃G̃</text>
+      <text id="combining-end" x="300" y="300" text-anchor="end">G̃G̃</text>
+      <text id="spans-one" x="300" y="300"><tspan>H</tspan></text>
+      <text id="spans-two" x="300" y="300"><tspan>H</tspan><tspan fill="blue">H</tspan></text>
+      <text id="spans-middle" x="300" y="300" text-anchor="middle"><tspan>H</tspan><tspan fill="blue">H</tspan></text>
+      <text id="spans-end" x="300" y="300" text-anchor="end"><tspan>H</tspan><tspan fill="blue">H</tspan></text>
+    </g>
+    <g font-family="Noto Sans CJK JP" writing-mode="vertical-lr" text-orientation="upright">
+      <text id="vertical-metrics-one" x="300" y="300">回</text>
+      <text id="vertical-metrics-two" x="300" y="300">回回</text>
+      <text id="vertical-metrics-middle" x="300" y="300" text-anchor="middle">回回</text>
+      <text id="vertical-metrics-end" x="300" y="300" text-anchor="end">回回</text>
+    </g>
+  </g>
+</svg>

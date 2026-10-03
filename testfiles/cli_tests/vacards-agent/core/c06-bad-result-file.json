@@ -1,0 +1,11 @@
+{
+  "description": "An unopenable result file is rejected; the chain halts and the option action is skipped.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "vacards-result-file:{WORK}/missing/x.jsonl;vacards-options",
+  "records_from": "stderr",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "rejected", "reason": "cannot-open-result-file"},
+    {"action": "vacards-options", "status": "skipped", "reason": "halted-after-error"}
+  ]
+}

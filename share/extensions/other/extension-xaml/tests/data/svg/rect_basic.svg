@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 480 360">
+<!-- Derived from shapes-rect-01-t.svg from the SVG unit test suite
+under the 3-clause BSD license-->
+    <rect id="Simple-rect-no-fill" fill="none" stroke="#000000" x="30" y="46" width="50" height="80" />
+    <rect id="Simple-rect-filled" fill="fuchsia" stroke="#000000" x="130" y="46" width="50" height="80" />
+    <rect id="Simple-round-rect-filled" fill="fuchsia" x="350" y="46" width="50" height="80" rx="30"/>
+    <rect id="rect-06" fill="#00FF00" x="350" y="196" width="50" height="80" rx="30" ry="50"/>
+</svg>

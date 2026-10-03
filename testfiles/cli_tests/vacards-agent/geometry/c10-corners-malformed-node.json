@@ -1,0 +1,17 @@
+{
+  "description": "A node address that is not a P:N pair of non-negative integers is rejected invalid-argument with error {code:malformed-value, key:nodes}.",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:r;vacards-corners:radius=2mm,scope=nodes,nodes=abc",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-corners",
+      "status": "rejected",
+      "mode": "single-object",
+      "reason": "invalid-argument",
+      "error": {"code": "malformed-value", "key": "nodes"},
+      "undo": "none"
+    }
+  ]
+}

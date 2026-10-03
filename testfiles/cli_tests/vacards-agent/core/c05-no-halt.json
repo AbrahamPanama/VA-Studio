@@ -1,0 +1,12 @@
+{
+  "description": "With halt-on-error=false, a rejection does not halt: later actions run and export succeeds, exit stays 3.",
+  "input": "{TESTCASES}/shapes.svg",
+  "actions": "vacards-result-file:{RESULT};vacards-options:halt-on-error=false;vacards-options:bogus=1;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 3,
+  "expect_records": [
+    {"action": "vacards-result-file", "status": "ok"},
+    {"action": "vacards-options", "status": "ok", "data": {"halt-on-error": false}},
+    {"action": "vacards-options", "status": "rejected", "reason": "invalid-argument"}
+  ],
+  "expect_files": {"out.svg": {"exists": true, "contains": ["<svg"]}}
+}
