@@ -4,7 +4,7 @@
  * Outcome-based tests for the bounded RTF -> TextPaste::Fragment decoder.
  *
  * Pure parser tests: no GTK, no clipboard, no document. Every expectation is
- * derived from evidence/external-text-paste-swarm/discovery/rtf/REPORT.md
+ * derived from internal evidence notes
  * section 3 (semantics) and section 5 (fixtures F01-F20, B01-B18) plus the
  * frozen interface of ui/text-paste-rtf.h. Two REPORT.md fixture expectations
  * are internally inconsistent with the section 3.2 delimiter rule and are

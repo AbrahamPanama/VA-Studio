@@ -13,10 +13,11 @@ VA Studio is a modified version of Inkscape. As a whole it is distributed under 
 1. Source-tree components
 2. Rust crates in the nesting engine
 3. Sparrow nesting helper
-4. Assets and external inputs
-5. Platform libraries
-6. License texts used by the Rust crates
-7. Status of this file
+4. Runtime libraries linked into the programs
+5. Assets and external inputs
+6. Platform libraries
+7. License texts
+8. Status of this file
 
 ## 1. Source-tree components
 
@@ -24,254 +25,254 @@ VA Studio is a modified version of Inkscape. As a whole it is distributed under 
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Inkscape (upstream base of VA Studio) | `.` | Inkscape 1.5 development snapshot d2b9be1c53 | GPL-2.0-or-later, with the exceptions listed in COPYING; the combined binaries are GPL-3.0-or-later | `COPYING`, `LICENSES/GPL-2.0-or-later.txt`, `LICENSES/GPL-3.0-or-later.txt`, `AUTHORS`, `TRANSLATORS` | https://gitlab.com/inkscape/inkscape | compiled into VA Studio | yes: VA Studio changes are the history of this repository after the baseline import |
 | lib2geom | `src/3rdparty/2geom` | c7d8378ccc109bdb2ed30f0c8407725e93ffdd9b | LGPL-2.1-only OR MPL-1.1 | `src/3rdparty/2geom/LICENSE.md`, `src/3rdparty/2geom/COPYING-LGPL-2.1`, `src/3rdparty/2geom/COPYING-MPL-1.1` | https://gitlab.com/inkscape/lib2geom | compiled into VA Studio | no |
-| libcroco (VA Studio fork) | `src/3rdparty/libcroco` | 7369a22273e2d7b7c5ba7b582fd52759649f5425 | LGPL-2.1-only (source headers; COPYING carries the LGPL-2.0 text) | `src/3rdparty/libcroco/COPYING`, `src/3rdparty/libcroco/COPYING.LIB`, `src/3rdparty/libcroco/COPYRIGHTS`, `src/3rdparty/libcroco/AUTHORS` | https://gitlab.com/inkscape/libcroco | compiled into VA Studio | yes: one VA commit on top of upstream d851af79660943cb8b6feaa9c7cc9d39eb3b4686 (Unicode Windows CSS file names) |
+| libcroco (VA Studio fork) | `src/3rdparty/libcroco` | 7369a22273e2d7b7c5ba7b582fd52759649f5425 | LGPL-2.1-only (source headers; COPYING carries the LGPL-2.0 text) | `src/3rdparty/libcroco/COPYING`, `src/3rdparty/libcroco/COPYING.LIB`, `src/3rdparty/libcroco/COPYRIGHTS`, `src/3rdparty/libcroco/AUTHORS` | https://gitlab.com/inkscape/libcroco | compiled into VA Studio | yes: one VA commit on top of upstream d851af79660943cb8b6feaa9c7cc9d39eb3b4686 (Unicode Windows CSS file names) (upstream base: d851af79660943cb8b6feaa9c7cc9d39eb3b4686) |
 | libdepixelize | `src/3rdparty/libdepixelize` | 73b07a45f01cf7c4b179d1e65cef22609e000419 | LGPL-2.1-or-later OR GPL-2.0-or-later | `src/3rdparty/libdepixelize/COPYING`, `src/3rdparty/libdepixelize/COPYING.LESSER` | https://gitlab.com/inkscape/devel/libdepixelize | compiled into VA Studio | no |
 | libUEMF | `src/3rdparty/libuemf` | 71aba3710b4548bd6df7b7bddcd17096a813efa5 | GPL-2.0 (README; see COPYING) | `src/3rdparty/libuemf/COPYING`, `src/3rdparty/libuemf/README` | https://gitlab.com/inkscape/devel/libuemf | source only: VA Studio retired EMF/WMF support and does not compile or link it | no |
-| CapyPDF (VA Studio fork) | `src/3rdparty/capypdf` | a4b222b9690f593a28bed2f01260b713ed315620 | Apache-2.0 | `src/3rdparty/capypdf/COPYING` | https://github.com/jpakkane/capypdf | compiled into VA Studio | yes: one VA commit on top of upstream d789f48b43518bcd190e9d845c943e3978014f61 (UTF-8 PDF output paths on Windows) |
+| CapyPDF (VA Studio fork) | `src/3rdparty/capypdf` | a4b222b9690f593a28bed2f01260b713ed315620 | Apache-2.0 | `src/3rdparty/capypdf/COPYING` | https://github.com/jpakkane/capypdf | compiled into VA Studio | yes: one VA commit on top of upstream d789f48b43518bcd190e9d845c943e3978014f61 (UTF-8 PDF output paths on Windows) (upstream base: d789f48b43518bcd190e9d845c943e3978014f61) |
 | Adaptagrams (libavoid, libcola, libvpsc) | `src/3rdparty/adaptagrams` | as imported by Inkscape | LGPL-2.1-or-later | `src/3rdparty/adaptagrams/libavoid/LICENSE.LGPL`, `src/3rdparty/adaptagrams/libvpsc/COPYING` | https://github.com/mjwybrow/adaptagrams | compiled into VA Studio | no VA changes |
 | AutoTrace (subset) | `src/3rdparty/autotrace` | as imported by Inkscape | GPL-2.0-or-later AND LGPL-2.1-or-later (per-file headers) | `LICENSES/GPL-2.0-or-later.txt`, `LICENSES/LGPL-2.1-or-later.txt` | https://github.com/autotrace/autotrace | compiled into VA Studio | no VA changes |
 | VA Studio nesting engine (Rust static library) | `src/3rdparty/vacards-nesting-rs` | this repository | GPL-2.0-or-later | `src/3rdparty/vacards-nesting-rs/LICENSES/README.md`, `src/3rdparty/vacards-nesting-rs/LICENSES/jagua-rs-MPL-2.0.txt`, `src/3rdparty/vacards-nesting-rs/LICENSES/sparrow-MIT.txt` | VA Studio (original code); uses jagua-rs and the crates listed in section 2 | compiled into VA Studio | original VA Studio code |
-| Inkscape extensions (VA Studio fork) | `share/extensions` | 569514b42d8fbc890bf61adbdf16ffee9fdc632e | GPL-2.0-or-later (some files GPL-3.0-or-later, see per-file headers) | `share/extensions/LICENSE.txt` | https://gitlab.com/inkscape/extensions | installed as Python extensions | yes: two VA commits on top of upstream 87ece23a2fac1a8174d93e35354b84e9465f57e1 (pin the Affinity importer fork) |
-| Affinity Designer importer (VA Studio fork) | `share/extensions/other/extension-afdesign` | 13562e6bf55a9a180434b7824e07f5ede4b3f0fc | GPL-2.0-or-later | `share/extensions/other/extension-afdesign/LICENSE`, `share/extensions/other/extension-afdesign/LICENSES/GPL-2.0-or-later.txt`, `share/extensions/other/extension-afdesign/REUSE.toml` | https://gitlab.com/inkscape/extras/extension-afdesign | installed as a Python extension | yes: one VA commit on top of upstream b2288b5f371685161ff87b70788a5cddccf7f4a8 (color compatibility with current inkex) |
+| Inkscape extensions (VA Studio fork) | `share/extensions` | 569514b42d8fbc890bf61adbdf16ffee9fdc632e | GPL-2.0-or-later (some files GPL-3.0-or-later, see per-file headers) | `share/extensions/LICENSE.txt` | https://gitlab.com/inkscape/extensions | installed as Python extensions | yes: two VA commits on top of upstream 87ece23a2fac1a8174d93e35354b84e9465f57e1 (pin the Affinity importer fork) (upstream base: 87ece23a2fac1a8174d93e35354b84e9465f57e1) |
+| Affinity Designer importer (VA Studio fork) | `share/extensions/other/extension-afdesign` | 13562e6bf55a9a180434b7824e07f5ede4b3f0fc | GPL-2.0-or-later | `share/extensions/other/extension-afdesign/LICENSE`, `share/extensions/other/extension-afdesign/LICENSES/GPL-2.0-or-later.txt`, `share/extensions/other/extension-afdesign/REUSE.toml` | https://gitlab.com/inkscape/extras/extension-afdesign | installed as a Python extension | yes: one VA commit on top of upstream b2288b5f371685161ff87b70788a5cddccf7f4a8 (color compatibility with current inkex) (upstream base: b2288b5f371685161ff87b70788a5cddccf7f4a8) |
 | Inkscape Extension Manager (inkman) | `share/extensions/other/inkman` | 267734e94609fe9041a3c69da6430e7a90b8cd6f | GPL-3.0-or-later | `share/extensions/other/inkman/LICENSE.txt` | https://gitlab.com/inkscape/extras/extension-manager | installed as a Python extension (online feature, see PRIVACY.md) | no |
 | Import Web Image (inkscape-import-clipart) | `share/extensions/other/clipart` | 8d2948ce2fe82b195fec99f909049a8fdd64298e | GPL-3.0-or-later | `share/extensions/other/clipart/LICENSE.txt` | https://gitlab.com/inkscape/extras/inkscape-import-clipart | installed as a Python extension (online feature, see PRIVACY.md) | no |
 | Gcodetools | `share/extensions/other/gcodetools` | f799a9ac8707cb08f2b04602c22a12c6d7acb9c7 | GPL-2.0-or-later | `share/extensions/other/gcodetools/LICENSE.txt` | https://gitlab.com/inkscape/extras/extensions-gcodetools | installed as a Python extension | no |
 | XAML extension | `share/extensions/other/extension-xaml` | 3a16aa7372c96559a6af918f54e096dc5de16081 | GPL-2.0-or-later | `share/extensions/other/extension-xaml/LICENSE.txt` | https://gitlab.com/inkscape/extras/extension-xaml | installed as a Python extension | no |
 | Inkscape GTK themes | `share/themes` | a8a8375fbe8672bb1a273be7aa32c06564936e29 | GPL-2.0-or-later | `share/themes/LICENSE.txt` | https://gitlab.com/inkscape/themes | installed data | no |
-| Inkscape translations (VA Studio fork) | `po` | a4b32e22401fb35a6b51e310d12af465187bbb52 | GPL-2.0-or-later (same terms as Inkscape) | `COPYING` | https://gitlab.com/inkscape/translations | compiled message catalogs | yes: nine VA commits (Spanish strings for VA Studio features) on top of upstream 4a4241de4b7fa4f71160b628487369a42320e9ff |
-| libcdr (VA Studio fork, CorelDRAW import) | `third_party/libcdr-vacards` | 297ad1ad0b8e1772633abd7553649714b173f7e4 | MPL-2.0 | `third_party/libcdr-vacards/COPYING.MPL`, `third_party/libcdr-vacards/AUTHORS` | https://git.libreoffice.org/libcdr (mirror: https://github.com/LibreOffice/libcdr) | built as a shared library and bundled | yes: libcdr 0.1.10 baseline import plus nine VA commits (CorelDRAW 2023/v27 fills, bitmap alpha and crop, text styles) |
+| Inkscape translations (VA Studio fork) | `po` | a4b32e22401fb35a6b51e310d12af465187bbb52 | GPL-2.0-or-later (same terms as Inkscape) | `COPYING` | https://gitlab.com/inkscape/translations | compiled message catalogs | yes: nine VA commits (Spanish strings for VA Studio features) on top of upstream 4a4241de4b7fa4f71160b628487369a42320e9ff (upstream base: 4a4241de4b7fa4f71160b628487369a42320e9ff) |
+| libcdr (VA Studio fork, CorelDRAW import) | `third_party/libcdr-vacards` | 297ad1ad0b8e1772633abd7553649714b173f7e4 | MPL-2.0 | `third_party/libcdr-vacards/COPYING.MPL`, `third_party/libcdr-vacards/AUTHORS` | https://git.libreoffice.org/libcdr (mirror: https://github.com/LibreOffice/libcdr) | built as a shared library and bundled | yes: libcdr 0.1.10 baseline import plus nine VA commits (CorelDRAW 2023/v27 fills, bitmap alpha and crop, text styles) (upstream base: none (snapshot import of the libcdr 0.1.10 release)) |
 | librevenge 0.0.6 with the VA Studio patch | `packaging/dependencies/librevenge-0.0.6` | librevenge-0.0.6.tar.xz SHA-256 19eacf5ce55d7fe6a990a45142589cdf7da0c7b68701797f133482cb44f189fa + vacards-librevenge-0.0.6.patch | MPL-2.0 OR LGPL-2.1-or-later | `packaging/dependencies/librevenge-0.0.6/README.md`, `LICENSES/MPL-2.0.txt`, `LICENSES/LGPL-2.1-or-later.txt` | https://sourceforge.net/projects/libwpd/files/librevenge/ | built as a shared library and bundled | yes: the patch in this directory |
 | Cairo 1.18.4 with the upstream clip fix | `.` | cairo-1.18.4.tar.xz SHA-256 445ed8208a6e4823de1226a74ca319d3600e83f6369f99b14265006599c32ccb + cairo-1.18.4-clip-all.patch (upstream commit 1d3347a6904fd4d9a57e4a5e4819de885fce6e46) | LGPL-2.1-only OR MPL-1.1 | `LICENSES/LGPL-2.1.txt`, `LICENSES/MPL-1.1.txt` | https://cairographics.org/releases/ | built as a shared library and bundled | yes: one upstream fix applied to the release |
 | GTK 4.22.4 with VA Studio patches | `.` | gtk-4.22.4.tar.xz SHA-256 51bd9f60c7d23a665a556c7364c21fb2e4e282566b3e7e092455e8f910330893; macOS patches packaging/macos/vacards/gtk-4.22.4-*.patch; Windows patch packaging/windows/vacards/gtk-4.22.4-win32-cairo-buffer.patch plus the MSYS2 mingw-w64-gtk4 recipe at MINGW-packages d07b8dabb92443fd1daed511ad7b406825964b0d | LGPL-2.1-or-later | `LICENSES/LGPL-2.1-or-later.txt` | https://download.gnome.org/sources/gtk/4.22/ | built as a shared library and bundled | yes: the patches listed |
 | Sparrow nesting helper (vacards-sparrow) | `src/3rdparty/sparrow` | upstream commit 57c45cd295f5d2ce2a11edf6e765318a51d2b41e; executables pinned by SHA-256 in VACARDS-DEPENDENCIES.env | MIT (the executable also contains the Rust crates listed in section 3, including jagua-rs under MPL-2.0) | `src/3rdparty/sparrow/LICENSE`, `src/3rdparty/sparrow/README.md` | https://github.com/JeroenGar/sparrow | separate executable installed beside VA Studio | no source changes; built with the only_final_svg feature |
 | AlphaKiller alpha threshold and softness formula | `testfiles/explode-bitmap/oracle` | imageProcessing.js formula | MIT | `testfiles/explode-bitmap/oracle/README.md` | AlphaKiller, Copyright (c) 2026 Abraham Saenz | the formula is reimplemented in the Explode Bitmap engine compiled into VA Studio | reimplemented in C++; the MIT notice is in the README listed |
 
-The forks marked as modified are published as part of this source tree; their exact upstream base commits are listed in the Modified column.
+The VA Studio forks (marked as modified) are part of this source tree; their commits exist only in the VA Studio history, and the upstream base each one starts from is named above.
 
 ## 2. Rust crates in the nesting engine
 
 The nesting engine (`src/3rdparty/vacards-nesting-rs`, GPL-2.0-or-later) is a Rust static library linked into VA Studio. Its dependencies are vendored in the source tree with their own license files. Target-specific crates (for example the WebAssembly crates) are vendored for the lockfile but are not compiled for Windows or macOS; they are listed for completeness.
 
-| Crate | Version | License | Source | License files |
-| --- | --- | --- | --- | --- |
-| anyhow | 1.0.104 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| approx | 0.5.1 | Apache-2.0 | crates.io | `LICENSE` |
-| atomic-polyfill | 1.0.3 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| autocfg | 1.5.1 | Apache-2.0 OR MIT | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| bumpalo | 3.20.3 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| byteorder | 1.5.0 | Unlicense OR MIT | crates.io | `COPYING`, `LICENSE-MIT`, `UNLICENSE` |
-| cfg-if | 1.0.4 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| critical-section | 1.2.0 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| crossbeam-deque | 0.8.7 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| crossbeam-epoch | 0.9.20 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| crossbeam-utils | 0.8.22 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| document-features | 0.2.12 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| either | 1.18.0 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| float-cmp | 0.10.0 | MIT | crates.io | `LICENSE` |
-| float_next_after | 1.0.0 | MIT | crates.io | `LICENSE` |
-| futures-core | 0.3.34 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| futures-task | 0.3.34 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| futures-util | 0.3.34 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| geo | 0.24.1 | MIT OR Apache-2.0 | crates.io | none in crate (see section 6) |
-| geo-buffer | 0.2.0 | Apache-2.0 | crates.io | `LICENSE` |
-| geo-types | 0.7.20 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| geographiclib-rs | 0.2.7 | MIT | crates.io | `LICENSE` |
-| getrandom | 0.4.3 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| hash32 | 0.2.1 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| heapless | 0.7.17 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| itertools | 0.15.0 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| jagua-rs | 0.8.0 | MPL-2.0 | git+https://github.com/JeroenGar/jagua-rs.git?rev=9a19409bd38f3643c3d6d2d7571cddfba548ee17 | `jagua-rs-MPL-2.0.txt` |
-| js-sys | 0.3.104 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| libc | 0.2.189 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| libm | 0.2.16 | MIT | crates.io | `LICENSE.txt` |
-| litrs | 1.0.0 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| lock_api | 0.4.14 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| log | 0.4.34 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| matrixmultiply | 0.3.11 | MIT/Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| ndarray | 0.17.2 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| num-complex | 0.4.6 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| num-integer | 0.1.47 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| num-traits | 0.2.19 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| once_cell | 1.21.4 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| ordered-float | 5.4.0 | MIT | crates.io | `LICENSE-MIT` |
-| pin-project-lite | 0.2.17 | Apache-2.0 OR MIT | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| portable-atomic | 1.15.0 | Apache-2.0 OR MIT | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| portable-atomic-util | 0.2.7 | Apache-2.0 OR MIT | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| proc-macro2 | 1.0.107 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| quote | 1.0.47 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| r-efi | 6.0.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later | crates.io | `AUTHORS` |
-| rand | 0.10.2 | MIT OR Apache-2.0 | crates.io | `COPYRIGHT`, `LICENSE-APACHE`, `LICENSE-MIT` |
-| rand_core | 0.10.1 | MIT OR Apache-2.0 | crates.io | `COPYRIGHT`, `LICENSE-APACHE`, `LICENSE-MIT` |
-| rand_distr | 0.6.0 | MIT OR Apache-2.0 | crates.io | `COPYRIGHT`, `LICENSE-APACHE`, `LICENSE-MIT` |
-| rawpointer | 0.2.1 | MIT/Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| rayon | 1.12.0 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| rayon-core | 1.13.0 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| robust | 0.2.3 | MIT/Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| rstar | 0.10.0 | MIT OR Apache-2.0 | crates.io | none in crate (see section 6) |
-| rustc_version | 0.4.1 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| rustversion | 1.0.23 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| scopeguard | 1.2.0 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| semver | 1.0.28 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| serde | 1.0.229 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| serde_core | 1.0.229 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| serde_derive | 1.0.229 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| slab | 0.4.12 | MIT | crates.io | `LICENSE` |
-| slotmap | 1.1.1 | Zlib | crates.io | `LICENSE` |
-| smallvec | 1.16.0 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| spin | 0.9.9 | MIT | crates.io | `LICENSE` |
-| stable_deref_trait | 1.2.1 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| svg | 0.18.0 | Apache-2.0 OR MIT | crates.io | `LICENSE.md` |
-| syn | 2.0.119 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| syn | 3.0.4 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| thiserror | 2.0.20 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| thiserror-impl | 2.0.20 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| unicode-ident | 1.0.24 | (MIT OR Apache-2.0) AND Unicode-3.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT`, `LICENSE-UNICODE` |
-| version_check | 0.9.5 | MIT/Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| wasm-bindgen | 0.2.127 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| wasm-bindgen-macro | 0.2.127 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| wasm-bindgen-macro-support | 0.2.127 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| wasm-bindgen-shared | 0.2.127 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
-| web-time | 1.1.0 | MIT OR Apache-2.0 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| Crate | Version | License | Copyright | Source | License files |
+| --- | --- | --- | --- | --- | --- |
+| anyhow | 1.0.104 | MIT OR Apache-2.0 | Copyright the authors of anyhow: David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| approx | 0.5.1 | Apache-2.0 | Copyright the authors of approx: Brendan Zabarauskas <bjzaba@yahoo.com.au> | crates.io | `LICENSE` |
+| atomic-polyfill | 1.0.3 | MIT OR Apache-2.0 | Copyright (c) 2020 Dario Nieuwenhuis | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| autocfg | 1.5.1 | Apache-2.0 OR MIT | Copyright (c) 2018 Josh Stone | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| bumpalo | 3.20.3 | MIT OR Apache-2.0 | Copyright (c) 2019 Nick Fitzgerald | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| byteorder | 1.5.0 | Unlicense OR MIT | Copyright (c) 2015 Andrew Gallant | crates.io | `COPYING`, `LICENSE-MIT`, `UNLICENSE` |
+| cfg-if | 1.0.4 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| critical-section | 1.2.0 | MIT OR Apache-2.0 | Copyright (c) 2022 The critical-section authors | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| crossbeam-deque | 0.8.7 | MIT OR Apache-2.0 | Copyright (c) 2019 The Crossbeam Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| crossbeam-epoch | 0.9.20 | MIT OR Apache-2.0 | Copyright (c) 2019 The Crossbeam Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| crossbeam-utils | 0.8.22 | MIT OR Apache-2.0 | Copyright (c) 2019 The Crossbeam Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| document-features | 0.2.12 | MIT OR Apache-2.0 | Copyright (c) 2020 Olivier Goffart <ogoffart@sixtyfps.io> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| either | 1.18.0 | MIT OR Apache-2.0 | Copyright (c) 2015 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| float-cmp | 0.10.0 | MIT | Copyright (c) 2014-2020 Optimal Computing (NZ) Ltd | crates.io | `LICENSE` |
+| float_next_after | 1.0.0 | MIT | Copyright (c) 2020 Scripta Qumranica Electronica | crates.io | `LICENSE` |
+| futures-core | 0.3.34 | MIT OR Apache-2.0 | Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| futures-task | 0.3.34 | MIT OR Apache-2.0 | Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| futures-util | 0.3.34 | MIT OR Apache-2.0 | Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| geo | 0.24.1 | MIT OR Apache-2.0 | Copyright the geo contributors (https://github.com/georust/geo) | crates.io | none in crate (see section 7) |
+| geo-buffer | 0.2.0 | Apache-2.0 | Copyright the authors of geo-buffer: Teneleven Corp<1011@1011.co.kr>, Inseop Youn<pinebananais@gmail.com> | crates.io | `LICENSE` |
+| geo-types | 0.7.20 | MIT OR Apache-2.0 | Copyright (c) 2017 The GeoRust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| geographiclib-rs | 0.2.7 | MIT | Copyright (c) 2019 | crates.io | `LICENSE` |
+| getrandom | 0.4.3 | MIT OR Apache-2.0 | Copyright (c) 2018-2026 The rust-random Project Developers; Copyright (c) 2014 The Rust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| hash32 | 0.2.1 | MIT OR Apache-2.0 | Copyright (c) 2018 Jorge Aparicio | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| heapless | 0.7.17 | MIT OR Apache-2.0 | Copyright (c) 2017 Jorge Aparicio | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| itertools | 0.15.0 | MIT OR Apache-2.0 | Copyright (c) 2015 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| jagua-rs | 0.8.0 | MPL-2.0 | Copyright the authors of jagua-rs: Jeroen Gardeyn | git+https://github.com/JeroenGar/jagua-rs.git?rev=9a19409bd38f3643c3d6d2d7571cddfba548ee17 | `jagua-rs-MPL-2.0.txt` |
+| js-sys | 0.3.104 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| libc | 0.2.189 | MIT OR Apache-2.0 | Copyright (c) The Rust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| libm | 0.2.16 | MIT | Copyright (c) 2018 Jorge Aparicio; Copyright © 2005-2020 Rich Felker, et al.; Copyright © 1993,2004 Sun Microsystems or; Copyright © 2003-2011 David Schultz or; Copyright © 2003-2009 Steven G. Kargl or; Copyright © 2003-2009 Bruce D. Evans or; Copyright © 2008 Stephen L. Moshier or; Copyright © 2017-2018 Arm Limited | crates.io | `LICENSE.txt` |
+| litrs | 1.0.0 | MIT OR Apache-2.0 | Copyright (c) 2020 Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| lock_api | 0.4.14 | MIT OR Apache-2.0 | Copyright (c) 2016 The Rust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| log | 0.4.34 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| matrixmultiply | 0.3.11 | MIT/Apache-2.0 | Copyright (c) 2016 - 2023 Ulrik Sverdrup "bluss"; Copyright (c) 2021 DutchGhost [constparse.rs] | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| ndarray | 0.17.2 | MIT OR Apache-2.0 | Copyright (c) 2015 - 2021 Ulrik Sverdrup "bluss", | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| num-complex | 0.4.6 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| num-integer | 0.1.47 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| num-traits | 0.2.19 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| once_cell | 1.21.4 | MIT OR Apache-2.0 | Copyright the authors of once_cell: Aleksey Kladov <aleksey.kladov@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| ordered-float | 5.4.0 | MIT | Copyright (c) 2015 Jonathan Reem | crates.io | `LICENSE-MIT` |
+| pin-project-lite | 0.2.17 | Apache-2.0 OR MIT | Copyright the pin-project-lite contributors (https://github.com/taiki-e/pin-project-lite) | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| portable-atomic | 1.15.0 | Apache-2.0 OR MIT | Copyright the portable-atomic contributors (https://github.com/taiki-e/portable-atomic) | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| portable-atomic-util | 0.2.7 | Apache-2.0 OR MIT | Copyright the portable-atomic-util contributors (https://github.com/taiki-e/portable-atomic-util) | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| proc-macro2 | 1.0.107 | MIT OR Apache-2.0 | Copyright the authors of proc-macro2: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| quote | 1.0.47 | MIT OR Apache-2.0 | Copyright the authors of quote: David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| r-efi | 6.0.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later | Copyright (C) 2017-2023 Red Hat, Inc.; Copyright (C) 2019-2023 Microsoft Corporation; Copyright (C) 2022-2023 David Rheinsberg | crates.io | `AUTHORS` |
+| rand | 0.10.2 | MIT OR Apache-2.0 | Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers | crates.io | `COPYRIGHT`, `LICENSE-APACHE`, `LICENSE-MIT` |
+| rand_core | 0.10.1 | MIT OR Apache-2.0 | Copyright (c) 2018-2026 The Rand Project Developers | crates.io | `COPYRIGHT`, `LICENSE-APACHE`, `LICENSE-MIT` |
+| rand_distr | 0.6.0 | MIT OR Apache-2.0 | Copyright 2018 Developers of the Rand project | crates.io | `COPYRIGHT`, `LICENSE-APACHE`, `LICENSE-MIT` |
+| rawpointer | 0.2.1 | MIT/Apache-2.0 | Copyright (c) 2015 | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| rayon | 1.12.0 | MIT OR Apache-2.0 | Copyright (c) 2010 The Rust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| rayon-core | 1.13.0 | MIT OR Apache-2.0 | Copyright (c) 2010 The Rust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| robust | 0.2.3 | MIT/Apache-2.0 | Copyright (c) 2017 The Spade Developers; Copyright (c) 2020 The GeoRust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| rstar | 0.10.0 | MIT OR Apache-2.0 | Copyright the authors of rstar: Stefan Altmayer <stoeoef@gmail.com>, The Georust Developers <mods@georust.org> | crates.io | none in crate (see section 7) |
+| rustc_version | 0.4.1 | MIT OR Apache-2.0 | Copyright (c) 2016 The Rust Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| rustversion | 1.0.23 | MIT OR Apache-2.0 | Copyright the authors of rustversion: David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| scopeguard | 1.2.0 | MIT OR Apache-2.0 | Copyright (c) 2016-2019 Ulrik Sverdrup "bluss" and scopeguard developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| semver | 1.0.28 | MIT OR Apache-2.0 | Copyright the authors of semver: David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| serde | 1.0.229 | MIT OR Apache-2.0 | Copyright the authors of serde: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| serde_core | 1.0.229 | MIT OR Apache-2.0 | Copyright the authors of serde_core: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| serde_derive | 1.0.229 | MIT OR Apache-2.0 | Copyright the authors of serde_derive: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| slab | 0.4.12 | MIT | Copyright (c) 2019 Carl Lerche | crates.io | `LICENSE` |
+| slotmap | 1.1.1 | Zlib | Copyright (c) 2021 Orson Peters <orsonpeters@gmail.com> | crates.io | `LICENSE` |
+| smallvec | 1.16.0 | MIT OR Apache-2.0 | Copyright (c) 2018 The Servo Project Developers | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| spin | 0.9.9 | MIT | Copyright (c) 2014 Mathijs van de Nes | crates.io | `LICENSE` |
+| stable_deref_trait | 1.2.1 | MIT OR Apache-2.0 | Copyright (c) 2017 Robert Grosse | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| svg | 0.18.0 | Apache-2.0 OR MIT | Copyright 2015–2024 The svg Developers | crates.io | `LICENSE.md` |
+| syn | 2.0.119 | MIT OR Apache-2.0 | Copyright the authors of syn: David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| syn | 3.0.4 | MIT OR Apache-2.0 | Copyright the authors of syn: David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| thiserror | 2.0.20 | MIT OR Apache-2.0 | Copyright the authors of thiserror: David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| thiserror-impl | 2.0.20 | MIT OR Apache-2.0 | Copyright the authors of thiserror-impl: David Tolnay <dtolnay@gmail.com> | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| unicode-ident | 1.0.24 | (MIT OR Apache-2.0) AND Unicode-3.0 | Copyright © 1991-2023 Unicode, Inc. | crates.io | `LICENSE-APACHE`, `LICENSE-MIT`, `LICENSE-UNICODE` |
+| version_check | 0.9.5 | MIT/Apache-2.0 | Copyright (c) 2017-2018 Sergio Benitez | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| wasm-bindgen | 0.2.127 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| wasm-bindgen-macro | 0.2.127 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| wasm-bindgen-macro-support | 0.2.127 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| wasm-bindgen-shared | 0.2.127 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
+| web-time | 1.1.0 | MIT OR Apache-2.0 | Copyright 2023 dAxpeDDa; Copyright (c) 2023 dAxpeDDa | crates.io | `LICENSE-APACHE`, `LICENSE-MIT` |
 
 78 crates. Each crate's sources are under `src/3rdparty/vacards-nesting-rs/vendor/`.
 
 ## 3. Sparrow nesting helper
 
-`vacards-sparrow` is the unmodified Sparrow program (MIT, Copyright (c) 2025 Jeroen Gardeyn, KU Leuven) built from upstream commit 57c45cd295f5d2ce2a11edf6e765318a51d2b41e. It is a separate executable that VA Studio starts as a child process. Its license is in `src/3rdparty/sparrow/LICENSE` and is installed as `share/inkscape/sparrow/LICENSE`. The executable contains the Rust crates below. jagua-rs is licensed under MPL-2.0; its source code is available from https://crates.io/crates/jagua-rs and https://github.com/JeroenGar/jagua-rs, and version 0.8.0 is also in `src/3rdparty/vacards-nesting-rs/vendor/jagua-rs`.
+`vacards-sparrow` is the unmodified Sparrow program (MIT, Copyright (c) 2025 Jeroen Gardeyn, KU Leuven) built from upstream commit 57c45cd295f5d2ce2a11edf6e765318a51d2b41e. It is a separate executable that VA Studio starts as a child process. Its license is in `src/3rdparty/sparrow/LICENSE` and is installed as `share/inkscape/sparrow/LICENSE`. The executable contains the Rust crates below and the Rust standard library (section 4). jagua-rs is licensed under MPL-2.0; its source code is available from https://crates.io/crates/jagua-rs and https://github.com/JeroenGar/jagua-rs, and version 0.8.0 is also in `src/3rdparty/vacards-nesting-rs/vendor/jagua-rs`.
 
 ### 3.1 Windows x64 executable (from `src/3rdparty/sparrow/windows-x64.Cargo.lock`)
 
-| Crate | Version | License | License recorded from | Checksum matches lock | Crate license texts |
-| --- | --- | --- | --- | --- | --- |
-| anstream | 1.0.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| anstyle | 1.0.14 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| anstyle-parse | 1.0.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| anstyle-query | 1.1.5 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| anstyle-wincon | 3.0.11 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| anyhow | 1.0.104 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/anyhow`) |
-| approx | 0.5.1 | Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/approx`) |
-| atomic-polyfill | 1.0.3 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/atomic-polyfill`) |
-| autocfg | 1.5.1 | Apache-2.0 OR MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/autocfg`) |
-| bitflags | 1.3.2 | MIT/Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| bitflags | 2.13.1 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| block2 | 0.6.2 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| bumpalo | 3.20.3 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/bumpalo`) |
-| byteorder | 1.5.0 | Unlicense OR MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/byteorder`) |
-| cfg-if | 1.0.4 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/cfg-if`) |
-| cfg_aliases | 0.2.2 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| chacha20 | 0.10.2 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| clap | 4.6.6 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| clap_builder | 4.6.6 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| clap_derive | 4.6.4 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| clap_lex | 1.1.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| colorchoice | 1.0.5 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| cpufeatures | 0.3.1 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| critical-section | 1.2.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/critical-section`) |
-| crossbeam-deque | 0.8.8 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| crossbeam-epoch | 0.9.21 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| crossbeam-utils | 0.8.23 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| ctrlc | 3.5.2 | MIT/Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| defmt | 1.1.1 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| defmt-macros | 1.1.1 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| defmt-parser | 1.0.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| dispatch2 | 0.3.1 | Zlib OR Apache-2.0 OR MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| document-features | 0.2.12 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/document-features`) |
-| dtoa | 1.0.11 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| either | 1.18.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/either`) |
-| fern | 0.7.1 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| float-cmp | 0.10.0 | MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/float-cmp`) |
-| float_next_after | 1.0.0 | MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/float_next_after`) |
-| futures-core | 0.3.34 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/futures-core`) |
-| futures-task | 0.3.34 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/futures-task`) |
-| futures-util | 0.3.34 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/futures-util`) |
-| geo | 0.24.1 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/geo`) |
-| geo-buffer | 0.2.0 | Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/geo-buffer`) |
-| geo-types | 0.7.20 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/geo-types`) |
-| geographiclib-rs | 0.2.7 | MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/geographiclib-rs`) |
-| getrandom | 0.4.3 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/getrandom`) |
-| hash32 | 0.2.1 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/hash32`) |
-| heapless | 0.7.17 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/heapless`) |
-| heck | 0.5.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| hermit-abi | 0.5.3 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| is_terminal_polyfill | 1.70.2 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| itertools | 0.15.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/itertools`) |
-| itoa | 1.0.18 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| jagua-rs | 0.8.1 | MPL-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| jiff | 0.2.35 | Unlicense OR MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| jiff-core | 0.1.0 | Unlicense OR MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| jiff-static | 0.2.35 | Unlicense OR MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| jiff-tzdb | 0.1.8 | Unlicense OR MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| jiff-tzdb-platform | 0.1.3 | Unlicense OR MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| js-sys | 0.3.105 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| libc | 0.2.189 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/libc`) |
-| libm | 0.2.16 | MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/libm`) |
-| litrs | 1.0.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/litrs`) |
-| lock_api | 0.4.14 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/lock_api`) |
-| log | 0.4.34 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/log`) |
-| matrixmultiply | 0.3.11 | MIT/Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/matrixmultiply`) |
-| memchr | 2.8.3 | Unlicense OR MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| ndarray | 0.17.2 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/ndarray`) |
-| nix | 0.31.3 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| num-complex | 0.4.6 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/num-complex`) |
-| num-integer | 0.1.47 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/num-integer`) |
-| num-traits | 0.2.19 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/num-traits`) |
-| num_cpus | 1.17.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| numfmt | 1.2.0 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| objc2 | 0.6.4 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| objc2-encode | 4.1.0 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| once_cell | 1.21.4 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/once_cell`) |
-| once_cell_polyfill | 1.70.2 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| ordered-float | 5.5.0 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| pin-project-lite | 0.2.17 | Apache-2.0 OR MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/pin-project-lite`) |
-| portable-atomic | 1.15.0 | Apache-2.0 OR MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/portable-atomic`) |
-| portable-atomic-util | 0.2.8 | Apache-2.0 OR MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| proc-macro2 | 1.0.107 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/proc-macro2`) |
-| quote | 1.0.47 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/quote`) |
-| r-efi | 6.0.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/r-efi`) |
-| rand | 0.10.2 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rand`) |
-| rand_core | 0.10.1 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rand_core`) |
-| rand_distr | 0.6.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rand_distr`) |
-| rawpointer | 0.2.1 | MIT/Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rawpointer`) |
-| rayon | 1.12.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rayon`) |
-| rayon-core | 1.13.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rayon-core`) |
-| robust | 0.2.3 | MIT/Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/robust`) |
-| rstar | 0.10.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rstar`) |
-| rustc_version | 0.4.1 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rustc_version`) |
-| rustversion | 1.0.23 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rustversion`) |
-| scopeguard | 1.2.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/scopeguard`) |
-| semver | 1.0.28 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/semver`) |
-| serde | 1.0.229 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/serde`) |
-| serde_core | 1.0.229 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/serde_core`) |
-| serde_derive | 1.0.229 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/serde_derive`) |
-| serde_json | 1.0.151 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| slab | 0.4.12 | MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/slab`) |
-| slotmap | 1.1.1 | Zlib | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/slotmap`) |
-| smallvec | 1.16.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/smallvec`) |
-| spin | 0.9.9 | MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/spin`) |
-| stable_deref_trait | 1.2.1 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/stable_deref_trait`) |
-| strsim | 0.11.1 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| svg | 0.18.0 | Apache-2.0 OR MIT | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/svg`) |
-| syn | 2.0.119 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/syn-2.0.119`) |
-| syn | 3.0.5 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| tap | 1.0.1 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| test-case | 3.3.1 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| test-case-core | 3.3.1 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| test-case-macros | 3.3.1 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| thiserror | 2.0.20 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror`) |
-| thiserror-impl | 2.0.20 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror-impl`) |
-| unicode-ident | 1.0.24 | (MIT OR Apache-2.0) AND Unicode-3.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/unicode-ident`) |
-| utf8parse | 0.2.2 | Apache-2.0 OR MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| version_check | 0.9.5 | MIT/Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/version_check`) |
-| wasm-bindgen | 0.2.128 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| wasm-bindgen-macro | 0.2.128 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| wasm-bindgen-macro-support | 0.2.128 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| wasm-bindgen-shared | 0.2.128 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| web-time | 1.1.0 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/web-time`) |
-| windows-link | 0.2.1 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| windows-sys | 0.61.2 | MIT OR Apache-2.0 | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
-| zmij | 1.0.23 | MIT | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| Crate | Version | License | Copyright | License recorded from | Checksum matches lock | Crate license texts |
+| --- | --- | --- | --- | --- | --- | --- |
+| anstream | 1.0.0 | MIT OR Apache-2.0 | the anstream contributors (https://github.com/rust-cli/anstyle.git); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| anstyle | 1.0.14 | MIT OR Apache-2.0 | the anstyle contributors (https://github.com/rust-cli/anstyle.git); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| anstyle-parse | 1.0.0 | MIT OR Apache-2.0 | the anstyle-parse contributors (https://github.com/rust-cli/anstyle.git); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| anstyle-query | 1.1.5 | MIT OR Apache-2.0 | the anstyle-query contributors (https://github.com/rust-cli/anstyle.git); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| anstyle-wincon | 3.0.11 | MIT OR Apache-2.0 | the anstyle-wincon contributors (https://github.com/rust-cli/anstyle.git); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| anyhow | 1.0.104 | MIT OR Apache-2.0 | Copyright the authors of anyhow: David Tolnay <dtolnay@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/anyhow`) |
+| approx | 0.5.1 | Apache-2.0 | Copyright the authors of approx: Brendan Zabarauskas <bjzaba@yahoo.com.au> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/approx`) |
+| atomic-polyfill | 1.0.3 | MIT OR Apache-2.0 | Copyright (c) 2020 Dario Nieuwenhuis | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/atomic-polyfill`) |
+| autocfg | 1.5.1 | Apache-2.0 OR MIT | Copyright (c) 2018 Josh Stone | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/autocfg`) |
+| bitflags | 1.3.2 | MIT/Apache-2.0 | the bitflags contributors (https://github.com/bitflags/bitflags); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| bitflags | 2.13.1 | MIT OR Apache-2.0 | the bitflags contributors (https://github.com/bitflags/bitflags); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| block2 | 0.6.2 | MIT | the block2 contributors (https://github.com/madsmtm/objc2); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| bumpalo | 3.20.3 | MIT OR Apache-2.0 | Copyright (c) 2019 Nick Fitzgerald | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/bumpalo`) |
+| byteorder | 1.5.0 | Unlicense OR MIT | Copyright (c) 2015 Andrew Gallant | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/byteorder`) |
+| cfg-if | 1.0.4 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/cfg-if`) |
+| cfg_aliases | 0.2.2 | MIT | the cfg_aliases contributors (https://github.com/katharostech/cfg_aliases); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| chacha20 | 0.10.2 | MIT OR Apache-2.0 | the chacha20 contributors (https://github.com/RustCrypto/stream-ciphers); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| clap | 4.6.6 | MIT OR Apache-2.0 | the clap contributors (https://github.com/clap-rs/clap); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| clap_builder | 4.6.6 | MIT OR Apache-2.0 | the clap_builder contributors (https://github.com/clap-rs/clap); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| clap_derive | 4.6.4 | MIT OR Apache-2.0 | the clap_derive contributors (https://github.com/clap-rs/clap); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| clap_lex | 1.1.0 | MIT OR Apache-2.0 | the clap_lex contributors (https://github.com/clap-rs/clap); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| colorchoice | 1.0.5 | MIT OR Apache-2.0 | the colorchoice contributors (https://github.com/rust-cli/anstyle.git); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| cpufeatures | 0.3.1 | MIT OR Apache-2.0 | the cpufeatures contributors (https://github.com/RustCrypto/utils); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| critical-section | 1.2.0 | MIT OR Apache-2.0 | Copyright (c) 2022 The critical-section authors | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/critical-section`) |
+| crossbeam-deque | 0.8.8 | MIT OR Apache-2.0 | the crossbeam-deque contributors (https://github.com/crossbeam-rs/crossbeam); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| crossbeam-epoch | 0.9.21 | MIT OR Apache-2.0 | the crossbeam-epoch contributors (https://github.com/crossbeam-rs/crossbeam); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| crossbeam-utils | 0.8.23 | MIT OR Apache-2.0 | the crossbeam-utils contributors (https://github.com/crossbeam-rs/crossbeam); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| ctrlc | 3.5.2 | MIT/Apache-2.0 | the ctrlc contributors (https://github.com/Detegr/rust-ctrlc.git); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| defmt | 1.1.1 | MIT OR Apache-2.0 | the defmt contributors (https://github.com/knurling-rs/defmt); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| defmt-macros | 1.1.1 | MIT OR Apache-2.0 | the defmt-macros contributors (https://github.com/knurling-rs/defmt); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| defmt-parser | 1.0.0 | MIT OR Apache-2.0 | the defmt-parser contributors (https://github.com/knurling-rs/defmt); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| dispatch2 | 0.3.1 | Zlib OR Apache-2.0 OR MIT | the dispatch2 contributors (https://github.com/madsmtm/objc2); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| document-features | 0.2.12 | MIT OR Apache-2.0 | Copyright (c) 2020 Olivier Goffart <ogoffart@sixtyfps.io> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/document-features`) |
+| dtoa | 1.0.11 | MIT OR Apache-2.0 | the dtoa contributors (https://github.com/dtolnay/dtoa); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| either | 1.18.0 | MIT OR Apache-2.0 | Copyright (c) 2015 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/either`) |
+| fern | 0.7.1 | MIT | the fern contributors (https://github.com/daboross/fern); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| float-cmp | 0.10.0 | MIT | Copyright (c) 2014-2020 Optimal Computing (NZ) Ltd | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/float-cmp`) |
+| float_next_after | 1.0.0 | MIT | Copyright (c) 2020 Scripta Qumranica Electronica | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/float_next_after`) |
+| futures-core | 0.3.34 | MIT OR Apache-2.0 | Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/futures-core`) |
+| futures-task | 0.3.34 | MIT OR Apache-2.0 | Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/futures-task`) |
+| futures-util | 0.3.34 | MIT OR Apache-2.0 | Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/futures-util`) |
+| geo | 0.24.1 | MIT OR Apache-2.0 | Copyright the geo contributors (https://github.com/georust/geo) | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/geo`) |
+| geo-buffer | 0.2.0 | Apache-2.0 | Copyright the authors of geo-buffer: Teneleven Corp<1011@1011.co.kr>, Inseop Youn<pinebananais@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/geo-buffer`) |
+| geo-types | 0.7.20 | MIT OR Apache-2.0 | Copyright (c) 2017 The GeoRust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/geo-types`) |
+| geographiclib-rs | 0.2.7 | MIT | Copyright (c) 2019 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/geographiclib-rs`) |
+| getrandom | 0.4.3 | MIT OR Apache-2.0 | Copyright (c) 2018-2026 The rust-random Project Developers; Copyright (c) 2014 The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/getrandom`) |
+| hash32 | 0.2.1 | MIT OR Apache-2.0 | Copyright (c) 2018 Jorge Aparicio | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/hash32`) |
+| heapless | 0.7.17 | MIT OR Apache-2.0 | Copyright (c) 2017 Jorge Aparicio | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/heapless`) |
+| heck | 0.5.0 | MIT OR Apache-2.0 | the heck contributors (https://github.com/withoutboats/heck); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| hermit-abi | 0.5.3 | MIT OR Apache-2.0 | the hermit-abi contributors (https://github.com/hermit-os/hermit-rs); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| is_terminal_polyfill | 1.70.2 | MIT OR Apache-2.0 | the is_terminal_polyfill contributors (https://github.com/polyfill-rs/is_terminal_polyfill); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| itertools | 0.15.0 | MIT OR Apache-2.0 | Copyright (c) 2015 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/itertools`) |
+| itoa | 1.0.18 | MIT OR Apache-2.0 | the itoa contributors (https://github.com/dtolnay/itoa); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| jagua-rs | 0.8.1 | MPL-2.0 | the jagua-rs contributors (https://github.com/JeroenGar/jagua-rs); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| jiff | 0.2.35 | Unlicense OR MIT | the jiff contributors (https://github.com/BurntSushi/jiff); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| jiff-core | 0.1.0 | Unlicense OR MIT | the jiff-core contributors (https://github.com/BurntSushi/jiff); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| jiff-static | 0.2.35 | Unlicense OR MIT | the jiff-static contributors (https://github.com/BurntSushi/jiff); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| jiff-tzdb | 0.1.8 | Unlicense OR MIT | the jiff-tzdb contributors (https://github.com/BurntSushi/jiff); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| jiff-tzdb-platform | 0.1.3 | Unlicense OR MIT | the jiff-tzdb-platform contributors (https://github.com/BurntSushi/jiff); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| js-sys | 0.3.105 | MIT OR Apache-2.0 | the js-sys contributors (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/js-sys); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| libc | 0.2.189 | MIT OR Apache-2.0 | Copyright (c) The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/libc`) |
+| libm | 0.2.16 | MIT | Copyright (c) 2018 Jorge Aparicio; Copyright © 2005-2020 Rich Felker, et al.; Copyright © 1993,2004 Sun Microsystems or; Copyright © 2003-2011 David Schultz or; Copyright © 2003-2009 Steven G. Kargl or; Copyright © 2003-2009 Bruce D. Evans or; Copyright © 2008 Stephen L. Moshier or; Copyright © 2017-2018 Arm Limited | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/libm`) |
+| litrs | 1.0.0 | MIT OR Apache-2.0 | Copyright (c) 2020 Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/litrs`) |
+| lock_api | 0.4.14 | MIT OR Apache-2.0 | Copyright (c) 2016 The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/lock_api`) |
+| log | 0.4.34 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/log`) |
+| matrixmultiply | 0.3.11 | MIT/Apache-2.0 | Copyright (c) 2016 - 2023 Ulrik Sverdrup "bluss"; Copyright (c) 2021 DutchGhost [constparse.rs] | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/matrixmultiply`) |
+| memchr | 2.8.3 | Unlicense OR MIT | the memchr contributors (https://github.com/BurntSushi/memchr); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| ndarray | 0.17.2 | MIT OR Apache-2.0 | Copyright (c) 2015 - 2021 Ulrik Sverdrup "bluss", | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/ndarray`) |
+| nix | 0.31.3 | MIT | the nix contributors (https://github.com/nix-rust/nix); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| num-complex | 0.4.6 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/num-complex`) |
+| num-integer | 0.1.47 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/num-integer`) |
+| num-traits | 0.2.19 | MIT OR Apache-2.0 | Copyright (c) 2014 The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/num-traits`) |
+| num_cpus | 1.17.0 | MIT OR Apache-2.0 | the num_cpus contributors (https://github.com/seanmonstar/num_cpus); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| numfmt | 1.2.0 | MIT | the numfmt contributors (https://github.com/kurtlawrence/numfmt); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| objc2 | 0.6.4 | MIT | the objc2 contributors (https://github.com/madsmtm/objc2); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| objc2-encode | 4.1.0 | MIT | the objc2-encode contributors (https://github.com/madsmtm/objc2); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| once_cell | 1.21.4 | MIT OR Apache-2.0 | Copyright the authors of once_cell: Aleksey Kladov <aleksey.kladov@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/once_cell`) |
+| once_cell_polyfill | 1.70.2 | MIT OR Apache-2.0 | the once_cell_polyfill contributors (https://github.com/polyfill-rs/once_cell_polyfill); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| ordered-float | 5.5.0 | MIT | the ordered-float contributors (https://github.com/reem/rust-ordered-float); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| pin-project-lite | 0.2.17 | Apache-2.0 OR MIT | Copyright the pin-project-lite contributors (https://github.com/taiki-e/pin-project-lite) | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/pin-project-lite`) |
+| portable-atomic | 1.15.0 | Apache-2.0 OR MIT | Copyright the portable-atomic contributors (https://github.com/taiki-e/portable-atomic) | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/portable-atomic`) |
+| portable-atomic-util | 0.2.8 | Apache-2.0 OR MIT | the portable-atomic-util contributors (https://github.com/taiki-e/portable-atomic-util); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| proc-macro2 | 1.0.107 | MIT OR Apache-2.0 | Copyright the authors of proc-macro2: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/proc-macro2`) |
+| quote | 1.0.47 | MIT OR Apache-2.0 | Copyright the authors of quote: David Tolnay <dtolnay@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/quote`) |
+| r-efi | 6.0.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later | Copyright (C) 2017-2023 Red Hat, Inc.; Copyright (C) 2019-2023 Microsoft Corporation; Copyright (C) 2022-2023 David Rheinsberg | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/r-efi`) |
+| rand | 0.10.2 | MIT OR Apache-2.0 | Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rand`) |
+| rand_core | 0.10.1 | MIT OR Apache-2.0 | Copyright (c) 2018-2026 The Rand Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rand_core`) |
+| rand_distr | 0.6.0 | MIT OR Apache-2.0 | Copyright 2018 Developers of the Rand project | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rand_distr`) |
+| rawpointer | 0.2.1 | MIT/Apache-2.0 | Copyright (c) 2015 | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rawpointer`) |
+| rayon | 1.12.0 | MIT OR Apache-2.0 | Copyright (c) 2010 The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rayon`) |
+| rayon-core | 1.13.0 | MIT OR Apache-2.0 | Copyright (c) 2010 The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rayon-core`) |
+| robust | 0.2.3 | MIT/Apache-2.0 | Copyright (c) 2017 The Spade Developers; Copyright (c) 2020 The GeoRust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/robust`) |
+| rstar | 0.10.0 | MIT OR Apache-2.0 | Copyright the authors of rstar: Stefan Altmayer <stoeoef@gmail.com>, The Georust Developers <mods@georust.org> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rstar`) |
+| rustc_version | 0.4.1 | MIT OR Apache-2.0 | Copyright (c) 2016 The Rust Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rustc_version`) |
+| rustversion | 1.0.23 | MIT OR Apache-2.0 | Copyright the authors of rustversion: David Tolnay <dtolnay@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/rustversion`) |
+| scopeguard | 1.2.0 | MIT OR Apache-2.0 | Copyright (c) 2016-2019 Ulrik Sverdrup "bluss" and scopeguard developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/scopeguard`) |
+| semver | 1.0.28 | MIT OR Apache-2.0 | Copyright the authors of semver: David Tolnay <dtolnay@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/semver`) |
+| serde | 1.0.229 | MIT OR Apache-2.0 | Copyright the authors of serde: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/serde`) |
+| serde_core | 1.0.229 | MIT OR Apache-2.0 | Copyright the authors of serde_core: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/serde_core`) |
+| serde_derive | 1.0.229 | MIT OR Apache-2.0 | Copyright the authors of serde_derive: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/serde_derive`) |
+| serde_json | 1.0.151 | MIT OR Apache-2.0 | the serde_json contributors (https://github.com/serde-rs/json); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| slab | 0.4.12 | MIT | Copyright (c) 2019 Carl Lerche | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/slab`) |
+| slotmap | 1.1.1 | Zlib | Copyright (c) 2021 Orson Peters <orsonpeters@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/slotmap`) |
+| smallvec | 1.16.0 | MIT OR Apache-2.0 | Copyright (c) 2018 The Servo Project Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/smallvec`) |
+| spin | 0.9.9 | MIT | Copyright (c) 2014 Mathijs van de Nes | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/spin`) |
+| stable_deref_trait | 1.2.1 | MIT OR Apache-2.0 | Copyright (c) 2017 Robert Grosse | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/stable_deref_trait`) |
+| strsim | 0.11.1 | MIT | the strsim contributors (https://github.com/rapidfuzz/strsim-rs); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| svg | 0.18.0 | Apache-2.0 OR MIT | Copyright 2015–2024 The svg Developers | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/svg`) |
+| syn | 2.0.119 | MIT OR Apache-2.0 | Copyright the authors of syn: David Tolnay <dtolnay@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/syn-2.0.119`) |
+| syn | 3.0.5 | MIT OR Apache-2.0 | the syn contributors (https://github.com/dtolnay/syn); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| tap | 1.0.1 | MIT | the tap contributors (https://github.com/myrrlyn/tap); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| test-case | 3.3.1 | MIT | the test-case contributors (https://github.com/frondeus/test-case); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| test-case-core | 3.3.1 | MIT | the test-case-core contributors (https://github.com/frondeus/test-case); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| test-case-macros | 3.3.1 | MIT | the test-case-macros contributors (https://github.com/frondeus/test-case); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| thiserror | 2.0.20 | MIT OR Apache-2.0 | Copyright the authors of thiserror: David Tolnay <dtolnay@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror`) |
+| thiserror-impl | 2.0.20 | MIT OR Apache-2.0 | Copyright the authors of thiserror-impl: David Tolnay <dtolnay@gmail.com> | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror-impl`) |
+| unicode-ident | 1.0.24 | (MIT OR Apache-2.0) AND Unicode-3.0 | Copyright © 1991-2023 Unicode, Inc. | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/unicode-ident`) |
+| utf8parse | 0.2.2 | Apache-2.0 OR MIT | the utf8parse contributors (https://github.com/alacritty/vte); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| version_check | 0.9.5 | MIT/Apache-2.0 | Copyright (c) 2017-2018 Sergio Benitez | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/version_check`) |
+| wasm-bindgen | 0.2.128 | MIT OR Apache-2.0 | the wasm-bindgen contributors (https://github.com/wasm-bindgen/wasm-bindgen); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| wasm-bindgen-macro | 0.2.128 | MIT OR Apache-2.0 | the wasm-bindgen-macro contributors (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/macro); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| wasm-bindgen-macro-support | 0.2.128 | MIT OR Apache-2.0 | the wasm-bindgen-macro-support contributors (https://github.com/wasm-bindgen/wasm-bindgen/tree/main/crates/macro-support); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| wasm-bindgen-shared | 0.2.128 | MIT OR Apache-2.0 | the wasm-bindgen-shared contributors (https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/shared); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| web-time | 1.1.0 | MIT OR Apache-2.0 | Copyright 2023 dAxpeDDa; Copyright (c) 2023 dAxpeDDa | crates.io API, 2026-10-03 | yes | same crate as in section 2 (`src/3rdparty/vacards-nesting-rs/vendor/web-time`) |
+| windows-link | 0.2.1 | MIT OR Apache-2.0 | the windows-link contributors (https://github.com/microsoft/windows-rs); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| windows-sys | 0.61.2 | MIT OR Apache-2.0 | the windows-sys contributors (https://github.com/microsoft/windows-rs); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
+| zmij | 1.0.23 | MIT | the zmij contributors (https://github.com/dtolnay/zmij); copyright lines not captured yet | crates.io API, 2026-10-03 | yes | NOT CAPTURED |
 
-**Incomplete:** the crates' own license files and copyright lines are not yet captured for 61 crates. Their license identifiers above come from crates.io; the standard texts are in `LICENSES/`. Before a public release the supervisor reruns this generator with `--sparrow-vendor` (see packaging/public-release/README.md).
+**Incomplete:** the crates' own license files and copyright lines are not yet captured for 61 crates. Their license identifiers above come from crates.io; the standard texts are in `LICENSES/`. Before a public release this file is generated again with `--sparrow-vendor` (see packaging/public-release/README.md).
 
 ### 3.2 macOS arm64 executable
 
@@ -308,7 +309,63 @@ No lockfile was recorded for the macOS arm64 build. The crate paths embedded in 
 - slotmap 1.1.1: Zlib
 - strsim 0.11.1: MIT
 
-## 4. Assets and external inputs
+## 4. Runtime libraries linked into the programs
+
+Compilers link parts of their runtime libraries into every program they build. These are the runtime libraries in the VA Studio programs.
+
+| Component | Version | License | License files | Upstream | Linked into |
+| --- | --- | --- | --- | --- | --- |
+| Rust standard library | Rust 1.88.0 (nesting engine, both platforms); Rust 1.90.0 (Windows Sparrow helper) | Apache-2.0 OR MIT, with the exceptions and dependencies listed in section 4 | `LICENSES/Apache-2.0.txt`, `LICENSES/MIT.txt`, `LICENSES/Unicode-3.0.txt`, `LICENSES/LLVM-exception.txt` | https://github.com/rust-lang/rust | statically linked into VA Studio (nesting engine) and into vacards-sparrow |
+| GCC runtime libraries (libgcc, libstdc++) | the MSYS2 UCRT64 GCC of the Windows build (version recorded by the platform SBOM) | GPL-3.0-or-later WITH GCC-exception-3.1 | `LICENSES/GPL-3.0-or-later.txt`, `LICENSES/GCC-exception-3.1.txt` | https://gcc.gnu.org | Windows: statically linked into the Explorer thumbnail and preview handler (vasvgthumb.dll), the launcher and vacards-sparrow.exe; the DLLs used by VA Studio itself are bundled and listed with the platform libraries |
+| MinGW-w64 runtime (CRT startup code, winpthreads) | the MSYS2 UCRT64 mingw-w64-crt and winpthreads packages of the Windows build (versions recorded by the platform SBOM) | the MinGW-w64 runtime terms (COPYING.MinGW-w64-runtime.txt) and the winpthreads terms (its COPYING) | `mingw-w64-runtime` license text: captured on the build host at release time, `winpthreads` license text: captured on the build host at release time | https://www.mingw-w64.org | Windows: statically linked into every executable and DLL built with MSYS2 (VA Studio, the launcher, the Explorer handler, vacards-sparrow.exe) |
+
+### Rust standard library 1.88.0
+
+From the share/doc/rust/COPYRIGHT-library.html of the Rust 1.88.0 toolchain (SHA-256 `3d3f60160f5214efa0a7fd804102d02ce9ea6af04b5249a19eeb243450246ae9`). The standard library is licensed under Apache-2.0 OR MIT, except as listed here. Crates that only serve other targets (WebAssembly, SGX, UEFI, Hermit, other Windows targets) are listed as in the toolchain's notice file but are not compiled into VA Studio's programs.
+
+- `.`: Apache-2.0 OR MIT; Copyright The Rust Project Developers (see https://thanks.rust-lang.org)
+- `library/backtrace`: Apache-2.0 OR MIT; Copyright 2014 Alex Crichton; The Rust Project Developers (see https://thanks.rust-lang.org)
+- `library/core/src/unicode/unicode_data.rs`: Unicode-3.0; Copyright 1991-2024 Unicode, Inc
+- `library/std/src/sync/mpmc`: Apache-2.0 OR MIT; Copyright 2019 The Crossbeam Project Developers; The Rust Project Developers (see https://thanks.rust-lang.org)
+- `library/std/src/sys/sync/mutex/fuchsia.rs`: BSD-2-Clause AND (Apache-2.0 OR MIT); Copyright 2016 The Fuchsia Authors; The Rust Project Developers (see https://thanks.rust-lang.org)
+
+| Crate | Version | License | Copyright |
+| --- | --- | --- | --- |
+| cc | 1.2.0 | MIT OR Apache-2.0 | Copyright (c) 2014 Alex Crichton |
+| cfg-if | 1.0.0 | MIT/Apache-2.0 | Copyright (c) 2014 Alex Crichton |
+| compiler_builtins | 0.1.158 | MIT AND Apache-2.0 WITH LLVM-exception AND (MIT OR Apache-2.0) | Copyright (c) 2009-2016 by the contributors listed in CREDITS.TXT |
+| dlmalloc | 0.2.8 | MIT/Apache-2.0 | Copyright (c) 2014 Alex Crichton |
+| fortanix-sgx-abi | 0.5.0 | MPL-2.0 | Copyright the authors of fortanix-sgx-abi: Fortanix, Inc. |
+| getopts | 0.2.21 | MIT/Apache-2.0 | Copyright (c) 2014 The Rust Project Developers |
+| gimli | 0.31.1 | MIT OR Apache-2.0 | Copyright (c) 2015 The Rust Project Developers |
+| hashbrown | 0.15.3 | MIT OR Apache-2.0 | Copyright (c) 2016 Amanieu d'Antras |
+| hermit-abi | 0.5.0 | MIT OR Apache-2.0 | Copyright the authors of hermit-abi: Stefan Lankes |
+| libc | 0.2.172 | MIT OR Apache-2.0 | Copyright (c) 2014-2020 The Rust Project Developers |
+| r-efi | 5.2.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later | Copyright (C) 2017-2023 Red Hat, Inc.; Copyright (C) 2019-2023 Microsoft Corporation; Copyright (C) 2022-2023 David Rheinsberg |
+| r-efi-alloc | 2.0.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later | Copyright (C) 2017-2022 Red Hat, Inc. |
+| rand | 0.9.1 | MIT OR Apache-2.0 | Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers |
+| rand_core | 0.9.3 | MIT OR Apache-2.0 | Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers |
+| rand_xorshift | 0.4.0 | MIT OR Apache-2.0 | Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers |
+| rustc-demangle | 0.1.24 | MIT/Apache-2.0 | Copyright (c) 2014 Alex Crichton |
+| rustc-literal-escaper | 0.0.2 | Apache-2.0 OR MIT | Copyright the rustc-literal-escaper contributors (https://crates.io/crates/rustc-literal-escaper/0.0.2) |
+| shlex | 1.3.0 | MIT OR Apache-2.0 | Copyright 2015 Nicholas Allegra (comex).; Copyright (c) 2015 Nicholas Allegra (comex). |
+| unicode-width | 0.1.14 | MIT OR Apache-2.0 | Copyright (c) 2015 The Rust Project Developers |
+| unwinding | 0.2.6 | MIT OR Apache-2.0 | Copyright the authors of unwinding: Gary Guo <gary@garyguo.net> |
+| wasi | 0.11.0+wasi-snapshot-preview1 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT | Copyright the authors of wasi: The Cranelift Project Developers |
+| windows-sys | 0.59.0 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. |
+| windows-targets | 0.52.6 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. |
+| windows_aarch64_gnullvm | 0.52.6 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. |
+| windows_aarch64_msvc | 0.52.6 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. |
+| windows_i686_gnu | 0.52.6 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. |
+| windows_i686_gnullvm | 0.52.6 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. |
+| windows_i686_msvc | 0.52.6 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. |
+| windows_x86_64_gnu | 0.52.6 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. |
+| windows_x86_64_gnullvm | 0.52.6 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. |
+| windows_x86_64_msvc | 0.52.6 | MIT OR Apache-2.0 | Copyright (c) Microsoft Corporation. |
+
+The Rust 1.90.0 standard library notices of the Windows Sparrow helper are imported from that toolchain at release time; the macOS Sparrow helper's toolchain is not recorded.
+
+## 5. Assets and external inputs
 
 | Item | Location | License | Status |
 | --- | --- | --- | --- |
@@ -317,38 +374,41 @@ No lockfile was recorded for the macOS arm64 build. The crate paths embedded in 
 | TIFF export RGB profile (TheBest.icc) | (external build input, not in the repository) | UNKNOWN: no source or redistribution permission recorded (VACARDS-DEPENDENCIES.env pins only its SHA-256 f3ae51fbbeb717b46b20a6f7eac769ae5c4c2b4fa1e2fc6816bb22283772b8e8) | blocked |
 | Hyphenation dictionaries (en_US, es) | (external build input on Windows: hyph_en_US.dic, hyph_es.dic with README_hyph_en_US.txt, README_hyph_es.txt, LICENSE-es.md, GPLv3-es.txt) | As stated in the README and license files shipped beside each dictionary in share/inkscape/hyphen; the source and version of each dictionary are not yet recorded | needs-provenance |
 
-## 5. Platform libraries
+## 6. Platform libraries
 
 The Windows package bundles libraries and data from MSYS2 UCRT64 packages; the macOS package bundles libraries from Homebrew formulae. Their exact package versions, licenses and license files are generated at release time from the SBOM captured on the build hosts (`packaging/public-release/capture-sbom-msys2.sh`, `capture-sbom-homebrew.sh`). The Windows package also carries the MSYS2 license directory as `share/licenses/ucrt64`.
 
-**Platform libraries: generated at release time from the SBOM.** No SBOM was supplied to this generation run.
+**Platform libraries: generated at release time from the SBOM.** No SBOM was supplied to this generation run, so this file does not list their versions yet.
 
-## 6. License texts used by the Rust crates
+## 7. License texts
 
-Texts that differ only in their copyright lines are printed once; each crate's own copyright lines are listed above the text.
+Each text is printed once. Texts that differ only in their copyright lines are grouped; the copyright holders of every crate that uses a text are listed above it.
 
-### 6.1. Apache License
+### 7.1. Apache License
 
 Used by:
 
-- anyhow 1.0.104 (`src/3rdparty/vacards-nesting-rs/vendor/anyhow/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- libc 0.2.189 (`src/3rdparty/vacards-nesting-rs/vendor/libc/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- litrs 1.0.0 (`src/3rdparty/vacards-nesting-rs/vendor/litrs/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- pin-project-lite 0.2.17 (`src/3rdparty/vacards-nesting-rs/vendor/pin-project-lite/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- portable-atomic 1.15.0 (`src/3rdparty/vacards-nesting-rs/vendor/portable-atomic/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- portable-atomic-util 0.2.7 (`src/3rdparty/vacards-nesting-rs/vendor/portable-atomic-util/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- proc-macro2 1.0.107 (`src/3rdparty/vacards-nesting-rs/vendor/proc-macro2/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- quote 1.0.47 (`src/3rdparty/vacards-nesting-rs/vendor/quote/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- rustversion 1.0.23 (`src/3rdparty/vacards-nesting-rs/vendor/rustversion/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- semver 1.0.28 (`src/3rdparty/vacards-nesting-rs/vendor/semver/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- serde 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- serde_core 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde_core/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- serde_derive 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde_derive/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- syn 2.0.119 (`src/3rdparty/vacards-nesting-rs/vendor/syn-2.0.119/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- syn 3.0.4 (`src/3rdparty/vacards-nesting-rs/vendor/syn/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- thiserror 2.0.20 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- thiserror-impl 2.0.20 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror-impl/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- unicode-ident 1.0.24 (`src/3rdparty/vacards-nesting-rs/vendor/unicode-ident/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
+- anyhow 1.0.104 (`src/3rdparty/vacards-nesting-rs/vendor/anyhow/LICENSE-APACHE`): Copyright the authors of anyhow: David Tolnay <dtolnay@gmail.com>
+- libc 0.2.189 (`src/3rdparty/vacards-nesting-rs/vendor/libc/LICENSE-APACHE`): Copyright (c) The Rust Project Developers
+- litrs 1.0.0 (`src/3rdparty/vacards-nesting-rs/vendor/litrs/LICENSE-APACHE`): Copyright (c) 2020 Project Developers
+- pin-project-lite 0.2.17 (`src/3rdparty/vacards-nesting-rs/vendor/pin-project-lite/LICENSE-APACHE`): Copyright the pin-project-lite contributors (https://github.com/taiki-e/pin-project-lite)
+- portable-atomic 1.15.0 (`src/3rdparty/vacards-nesting-rs/vendor/portable-atomic/LICENSE-APACHE`): Copyright the portable-atomic contributors (https://github.com/taiki-e/portable-atomic)
+- portable-atomic-util 0.2.7 (`src/3rdparty/vacards-nesting-rs/vendor/portable-atomic-util/LICENSE-APACHE`): Copyright the portable-atomic-util contributors (https://github.com/taiki-e/portable-atomic-util)
+- proc-macro2 1.0.107 (`src/3rdparty/vacards-nesting-rs/vendor/proc-macro2/LICENSE-APACHE`): Copyright the authors of proc-macro2: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com>
+- quote 1.0.47 (`src/3rdparty/vacards-nesting-rs/vendor/quote/LICENSE-APACHE`): Copyright the authors of quote: David Tolnay <dtolnay@gmail.com>
+- rustversion 1.0.23 (`src/3rdparty/vacards-nesting-rs/vendor/rustversion/LICENSE-APACHE`): Copyright the authors of rustversion: David Tolnay <dtolnay@gmail.com>
+- semver 1.0.28 (`src/3rdparty/vacards-nesting-rs/vendor/semver/LICENSE-APACHE`): Copyright the authors of semver: David Tolnay <dtolnay@gmail.com>
+- serde 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde/LICENSE-APACHE`): Copyright the authors of serde: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+- serde_core 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde_core/LICENSE-APACHE`): Copyright the authors of serde_core: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+- serde_derive 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde_derive/LICENSE-APACHE`): Copyright the authors of serde_derive: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+- syn 2.0.119 (`src/3rdparty/vacards-nesting-rs/vendor/syn-2.0.119/LICENSE-APACHE`): Copyright the authors of syn: David Tolnay <dtolnay@gmail.com>
+- syn 3.0.4 (`src/3rdparty/vacards-nesting-rs/vendor/syn/LICENSE-APACHE`): Copyright the authors of syn: David Tolnay <dtolnay@gmail.com>
+- thiserror 2.0.20 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror/LICENSE-APACHE`): Copyright the authors of thiserror: David Tolnay <dtolnay@gmail.com>
+- thiserror-impl 2.0.20 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror-impl/LICENSE-APACHE`): Copyright the authors of thiserror-impl: David Tolnay <dtolnay@gmail.com>
+- unicode-ident 1.0.24 (`src/3rdparty/vacards-nesting-rs/vendor/unicode-ident/LICENSE-APACHE`): Copyright © 1991-2023 Unicode, Inc.
+- libc 0.2.172 (Rust 1.88.0 standard library) (`libc-0.2.172/LICENSE-APACHE`): Copyright (c) 2014-2020 The Rust Project Developers
+- rustc-literal-escaper 0.0.2 (Rust 1.88.0 standard library) (`rustc-literal-escaper-0.0.2/LICENSE-APACHE`): Copyright the rustc-literal-escaper contributors (https://crates.io/crates/rustc-literal-escaper/0.0.2)
+- unwinding 0.2.6 (Rust 1.88.0 standard library) (`unwinding-0.2.6/LICENSE-APACHE`): Copyright the authors of unwinding: Gary Guo <gary@garyguo.net>
 
 ```text
                               Apache License
@@ -529,68 +589,84 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 END OF TERMS AND CONDITIONS
 ```
 
-### 6.2. Permission is hereby granted, free of charge, to any
+### 7.2. Permission is hereby granted, free of charge, to any
 
 Used by:
 
-- anyhow 1.0.104 (`src/3rdparty/vacards-nesting-rs/vendor/anyhow/LICENSE-MIT`)
-- atomic-polyfill 1.0.3 (`src/3rdparty/vacards-nesting-rs/vendor/atomic-polyfill/LICENSE-MIT`); Copyright (c) 2020 Dario Nieuwenhuis
-- autocfg 1.5.1 (`src/3rdparty/vacards-nesting-rs/vendor/autocfg/LICENSE-MIT`); Copyright (c) 2018 Josh Stone
-- bumpalo 3.20.3 (`src/3rdparty/vacards-nesting-rs/vendor/bumpalo/LICENSE-MIT`); Copyright (c) 2019 Nick Fitzgerald
-- cfg-if 1.0.4 (`src/3rdparty/vacards-nesting-rs/vendor/cfg-if/LICENSE-MIT`); Copyright (c) 2014 Alex Crichton
-- critical-section 1.2.0 (`src/3rdparty/vacards-nesting-rs/vendor/critical-section/LICENSE-MIT`); Copyright (c) 2022 The critical-section authors
-- document-features 0.2.12 (`src/3rdparty/vacards-nesting-rs/vendor/document-features/LICENSE-MIT`); Copyright (c) 2020 Olivier Goffart <ogoffart@sixtyfps.io>
-- either 1.18.0 (`src/3rdparty/vacards-nesting-rs/vendor/either/LICENSE-MIT`); Copyright (c) 2015
-- float-cmp 0.10.0 (`src/3rdparty/vacards-nesting-rs/vendor/float-cmp/LICENSE`); Copyright (c) 2014-2020 Optimal Computing (NZ) Ltd
-- futures-core 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-core/LICENSE-MIT`); Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
-- futures-task 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-task/LICENSE-MIT`); Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
-- futures-util 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-util/LICENSE-MIT`); Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
-- geo-types 0.7.20 (`src/3rdparty/vacards-nesting-rs/vendor/geo-types/LICENSE-MIT`); Copyright (c) 2017 The GeoRust Project Developers
-- getrandom 0.4.3 (`src/3rdparty/vacards-nesting-rs/vendor/getrandom/LICENSE-MIT`); Copyright (c) 2018-2026 The rust-random Project Developers; Copyright (c) 2014 The Rust Project Developers
-- hash32 0.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/hash32/LICENSE-MIT`); Copyright (c) 2018 Jorge Aparicio
-- heapless 0.7.17 (`src/3rdparty/vacards-nesting-rs/vendor/heapless/LICENSE-MIT`); Copyright (c) 2017 Jorge Aparicio
-- itertools 0.15.0 (`src/3rdparty/vacards-nesting-rs/vendor/itertools/LICENSE-MIT`); Copyright (c) 2015
-- js-sys 0.3.104 (`src/3rdparty/vacards-nesting-rs/vendor/js-sys/LICENSE-MIT`); Copyright (c) 2014 Alex Crichton
-- libc 0.2.189 (`src/3rdparty/vacards-nesting-rs/vendor/libc/LICENSE-MIT`); Copyright (c) The Rust Project Developers
-- litrs 1.0.0 (`src/3rdparty/vacards-nesting-rs/vendor/litrs/LICENSE-MIT`); Copyright (c) 2020 Project Developers
-- lock_api 0.4.14 (`src/3rdparty/vacards-nesting-rs/vendor/lock_api/LICENSE-MIT`); Copyright (c) 2016 The Rust Project Developers
-- log 0.4.34 (`src/3rdparty/vacards-nesting-rs/vendor/log/LICENSE-MIT`); Copyright (c) 2014 The Rust Project Developers
-- num-complex 0.4.6 (`src/3rdparty/vacards-nesting-rs/vendor/num-complex/LICENSE-MIT`); Copyright (c) 2014 The Rust Project Developers
-- num-integer 0.1.47 (`src/3rdparty/vacards-nesting-rs/vendor/num-integer/LICENSE-MIT`); Copyright (c) 2014 The Rust Project Developers
-- num-traits 0.2.19 (`src/3rdparty/vacards-nesting-rs/vendor/num-traits/LICENSE-MIT`); Copyright (c) 2014 The Rust Project Developers
-- once_cell 1.21.4 (`src/3rdparty/vacards-nesting-rs/vendor/once_cell/LICENSE-MIT`)
-- ordered-float 5.4.0 (`src/3rdparty/vacards-nesting-rs/vendor/ordered-float/LICENSE-MIT`); Copyright (c) 2015 Jonathan Reem
-- pin-project-lite 0.2.17 (`src/3rdparty/vacards-nesting-rs/vendor/pin-project-lite/LICENSE-MIT`)
-- portable-atomic 1.15.0 (`src/3rdparty/vacards-nesting-rs/vendor/portable-atomic/LICENSE-MIT`)
-- portable-atomic-util 0.2.7 (`src/3rdparty/vacards-nesting-rs/vendor/portable-atomic-util/LICENSE-MIT`)
-- proc-macro2 1.0.107 (`src/3rdparty/vacards-nesting-rs/vendor/proc-macro2/LICENSE-MIT`)
-- quote 1.0.47 (`src/3rdparty/vacards-nesting-rs/vendor/quote/LICENSE-MIT`)
-- rand 0.10.2 (`src/3rdparty/vacards-nesting-rs/vendor/rand/LICENSE-MIT`); Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
-- rand_core 0.10.1 (`src/3rdparty/vacards-nesting-rs/vendor/rand_core/LICENSE-MIT`); Copyright (c) 2018-2026 The Rand Project Developers
-- rand_distr 0.6.0 (`src/3rdparty/vacards-nesting-rs/vendor/rand_distr/LICENSE-MIT`); Copyright 2018 Developers of the Rand project
-- rawpointer 0.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/rawpointer/LICENSE-MIT`); Copyright (c) 2015
-- rayon 1.12.0 (`src/3rdparty/vacards-nesting-rs/vendor/rayon/LICENSE-MIT`); Copyright (c) 2010 The Rust Project Developers
-- rayon-core 1.13.0 (`src/3rdparty/vacards-nesting-rs/vendor/rayon-core/LICENSE-MIT`); Copyright (c) 2010 The Rust Project Developers
-- robust 0.2.3 (`src/3rdparty/vacards-nesting-rs/vendor/robust/LICENSE-MIT`); Copyright (c) 2017 The Spade Developers; Copyright (c) 2020 The GeoRust Project Developers
-- rustc_version 0.4.1 (`src/3rdparty/vacards-nesting-rs/vendor/rustc_version/LICENSE-MIT`); Copyright (c) 2016 The Rust Project Developers
-- rustversion 1.0.23 (`src/3rdparty/vacards-nesting-rs/vendor/rustversion/LICENSE-MIT`)
-- scopeguard 1.2.0 (`src/3rdparty/vacards-nesting-rs/vendor/scopeguard/LICENSE-MIT`); Copyright (c) 2016-2019 Ulrik Sverdrup "bluss" and scopeguard developers
-- semver 1.0.28 (`src/3rdparty/vacards-nesting-rs/vendor/semver/LICENSE-MIT`)
-- serde 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde/LICENSE-MIT`)
-- serde_core 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde_core/LICENSE-MIT`)
-- serde_derive 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde_derive/LICENSE-MIT`)
-- slab 0.4.12 (`src/3rdparty/vacards-nesting-rs/vendor/slab/LICENSE`); Copyright (c) 2019 Carl Lerche
-- smallvec 1.16.0 (`src/3rdparty/vacards-nesting-rs/vendor/smallvec/LICENSE-MIT`); Copyright (c) 2018 The Servo Project Developers
-- stable_deref_trait 1.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/stable_deref_trait/LICENSE-MIT`); Copyright (c) 2017 Robert Grosse
-- syn 2.0.119 (`src/3rdparty/vacards-nesting-rs/vendor/syn-2.0.119/LICENSE-MIT`)
-- syn 3.0.4 (`src/3rdparty/vacards-nesting-rs/vendor/syn/LICENSE-MIT`)
-- thiserror 2.0.20 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror/LICENSE-MIT`)
-- thiserror-impl 2.0.20 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror-impl/LICENSE-MIT`)
-- unicode-ident 1.0.24 (`src/3rdparty/vacards-nesting-rs/vendor/unicode-ident/LICENSE-MIT`)
-- wasm-bindgen 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen/LICENSE-MIT`); Copyright (c) 2014 Alex Crichton
-- wasm-bindgen-macro 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-macro/LICENSE-MIT`); Copyright (c) 2014 Alex Crichton
-- wasm-bindgen-macro-support 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-macro-support/LICENSE-MIT`); Copyright (c) 2014 Alex Crichton
-- wasm-bindgen-shared 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-shared/LICENSE-MIT`); Copyright (c) 2014 Alex Crichton
+- anyhow 1.0.104 (`src/3rdparty/vacards-nesting-rs/vendor/anyhow/LICENSE-MIT`): Copyright the authors of anyhow: David Tolnay <dtolnay@gmail.com>
+- atomic-polyfill 1.0.3 (`src/3rdparty/vacards-nesting-rs/vendor/atomic-polyfill/LICENSE-MIT`): Copyright (c) 2020 Dario Nieuwenhuis
+- autocfg 1.5.1 (`src/3rdparty/vacards-nesting-rs/vendor/autocfg/LICENSE-MIT`): Copyright (c) 2018 Josh Stone
+- bumpalo 3.20.3 (`src/3rdparty/vacards-nesting-rs/vendor/bumpalo/LICENSE-MIT`): Copyright (c) 2019 Nick Fitzgerald
+- cfg-if 1.0.4 (`src/3rdparty/vacards-nesting-rs/vendor/cfg-if/LICENSE-MIT`): Copyright (c) 2014 Alex Crichton
+- critical-section 1.2.0 (`src/3rdparty/vacards-nesting-rs/vendor/critical-section/LICENSE-MIT`): Copyright (c) 2022 The critical-section authors
+- document-features 0.2.12 (`src/3rdparty/vacards-nesting-rs/vendor/document-features/LICENSE-MIT`): Copyright (c) 2020 Olivier Goffart <ogoffart@sixtyfps.io>
+- either 1.18.0 (`src/3rdparty/vacards-nesting-rs/vendor/either/LICENSE-MIT`): Copyright (c) 2015
+- float-cmp 0.10.0 (`src/3rdparty/vacards-nesting-rs/vendor/float-cmp/LICENSE`): Copyright (c) 2014-2020 Optimal Computing (NZ) Ltd
+- futures-core 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-core/LICENSE-MIT`): Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
+- futures-task 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-task/LICENSE-MIT`): Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
+- futures-util 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-util/LICENSE-MIT`): Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
+- geo-types 0.7.20 (`src/3rdparty/vacards-nesting-rs/vendor/geo-types/LICENSE-MIT`): Copyright (c) 2017 The GeoRust Project Developers
+- getrandom 0.4.3 (`src/3rdparty/vacards-nesting-rs/vendor/getrandom/LICENSE-MIT`): Copyright (c) 2018-2026 The rust-random Project Developers; Copyright (c) 2014 The Rust Project Developers
+- hash32 0.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/hash32/LICENSE-MIT`): Copyright (c) 2018 Jorge Aparicio
+- heapless 0.7.17 (`src/3rdparty/vacards-nesting-rs/vendor/heapless/LICENSE-MIT`): Copyright (c) 2017 Jorge Aparicio
+- itertools 0.15.0 (`src/3rdparty/vacards-nesting-rs/vendor/itertools/LICENSE-MIT`): Copyright (c) 2015
+- js-sys 0.3.104 (`src/3rdparty/vacards-nesting-rs/vendor/js-sys/LICENSE-MIT`): Copyright (c) 2014 Alex Crichton
+- libc 0.2.189 (`src/3rdparty/vacards-nesting-rs/vendor/libc/LICENSE-MIT`): Copyright (c) The Rust Project Developers
+- litrs 1.0.0 (`src/3rdparty/vacards-nesting-rs/vendor/litrs/LICENSE-MIT`): Copyright (c) 2020 Project Developers
+- lock_api 0.4.14 (`src/3rdparty/vacards-nesting-rs/vendor/lock_api/LICENSE-MIT`): Copyright (c) 2016 The Rust Project Developers
+- log 0.4.34 (`src/3rdparty/vacards-nesting-rs/vendor/log/LICENSE-MIT`): Copyright (c) 2014 The Rust Project Developers
+- num-complex 0.4.6 (`src/3rdparty/vacards-nesting-rs/vendor/num-complex/LICENSE-MIT`): Copyright (c) 2014 The Rust Project Developers
+- num-integer 0.1.47 (`src/3rdparty/vacards-nesting-rs/vendor/num-integer/LICENSE-MIT`): Copyright (c) 2014 The Rust Project Developers
+- num-traits 0.2.19 (`src/3rdparty/vacards-nesting-rs/vendor/num-traits/LICENSE-MIT`): Copyright (c) 2014 The Rust Project Developers
+- once_cell 1.21.4 (`src/3rdparty/vacards-nesting-rs/vendor/once_cell/LICENSE-MIT`): Copyright the authors of once_cell: Aleksey Kladov <aleksey.kladov@gmail.com>
+- ordered-float 5.4.0 (`src/3rdparty/vacards-nesting-rs/vendor/ordered-float/LICENSE-MIT`): Copyright (c) 2015 Jonathan Reem
+- pin-project-lite 0.2.17 (`src/3rdparty/vacards-nesting-rs/vendor/pin-project-lite/LICENSE-MIT`): Copyright the pin-project-lite contributors (https://github.com/taiki-e/pin-project-lite)
+- portable-atomic 1.15.0 (`src/3rdparty/vacards-nesting-rs/vendor/portable-atomic/LICENSE-MIT`): Copyright the portable-atomic contributors (https://github.com/taiki-e/portable-atomic)
+- portable-atomic-util 0.2.7 (`src/3rdparty/vacards-nesting-rs/vendor/portable-atomic-util/LICENSE-MIT`): Copyright the portable-atomic-util contributors (https://github.com/taiki-e/portable-atomic-util)
+- proc-macro2 1.0.107 (`src/3rdparty/vacards-nesting-rs/vendor/proc-macro2/LICENSE-MIT`): Copyright the authors of proc-macro2: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com>
+- quote 1.0.47 (`src/3rdparty/vacards-nesting-rs/vendor/quote/LICENSE-MIT`): Copyright the authors of quote: David Tolnay <dtolnay@gmail.com>
+- rand 0.10.2 (`src/3rdparty/vacards-nesting-rs/vendor/rand/LICENSE-MIT`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
+- rand_core 0.10.1 (`src/3rdparty/vacards-nesting-rs/vendor/rand_core/LICENSE-MIT`): Copyright (c) 2018-2026 The Rand Project Developers
+- rand_distr 0.6.0 (`src/3rdparty/vacards-nesting-rs/vendor/rand_distr/LICENSE-MIT`): Copyright 2018 Developers of the Rand project
+- rawpointer 0.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/rawpointer/LICENSE-MIT`): Copyright (c) 2015
+- rayon 1.12.0 (`src/3rdparty/vacards-nesting-rs/vendor/rayon/LICENSE-MIT`): Copyright (c) 2010 The Rust Project Developers
+- rayon-core 1.13.0 (`src/3rdparty/vacards-nesting-rs/vendor/rayon-core/LICENSE-MIT`): Copyright (c) 2010 The Rust Project Developers
+- robust 0.2.3 (`src/3rdparty/vacards-nesting-rs/vendor/robust/LICENSE-MIT`): Copyright (c) 2017 The Spade Developers; Copyright (c) 2020 The GeoRust Project Developers
+- rustc_version 0.4.1 (`src/3rdparty/vacards-nesting-rs/vendor/rustc_version/LICENSE-MIT`): Copyright (c) 2016 The Rust Project Developers
+- rustversion 1.0.23 (`src/3rdparty/vacards-nesting-rs/vendor/rustversion/LICENSE-MIT`): Copyright the authors of rustversion: David Tolnay <dtolnay@gmail.com>
+- scopeguard 1.2.0 (`src/3rdparty/vacards-nesting-rs/vendor/scopeguard/LICENSE-MIT`): Copyright (c) 2016-2019 Ulrik Sverdrup "bluss" and scopeguard developers
+- semver 1.0.28 (`src/3rdparty/vacards-nesting-rs/vendor/semver/LICENSE-MIT`): Copyright the authors of semver: David Tolnay <dtolnay@gmail.com>
+- serde 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde/LICENSE-MIT`): Copyright the authors of serde: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+- serde_core 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde_core/LICENSE-MIT`): Copyright the authors of serde_core: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+- serde_derive 1.0.229 (`src/3rdparty/vacards-nesting-rs/vendor/serde_derive/LICENSE-MIT`): Copyright the authors of serde_derive: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+- slab 0.4.12 (`src/3rdparty/vacards-nesting-rs/vendor/slab/LICENSE`): Copyright (c) 2019 Carl Lerche
+- smallvec 1.16.0 (`src/3rdparty/vacards-nesting-rs/vendor/smallvec/LICENSE-MIT`): Copyright (c) 2018 The Servo Project Developers
+- stable_deref_trait 1.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/stable_deref_trait/LICENSE-MIT`): Copyright (c) 2017 Robert Grosse
+- syn 2.0.119 (`src/3rdparty/vacards-nesting-rs/vendor/syn-2.0.119/LICENSE-MIT`): Copyright the authors of syn: David Tolnay <dtolnay@gmail.com>
+- syn 3.0.4 (`src/3rdparty/vacards-nesting-rs/vendor/syn/LICENSE-MIT`): Copyright the authors of syn: David Tolnay <dtolnay@gmail.com>
+- thiserror 2.0.20 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror/LICENSE-MIT`): Copyright the authors of thiserror: David Tolnay <dtolnay@gmail.com>
+- thiserror-impl 2.0.20 (`src/3rdparty/vacards-nesting-rs/vendor/thiserror-impl/LICENSE-MIT`): Copyright the authors of thiserror-impl: David Tolnay <dtolnay@gmail.com>
+- unicode-ident 1.0.24 (`src/3rdparty/vacards-nesting-rs/vendor/unicode-ident/LICENSE-MIT`): Copyright © 1991-2023 Unicode, Inc.
+- wasm-bindgen 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen/LICENSE-MIT`): Copyright (c) 2014 Alex Crichton
+- wasm-bindgen-macro 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-macro/LICENSE-MIT`): Copyright (c) 2014 Alex Crichton
+- wasm-bindgen-macro-support 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-macro-support/LICENSE-MIT`): Copyright (c) 2014 Alex Crichton
+- wasm-bindgen-shared 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-shared/LICENSE-MIT`): Copyright (c) 2014 Alex Crichton
+- cc 1.2.0 (Rust 1.88.0 standard library) (`cc-1.2.0/LICENSE-MIT`): Copyright (c) 2014 Alex Crichton
+- cfg-if 1.0.0 (Rust 1.88.0 standard library) (`cfg-if-1.0.0/LICENSE-MIT`): Copyright (c) 2014 Alex Crichton
+- dlmalloc 0.2.8 (Rust 1.88.0 standard library) (`dlmalloc-0.2.8/LICENSE-MIT`): Copyright (c) 2014 Alex Crichton
+- getopts 0.2.21 (Rust 1.88.0 standard library) (`getopts-0.2.21/LICENSE-MIT`): Copyright (c) 2014 The Rust Project Developers
+- gimli 0.31.1 (Rust 1.88.0 standard library) (`gimli-0.31.1/LICENSE-MIT`): Copyright (c) 2015 The Rust Project Developers
+- hashbrown 0.15.3 (Rust 1.88.0 standard library) (`hashbrown-0.15.3/LICENSE-MIT`): Copyright (c) 2016 Amanieu d'Antras
+- hermit-abi 0.5.0 (Rust 1.88.0 standard library) (`hermit-abi-0.5.0/LICENSE-MIT`): Copyright the authors of hermit-abi: Stefan Lankes
+- libc 0.2.172 (Rust 1.88.0 standard library) (`libc-0.2.172/LICENSE-MIT`): Copyright (c) 2014-2020 The Rust Project Developers
+- rand 0.9.1 (Rust 1.88.0 standard library) (`rand-0.9.1/LICENSE-MIT`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
+- rand_core 0.9.3 (Rust 1.88.0 standard library) (`rand_core-0.9.3/LICENSE-MIT`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
+- rand_xorshift 0.4.0 (Rust 1.88.0 standard library) (`rand_xorshift-0.4.0/LICENSE-MIT`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
+- rustc-demangle 0.1.24 (Rust 1.88.0 standard library) (`rustc-demangle-0.1.24/LICENSE-MIT`): Copyright (c) 2014 Alex Crichton
+- rustc-literal-escaper 0.0.2 (Rust 1.88.0 standard library) (`rustc-literal-escaper-0.0.2/LICENSE-MIT`): Copyright the rustc-literal-escaper contributors (https://crates.io/crates/rustc-literal-escaper/0.0.2)
+- unicode-width 0.1.14 (Rust 1.88.0 standard library) (`unicode-width-0.1.14/LICENSE-MIT`): Copyright (c) 2015 The Rust Project Developers
+- unwinding 0.2.6 (Rust 1.88.0 standard library) (`unwinding-0.2.6/LICENSE-MIT`): Copyright the authors of unwinding: Gary Guo <gary@garyguo.net>
+- wasi 0.11.0+wasi-snapshot-preview1 (Rust 1.88.0 standard library) (`wasi-0.11.0+wasi-snapshot-preview1/LICENSE-MIT`): Copyright the authors of wasi: The Cranelift Project Developers
 
 ```text
 Permission is hereby granted, free of charge, to any
@@ -618,47 +694,58 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-### 6.3. Apache License
+### 7.3. Apache License
 
 Used by:
 
-- approx 0.5.1 (`src/3rdparty/vacards-nesting-rs/vendor/approx/LICENSE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- atomic-polyfill 1.0.3 (`src/3rdparty/vacards-nesting-rs/vendor/atomic-polyfill/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- autocfg 1.5.1 (`src/3rdparty/vacards-nesting-rs/vendor/autocfg/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- bumpalo 3.20.3 (`src/3rdparty/vacards-nesting-rs/vendor/bumpalo/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- cfg-if 1.0.4 (`src/3rdparty/vacards-nesting-rs/vendor/cfg-if/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- critical-section 1.2.0 (`src/3rdparty/vacards-nesting-rs/vendor/critical-section/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- crossbeam-deque 0.8.7 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-deque/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- crossbeam-epoch 0.9.20 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-epoch/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- crossbeam-utils 0.8.22 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-utils/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- either 1.18.0 (`src/3rdparty/vacards-nesting-rs/vendor/either/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- geo-buffer 0.2.0 (`src/3rdparty/vacards-nesting-rs/vendor/geo-buffer/LICENSE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- geo-types 0.7.20 (`src/3rdparty/vacards-nesting-rs/vendor/geo-types/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- hash32 0.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/hash32/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- heapless 0.7.17 (`src/3rdparty/vacards-nesting-rs/vendor/heapless/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- itertools 0.15.0 (`src/3rdparty/vacards-nesting-rs/vendor/itertools/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- js-sys 0.3.104 (`src/3rdparty/vacards-nesting-rs/vendor/js-sys/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- lock_api 0.4.14 (`src/3rdparty/vacards-nesting-rs/vendor/lock_api/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- log 0.4.34 (`src/3rdparty/vacards-nesting-rs/vendor/log/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- matrixmultiply 0.3.11 (`src/3rdparty/vacards-nesting-rs/vendor/matrixmultiply/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- ndarray 0.17.2 (`src/3rdparty/vacards-nesting-rs/vendor/ndarray/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- num-complex 0.4.6 (`src/3rdparty/vacards-nesting-rs/vendor/num-complex/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- num-integer 0.1.47 (`src/3rdparty/vacards-nesting-rs/vendor/num-integer/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- num-traits 0.2.19 (`src/3rdparty/vacards-nesting-rs/vendor/num-traits/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- once_cell 1.21.4 (`src/3rdparty/vacards-nesting-rs/vendor/once_cell/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- rawpointer 0.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/rawpointer/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- rayon 1.12.0 (`src/3rdparty/vacards-nesting-rs/vendor/rayon/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- rayon-core 1.13.0 (`src/3rdparty/vacards-nesting-rs/vendor/rayon-core/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- robust 0.2.3 (`src/3rdparty/vacards-nesting-rs/vendor/robust/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- rustc_version 0.4.1 (`src/3rdparty/vacards-nesting-rs/vendor/rustc_version/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- scopeguard 1.2.0 (`src/3rdparty/vacards-nesting-rs/vendor/scopeguard/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- smallvec 1.16.0 (`src/3rdparty/vacards-nesting-rs/vendor/smallvec/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- stable_deref_trait 1.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/stable_deref_trait/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- version_check 0.9.5 (`src/3rdparty/vacards-nesting-rs/vendor/version_check/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- wasm-bindgen 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- wasm-bindgen-macro 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-macro/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- wasm-bindgen-macro-support 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-macro-support/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- wasm-bindgen-shared 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-shared/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
+- approx 0.5.1 (`src/3rdparty/vacards-nesting-rs/vendor/approx/LICENSE`): Copyright the authors of approx: Brendan Zabarauskas <bjzaba@yahoo.com.au>
+- atomic-polyfill 1.0.3 (`src/3rdparty/vacards-nesting-rs/vendor/atomic-polyfill/LICENSE-APACHE`): Copyright (c) 2020 Dario Nieuwenhuis
+- autocfg 1.5.1 (`src/3rdparty/vacards-nesting-rs/vendor/autocfg/LICENSE-APACHE`): Copyright (c) 2018 Josh Stone
+- bumpalo 3.20.3 (`src/3rdparty/vacards-nesting-rs/vendor/bumpalo/LICENSE-APACHE`): Copyright (c) 2019 Nick Fitzgerald
+- cfg-if 1.0.4 (`src/3rdparty/vacards-nesting-rs/vendor/cfg-if/LICENSE-APACHE`): Copyright (c) 2014 Alex Crichton
+- critical-section 1.2.0 (`src/3rdparty/vacards-nesting-rs/vendor/critical-section/LICENSE-APACHE`): Copyright (c) 2022 The critical-section authors
+- crossbeam-deque 0.8.7 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-deque/LICENSE-APACHE`): Copyright (c) 2019 The Crossbeam Project Developers
+- crossbeam-epoch 0.9.20 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-epoch/LICENSE-APACHE`): Copyright (c) 2019 The Crossbeam Project Developers
+- crossbeam-utils 0.8.22 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-utils/LICENSE-APACHE`): Copyright (c) 2019 The Crossbeam Project Developers
+- document-features 0.2.12 (`src/3rdparty/vacards-nesting-rs/vendor/document-features/LICENSE-APACHE`): Copyright (c) 2020 Olivier Goffart <ogoffart@sixtyfps.io>
+- either 1.18.0 (`src/3rdparty/vacards-nesting-rs/vendor/either/LICENSE-APACHE`): Copyright (c) 2015
+- geo-buffer 0.2.0 (`src/3rdparty/vacards-nesting-rs/vendor/geo-buffer/LICENSE`): Copyright the authors of geo-buffer: Teneleven Corp<1011@1011.co.kr>, Inseop Youn<pinebananais@gmail.com>
+- geo-types 0.7.20 (`src/3rdparty/vacards-nesting-rs/vendor/geo-types/LICENSE-APACHE`): Copyright (c) 2017 The GeoRust Project Developers
+- hash32 0.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/hash32/LICENSE-APACHE`): Copyright (c) 2018 Jorge Aparicio
+- heapless 0.7.17 (`src/3rdparty/vacards-nesting-rs/vendor/heapless/LICENSE-APACHE`): Copyright (c) 2017 Jorge Aparicio
+- itertools 0.15.0 (`src/3rdparty/vacards-nesting-rs/vendor/itertools/LICENSE-APACHE`): Copyright (c) 2015
+- js-sys 0.3.104 (`src/3rdparty/vacards-nesting-rs/vendor/js-sys/LICENSE-APACHE`): Copyright (c) 2014 Alex Crichton
+- lock_api 0.4.14 (`src/3rdparty/vacards-nesting-rs/vendor/lock_api/LICENSE-APACHE`): Copyright (c) 2016 The Rust Project Developers
+- log 0.4.34 (`src/3rdparty/vacards-nesting-rs/vendor/log/LICENSE-APACHE`): Copyright (c) 2014 The Rust Project Developers
+- matrixmultiply 0.3.11 (`src/3rdparty/vacards-nesting-rs/vendor/matrixmultiply/LICENSE-APACHE`): Copyright (c) 2016 - 2023 Ulrik Sverdrup "bluss"; Copyright (c) 2021 DutchGhost [constparse.rs]
+- ndarray 0.17.2 (`src/3rdparty/vacards-nesting-rs/vendor/ndarray/LICENSE-APACHE`): Copyright (c) 2015 - 2021 Ulrik Sverdrup "bluss",
+- num-complex 0.4.6 (`src/3rdparty/vacards-nesting-rs/vendor/num-complex/LICENSE-APACHE`): Copyright (c) 2014 The Rust Project Developers
+- num-integer 0.1.47 (`src/3rdparty/vacards-nesting-rs/vendor/num-integer/LICENSE-APACHE`): Copyright (c) 2014 The Rust Project Developers
+- num-traits 0.2.19 (`src/3rdparty/vacards-nesting-rs/vendor/num-traits/LICENSE-APACHE`): Copyright (c) 2014 The Rust Project Developers
+- once_cell 1.21.4 (`src/3rdparty/vacards-nesting-rs/vendor/once_cell/LICENSE-APACHE`): Copyright the authors of once_cell: Aleksey Kladov <aleksey.kladov@gmail.com>
+- rawpointer 0.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/rawpointer/LICENSE-APACHE`): Copyright (c) 2015
+- rayon 1.12.0 (`src/3rdparty/vacards-nesting-rs/vendor/rayon/LICENSE-APACHE`): Copyright (c) 2010 The Rust Project Developers
+- rayon-core 1.13.0 (`src/3rdparty/vacards-nesting-rs/vendor/rayon-core/LICENSE-APACHE`): Copyright (c) 2010 The Rust Project Developers
+- robust 0.2.3 (`src/3rdparty/vacards-nesting-rs/vendor/robust/LICENSE-APACHE`): Copyright (c) 2017 The Spade Developers; Copyright (c) 2020 The GeoRust Project Developers
+- rustc_version 0.4.1 (`src/3rdparty/vacards-nesting-rs/vendor/rustc_version/LICENSE-APACHE`): Copyright (c) 2016 The Rust Project Developers
+- scopeguard 1.2.0 (`src/3rdparty/vacards-nesting-rs/vendor/scopeguard/LICENSE-APACHE`): Copyright (c) 2016-2019 Ulrik Sverdrup "bluss" and scopeguard developers
+- smallvec 1.16.0 (`src/3rdparty/vacards-nesting-rs/vendor/smallvec/LICENSE-APACHE`): Copyright (c) 2018 The Servo Project Developers
+- stable_deref_trait 1.2.1 (`src/3rdparty/vacards-nesting-rs/vendor/stable_deref_trait/LICENSE-APACHE`): Copyright (c) 2017 Robert Grosse
+- version_check 0.9.5 (`src/3rdparty/vacards-nesting-rs/vendor/version_check/LICENSE-APACHE`): Copyright (c) 2017-2018 Sergio Benitez
+- wasm-bindgen 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen/LICENSE-APACHE`): Copyright (c) 2014 Alex Crichton
+- wasm-bindgen-macro 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-macro/LICENSE-APACHE`): Copyright (c) 2014 Alex Crichton
+- wasm-bindgen-macro-support 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-macro-support/LICENSE-APACHE`): Copyright (c) 2014 Alex Crichton
+- wasm-bindgen-shared 0.2.127 (`src/3rdparty/vacards-nesting-rs/vendor/wasm-bindgen-shared/LICENSE-APACHE`): Copyright (c) 2014 Alex Crichton
+- cc 1.2.0 (Rust 1.88.0 standard library) (`cc-1.2.0/LICENSE-APACHE`): Copyright (c) 2014 Alex Crichton
+- cfg-if 1.0.0 (Rust 1.88.0 standard library) (`cfg-if-1.0.0/LICENSE-APACHE`): Copyright (c) 2014 Alex Crichton
+- dlmalloc 0.2.8 (Rust 1.88.0 standard library) (`dlmalloc-0.2.8/LICENSE-APACHE`): Copyright (c) 2014 Alex Crichton
+- getopts 0.2.21 (Rust 1.88.0 standard library) (`getopts-0.2.21/LICENSE-APACHE`): Copyright (c) 2014 The Rust Project Developers
+- gimli 0.31.1 (Rust 1.88.0 standard library) (`gimli-0.31.1/LICENSE-APACHE`): Copyright (c) 2015 The Rust Project Developers
+- hashbrown 0.15.3 (Rust 1.88.0 standard library) (`hashbrown-0.15.3/LICENSE-APACHE`): Copyright (c) 2016 Amanieu d'Antras
+- hermit-abi 0.5.0 (Rust 1.88.0 standard library) (`hermit-abi-0.5.0/LICENSE-APACHE`): Copyright the authors of hermit-abi: Stefan Lankes
+- rustc-demangle 0.1.24 (Rust 1.88.0 standard library) (`rustc-demangle-0.1.24/LICENSE-APACHE`): Copyright (c) 2014 Alex Crichton
+- unicode-width 0.1.14 (Rust 1.88.0 standard library) (`unicode-width-0.1.14/LICENSE-APACHE`): Copyright (c) 2015 The Rust Project Developers
+- wasi 0.11.0+wasi-snapshot-preview1 (Rust 1.88.0 standard library) (`wasi-0.11.0+wasi-snapshot-preview1/LICENSE-APACHE`): Copyright the authors of wasi: The Cranelift Project Developers
 
 ```text
 
@@ -865,11 +952,11 @@ Used by:
    limitations under the License.
 ```
 
-### 6.4. This project is dual-licensed under the Unlicense and MIT licenses.
+### 7.4. This project is dual-licensed under the Unlicense and MIT licenses.
 
 Used by:
 
-- byteorder 1.5.0 (`src/3rdparty/vacards-nesting-rs/vendor/byteorder/COPYING`)
+- byteorder 1.5.0 (`src/3rdparty/vacards-nesting-rs/vendor/byteorder/COPYING`): Copyright (c) 2015 Andrew Gallant
 
 ```text
 This project is dual-licensed under the Unlicense and MIT licenses.
@@ -877,15 +964,17 @@ This project is dual-licensed under the Unlicense and MIT licenses.
 You may use this code under the terms of either license.
 ```
 
-### 6.5. The MIT License (MIT)
+### 7.5. The MIT License (MIT)
 
 Used by:
 
-- byteorder 1.5.0 (`src/3rdparty/vacards-nesting-rs/vendor/byteorder/LICENSE-MIT`); Copyright (c) 2015 Andrew Gallant
-- crossbeam-deque 0.8.7 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-deque/LICENSE-MIT`); Copyright (c) 2019 The Crossbeam Project Developers
-- crossbeam-epoch 0.9.20 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-epoch/LICENSE-MIT`); Copyright (c) 2019 The Crossbeam Project Developers
-- crossbeam-utils 0.8.22 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-utils/LICENSE-MIT`); Copyright (c) 2019 The Crossbeam Project Developers
-- spin 0.9.9 (`src/3rdparty/vacards-nesting-rs/vendor/spin/LICENSE`); Copyright (c) 2014 Mathijs van de Nes
+- byteorder 1.5.0 (`src/3rdparty/vacards-nesting-rs/vendor/byteorder/LICENSE-MIT`): Copyright (c) 2015 Andrew Gallant
+- crossbeam-deque 0.8.7 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-deque/LICENSE-MIT`): Copyright (c) 2019 The Crossbeam Project Developers
+- crossbeam-epoch 0.9.20 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-epoch/LICENSE-MIT`): Copyright (c) 2019 The Crossbeam Project Developers
+- crossbeam-utils 0.8.22 (`src/3rdparty/vacards-nesting-rs/vendor/crossbeam-utils/LICENSE-MIT`): Copyright (c) 2019 The Crossbeam Project Developers
+- spin 0.9.9 (`src/3rdparty/vacards-nesting-rs/vendor/spin/LICENSE`): Copyright (c) 2014 Mathijs van de Nes
+- version_check 0.9.5 (`src/3rdparty/vacards-nesting-rs/vendor/version_check/LICENSE-MIT`): Copyright (c) 2017-2018 Sergio Benitez
+- shlex 1.3.0 (Rust 1.88.0 standard library) (`shlex-1.3.0/LICENSE-MIT`): Copyright 2015 Nicholas Allegra (comex).; Copyright (c) 2015 Nicholas Allegra (comex).
 
 ```text
 The MIT License (MIT)
@@ -911,11 +1000,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
 
-### 6.6. This is free and unencumbered software released into the public domain.
+### 7.6. This is free and unencumbered software released into the public domain.
 
 Used by:
 
-- byteorder 1.5.0 (`src/3rdparty/vacards-nesting-rs/vendor/byteorder/UNLICENSE`)
+- byteorder 1.5.0 (`src/3rdparty/vacards-nesting-rs/vendor/byteorder/UNLICENSE`): Copyright (c) 2015 Andrew Gallant
 
 ```text
 This is free and unencumbered software released into the public domain.
@@ -944,93 +1033,297 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <http://unlicense.org/>
 ```
 
-### 6.7. Apache License
+### 7.7. The compiler-builtins crate is available for use under both the MIT license
 
 Used by:
 
-- document-features 0.2.12 (`src/3rdparty/vacards-nesting-rs/vendor/document-features/LICENSE-APACHE`); (c) You must retain, in the Source form of any Derivative Works that You distribute, all copyright, patent, trademark, and attribution notices from the Source form of the Work, excluding those notices that do not pertain to any part of the Derivative Works; and
+- compiler_builtins 0.1.158 (Rust 1.88.0 standard library) (`compiler_builtins-0.1.158/LICENSE.txt`): Copyright (c) 2009-2016 by the contributors listed in CREDITS.TXT
 
 ```text
-Apache License
-Version 2.0, January 2004
-http://www.apache.org/licenses/
+The compiler-builtins crate is available for use under both the MIT license
+and the Apache-2.0 license with the LLVM exception (MIT AND Apache-2.0 WITH
+LLVM-exception).
 
-TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+The libm crate is available for use under the MIT license.
 
-1. Definitions.
+As a contributor, you agree that your code may be used under any of the
+following: the MIT license, the Apache-2.0 license, or the Apache-2.0 license
+with the LLVM exception. In other words, original (non-derivative) work is
+licensed under MIT OR Apache-2.0 OR Apache-2.0 WITH LLVM-exception. This is
+the default license for all other source in this repository.
 
-"License" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.
+Text of the relevant licenses is provided below:
 
-"Licensor" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.
+------------------------------------------------------------------------------
+MIT License
 
-"Legal Entity" shall mean the union of the acting entity and all other entities that control, are controlled by, or are under common control with that entity. For the purposes of this definition, "control" means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-"You" (or "Your") shall mean an individual or Legal Entity exercising permissions granted by this License.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-"Source" form shall mean the preferred form for making modifications, including but not limited to software source code, documentation source, and configuration files.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+------------------------------------------------------------------------------
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
 
-"Object" form shall mean any form resulting from mechanical transformation or translation of a Source form, including but not limited to compiled object code, generated documentation, and conversions to other media types.
+    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
-"Work" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).
+    1. Definitions.
 
-"Derivative Works" shall mean any work, whether in Source or Object form, that is based on (or derived from) the Work and for which the editorial revisions, annotations, elaborations, or other modifications represent, as a whole, an original work of authorship. For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
 
-"Contribution" shall mean any work of authorship, including the original version of the Work and any modifications or additions to that Work or Derivative Works thereof, that is intentionally submitted to Licensor for inclusion in the Work by the copyright owner or by an individual or Legal Entity authorized to submit on behalf of the copyright owner. For the purposes of this definition, "submitted" means any form of electronic, verbal, or written communication sent to the Licensor or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Licensor for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by the copyright owner as "Not a Contribution."
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
 
-"Contributor" shall mean Licensor and any individual or Legal Entity on behalf of whom a Contribution has been received by Licensor and subsequently incorporated within the Work.
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
 
-2. Grant of Copyright License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
 
-3. Grant of Patent License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted. If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
 
-4. Redistribution. You may reproduce and distribute copies of the Work or Derivative Works thereof in any medium, with or without modifications, and in Source or Object form, provided that You meet the following conditions:
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
 
-     (a) You must give any other recipients of the Work or Derivative Works a copy of this License; and
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
 
-     (b) You must cause any modified files to carry prominent notices stating that You changed the files; and
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
 
-     (c) You must retain, in the Source form of any Derivative Works that You distribute, all copyright, patent, trademark, and attribution notices from the Source form of the Work, excluding those notices that do not pertain to any part of the Derivative Works; and
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
 
-     (d) If the Work includes a "NOTICE" text file as part of its distribution, then any Derivative Works that You distribute must include a readable copy of the attribution notices contained within such NOTICE file, excluding those notices that do not pertain to any part of the Derivative Works, in at least one of the following places: within a NOTICE text file distributed as part of the Derivative Works; within the Source form or documentation, if provided along with the Derivative Works; or, within a display generated by the Derivative Works, if and wherever such third-party notices normally appear. The contents of the NOTICE file are for informational purposes only and do not modify the License. You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
 
-     You may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License.
+    2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
 
-5. Submission of Contributions. Unless You explicitly state otherwise, any Contribution intentionally submitted for inclusion in the Work by You to the Licensor shall be under the terms and conditions of this License, without any additional terms or conditions. Notwithstanding the above, nothing herein shall supersede or modify the terms of any separate license agreement you may have executed with Licensor regarding such Contributions.
+    3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
 
-6. Trademarks. This License does not grant permission to use the trade names, trademarks, service marks, or product names of the Licensor, except as required for reasonable and customary use in describing the origin of the Work and reproducing the content of the NOTICE file.
+    4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
 
-7. Disclaimer of Warranty. Unless required by applicable law or agreed to in writing, Licensor provides the Work (and each Contributor provides its Contributions) on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining the appropriateness of using or redistributing the Work and assume any risks associated with Your exercise of permissions under this License.
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
 
-8. Limitation of Liability. In no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law (such as deliberate and grossly negligent acts) or agreed to in writing, shall any Contributor be liable to You for damages, including any direct, indirect, special, incidental, or consequential damages of any character arising as a result of this License or out of the use or inability to use the Work (including but not limited to damages for loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses), even if such Contributor has been advised of the possibility of such damages.
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
 
-9. Accepting Warranty or Additional Liability. While redistributing the Work or Derivative Works thereof, You may choose to offer, and charge a fee for, acceptance of support, warranty, indemnity, or other liability obligations and/or rights consistent with this License. However, in accepting such obligations, You may act only on Your own behalf and on Your sole responsibility, not on behalf of any other Contributor, and only if You agree to indemnify, defend, and hold each Contributor harmless for any liability incurred by, or claims asserted against, such Contributor by reason of your accepting any such warranty or additional liability.
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
 
-END OF TERMS AND CONDITIONS
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
 
-APPENDIX: How to apply the Apache License to your work.
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
 
-To apply the Apache License to your work, attach the following boilerplate notice, with the fields enclosed by brackets "[]" replaced with your own identifying information. (Don't include the brackets!)  The text should be enclosed in the appropriate comment syntax for the file format. We also recommend that a file or class name and description of purpose be included on the same "printed page" as the copyright notice for easier identification within third-party archives.
+    5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
 
-Copyright [yyyy] [name of copyright owner]
+    6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
 
-http://www.apache.org/licenses/LICENSE-2.0
+    8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+    END OF TERMS AND CONDITIONS
+
+    APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+
+---- LLVM Exceptions to the Apache 2.0 License ----
+
+As an exception, if, as a result of your compiling your source code, portions
+of this Software are embedded into an Object form of such source code, you
+may redistribute such embedded portions in such Object form without complying
+with the conditions of Sections 4(a), 4(b) and 4(d) of the License.
+
+In addition, if you combine or link compiled forms of this Software with
+software that is licensed under the GPLv2 ("Combined Software") and if a
+court of competent jurisdiction determines that the patent provision (Section
+3), the indemnity provision (Section 9) or other Section of the License
+conflicts with the conditions of the GPLv2, you may retroactively and
+prospectively choose to deem waived or otherwise exclude such Section(s) of
+the License, but only in their entirety and only with respect to the Combined
+Software.
+------------------------------------------------------------------------------
+
+Portions of this software are derived from third-party works licensed under
+terms compatible with the above Apache-2.0 WITH LLVM-exception AND MIT
+license:
+
+* compiler-builtins is derived from LLVM's compiler-rt (https://llvm.org/).
+  Work derived from compiler-rt prior to 2019-01-19 is usable under the MIT
+  license, with the following copyright:
+
+      Copyright (c) 2009-2016 by the contributors listed in CREDITS.TXT
+
+  The relevant CREDITS.TXT is located at
+  https://github.com/llvm/llvm-project/blob/main/compiler-rt/CREDITS.TXT.
+
+* Work derived from compiler-rt after 2019-01-19 is usable under the
+  Apache-2.0 license with the LLVM exception.
+
+* The bundled `math` module is from the libm crate, usable under the MIT
+  license. For further details and copyrights, see see libm/LICENSE.txt at
+  https://github.com/rust-lang/compiler-builtins.
+
+Additionally, some source files may contain comments with specific copyrights
+or licenses.
+
+                
 ```
 
-### 6.8. MIT License
+### 7.8. MIT License
 
 Used by:
 
-- float_next_after 1.0.0 (`src/3rdparty/vacards-nesting-rs/vendor/float_next_after/LICENSE`); Copyright (c) 2020 Scripta Qumranica Electronica
+- float_next_after 1.0.0 (`src/3rdparty/vacards-nesting-rs/vendor/float_next_after/LICENSE`): Copyright (c) 2020 Scripta Qumranica Electronica
 
 ```text
 MIT License
@@ -1058,14 +1351,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### 6.9. Apache License
+### 7.9. Apache License
 
 Used by:
 
-- futures-core 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-core/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works; Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
-- futures-task 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-task/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works; Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
-- futures-util 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-util/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works; Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
-- web-time 1.1.0 (`src/3rdparty/vacards-nesting-rs/vendor/web-time/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works; Copyright 2023 dAxpeDDa
+- futures-core 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-core/LICENSE-APACHE`): Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
+- futures-task 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-task/LICENSE-APACHE`): Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
+- futures-util 0.3.34 (`src/3rdparty/vacards-nesting-rs/vendor/futures-util/LICENSE-APACHE`): Copyright (c) 2016 Alex Crichton; Copyright (c) 2017 The Tokio Authors
+- web-time 1.1.0 (`src/3rdparty/vacards-nesting-rs/vendor/web-time/LICENSE-APACHE`): Copyright 2023 dAxpeDDa; Copyright (c) 2023 dAxpeDDa
+- windows-sys 0.59.0 (Rust 1.88.0 standard library) (`windows-sys-0.59.0/license-apache-2.0`): Copyright (c) Microsoft Corporation.
+- windows-targets 0.52.6 (Rust 1.88.0 standard library) (`windows-targets-0.52.6/license-apache-2.0`): Copyright (c) Microsoft Corporation.
+- windows_aarch64_gnullvm 0.52.6 (Rust 1.88.0 standard library) (`windows_aarch64_gnullvm-0.52.6/license-apache-2.0`): Copyright (c) Microsoft Corporation.
+- windows_aarch64_msvc 0.52.6 (Rust 1.88.0 standard library) (`windows_aarch64_msvc-0.52.6/license-apache-2.0`): Copyright (c) Microsoft Corporation.
+- windows_i686_gnu 0.52.6 (Rust 1.88.0 standard library) (`windows_i686_gnu-0.52.6/license-apache-2.0`): Copyright (c) Microsoft Corporation.
+- windows_i686_gnullvm 0.52.6 (Rust 1.88.0 standard library) (`windows_i686_gnullvm-0.52.6/license-apache-2.0`): Copyright (c) Microsoft Corporation.
+- windows_i686_msvc 0.52.6 (Rust 1.88.0 standard library) (`windows_i686_msvc-0.52.6/license-apache-2.0`): Copyright (c) Microsoft Corporation.
+- windows_x86_64_gnu 0.52.6 (Rust 1.88.0 standard library) (`windows_x86_64_gnu-0.52.6/license-apache-2.0`): Copyright (c) Microsoft Corporation.
+- windows_x86_64_gnullvm 0.52.6 (Rust 1.88.0 standard library) (`windows_x86_64_gnullvm-0.52.6/license-apache-2.0`): Copyright (c) Microsoft Corporation.
+- windows_x86_64_msvc 0.52.6 (Rust 1.88.0 standard library) (`windows_x86_64_msvc-0.52.6/license-apache-2.0`): Copyright (c) Microsoft Corporation.
 
 ```text
                               Apache License
@@ -1272,12 +1575,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-### 6.10. MIT License
+### 7.10. MIT License
 
 Used by:
 
-- geographiclib-rs 0.2.7 (`src/3rdparty/vacards-nesting-rs/vendor/geographiclib-rs/LICENSE`); Copyright (c) 2019
-- web-time 1.1.0 (`src/3rdparty/vacards-nesting-rs/vendor/web-time/LICENSE-MIT`); Copyright (c) 2023 dAxpeDDa
+- geographiclib-rs 0.2.7 (`src/3rdparty/vacards-nesting-rs/vendor/geographiclib-rs/LICENSE`): Copyright (c) 2019
+- web-time 1.1.0 (`src/3rdparty/vacards-nesting-rs/vendor/web-time/LICENSE-MIT`): Copyright 2023 dAxpeDDa; Copyright (c) 2023 dAxpeDDa
 
 ```text
 MIT License
@@ -1303,11 +1606,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### 6.11. Apache License
+### 7.11. Apache License
 
 Used by:
 
-- getrandom 0.4.3 (`src/3rdparty/vacards-nesting-rs/vendor/getrandom/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
+- getrandom 0.4.3 (`src/3rdparty/vacards-nesting-rs/vendor/getrandom/LICENSE-APACHE`): Copyright (c) 2018-2026 The rust-random Project Developers; Copyright (c) 2014 The Rust Project Developers
 
 ```text
                               Apache License
@@ -1513,11 +1816,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-### 6.12. Mozilla Public License Version 2.0
+### 7.12. Mozilla Public License Version 2.0
 
 Used by:
 
-- jagua-rs 0.8.0 (`src/3rdparty/vacards-nesting-rs/LICENSES/jagua-rs-MPL-2.0.txt`); (c) under Patent Claims infringed by Covered Software in the absence of
+- jagua-rs 0.8.0 (`src/3rdparty/vacards-nesting-rs/LICENSES/jagua-rs-MPL-2.0.txt`): Copyright the authors of jagua-rs: Jeroen Gardeyn
 
 ```text
 Mozilla Public License Version 2.0
@@ -1895,11 +2198,11 @@ Exhibit B - "Incompatible With Secondary Licenses" Notice
   defined by the Mozilla Public License, v. 2.0.
 ```
 
-### 6.13. rust-lang/libm as a whole is available for use under the MIT license:
+### 7.13. rust-lang/libm as a whole is available for use under the MIT license:
 
 Used by:
 
-- libm 0.2.16 (`src/3rdparty/vacards-nesting-rs/vendor/libm/LICENSE.txt`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works; Copyright (c) 2018 Jorge Aparicio; copyright:; Copyright © 2005-2020 Rich Felker, et al.; Copyright © 1993,2004 Sun Microsystems or; Copyright © 2003-2011 David Schultz or; Copyright © 2003-2009 Steven G. Kargl or; Copyright © 2003-2009 Bruce D. Evans or; Copyright © 2008 Stephen L. Moshier or; Copyright © 2017-2018 Arm Limited; Copyright notices are retained in src/* files where relevant.
+- libm 0.2.16 (`src/3rdparty/vacards-nesting-rs/vendor/libm/LICENSE.txt`): Copyright (c) 2018 Jorge Aparicio; Copyright © 2005-2020 Rich Felker, et al.; Copyright © 1993,2004 Sun Microsystems or; Copyright © 2003-2011 David Schultz or; Copyright © 2003-2009 Steven G. Kargl or; Copyright © 2003-2009 Bruce D. Evans or; Copyright © 2008 Stephen L. Moshier or; Copyright © 2017-2018 Arm Limited
 
 ```text
 rust-lang/libm as a whole is available for use under the MIT license:
@@ -2162,11 +2465,11 @@ have been licensed under extremely permissive terms.
 Copyright notices are retained in src/* files where relevant.
 ```
 
-### 6.14. Copyirhgt (c) 2018 R. Janis Goldschmidt
+### 7.14. Copyirhgt (c) 2018 R. Janis Goldschmidt
 
 Used by:
 
-- matrixmultiply 0.3.11 (`src/3rdparty/vacards-nesting-rs/vendor/matrixmultiply/LICENSE-MIT`); Copyright (c) 2016 - 2023 Ulrik Sverdrup "bluss"; Copyright (c) 2021 DutchGhost [constparse.rs]
+- matrixmultiply 0.3.11 (`src/3rdparty/vacards-nesting-rs/vendor/matrixmultiply/LICENSE-MIT`): Copyright (c) 2016 - 2023 Ulrik Sverdrup "bluss"; Copyright (c) 2021 DutchGhost [constparse.rs]
 
 ```text
 Copyright (c) 2016 - 2023 Ulrik Sverdrup "bluss"
@@ -2198,11 +2501,11 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-### 6.15. Jim Turner,
+### 7.15. Jim Turner,
 
 Used by:
 
-- ndarray 0.17.2 (`src/3rdparty/vacards-nesting-rs/vendor/ndarray/LICENSE-MIT`); Copyright (c) 2015 - 2021 Ulrik Sverdrup "bluss",
+- ndarray 0.17.2 (`src/3rdparty/vacards-nesting-rs/vendor/ndarray/LICENSE-MIT`): Copyright (c) 2015 - 2021 Ulrik Sverdrup "bluss",
 
 ```text
 Copyright (c) 2015 - 2021 Ulrik Sverdrup "bluss",
@@ -2234,11 +2537,95 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-### 6.16. LICENSE:
+### 7.16. LICENSE:
 
 Used by:
 
-- r-efi 6.0.0 (`src/3rdparty/vacards-nesting-rs/vendor/r-efi/AUTHORS`); COPYRIGHT: (ordered alphabetically); Copyright (C) 2017-2023 Red Hat, Inc.; Copyright (C) 2019-2023 Microsoft Corporation; Copyright (C) 2022-2023 David Rheinsberg
+- r-efi 5.2.0 (Rust 1.88.0 standard library) (`r-efi-5.2.0/AUTHORS`): Copyright (C) 2017-2023 Red Hat, Inc.; Copyright (C) 2019-2023 Microsoft Corporation; Copyright (C) 2022-2023 David Rheinsberg
+
+```text
+LICENSE:
+        This project is triple-licensed under the MIT License, the Apache
+        License, Version 2.0, and the GNU Lesser General Public License,
+        Version 2.1+.
+
+AUTHORS-MIT:
+        Permission is hereby granted, free of charge, to any person obtaining a
+        copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
+
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+        MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+        IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+        CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+        TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+        SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+AUTHORS-ASL:
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+                http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+AUTHORS-LGPL:
+        This program is free software; you can redistribute it and/or modify it
+        under the terms of the GNU Lesser General Public License as published
+        by the Free Software Foundation; either version 2.1 of the License, or
+        (at your option) any later version.
+
+        This program is distributed in the hope that it will be useful, but
+        WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+        Lesser General Public License for more details.
+
+        You should have received a copy of the GNU Lesser General Public License
+        along with this program; If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT: (ordered alphabetically)
+        Copyright (C) 2017-2023 Red Hat, Inc.
+        Copyright (C) 2019-2023 Microsoft Corporation
+        Copyright (C) 2022-2023 David Rheinsberg
+
+AUTHORS: (ordered alphabetically)
+        Alex James <theracermaster@gmail.com>
+        Ayush Singh <ayushsingh1325@gmail.com>
+        Boris-Chengbiao Zhou <bobo1239@web.de>
+        Bret Barkelew <bret@corthon.com>
+        Christopher Zurcher <christopher.zurcher@microsoft.com>
+        David Rheinsberg <david@readahead.eu>
+        Dmitry Mostovenko <trueberserker@gmail.com>
+        Hiroki Tokunaga <tokusan441@gmail.com>
+        Joe Richey <joerichey@google.com>
+        John Schock <joschock@microsoft.com>
+        Michael Kubacki <michael.kubacki@microsoft.com>
+        Oliver Smith-Denny <osde@microsoft.com>
+        Richard Wiedenhöft <richard@wiedenhoeft.xyz>
+        Rob Bradford <robert.bradford@intel.com>, <rbradford@rivosinc.com>
+        Tom Gundersen <teg@jklm.no>
+
+                
+```
+
+### 7.17. LICENSE:
+
+Used by:
+
+- r-efi 6.0.0 (`src/3rdparty/vacards-nesting-rs/vendor/r-efi/AUTHORS`): Copyright (C) 2017-2023 Red Hat, Inc.; Copyright (C) 2019-2023 Microsoft Corporation; Copyright (C) 2022-2023 David Rheinsberg
 
 ```text
 LICENSE:
@@ -2318,12 +2705,86 @@ AUTHORS: (ordered alphabetically)
         Trevor Gross <tmgross@umich.edu>
 ```
 
-### 6.17. Copyrights in the Rand project are retained by their contributors. No
+### 7.18. LICENSE:
 
 Used by:
 
-- rand 0.10.2 (`src/3rdparty/vacards-nesting-rs/vendor/rand/COPYRIGHT`); copyright assignment is required to contribute to the Rand project.
-- rand_distr 0.6.0 (`src/3rdparty/vacards-nesting-rs/vendor/rand_distr/COPYRIGHT`); copyright assignment is required to contribute to the Rand project.
+- r-efi-alloc 2.0.0 (Rust 1.88.0 standard library) (`r-efi-alloc-2.0.0/AUTHORS`): Copyright (C) 2017-2022 Red Hat, Inc.
+
+```text
+LICENSE:
+        This project is triple-licensed under the MIT License, the Apache
+        License, Version 2.0, and the GNU Lesser General Public License,
+        Version 2.1+.
+
+AUTHORS-MIT:
+        Permission is hereby granted, free of charge, to any person obtaining a
+        copy of this software and associated documentation files (the
+        "Software"), to deal in the Software without restriction, including
+        without limitation the rights to use, copy, modify, merge, publish,
+        distribute, sublicense, and/or sell copies of the Software, and to
+        permit persons to whom the Software is furnished to do so, subject to
+        the following conditions:
+
+        The above copyright notice and this permission notice shall be included
+        in all copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+        OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+        MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+        IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+        CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+        TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+        SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+AUTHORS-ASL:
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+                http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+AUTHORS-LGPL:
+        This program is free software; you can redistribute it and/or modify it
+        under the terms of the GNU Lesser General Public License as published
+        by the Free Software Foundation; either version 2.1 of the License, or
+        (at your option) any later version.
+
+        This program is distributed in the hope that it will be useful, but
+        WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+        Lesser General Public License for more details.
+
+        You should have received a copy of the GNU Lesser General Public License
+        along with this program; If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT: (ordered alphabetically)
+        Copyright (C) 2017-2022 Red Hat, Inc.
+
+AUTHORS: (ordered alphabetically)
+        Ayush Singh <ayushsingh1325@gmail.com>
+        David Rheinsberg <david.rheinsberg@gmail.com>
+        Mizuho MORI <morimolymoly@gmail.com>
+        Tom Gundersen <teg@jklm.no>
+
+                
+```
+
+### 7.19. Copyrights in the Rand project are retained by their contributors. No
+
+Used by:
+
+- rand 0.10.2 (`src/3rdparty/vacards-nesting-rs/vendor/rand/COPYRIGHT`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
+- rand_distr 0.6.0 (`src/3rdparty/vacards-nesting-rs/vendor/rand_distr/COPYRIGHT`): Copyright 2018 Developers of the Rand project
+- rand 0.9.1 (Rust 1.88.0 standard library) (`rand-0.9.1/COPYRIGHT`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
+- rand_core 0.9.3 (Rust 1.88.0 standard library) (`rand_core-0.9.3/COPYRIGHT`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
+- rand_xorshift 0.4.0 (Rust 1.88.0 standard library) (`rand_xorshift-0.4.0/COPYRIGHT`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
 
 ```text
 Copyrights in the Rand project are retained by their contributors. No
@@ -2340,11 +2801,13 @@ The Rand project includes code from the Rust project
 published under these same licenses.
 ```
 
-### 6.18. Apache License
+### 7.20. Apache License
 
 Used by:
 
-- rand 0.10.2 (`src/3rdparty/vacards-nesting-rs/vendor/rand/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
+- rand 0.10.2 (`src/3rdparty/vacards-nesting-rs/vendor/rand/LICENSE-APACHE`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
+- rand 0.9.1 (Rust 1.88.0 standard library) (`rand-0.9.1/LICENSE-APACHE`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
+- rand_xorshift 0.4.0 (Rust 1.88.0 standard library) (`rand_xorshift-0.4.0/LICENSE-APACHE`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
 
 ```text
                               Apache License
@@ -2525,11 +2988,11 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 END OF TERMS AND CONDITIONS
 ```
 
-### 6.19. Copyrights in the Rand project are retained by their contributors. No
+### 7.21. Copyrights in the Rand project are retained by their contributors. No
 
 Used by:
 
-- rand_core 0.10.1 (`src/3rdparty/vacards-nesting-rs/vendor/rand_core/COPYRIGHT`); copyright assignment is required to contribute to the Rand project.
+- rand_core 0.10.1 (`src/3rdparty/vacards-nesting-rs/vendor/rand_core/COPYRIGHT`): Copyright (c) 2018-2026 The Rand Project Developers
 
 ```text
 Copyrights in the Rand project are retained by their contributors. No
@@ -2543,12 +3006,13 @@ licensed under the Apache License, Version 2.0 <LICENSE-APACHE> or
 <LICENSE-MIT> or <http://opensource.org/licenses/MIT>, at your option.
 ```
 
-### 6.20. Apache License
+### 7.22. Apache License
 
 Used by:
 
-- rand_core 0.10.1 (`src/3rdparty/vacards-nesting-rs/vendor/rand_core/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
-- rand_distr 0.6.0 (`src/3rdparty/vacards-nesting-rs/vendor/rand_distr/LICENSE-APACHE`); copyright notice that is included in or attached to the work; copyright license to reproduce, prepare Derivative Works of,; (c) You must retain, in the Source form of any Derivative Works
+- rand_core 0.10.1 (`src/3rdparty/vacards-nesting-rs/vendor/rand_core/LICENSE-APACHE`): Copyright (c) 2018-2026 The Rand Project Developers
+- rand_distr 0.6.0 (`src/3rdparty/vacards-nesting-rs/vendor/rand_distr/LICENSE-APACHE`): Copyright 2018 Developers of the Rand project
+- rand_core 0.9.3 (Rust 1.88.0 standard library) (`rand_core-0.9.3/LICENSE-APACHE`): Copyright 2018 Developers of the Rand project; Copyright (c) 2014 The Rust Project Developers
 
 ```text
                               Apache License
@@ -2740,11 +3204,35 @@ APPENDIX: How to apply the Apache License to your work.
    identification within third-party archives.
 ```
 
-### 6.21. This software is provided 'as-is', without any express or implied warranty. In
+### 7.23. Licensed under the Apache License, Version 2.0 (the "License");
 
 Used by:
 
-- slotmap 1.1.1 (`src/3rdparty/vacards-nesting-rs/vendor/slotmap/LICENSE`); Copyright (c) 2021 Orson Peters <orsonpeters@gmail.com>
+- shlex 1.3.0 (Rust 1.88.0 standard library) (`shlex-1.3.0/LICENSE-APACHE`): Copyright 2015 Nicholas Allegra (comex).; Copyright (c) 2015 Nicholas Allegra (comex).
+
+```text
+Copyright 2015 Nicholas Allegra (comex).
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+                
+```
+
+### 7.24. This software is provided 'as-is', without any express or implied warranty. In
+
+Used by:
+
+- slotmap 1.1.1 (`src/3rdparty/vacards-nesting-rs/vendor/slotmap/LICENSE`): Copyright (c) 2021 Orson Peters <orsonpeters@gmail.com>
 
 ```text
 Copyright (c) 2021 Orson Peters <orsonpeters@gmail.com>
@@ -2768,11 +3256,11 @@ the following restrictions:
  3. This notice may not be removed or altered from any source distribution.
 ```
 
-### 6.22. License
+### 7.25. License
 
 Used by:
 
-- svg 0.18.0 (`src/3rdparty/vacards-nesting-rs/vendor/svg/LICENSE.md`); Copyright 2015–2024 The svg Developers; Copyright 2015–2024 The svg Developers; COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+- svg 0.18.0 (`src/3rdparty/vacards-nesting-rs/vendor/svg/LICENSE.md`): Copyright 2015–2024 The svg Developers
 
 ````text
 # License
@@ -2826,11 +3314,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 ````
 
-### 6.23. UNICODE LICENSE V3
+### 7.26. UNICODE LICENSE V3
 
 Used by:
 
-- unicode-ident 1.0.24 (`src/3rdparty/vacards-nesting-rs/vendor/unicode-ident/LICENSE-UNICODE`); COPYRIGHT AND PERMISSION NOTICE; Copyright © 1991-2023 Unicode, Inc.
+- unicode-ident 1.0.24 (`src/3rdparty/vacards-nesting-rs/vendor/unicode-ident/LICENSE-UNICODE`): Copyright © 1991-2023 Unicode, Inc.
 
 ```text
 UNICODE LICENSE V3
@@ -2874,47 +3362,312 @@ dealings in these Data Files or Software without prior written
 authorization of the copyright holder.
 ```
 
-### 6.24. The MIT License (MIT)
+### 7.27. Licensed under the Apache License, Version 2.0
 
 Used by:
 
-- version_check 0.9.5 (`src/3rdparty/vacards-nesting-rs/vendor/version_check/LICENSE-MIT`); Copyright (c) 2017-2018 Sergio Benitez; COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+- unicode-width 0.1.14 (Rust 1.88.0 standard library) (`unicode-width-0.1.14/COPYRIGHT`): Copyright (c) 2015 The Rust Project Developers
 
 ```text
-The MIT License (MIT)
-Copyright (c) 2017-2018 Sergio Benitez
+Licensed under the Apache License, Version 2.0
+<LICENSE-APACHE or
+http://www.apache.org/licenses/LICENSE-2.0> or the MIT
+license <LICENSE-MIT or http://opensource.org/licenses/MIT>,
+at your option. All files in the project carrying such
+notice may not be copied, modified, or distributed except
+according to those terms.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
+                
+```
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+### 7.28. Apache License
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Used by:
+
+- wasi 0.11.0+wasi-snapshot-preview1 (Rust 1.88.0 standard library) (`wasi-0.11.0+wasi-snapshot-preview1/LICENSE-Apache-2.0_WITH_LLVM-exception`): Copyright the authors of wasi: The Cranelift Project Developers
+
+```text
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+
+--- LLVM Exceptions to the Apache 2.0 License ----
+
+As an exception, if, as a result of your compiling your source code, portions
+of this Software are embedded into an Object form of such source code, you
+may redistribute such embedded portions in such Object form without complying
+with the conditions of Sections 4(a), 4(b) and 4(d) of the License.
+
+In addition, if you combine or link compiled forms of this Software with
+software that is licensed under the GPLv2 ("Combined Software") and if a
+court of competent jurisdiction determines that the patent provision (Section
+3), the indemnity provision (Section 9) or other Section of the License
+conflicts with the conditions of the GPLv2, you may retroactively and
+prospectively choose to deem waived or otherwise exclude such Section(s) of
+the License, but only in their entirety and only with respect to the Combined
+Software.
+
+
+                
+```
+
+### 7.29. MIT License
+
+Used by:
+
+- windows-sys 0.59.0 (Rust 1.88.0 standard library) (`windows-sys-0.59.0/license-mit`): Copyright (c) Microsoft Corporation.
+- windows-targets 0.52.6 (Rust 1.88.0 standard library) (`windows-targets-0.52.6/license-mit`): Copyright (c) Microsoft Corporation.
+- windows_aarch64_gnullvm 0.52.6 (Rust 1.88.0 standard library) (`windows_aarch64_gnullvm-0.52.6/license-mit`): Copyright (c) Microsoft Corporation.
+- windows_aarch64_msvc 0.52.6 (Rust 1.88.0 standard library) (`windows_aarch64_msvc-0.52.6/license-mit`): Copyright (c) Microsoft Corporation.
+- windows_i686_gnu 0.52.6 (Rust 1.88.0 standard library) (`windows_i686_gnu-0.52.6/license-mit`): Copyright (c) Microsoft Corporation.
+- windows_i686_gnullvm 0.52.6 (Rust 1.88.0 standard library) (`windows_i686_gnullvm-0.52.6/license-mit`): Copyright (c) Microsoft Corporation.
+- windows_i686_msvc 0.52.6 (Rust 1.88.0 standard library) (`windows_i686_msvc-0.52.6/license-mit`): Copyright (c) Microsoft Corporation.
+- windows_x86_64_gnu 0.52.6 (Rust 1.88.0 standard library) (`windows_x86_64_gnu-0.52.6/license-mit`): Copyright (c) Microsoft Corporation.
+- windows_x86_64_gnullvm 0.52.6 (Rust 1.88.0 standard library) (`windows_x86_64_gnullvm-0.52.6/license-mit`): Copyright (c) Microsoft Corporation.
+- windows_x86_64_msvc 0.52.6 (Rust 1.88.0 standard library) (`windows_x86_64_msvc-0.52.6/license-mit`): Copyright (c) Microsoft Corporation.
+
+```text
+    MIT License
+
+    Copyright (c) Microsoft Corporation.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE
+
+                
 ```
 
 ### Crates without license files in their package
 
-These crates do not ship a license file. The standard text of each license named in their license expression is in `LICENSES/`. Copyright is held by the crate authors listed:
+These crates do not ship a license file. The standard text of each license named in their license expression is in `LICENSES/`.
 
-- geo 0.24.1 (MIT OR Apache-2.0): the crate's contributors (no authors field); project: https://github.com/georust/geo
-- rstar 0.10.0 (MIT OR Apache-2.0): Stefan Altmayer <stoeoef@gmail.com>, The Georust Developers <mods@georust.org>; project: https://github.com/georust/rstar
+- fortanix-sgx-abi 0.5.0 (Rust 1.88.0 standard library) (MPL-2.0): Copyright the authors of fortanix-sgx-abi: Fortanix, Inc.
+- geo 0.24.1 (MIT OR Apache-2.0): Copyright the geo contributors (https://github.com/georust/geo)
+- rstar 0.10.0 (MIT OR Apache-2.0): Copyright the authors of rstar: Stefan Altmayer <stoeoef@gmail.com>, The Georust Developers <mods@georust.org>
 
-## 7. Status of this file
+## 8. Status of this file
 
 **Incomplete.** The following items must be resolved before a public release:
 
 - sparrow-crates: 61 crate license texts not captured; rerun with --sparrow-vendor on a host with `cargo vendor` output for the lockfile
 - sparrow-crates: macOS arm64 Sparrow build has no recorded lockfile; rebuild it from a recorded lock (and with --remap-path-prefix) or record its crate list
+- runtime: mingw-w64-runtime: mingw-w64-runtime license text not captured (--platform-license-file on the Windows build host)
+- runtime: mingw-w64-runtime: winpthreads license text not captured (--platform-license-file on the Windows build host)
+- runtime: Rust 1.90.0 standard library notices (Windows Sparrow helper) not imported; run --import-rust-std with that toolchain's COPYRIGHT-library.html
 - assets: va-artwork: needs-owner
 - assets: tiff-icc: blocked
 - assets: hyphenation: needs-provenance

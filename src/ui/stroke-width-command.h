@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /** @file
  * Shared stroke-width command for the Fill and Stroke width row and the status
- * bar (doc/vacards/STROKE_WIDTH_CONTROLS_PLAN.md §3).
+ * bar (internal note STROKE_WIDTH_CONTROLS_PLAN §3).
  *
  * Operation mode: compatible-member editing of the whole selection (or the
  * explicit text range) as ONE user action with one Undo step. Targets, exclusions

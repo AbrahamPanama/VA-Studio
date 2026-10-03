@@ -1355,7 +1355,7 @@ StrokeWidthCommandOutcome StrokeStyle::runWidthCommand(StrokeWidthIntent const &
 }
 
 // ---------------------------------------------------------------------------
-// The width row: - field v + unit (doc/vacards/STROKE_WIDTH_CONTROLS_PLAN.md §5)
+// The width row: - field v + unit (internal note STROKE_WIDTH_CONTROLS_PLAN §5)
 // ---------------------------------------------------------------------------
 
 /// The unit that gives steps, digits and the preset list: the shown unit when it

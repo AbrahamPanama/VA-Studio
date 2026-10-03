@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /** @file
- * Shared stroke-width command (doc/vacards/STROKE_WIDTH_CONTROLS_PLAN.md §3).
+ * Shared stroke-width command (internal note STROKE_WIDTH_CONTROLS_PLAN §3).
  *
  * Copyright 2026 VA Studio authors
  *

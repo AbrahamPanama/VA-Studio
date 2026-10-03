@@ -11,6 +11,10 @@
  * support_uri() then name the SUPPORT.md installed in the documentation folder
  * (share/inkscape/doc), which explains how to obtain support; if even that file
  * is missing, they return its bare name so the message stays readable.
+ *
+ * Both functions look up resources and allocate: call them at startup or from
+ * ordinary UI code, never from a signal handler (the crash handler in
+ * inkscape.cpp reads strings that the Application constructor resolved).
  */
 #ifndef VACARDS_PUBLIC_IDENTITY_H
 #define VACARDS_PUBLIC_IDENTITY_H

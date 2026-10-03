@@ -2622,7 +2622,7 @@ TEST_F(NestingDocumentTest, LeftoversStartAfterEarlierStagedLeftovers)
 
 // ---------------------------------------------------------------------------
 // P3/P4 fidelity regressions, reviewed from
-// evidence/P4-regression-draft/staged/regression-additions.cpp. Two staged
+// internal evidence notes. Two staged
 // oracles were corrected against the supervisor contract:
 //  * the bitmap fixture is non-gray and semi-transparent so the raw GdkPixbuf
 //    and premultiplied Cairo representations actually differ (an all-black

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /** @file
  * Explode Bitmap: piece crops, gutters, bleed and PNG encoding (EB2-png).
- * Plan: doc/vacards/EXPLODE_BITMAP_IMPLEMENTATION_PLAN.md, doc/vacards/EXPLODE_BITMAP_PLAN.md v3.2.
+ * Plan: internal note EXPLODE_BITMAP_IMPLEMENTATION_PLAN, internal note EXPLODE_BITMAP_PLAN v3.2.
  *
  * Every piece is cut from the final grid by RUN OWNERSHIP (never by bounding box): only the foreground
  * runs the piece owns are copied; every other pixel of the crop, including samples owned by other pieces

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * BRK-1: Break Apart like CorelDRAW (doc/vacards/OWNER_REQUESTS.md).
+ * BRK-1: Break Apart like CorelDRAW (internal note OWNER_REQUESTS).
  * Outcome tests: pieces per level, glyph positions preserved, styles and
  * colours preserved, paths by their own rule, other objects untouched and
  * reported, one Undo step, no-op without a history entry.

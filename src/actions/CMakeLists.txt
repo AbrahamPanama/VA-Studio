@@ -81,7 +81,7 @@ target_sources(inkscape_base PRIVATE
   actions-svg-processing.h
   actions-svg-processing.cpp
 
-  # VACards agent command line (doc/vacards agent CLI design)
+  # VACards agent command line (in development)
   vacards-cli-params.h
   vacards-cli-params.cpp
   vacards-cli-result.h

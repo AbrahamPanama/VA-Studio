@@ -156,6 +156,15 @@ The Sparrow helper is prebuilt; `packaging/windows/vacards/build-sparrow.sh`
 rebuilds the Windows executable from the pinned commit and lockfile with Rust
 1.90.0 for comparison.
 
+## Release gate
+
+`packaging/macos/vacards/run-release-gate.sh` and
+`verify-release-attestation.sh` check that the source history contains the
+baseline commit named by `source_baseline_commit` in `VACARDS-DEPENDENCIES.env`.
+That history exists only in VA Studio's development repository, so the release
+gate runs there and not in this repository. Builds, tests and the packaging
+steps above do not need it.
+
 ## Tests
 
 Tests use CTest. Run them serially:

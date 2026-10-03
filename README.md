@@ -40,7 +40,8 @@ EMF and WMF import and export are not available in VA Studio.
 - First steps: [doc/public/QUICKSTART.md](doc/public/QUICKSTART.md)
 - Known issues: [doc/public/KNOWN-ISSUES.md](doc/public/KNOWN-ISSUES.md)
 
-Releases are published at @VA_PUBLIC_REPO_URL@.
+Releases, with their installers, checksums and complete source archive, are
+published on the Releases page of the VA Studio repository.
 
 ## Help, privacy and security
 

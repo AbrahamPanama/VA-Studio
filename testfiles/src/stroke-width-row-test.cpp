@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
  * Fill and Stroke width row and the shared stroke-width command
- * (doc/vacards/STROKE_WIDTH_CONTROLS_PLAN.md v2.2, sections 3 and 5).
+ * (internal note STROKE_WIDTH_CONTROLS_PLAN v2.2, sections 3 and 5).
  *
  * A GUI suite (INKSCAPE_TEST_GUI=1). It drives the real StrokeStyle panel on a
  * real SPDesktop and reads document state (XML, Undo labels, widths), never only

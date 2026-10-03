@@ -9,8 +9,8 @@
  * asserted for every fault case so the state machine's "no second close" and
  * "no publication after failure" contracts are runtime evidence, not syntax.
  *
- * These tests compile and run only after the root registers the module and test
- * in CMake (see the packet handoff). Nothing here performs a build.
+ * These tests are registered in testfiles/CMakeLists.txt. Nothing here
+ * performs a build.
  */
 
 #include <gtest/gtest.h>

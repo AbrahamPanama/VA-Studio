@@ -9,9 +9,10 @@ not updated; please install the latest one.
 
 Please do not report security problems in public issues or discussions.
 
-- Report them privately through @VA_SUPPORT_URL@ and mark the report as a
-  security issue, or use the repository's private vulnerability reporting at
-  @VA_PUBLIC_REPO_URL@ when it is enabled.
+- Report them privately through the VA Studio support address (published
+  with the first public release) and mark the report as a security issue,
+  or use the private vulnerability reporting of the VA Studio repository
+  (Security > Report a vulnerability) when it is enabled.
 - Include the VA Studio version and build (Help > About VA Studio), your
   operating system, the steps to reproduce, and a file that triggers the
   problem if you can share it.

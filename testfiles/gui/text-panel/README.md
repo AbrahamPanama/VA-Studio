@@ -68,14 +68,14 @@ report was generated.
 
 ### CDR size regression
 
-The imported `BEST/Femenino` text in that 1.7 MB customer CDR file reported `30.375 pt` in
+An imported 11-character text in that 1.7 MB customer CDR file reported `30.375 pt` in
 the modern panel. Appending a character kept it at `30.375 pt`; Undo restored
 the original 11-character text and returned the document to a clean state.
 The selection did not write a 12-pt style.
 
 ### Large CDR performance gate
 
-`Invitacionesfinal.cdr` is 154.9 MB. Its import stayed non-interactive for more
+A 154.9 MB customer CDR file (not in the repository) was used. Its import stayed non-interactive for more
 than 306 seconds while the process continued reading the CDR and increasing
 CPU/RSS; it did not crash. The run was stopped with `SIGTERM` after the
 five-minute acceptance limit.

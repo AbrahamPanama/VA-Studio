@@ -24,14 +24,15 @@ install(FILES
     THIRD-PARTY-NOTICES.md
     DESTINATION ${INKSCAPE_SHARE_INSTALL}/doc)
 
-# Public VA Studio documents. Their @VA_<KEY>@ placeholders come from
-# packaging/public-release/public-release.env through
-# CMakeScripts/VACardsPublicIdentity.cmake, which substitutes "(not yet
-# published)" while a value is unset. SUPPORT.md is also the fallback target of
-# the crash dialog (src/vacards-public-identity.h), so it must stay installed.
+# Public VA Studio documents. Their owner values (packaging/public-release/
+# public-release.env) are filled in by vacards_configure_public_document()
+# from CMakeScripts/VACardsPublicIdentity.cmake; unset values keep neutral text.
+# SUPPORT.md is also the fallback target of the crash dialog
+# (src/vacards-public-identity.h), so it must stay installed.
 foreach(_vacards_doc SUPPORT.md PRIVACY.md TRADEMARKS.md share/doc/SOURCE.md)
     get_filename_component(_vacards_doc_name "${_vacards_doc}" NAME)
-    configure_file(${CMAKE_SOURCE_DIR}/${_vacards_doc} ${CMAKE_CURRENT_BINARY_DIR}/${_vacards_doc_name} @ONLY)
+    vacards_configure_public_document(${CMAKE_SOURCE_DIR}/${_vacards_doc}
+        ${CMAKE_CURRENT_BINARY_DIR}/${_vacards_doc_name})
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${_vacards_doc_name}
         DESTINATION ${INKSCAPE_SHARE_INSTALL}/doc)
 endforeach()

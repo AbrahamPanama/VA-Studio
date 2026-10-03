@@ -2223,10 +2223,21 @@ TEST_F(ExplodeBitmapPanelTest, OneHundredFiftyFullHeightStripsAt96DpiPublishWith
     explode(); ASSERT_EQ(state(),State::Idle) << message(); EXPECT_EQ(desktop->getSelection()->size(),150u);
     DocumentUndo::undo(doc.get()); EXPECT_EQ(xml(),before);
 }
+// The two real-photo sheets (sheet-*.png) are not distributed with the public
+// source tree. Tests skip their cases, with a message, when a file is absent.
+static bool explodeFixturePresent(char const *file)
+{
+    return std::filesystem::exists(std::filesystem::path(INKSCAPE_TESTS_DIR) / "data/explode-bitmap" / file);
+}
 TEST_F(ExplodeBitmapPanelTest, RealImportedFixturesReachExactResultsAndPublish) {
+    std::string absent;
     for (auto [file, count] : {std::pair{"sheet-flowers-10.png", 10u}, {"sheet-stickers-30.png", 30u},
                              {"geo-spiral-star-line.png", 1u}, {"geo-interleaved-star-spiral-3arms.png", 3u},
                              {"geo-grid-64.png", 64u}}) {
+        if (!explodeFixturePresent(file)) {
+            absent += (absent.empty() ? "" : ", ") + std::string(file);
+            continue;
+        }
         SCOPED_TRACE(file);
         imported(std::string(INKSCAPE_TESTS_DIR) + "/data/explode-bitmap/" + file);
         auto before = xml(); finish();
@@ -2250,6 +2261,10 @@ TEST_F(ExplodeBitmapPanelTest, RealImportedFixturesReachExactResultsAndPublish) 
         EXPECT_EQ(preflightUndo(*doc, {false, 0, 1}).usage.undoCount, 1u);
         DocumentUndo::undo(doc.get()); EXPECT_EQ(xml(), before);
         DocumentUndo::redo(doc.get()); EXPECT_EQ(xml(), published);
+    }
+    if (!absent.empty()) {
+        GTEST_SKIP() << "Ran the fixtures that are present; not run because the image is absent: " << absent
+                     << " (the real-photo sheets are not distributed with the public source tree).";
     }
 }
 TEST_F(ExplodeBitmapPanelTest, FaintFloorControlsMemoryDebounceAndExactStrings) {
@@ -2330,6 +2345,12 @@ TEST_F(ExplodeBitmapPanelTest, FaintFloorDoesNotApplyTwiceAfterSoftRefinement) {
     explode(); ASSERT_EQ(state(),State::Idle) << message(); EXPECT_EQ(desktop->getSelection()->size(),2u);
 }
 TEST_F(ExplodeBitmapPanelTest, FaintFloorRealPiecesMoveIndependentlyAndUndoAllPositions) {
+    for (auto file : {"sheet-flowers-10.png", "sheet-stickers-30.png"}) {
+        if (!explodeFixturePresent(file)) {
+            GTEST_SKIP() << "Fixture image " << file << " is absent (the real-photo sheets are not distributed "
+                            "with the public source tree).";
+        }
+    }
     for (bool on : {false,true}) for (auto [file,count] : {std::pair{"sheet-flowers-10.png",10u},{"sheet-stickers-30.png",30u}}) {
         SCOPED_TRACE(file);
         SCOPED_TRACE(on);

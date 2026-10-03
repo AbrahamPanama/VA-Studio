@@ -7,3 +7,7 @@ src/3rdparty/sparrow/windows-x64.Cargo.lock text eol=lf
 # Flattened upstream module files whose original bytes use CRLF line endings.
 share/extensions/tests/data/svg/style_inheritance.svg -text
 share/extensions/tests/data/svg/gradient_with_mixed_offsets.svg -text
+# The libcdr fork and its records are verified by SHA-256: keep their bytes.
+third_party/libcdr-vacards/** -text
+third_party/libcdr-vacards.sha256 -text
+third_party/VACARDS-LIBCDR-SOURCE.env -text

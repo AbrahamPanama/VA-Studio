@@ -1,6 +1,6 @@
 {
   "schema": "va-studio-third-party-components/1",
-  "about": "Curated inventory of the non-Cargo components in VA Studio, read by generate-third-party-notices.py. Cargo crates come from the lockfiles, not from this file. 'path' is relative to the source root. 'license_files' are relative to 'path', or to the source root when they start with '@/'. 'inputs' (root-relative) are the patches and manifests that define a modified external build input. A component whose license files cannot be found is reported as incomplete.",
+  "about": "Curated inventory of the non-Cargo components in VA Studio, read by generate-third-party-notices.py. Cargo crates come from the lockfiles, not from this file. 'path' is relative to the source root. 'license_files' are relative to 'path', or to the source root when they start with '@/'. 'inputs' (root-relative) are the patches and manifests that define a modified external build input. A component whose license files cannot be found is reported as incomplete. 'upstream_base' names the upstream commit a VA fork starts from. Components with 'capture_ids' need license texts captured on the build host and passed with --platform-license-file ID=PATH.",
   "components": [
     {
       "id": "inkscape",
@@ -51,7 +51,8 @@
         "AUTHORS"
       ],
       "shipped": "compiled into VA Studio",
-      "modified": "yes: one VA commit on top of upstream d851af79660943cb8b6feaa9c7cc9d39eb3b4686 (Unicode Windows CSS file names)"
+      "modified": "yes: one VA commit on top of upstream d851af79660943cb8b6feaa9c7cc9d39eb3b4686 (Unicode Windows CSS file names)",
+      "upstream_base": "d851af79660943cb8b6feaa9c7cc9d39eb3b4686"
     },
     {
       "id": "libdepixelize",
@@ -95,7 +96,8 @@
         "COPYING"
       ],
       "shipped": "compiled into VA Studio",
-      "modified": "yes: one VA commit on top of upstream d789f48b43518bcd190e9d845c943e3978014f61 (UTF-8 PDF output paths on Windows)"
+      "modified": "yes: one VA commit on top of upstream d789f48b43518bcd190e9d845c943e3978014f61 (UTF-8 PDF output paths on Windows)",
+      "upstream_base": "d789f48b43518bcd190e9d845c943e3978014f61"
     },
     {
       "id": "adaptagrams",
@@ -155,7 +157,8 @@
         "LICENSE.txt"
       ],
       "shipped": "installed as Python extensions",
-      "modified": "yes: two VA commits on top of upstream 87ece23a2fac1a8174d93e35354b84e9465f57e1 (pin the Affinity importer fork)"
+      "modified": "yes: two VA commits on top of upstream 87ece23a2fac1a8174d93e35354b84e9465f57e1 (pin the Affinity importer fork)",
+      "upstream_base": "87ece23a2fac1a8174d93e35354b84e9465f57e1"
     },
     {
       "id": "extension-afdesign",
@@ -171,7 +174,8 @@
         "REUSE.toml"
       ],
       "shipped": "installed as a Python extension",
-      "modified": "yes: one VA commit on top of upstream b2288b5f371685161ff87b70788a5cddccf7f4a8 (color compatibility with current inkex)"
+      "modified": "yes: one VA commit on top of upstream b2288b5f371685161ff87b70788a5cddccf7f4a8 (color compatibility with current inkex)",
+      "upstream_base": "b2288b5f371685161ff87b70788a5cddccf7f4a8"
     },
     {
       "id": "extension-manager",
@@ -255,7 +259,8 @@
         "@/COPYING"
       ],
       "shipped": "compiled message catalogs",
-      "modified": "yes: nine VA commits (Spanish strings for VA Studio features) on top of upstream 4a4241de4b7fa4f71160b628487369a42320e9ff"
+      "modified": "yes: nine VA commits (Spanish strings for VA Studio features) on top of upstream 4a4241de4b7fa4f71160b628487369a42320e9ff",
+      "upstream_base": "4a4241de4b7fa4f71160b628487369a42320e9ff"
     },
     {
       "id": "libcdr",
@@ -271,7 +276,8 @@
       ],
       "shipped": "built as a shared library and bundled",
       "modified": "yes: libcdr 0.1.10 baseline import plus nine VA commits (CorelDRAW 2023/v27 fills, bitmap alpha and crop, text styles)",
-      "private_tree_note": "In the development repository this source is fetched from the pinned fork commit by packaging/*/vacards/build-vacards-libcdr.sh; the public tree carries it under third_party/libcdr-vacards."
+      "private_tree_note": "In the development repository this source is fetched from the pinned fork commit by packaging/*/vacards/build-vacards-libcdr.sh; the public tree carries it under third_party/libcdr-vacards.",
+      "upstream_base": "none (snapshot import of the libcdr 0.1.10 release)"
     },
     {
       "id": "librevenge",
@@ -362,6 +368,55 @@
       ],
       "shipped": "the formula is reimplemented in the Explode Bitmap engine compiled into VA Studio",
       "modified": "reimplemented in C++; the MIT notice is in the README listed"
+    },
+    {
+      "id": "rust-std",
+      "name": "Rust standard library",
+      "path": ".",
+      "kind": "runtime-static",
+      "pin": "Rust 1.88.0 (nesting engine, both platforms); Rust 1.90.0 (Windows Sparrow helper)",
+      "upstream": "https://github.com/rust-lang/rust",
+      "license": "Apache-2.0 OR MIT, with the exceptions and dependencies listed in section 4",
+      "license_files": [
+        "@/LICENSES/Apache-2.0.txt",
+        "@/LICENSES/MIT.txt",
+        "@/LICENSES/Unicode-3.0.txt",
+        "@/LICENSES/LLVM-exception.txt"
+      ],
+      "shipped": "statically linked into VA Studio (nesting engine) and into vacards-sparrow",
+      "modified": "no"
+    },
+    {
+      "id": "gcc-runtime",
+      "name": "GCC runtime libraries (libgcc, libstdc++)",
+      "path": ".",
+      "kind": "runtime-static",
+      "pin": "the MSYS2 UCRT64 GCC of the Windows build (version recorded by the platform SBOM)",
+      "upstream": "https://gcc.gnu.org",
+      "license": "GPL-3.0-or-later WITH GCC-exception-3.1",
+      "license_files": [
+        "@/LICENSES/GPL-3.0-or-later.txt",
+        "@/LICENSES/GCC-exception-3.1.txt"
+      ],
+      "shipped": "Windows: statically linked into the Explorer thumbnail and preview handler (vasvgthumb.dll), the launcher and vacards-sparrow.exe; the DLLs used by VA Studio itself are bundled and listed with the platform libraries",
+      "modified": "no"
+    },
+    {
+      "id": "mingw-w64-runtime",
+      "name": "MinGW-w64 runtime (CRT startup code, winpthreads)",
+      "path": ".",
+      "kind": "runtime-static",
+      "pin": "the MSYS2 UCRT64 mingw-w64-crt and winpthreads packages of the Windows build (versions recorded by the platform SBOM)",
+      "upstream": "https://www.mingw-w64.org",
+      "license": "the MinGW-w64 runtime terms (COPYING.MinGW-w64-runtime.txt) and the winpthreads terms (its COPYING)",
+      "license_files": [],
+      "capture_ids": [
+        "mingw-w64-runtime",
+        "winpthreads"
+      ],
+      "shipped": "Windows: statically linked into every executable and DLL built with MSYS2 (VA Studio, the launcher, the Explorer handler, vacards-sparrow.exe)",
+      "modified": "no",
+      "status": "needs-windows"
     }
   ],
   "assets": [

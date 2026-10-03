@@ -6,7 +6,8 @@ project.
 
 ## Report a problem
 
-- Support and problem reports: @VA_SUPPORT_URL@
+- Support and problem reports: the VA Studio support address, published
+  with the first public release.
 - Please include the VA Studio version and build number (Help > About VA Studio),
   your operating system and version, the steps that lead to the problem and, if
   you can share it, a file that shows it.

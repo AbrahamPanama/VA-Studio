@@ -4,7 +4,7 @@
 //
 // Pure GTest: no GTK, no clipboard, no document, no network.  Every expected
 // value is a literal derived from
-// evidence/external-text-paste-swarm/discovery/html/REPORT.md sections 4-10 and
+// internal evidence notes sections 4-10 and
 // FORMAT_CHOICE_TABLE.md section 4, never from the decoder's own output.
 
 #include <gtest/gtest.h>

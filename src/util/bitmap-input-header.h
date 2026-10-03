@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /** @file
  * Explode Bitmap engine: bounded signature, header and URI validation (EB2-header).
- * Plan: doc/vacards/EXPLODE_BITMAP_IMPLEMENTATION_PLAN.md, doc/vacards/EXPLODE_BITMAP_PLAN.md v3.2.
+ * Plan: internal note EXPLODE_BITMAP_IMPLEMENTATION_PLAN, internal note EXPLODE_BITMAP_PLAN v3.2.
  *
  * Pure plain-data engine code: no GTK, document, XML or exceptions. Nothing here decodes pixels,
  * preallocates raster storage or copies an href; every offset/length uses checked arithmetic.

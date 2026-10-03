@@ -3224,7 +3224,7 @@ double computedLineHeight(SPItem *item, unsigned index)
 }
 
 // Paragraph indentation is the property the receiving run-style API does NOT
-// compensate (handoff section 6.4); it is the one that must be pre-divided at
+// compensate (design notes section 6.4); it is the one that must be pre-divided at
 // every boundary that bypasses that API.
 double computedTextIndent(SPItem *item, unsigned index)
 {
@@ -4666,7 +4666,7 @@ TEST_F(TextPasteTest, NestedTspanAndCaretBoundaryKeepEffectiveGlyphSize)
 // convention is descrim() = sqrt(|det|) (2geom affine); the copied fragment
 // cannot carry the warp, so the test requires exactly that scalar to cross the
 // boundary once and does not use axis-aligned glyph boxes as an oracle
-// (handoff section 9).
+// (design notes section 9).
 TEST_F(TextPasteTest, NonuniformParentUsesDocumentedScalarConvention)
 {
     constexpr char const *svg = R"SVG(<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360">

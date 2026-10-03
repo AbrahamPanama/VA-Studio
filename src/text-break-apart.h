@@ -6,7 +6,7 @@
  * colours and exact positions; a path breaks into its subpaths (the existing
  * Path > Break Apart). Other objects are left untouched and reported. One
  * Undo step for the whole selection. Owner decision 2026-09-29
- * (doc/vacards/OWNER_REQUESTS.md, BRK-1).
+ * (internal note OWNER_REQUESTS, BRK-1).
  *
  * Copyright 2026 VA Studio authors
  *

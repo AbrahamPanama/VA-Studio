@@ -5,7 +5,7 @@
 ## VA Studio and VA Cards
 
 "VA Studio", "VA Cards" and the VA Studio logo are trademarks of
-@VA_COPYRIGHT_HOLDER@. The GNU General Public License covers the software; it
+VA Cards. The GNU General Public License covers the software; it
 does not grant any right to use these names or the logo.
 
 You may say truthfully that your work is based on or compatible with VA Studio.

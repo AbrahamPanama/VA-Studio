@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /** @file
  * Explode Bitmap engine: qualified straight sRGB RGBA8 decode (EB2-decode).
- * Plan: doc/vacards/EXPLODE_BITMAP_IMPLEMENTATION_PLAN.md, doc/vacards/EXPLODE_BITMAP_PLAN.md v3.2.
+ * Plan: internal note EXPLODE_BITMAP_IMPLEMENTATION_PLAN, internal note EXPLODE_BITMAP_PLAN v3.2.
  *
  * Runs after the EB2-header gate. Codec route: GdkPixbufLoader (the shipped codec stack: libpng,
  * libjpeg, GIF and, where the platform registers it, a WebP loader), fed in 64 KiB chunks with Stop

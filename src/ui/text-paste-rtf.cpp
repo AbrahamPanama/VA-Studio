@@ -3,7 +3,7 @@
  * @brief Bounded RTF -> TextPaste::Fragment importer (external clipboard input).
  *
  * Dedicated, single-pass, byte-oriented parser. The design follows
- * evidence/external-text-paste-swarm/discovery/rtf/REPORT.md section 3:
+ * internal evidence notes section 3:
  *
  *  - a byte lexer (groups, control words <= 32 letters, control symbols,
  *    \'hh) that never interprets anything inside a \binN payload;

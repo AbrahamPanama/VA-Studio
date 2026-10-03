@@ -13,8 +13,10 @@ contains or is distributed with, and their licenses, are listed in
 
 Every VA Studio release is built from one commit of the public source repository:
 
-- Source repository: @VA_PUBLIC_REPO_URL@
-- Source of each release, as one archive: @VA_SOURCE_URL@
+- Source repository: the public VA Studio repository (its address is published
+  with the first public release)
+- Source of each release, as one archive: attached to that release on the
+  repository's Releases page
 
 The release notes of each version name its source commit. The repository is
 self-contained: the former Git submodules (lib2geom, libcroco, libdepixelize,
@@ -32,8 +34,10 @@ release, and a manifest of every file with its SHA-256.
 ## Libraries from MSYS2 and Homebrew
 
 The Windows package bundles libraries and data from MSYS2 packages, and the
-macOS package bundles libraries from Homebrew formulae. Their exact versions
-are listed in `THIRD-PARTY-NOTICES.md`. Their source code is available from
+macOS package bundles libraries from Homebrew formulae. Their exact package
+versions are recorded from the build of a release; section 5 of
+`THIRD-PARTY-NOTICES.md` either lists them or says that they have not been
+recorded yet. Their source code is available from
 those projects (https://packages.msys2.org, https://formulae.brew.sh) and is
 also covered by the offer below.
 
@@ -41,14 +45,15 @@ also covered by the offer below.
 
 For at least three years after we last distribute a given VA Studio binary,
 and for as long as we offer spare parts or customer support for it,
-@VA_COPYRIGHT_HOLDER@ will give anyone who has that binary, for a charge no
+VA Cards will give anyone who has that binary, for a charge no
 more than our reasonable cost of physically performing the distribution, a
 complete machine-readable copy of the corresponding source code of that binary,
 including the source of the GPL-, LGPL- and MPL-licensed libraries distributed
 with it, on a durable physical medium customarily used for software
 interchange, or by download from a network server at no charge.
 
-To request it, contact @VA_SUPPORT_URL@ and state the VA Studio version and
+To request it, contact VA Cards through the support address published with the
+release and state the VA Studio version and
 build number (Help > About VA Studio) and your platform.
 
 ## Building

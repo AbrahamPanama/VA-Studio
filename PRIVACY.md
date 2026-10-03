@@ -52,4 +52,5 @@ or the `VA_THUMB_LOG` environment variable names a log file.
 
 ## Contact
 
-Questions about privacy: @VA_SUPPORT_URL@
+Send questions about privacy to the VA Studio support address (published with the
+first public release).

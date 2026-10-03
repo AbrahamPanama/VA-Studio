@@ -11,6 +11,18 @@
       "issue": "macOS arm64 Sparrow build has no recorded lockfile; rebuild it from a recorded lock (and with --remap-path-prefix) or record its crate list"
     },
     {
+      "area": "runtime",
+      "issue": "mingw-w64-runtime: mingw-w64-runtime license text not captured (--platform-license-file on the Windows build host)"
+    },
+    {
+      "area": "runtime",
+      "issue": "mingw-w64-runtime: winpthreads license text not captured (--platform-license-file on the Windows build host)"
+    },
+    {
+      "area": "runtime",
+      "issue": "Rust 1.90.0 standard library notices (Windows Sparrow helper) not imported; run --import-rust-std with that toolchain's COPYRIGHT-library.html"
+    },
+    {
       "area": "assets",
       "issue": "va-artwork: needs-owner"
     },

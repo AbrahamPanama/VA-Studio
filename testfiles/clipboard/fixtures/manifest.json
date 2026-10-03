@@ -1,6 +1,6 @@
 {
   "manifest_version": 1,
-  "description": "Synthetic fixtures for the external-process clipboard paste protocol (milestone A, E-series). Expected values are authored from deliverables/EXTERNAL_TEXT_PASTE_IMPLEMENTATION_AND_TESTING_HANDOFF.md section 6 and evidence/external-text-paste-swarm/discovery/tests/REPORT.md, never computed by the production helper under test.",
+  "description": "Synthetic fixtures for the external-process clipboard paste protocol (milestone A, E-series). Expected values are authored from the paste protocol specification and the recorded discovery tests, never computed by the production helper under test.",
   "semantics": {
     "text_sha256": "SHA-256 of the UTF-8 bytes the document text must contain after the paste (success) or of the unchanged document text (reject/abort: the empty string, hash e3b0c442...b855)",
     "text_bytes": "UTF-8 byte length of that same expected document text",

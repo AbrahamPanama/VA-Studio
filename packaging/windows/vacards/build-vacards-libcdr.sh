@@ -9,7 +9,7 @@
 #   pkg-config version and macOS deployment target from VACARDS-DEPENDENCIES.env.
 #   The source is the in-tree fork third_party/libcdr-vacards, verified against
 #   third_party/libcdr-vacards.sha256; REPOSITORY is accepted and ignored.
-#   Environment: VACARDS_LIBREVENGE_PREFIX (default: the pinned librevenge),
+#   Environment: VACARDS_LIBREVENGE_PREFIX (required: the patched librevenge prefix),
 #   VACARDS_DEPENDENCY_JOBS (default 2).
 #
 # Writes install/VACARDS-LIBCDR.env (the shared closed schema),
@@ -28,7 +28,7 @@ commit=$($dependency_tool --get libcdr_commit)
 expected_version=$($dependency_tool --get libcdr_pkgconfig_version)
 deployment_target=$($dependency_tool --get macos_deployment_target)
 clone_repository=${2:-$repository}
-librevenge_prefix=${VACARDS_LIBREVENGE_PREFIX:-/c/vacards/deps/librevenge-three-items-20260919/install}
+librevenge_prefix=${VACARDS_LIBREVENGE_PREFIX:?set VACARDS_LIBREVENGE_PREFIX to the patched librevenge install prefix}
 jobs=${VACARDS_DEPENDENCY_JOBS:-2}
 
 [[ "$commit" =~ ^[0-9a-f]{40}$ ]] || fail "commit must be a full lowercase Git object id"

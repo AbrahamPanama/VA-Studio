@@ -320,8 +320,8 @@ as structured unapplied-tab diagnostics, not applied as guessed gaps. Incomplete
 required curve controls refuse the entire entry instead of substituting lines.
 The API retains its provisional Draft type names pending complete qualification.
 
-The current local read-only private pipeline test confirms 36 of Tarjetas' 37
-entries convert and pass SVG preflight; one-based entry 19 remains Unsupported
+The current local read-only private pipeline test confirms 36 of the 37
+entries of a private real-world library convert and pass SVG preflight; one-based entry 19 remains Unsupported
 because two required control ordinates are ambiguous. Six entries retain 13
 tab-bearing shapes and 34 numeric pairs. The source SHA-256 is checked before
 and after. No customer geometry is written to artifacts or published.
@@ -357,7 +357,7 @@ No full LIB-001, release, Windows or physical GUI qualification is claimed.
 ### Observed LightBurn library reader
 
 `LbartArchive` implements read-only indexing and decompression for the fixed-record
-variant observed in the owner's `Tarjetas.lbart`. This is **not yet an editable
+variant observed in a real-world LightBurn library. This is **not yet an editable
 LightBurn-to-SVG converter**, a PNG decoder, or support for every `.lbart` version.
 No Qt dependency or arbitrary signature scanning is used.
 

@@ -16,7 +16,7 @@
 #   * Only build-time introspection (default disabled) and man-pages (default
 #     enabled) may be turned off, each with an explicit flag and a recorded
 #     deviation. Neither changes the DLL's exported/imported symbol set.
-#   * Configure and compile require a root approval record whose patch sha256
+#   * Configure and compile require an approval record whose patch sha256
 #     matches the exact implementation patch being built. Absent or mismatched
 #     approval is fatal and nothing is configured or compiled.
 #   * Every run uses a unique, initially empty output root; failed runs keep
@@ -25,7 +25,7 @@
 #   * Compile is limited to --jobs (default and maximum 2). Tests are not run
 #     here; GUI/pixel qualification is separate.
 #
-# See doc/vacards/WINDOWS_CAIRO_BUFFER_BUILD.md for provenance and staging.
+# See internal note WINDOWS_CAIRO_BUFFER_BUILD for provenance and staging.
 set -euo pipefail
 export LC_ALL=C
 
@@ -79,8 +79,8 @@ Inputs (defaults look next to the script / documented dep prefixes):
   --download                fetch missing pinned inputs from their official URLs
   --impl-patch FILE         implementation patch (default: sibling
                             gtk-4.22.4-win32-cairo-buffer.patch)
-  --cairo-prefix DIR        pinned Cairo prefix (default: VACARDS_CAIRO_PREFIX or
-                            /c/vacards/deps/cairo-parity-20260906-r2/install)
+  --cairo-prefix DIR        pinned Cairo prefix (default: VACARDS_CAIRO_PREFIX;
+                            one of the two is required)
 
 Build tools (never installed into /ucrt64):
   --build-tools-prefix DIR  own prefix for pinned MSYS2 tools (default:
@@ -94,13 +94,11 @@ Build control:
   --enable-introspection    build GIR (default off: Python 3.14 + MSYS2
                             g-object-introspection lacks distutils; recorded)
   --disable-man-pages       skip man pages (default: built with rst2man)
-  --approval FILE           root approval JSON (default:
-                            $source_root/.dsh-report/ROOT-BUILD-APPROVAL.json or
-                            VACARDS_BUILD_APPROVAL); patch sha must match
+  --approval FILE           approval JSON recording the reviewed patch SHA-256
+                            (default: VACARDS_BUILD_APPROVAL; one is required)
   -h, --help
 
-Vulkan is always enabled. Configure/compile never start without a matching root
-approval record.
+Vulkan is always enabled. Configure/compile never start without a matching approval record.
 EOF
 }
 
@@ -165,7 +163,7 @@ mkdir -p -- "$tools_prefix"
 tools_prefix=$(normalize_dir "$tools_prefix") || fail "cannot resolve --build-tools-prefix"
 
 # Feature decisions. Vulkan is always enabled; introspection is off by default
-# (root-approved build-time-only deviation) and man-pages default on.
+# (approved build-time-only deviation) and man-pages default on.
 man_pages=true
 [[ $disable_man_pages == 0 ]] || man_pages=false
 introspection=disabled
@@ -325,7 +323,7 @@ trap 'rc=$?; printf "%s\n" "$rc" > "$output/exit-code.txt"; [[ $rc -eq 0 ]] || p
 
 # --- pinned inputs -----------------------------------------------------------
 [[ -n $impl_patch ]] || impl_patch=$script_dir/gtk-${gtk_version}-win32-cairo-buffer.patch
-[[ -n $cairo_prefix ]] || cairo_prefix=${VACARDS_CAIRO_PREFIX:-/c/vacards/deps/cairo-parity-20260906-r2/install}
+[[ -n $cairo_prefix ]] || cairo_prefix=${VACARDS_CAIRO_PREFIX:?pass --cairo-prefix or set VACARDS_CAIRO_PREFIX}
 seed_dir=${seed_dir:-$script_dir/gtk-pinned-inputs}
 seed_dir=$(cygpath -u "$seed_dir" 2>/dev/null || printf '%s' "$seed_dir")
 cairo_prefix=$(normalize_dir "$cairo_prefix") || fail "Cairo prefix not found: $cairo_prefix"
@@ -362,14 +360,14 @@ cp -- "$impl_patch" "$inputs/gtk-${gtk_version}-win32-cairo-buffer.patch"
 impl_sha=$(sha256 "$inputs/gtk-${gtk_version}-win32-cairo-buffer.patch")
 patch_sha=$impl_sha
 
-# --- root build approval gate (before configure/compile) ---------------------
-approval=${approval_arg:-${VACARDS_BUILD_APPROVAL:-$source_root/.dsh-report/ROOT-BUILD-APPROVAL.json}}
+# --- build approval gate (before configure/compile) ---------------------
+approval=${approval_arg:-${VACARDS_BUILD_APPROVAL:-}}
 [[ -n $approval ]] || fail "no approval path"
-[[ -f $approval && ! -L $approval ]] || fail "root build approval missing: $approval (root must review the current patch and record its sha256)"
+[[ -f $approval && ! -L $approval ]] || fail "build approval missing: '$approval' (review the current patch, record its SHA-256 in an approval file, pass --approval)"
 approval_sha=$(sha256 "$approval")
 approved_patch=$(sed -nE 's/.*"(patch_sha256|impl_patch_sha256|gtk_patch_sha256|candidate_gtk_patch_sha256|patch_sha)"[[:space:]]*:[[:space:]]*"([0-9a-f]{64})".*/\2/p' "$approval" | head -1)
 [[ -n $approved_patch ]] || fail "approval $approval has no patch sha256 field"
-[[ $approved_patch == "$patch_sha" ]] || fail "approval patch sha $approved_patch != current patch $patch_sha; rebuild after root re-approval"
+[[ $approved_patch == "$patch_sha" ]] || fail "approval patch sha $approved_patch != current patch $patch_sha; rebuild after re-approval"
 printf 'approval=%s\napproval_sha256=%s\napproved_patch_sha256=%s\n' "$approval" "$approval_sha" "$approved_patch" > "$inputs/approval.txt"
 
 # --- extract and patch -------------------------------------------------------

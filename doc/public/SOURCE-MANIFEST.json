@@ -1,72 +1,90 @@
 {
   "schema": "va-studio-public-source-manifest/1",
   "about": "Inputs of this public source tree. The modules were flattened from their pinned commits; the libcdr fork is in third_party/libcdr-vacards.",
-  "source_commit": "265cca5406979d134646b61ec90a0427f2fbee8c",
+  "source_commit": "22d12d4aacb0fddd2f41ee09d22a626003c9cac1",
   "inkscape_baseline": "d2b9be1c53",
   "modules": [
     {
       "path": "po",
       "commit": "a4b32e22401fb35a6b51e310d12af465187bbb52",
-      "upstream": "https://gitlab.com/inkscape/translations"
+      "origin": "VA Studio fork commit (exists only in the VA Studio development history; its complete source is this directory)",
+      "fork_of": "https://gitlab.com/inkscape/translations",
+      "upstream_base": "4a4241de4b7fa4f71160b628487369a42320e9ff"
     },
     {
       "path": "share/extensions",
       "commit": "569514b42d8fbc890bf61adbdf16ffee9fdc632e",
-      "upstream": "https://gitlab.com/inkscape/extensions"
+      "origin": "VA Studio fork commit (exists only in the VA Studio development history; its complete source is this directory)",
+      "fork_of": "https://gitlab.com/inkscape/extensions",
+      "upstream_base": "87ece23a2fac1a8174d93e35354b84e9465f57e1"
     },
     {
       "path": "share/extensions/other/clipart",
       "commit": "8d2948ce2fe82b195fec99f909049a8fdd64298e",
+      "origin": "unmodified upstream commit",
       "upstream": "https://gitlab.com/inkscape/extras/inkscape-import-clipart"
     },
     {
       "path": "share/extensions/other/extension-afdesign",
       "commit": "13562e6bf55a9a180434b7824e07f5ede4b3f0fc",
-      "upstream": "https://gitlab.com/inkscape/extras/extension-afdesign"
+      "origin": "VA Studio fork commit (exists only in the VA Studio development history; its complete source is this directory)",
+      "fork_of": "https://gitlab.com/inkscape/extras/extension-afdesign",
+      "upstream_base": "b2288b5f371685161ff87b70788a5cddccf7f4a8"
     },
     {
       "path": "share/extensions/other/extension-xaml",
       "commit": "3a16aa7372c96559a6af918f54e096dc5de16081",
+      "origin": "unmodified upstream commit",
       "upstream": "https://gitlab.com/inkscape/extras/extension-xaml"
     },
     {
       "path": "share/extensions/other/gcodetools",
       "commit": "f799a9ac8707cb08f2b04602c22a12c6d7acb9c7",
+      "origin": "unmodified upstream commit",
       "upstream": "https://gitlab.com/inkscape/extras/extensions-gcodetools"
     },
     {
       "path": "share/extensions/other/inkman",
       "commit": "267734e94609fe9041a3c69da6430e7a90b8cd6f",
+      "origin": "unmodified upstream commit",
       "upstream": "https://gitlab.com/inkscape/extras/extension-manager"
     },
     {
       "path": "share/themes",
       "commit": "a8a8375fbe8672bb1a273be7aa32c06564936e29",
+      "origin": "unmodified upstream commit",
       "upstream": "https://gitlab.com/inkscape/themes"
     },
     {
       "path": "src/3rdparty/2geom",
       "commit": "c7d8378ccc109bdb2ed30f0c8407725e93ffdd9b",
+      "origin": "unmodified upstream commit",
       "upstream": "https://gitlab.com/inkscape/lib2geom"
     },
     {
       "path": "src/3rdparty/capypdf",
       "commit": "a4b222b9690f593a28bed2f01260b713ed315620",
-      "upstream": "https://github.com/jpakkane/capypdf"
+      "origin": "VA Studio fork commit (exists only in the VA Studio development history; its complete source is this directory)",
+      "fork_of": "https://github.com/jpakkane/capypdf",
+      "upstream_base": "d789f48b43518bcd190e9d845c943e3978014f61"
     },
     {
       "path": "src/3rdparty/libcroco",
       "commit": "7369a22273e2d7b7c5ba7b582fd52759649f5425",
-      "upstream": "https://gitlab.com/inkscape/libcroco"
+      "origin": "VA Studio fork commit (exists only in the VA Studio development history; its complete source is this directory)",
+      "fork_of": "https://gitlab.com/inkscape/libcroco",
+      "upstream_base": "d851af79660943cb8b6feaa9c7cc9d39eb3b4686"
     },
     {
       "path": "src/3rdparty/libdepixelize",
       "commit": "73b07a45f01cf7c4b179d1e65cef22609e000419",
+      "origin": "unmodified upstream commit",
       "upstream": "https://gitlab.com/inkscape/devel/libdepixelize"
     },
     {
       "path": "src/3rdparty/libuemf",
       "commit": "71aba3710b4548bd6df7b7bddcd17096a813efa5",
+      "origin": "unmodified upstream commit",
       "upstream": "https://gitlab.com/inkscape/devel/libuemf"
     }
   ],
@@ -75,10 +93,12 @@
     "commit": "297ad1ad0b8e1772633abd7553649714b173f7e4",
     "files": 111,
     "tree_manifest_sha256": "4679d14823652ea67be257ae7985b6707361bb5a9a0ed34b1ebb2b1c27421f67",
-    "upstream": "https://git.libreoffice.org/libcdr (mirror: https://github.com/LibreOffice/libcdr)"
+    "origin": "VA Studio fork commit (exists only in the VA Studio development history; its complete source is this directory)",
+    "fork_of": "https://git.libreoffice.org/libcdr (mirror: https://github.com/LibreOffice/libcdr)",
+    "upstream_base": "none (snapshot import of the libcdr 0.1.10 release)"
   },
-  "exclude_manifest_sha256": "4e8642b7770241217854d937575342be04c499a6e5ee290b3bc990398e8e5b54",
-  "substitutions_sha256": "434ec795e37e50ee6a2924fda8fca010903567ef2480e41c2152df5389708753",
-  "excluded_file_count": 182,
+  "exclude_manifest_sha256": "882ac424933b9db292e51332bc4feb175f4b37cd9e2356c40ca8807f1c4bb56f",
+  "substitutions_sha256": "4c3fe7e1204637ec06411b1648f023a1e7f24f0bef0334717e3f95ab117aa4aa",
+  "excluded_file_count": 200,
   "rules_source": "commit"
 }

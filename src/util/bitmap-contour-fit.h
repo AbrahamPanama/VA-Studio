@@ -3,7 +3,7 @@
 #define INKSCAPE_UTIL_BITMAP_CONTOUR_FIT_H
 #include "util/bitmap-contour.h"
 
-// Explode Bitmap 1.5 contour engine. Contract: doc/vacards/EXPLODE_BITMAP_CONTOUR_CONTRACT.md.
+// Explode Bitmap 1.5 contour engine. Contract: internal note EXPLODE_BITMAP_CONTOUR_CONTRACT.
 namespace Inkscape::Bitmap {
 struct FitSettings { double smoothing = 50; };
 struct ContourSegment { bool cubic; ContourPoint c1, c2, end; };

@@ -3,7 +3,7 @@
  * @brief Bounded HTML -> TextPaste::Fragment decoder for external clipboard input.
  *
  * Implements the interface frozen in ui/text-paste-html.h exactly as designed in
- * evidence/external-text-paste-swarm/discovery/html/REPORT.md sections 4-10:
+ * internal evidence notes sections 4-10:
  *
  *   - markup: libxml2 HTML SAX2 push parser (htmlCreatePushParserCtxt /
  *     htmlParseChunk / htmlCtxtUseOptions / xmlStopParser) with exactly the flags
@@ -667,7 +667,7 @@ bool is_colour_function(std::string_view value)
     return false;
 }
 
-/** Self-contained colour grammar; see the handoff notes for the deviation. */
+/** Self-contained colour grammar; see the design notes for the deviation. */
 bool is_valid_colour(std::string_view value)
 {
     std::string const lower = to_lower(trim(value));

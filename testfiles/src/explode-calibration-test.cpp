@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-// Opt-in EB7 measurements, never a regression-label member. See evidence/report.md.
+// Opt-in EB7 measurements, never a regression-label member. See internal evidence notes.
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <atomic>

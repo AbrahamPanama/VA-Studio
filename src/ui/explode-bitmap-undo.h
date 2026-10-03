@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /** @file
  * Explode Bitmap: read-only Undo capacity preflight (EB5-undo).
- * Plan: doc/vacards/EXPLODE_BITMAP_IMPLEMENTATION_PLAN.md, doc/vacards/EXPLODE_BITMAP_PLAN.md v3.2 §13.4.
+ * Plan: internal note EXPLODE_BITMAP_IMPLEMENTATION_PLAN, internal note EXPLODE_BITMAP_PLAN v3.2 §13.4.
  *
  * The check runs before either publication (optional "convert to one bitmap" plus the explode) is admitted.
  * It never trims, expires, clears or otherwise touches history, Redo, selection or the document.

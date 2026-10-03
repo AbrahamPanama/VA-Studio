@@ -295,7 +295,7 @@ def verify(app, evidence, sha):
     trace = subprocess.run([str(macos / "inkscape-bin"), "--version"], env=traced_env,
                            text=True, capture_output=True, check=True).stderr
     (evidence / "runtime-libraries.txt").write_text(trace)
-    pp.require("/opt/homebrew/" not in trace and "/Volumes/VACards-Workspace/" not in
+    pp.require("/opt/homebrew/" not in trace and str(SOURCE.parent) + "/" not in
                trace.replace(str(app), "APP"), "external developer runtime loaded")
     pp.require("libcairo.2.dylib" in trace, "Cairo was not exercised")
     pp.require("libgtk-4.1.dylib" in trace, "GTK was not exercised")

@@ -28,7 +28,7 @@ DLLs only; users do not need Rust or MSYS2 installed to run this helper.
 To build a new candidate in MSYS2 UCRT64:
 
 ```sh
-bash packaging/windows/vacards/build-sparrow.sh /c/vacards/deps/sparrow-new-candidate
+bash packaging/windows/vacards/build-sparrow.sh /c/build/deps/sparrow-new-candidate
 ```
 
 The script uses the pinned source, lock and separate toolchain, and retains the

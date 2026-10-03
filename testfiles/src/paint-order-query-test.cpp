@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * BUG-010 (doc/vacards/BUGS_TO_INVESTIGATE.md): the paint-order query read a
+ * BUG-010 (internal note BUGS_TO_INVESTIGATE): the paint-order query read a
  * NULL text for `paint-order: inherit` under ancestors that set no paint
  * order, and crashed after Ungroup All (the Stroke Style panel queries the
  * new selection).

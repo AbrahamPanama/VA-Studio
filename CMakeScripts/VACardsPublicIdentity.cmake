@@ -9,7 +9,8 @@
 #     empty, so src/vacards-public-identity.h points at the installed SUPPORT.md;
 #   - VACARDS_COPYRIGHT_HOLDER_DISPLAY (Windows version resource): "the VA Studio
 #     authors";
-#   - VA_<KEY> (documents installed by share/doc): "(not yet published)".
+#   - documents installed by share/doc: each <!--VA_<KEY>-->...<!--/VA_<KEY>-->
+#     span keeps its neutral text (vacards_configure_public_document below).
 # check-public-release.py, not the build, blocks a public release while a value
 # is missing. Invalid characters fail the configure step.
 
@@ -58,19 +59,38 @@ else()
     set(VACARDS_COPYRIGHT_HOLDER_DISPLAY "${_vacards_holder}")
 endif()
 
-# Installed documents (share/doc/CMakeLists.txt configures their @VA_<KEY>@).
-set(_vacards_unset "(not yet published)")
-foreach(_pair IN ITEMS "VA_PUBLIC_PRODUCT_NAME;_vacards_product" "VA_COPYRIGHT_HOLDER;_vacards_holder"
-                       "VA_SUPPORT_URL;_vacards_support" "VA_SOURCE_URL;_vacards_source"
-                       "VA_PUBLIC_REPO_URL;_vacards_repo" "VA_FORKS_BASE_URL;_vacards_forks")
-    list(GET _pair 0 _name)
-    list(GET _pair 1 _variable)
-    if("${${_variable}}" STREQUAL "")
-        set(${_name} "${_vacards_unset}")
-    else()
-        set(${_name} "${${_variable}}")
+# Installed documents. Owner values appear in the public documents as spans
+#   <!--VA_<KEY>-->neutral text<!--/VA_<KEY>-->
+# (HTML comments, so the neutral text is what GitHub shows). The installed copy
+# gets the owner's value when it is set and the neutral text otherwise; no raw
+# span or placeholder is ever installed. The neutral text must not contain "<".
+set(VACARDS_PUBLIC_KEYS VA_PUBLIC_PRODUCT_NAME VA_COPYRIGHT_HOLDER VA_SUPPORT_URL VA_SOURCE_URL
+    VA_PUBLIC_REPO_URL VA_FORKS_BASE_URL)
+set(VACARDS_VALUE_VA_PUBLIC_PRODUCT_NAME "${_vacards_product}")
+set(VACARDS_VALUE_VA_COPYRIGHT_HOLDER "${_vacards_holder}")
+set(VACARDS_VALUE_VA_SUPPORT_URL "${_vacards_support}")
+set(VACARDS_VALUE_VA_SOURCE_URL "${_vacards_source}")
+set(VACARDS_VALUE_VA_PUBLIC_REPO_URL "${_vacards_repo}")
+set(VACARDS_VALUE_VA_FORKS_BASE_URL "${_vacards_forks}")
+
+function(vacards_configure_public_document input output)
+    file(READ "${input}" text)
+    foreach(key IN LISTS VACARDS_PUBLIC_KEYS)
+        if("${VACARDS_VALUE_${key}}" STREQUAL "")
+            string(REGEX REPLACE "<!--${key}-->([^<]*)<!--/${key}-->" "\\1" text "${text}")
+        else()
+            string(REGEX REPLACE "<!--${key}-->[^<]*<!--/${key}-->" "${VACARDS_VALUE_${key}}" text "${text}")
+        endif()
+    endforeach()
+    if(text MATCHES "<!--/?VA_[A-Z_]+-->" OR text MATCHES "@VA_[A-Z_]+@")
+        message(FATAL_ERROR "${input}: unresolved owner placeholder")
     endif()
-endforeach()
-if(_vacards_product STREQUAL "")
-    set(VA_PUBLIC_PRODUCT_NAME "VA Studio")
-endif()
+    set(previous "")
+    if(EXISTS "${output}")
+        file(READ "${output}" previous)
+    endif()
+    if(NOT previous STREQUAL text)
+        file(WRITE "${output}" "${text}")
+    endif()
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${input}")
+endfunction()

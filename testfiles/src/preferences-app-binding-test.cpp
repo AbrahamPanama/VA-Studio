@@ -7,8 +7,8 @@
 // fixture in dialog-notebook-test.cpp (process-singleton TestApplication,
 // drainMainContext, pumpFrames) rather than a new mock framework, and they skip
 // explicitly when INKSCAPE_TEST_GUI is not 1. A skipped run is never reported as
-// a pass: root must register both suites with the dialog-notebook-style failure
-// guards (see HANDOFF.md; CMake wiring is owned by root).
+// a pass: testfiles/CMakeLists.txt registers both suites with the
+// dialog-notebook-style failure guards.
 //
 // Suite split for CTest isolation: `PreferencesAppBindingTest` holds the three
 // ordinary GUI cases; `PreferencesAppBindingQuitTest` reaches an explicit Quit

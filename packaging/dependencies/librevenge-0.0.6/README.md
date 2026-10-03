@@ -4,7 +4,7 @@ This directory is the tracked, license-preserving patch bundle for the pinned
 librevenge **0.0.6** source archive. It carries the reviewed C02-FIX + T01-FIX +
 T01-FIX2 generator changes that give the CDR import path its versioned transport
 and native SVG crop/text serialization (see
-`doc/vacards/cdr-clipping-work/CDR_EVENT_CONTRACT.md`).
+`internal note cdr-clipping-work/CDR_EVENT_CONTRACT`).
 
 The bundle is **provenance and build input only**. It does not change the
 application, its CMake feature flags or any installed dependency prefix.

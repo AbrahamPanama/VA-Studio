@@ -756,7 +756,7 @@ texts about 0.28 s, and a 300-run text about 0.14 s, per click. Controller-only
 timings do not qualify click-through-refresh performance.
 
 WP4 native smoke (2026-09-30): the a6afe4cd4 payload ran unpacked, with no
-install, on the Windows printer PC while printing was idle. It used an isolated
+install, on a second Windows test PC while it was otherwise idle. It used an isolated
 profile and injected mouse and keyboard input on the maximized window. On a mixed
 selection (group, shapes, a two-span text, unstroked members) these passed:
 - `+` adds one step to each stroked member and reports the unstroked ones;
@@ -778,7 +778,7 @@ For diagnosis without GTK, configure `testfiles/selection-contract` separately.
 That runs only resolver semantics, not the application gate. macOS evidence is
 not Windows qualification. Missing app tests block readiness, not source work.
 
-The AGENTS.md rule and local targets are implemented safeguards, not protected
+The contribution rules and local targets are implemented safeguards, not protected
 server-side merge enforcement. There is no new cloud workflow, scheduler or
 permission to bypass existing release gates. Reviewers must check evidence and
 reject undocumented exceptions. An agent cannot self-certify unrun tests.

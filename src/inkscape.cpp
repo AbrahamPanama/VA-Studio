@@ -83,9 +83,14 @@ static void (* bus_handler)  (int) = SIG_DFL;
 static constexpr int SP_INDENT = 8;
 static std::thread::id crash_handler_main_thread;
 
-/// Crash dialog request to report the problem. The destination is VA Studio's
-/// public support identity (vacards-public-identity.h), never the upstream
-/// Inkscape bug tracker; without a configured URL it is the local SUPPORT.md.
+/// Where to report a crash: VA Studio's public support identity
+/// (vacards-public-identity.h), never the upstream Inkscape bug tracker; without
+/// a configured URL, the local SUPPORT.md. Resolved once at startup by the
+/// Application constructor; the crash handler only reads these strings.
+static std::string crash_support_destination;
+static Glib::ustring crash_report_text;
+
+/// Crash dialog request to report the problem (computed at startup, see above).
 static Glib::ustring crash_report_markup()
 {
     auto const uri = Inkscape::VACards::support_uri();
@@ -252,6 +257,14 @@ Application::Application(bool use_gui, RuntimePolicy policy) :
         // and :gl_locale_name_from_win32_LANGID:gettext-runtime/gnulib-lib/localename.c
         Glib::setenv("LANG", ui_language.raw(), true);
 #endif
+    }
+
+    // Resolve the crash report destination once, in the user's UI language.
+    // The emergency handler installed above must not look up resources or
+    // build these strings itself; until this point it falls back to plain text.
+    if (policy == RuntimePolicy::Editor) {
+        crash_support_destination = Inkscape::VACards::support_destination();
+        crash_report_text = crash_report_markup();
     }
 
     if (use_gui)
@@ -474,10 +487,12 @@ Application::crash_handler (int /*signum*/)
     }
 
     fprintf (stderr, "Emergency save completed. VA Studio will close now.\n");
-    // Reports go to VA Studio, not to the upstream Inkscape tracker (vacards-public-identity.h).
+    // Reports go to VA Studio, not to the upstream Inkscape tracker; the
+    // destination was resolved at startup (crash_support_destination).
     fprintf (stderr, "If you can reproduce this crash, please report it to VA Studio with a detailed\n"
                      "description of the steps leading to the crash, so we can fix it:\n  %s\n",
-             Inkscape::VACards::support_destination().c_str());
+             crash_support_destination.empty() ? Inkscape::VACards::support_document
+                                               : crash_support_destination.c_str());
 
     // Signal handlers execute on the faulting thread. GTK (including the
     // recent manager above) must never be entered from a canvas render worker.
@@ -552,8 +567,10 @@ Application::crash_handler (int /*signum*/)
             auto mainloop = Glib::MainLoop::create();
             auto builder = UI::create_builder("dialog-crash.glade");
             // Optional lookup: a missing label must not abort the crash dialog.
-            if (auto const report = builder->get_widget<Gtk::Label>("report_link")) {
-                report->set_markup(crash_report_markup());
+            // Without a startup-resolved text the glade default text stays.
+            auto const report = builder->get_widget<Gtk::Label>("report_link");
+            if (report && !crash_report_text.empty()) {
+                report->set_markup(crash_report_text);
             }
             auto &autosaves = UI::get_widget<Gtk::Label>(builder, "autosaves");
             if (std::strlen(b) == 0) {
