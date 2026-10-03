@@ -33,6 +33,30 @@ VA Studio is not Inkscape and is not endorsed by the Inkscape project. See
 
 EMF and WMF import and export are not available in VA Studio.
 
+## Performance
+
+Measured on Windows and macOS development builds; results depend on hardware.
+Methods, hardware and more results are in
+[doc/public/PERFORMANCE.md](doc/public/PERFORMANCE.md).
+
+- **Windows drawing** (novel: VA Studio's own patch to GTK): dragging an object
+  at 1080p, the median paint time per frame fell from 11.7 to 7.7 ms; on a 4K
+  display at 150% the dragged object updated on screen 24.1 instead of 16.8
+  times per second.
+- **Undo of many objects** (VA Studio fix to code inherited from Inkscape):
+  Undo of 1,000 objects takes 9.4 ms instead of 6.9 s on a Windows laptop, and
+  3.9 ms instead of 248 ms on a Mac.
+- **Stroke width on many texts** (novel): one click on 2,000 texts takes 0.34 s
+  instead of 3.7 s on a Mac.
+- **Nesting** (novel): with 1 mm part spacing the engine places 12 of 12
+  different 3000-vertex parts in 5 s, where it placed none after 110 s; on a Mac,
+  applying a result for 200 cards takes 2 ms instead of 215 ms; on Windows, the
+  80-circle test places all 80 parts in 15.5 s at its 15-second setting instead
+  of timing out.
+- **Explode Bitmap** (novel): 150 pieces from a 5000×5000 image are ready in
+  2.4 s with a 391 MiB memory peak on an 8 GB Mac, where this size was refused
+  before.
+
 ## Install
 
 - Windows: [doc/public/INSTALL-windows.md](doc/public/INSTALL-windows.md)

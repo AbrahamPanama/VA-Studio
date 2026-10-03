@@ -1,7 +1,7 @@
 {
   "schema": "va-studio-public-source-manifest/1",
   "about": "Inputs of this public source tree. The modules were flattened from their pinned commits; the libcdr fork is in third_party/libcdr-vacards.",
-  "source_commit": "22d12d4aacb0fddd2f41ee09d22a626003c9cac1",
+  "source_commit": "d2c62cdbb9ca4c08dbc946d43161c5952c923868",
   "inkscape_baseline": "d2b9be1c53",
   "modules": [
     {
@@ -99,6 +99,6 @@
   },
   "exclude_manifest_sha256": "882ac424933b9db292e51332bc4feb175f4b37cd9e2356c40ca8807f1c4bb56f",
   "substitutions_sha256": "4c3fe7e1204637ec06411b1648f023a1e7f24f0bef0334717e3f95ab117aa4aa",
-  "excluded_file_count": 200,
+  "excluded_file_count": 201,
   "rules_source": "commit"
 }
