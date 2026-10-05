@@ -5,6 +5,7 @@
  */
 
 #include "actions-vacards-cli.h"
+#include "vacards-cli-dispatch.h"
 
 #include <exception>
 #include <string>
@@ -67,7 +68,11 @@ namespace {
 void report(InkscapeApplication *app, Record const &record)
 {
     if (records_enabled(app)) {
-        emit(record);
+        if (record.action.starts_with("system.")) {
+            auto typed = record;
+            typed.typed_extensions = typed_result(record, "");
+            emit(typed);
+        } else emit(record);
         return;
     }
     auto *desktop = app ? app->get_active_desktop() : nullptr;
@@ -86,7 +91,7 @@ void report(InkscapeApplication *app, Record const &record)
 void run_action(ActionSpec const &spec, Glib::VariantBase const &value, InkscapeApplication *app,
                 std::function<void(ActionContext &)> const &body, bool needs_document)
 {
-    register_action_spec(spec);
+    if (!spec.name.starts_with("system.")) register_action_spec(spec);
 
     auto const text = string_parameter(value);
 
@@ -127,27 +132,11 @@ void run_action(ActionSpec const &spec, Glib::VariantBase const &value, Inkscape
         return;
     }
 
-    ActionContext context{app, parsed, document, selection, record};
-    try {
-        body(context);
-    } catch (std::exception const &e) { // includes Glib::Error (glibmm 2.68+)
-        record.status = Status::Failed;
-        record.reason = "internal-error";
-        record.message = e.what();
-    } catch (...) {
-        record.status = Status::Failed;
-        record.reason = "internal-error";
-        record.message = "Unexpected internal error.";
-    }
-
-    if (selection) {
-        record.selection_after.clear();
-        for (auto *item : selection->items()) {
-            if (char const *id = item->getId()) {
-                record.selection_after.emplace_back(id);
-            }
-        }
-    }
+    auto &context = action_session_context();
+    context.app = app;
+    context.document = document;
+    context.selection = selection;
+    dispatch_validated(spec, parsed, context, record, body, needs_document);
 
     report(app, record);
 }
@@ -186,26 +175,27 @@ void result_file(Glib::VariantBase const &value, InkscapeApplication *app)
         return;
     }
 
-    std::string error;
-    if (!open_result_channel(target, error)) {
-        record.status = Status::Rejected;
-        record.reason = "cannot-open-result-file";
-        record.message = error;
-        emit(record); // goes to the previous channel
-        return;
-    }
-    record.data["target"] = target;
-    emit(record); // first line of the new channel
+    auto spec = result_file_command();
+    ParseResult parsed;
+    ParamValue parameter; parameter.type = ParamType::Text; parameter.text = target;
+    parsed.values["target"] = parameter;
+    DispatchContext context{app};
+    dispatch_validated(spec, parsed, context, record, {}, false);
+    emit(record); // first line of the new channel, or previous channel on failure
+
 }
 
-void options(Glib::VariantBase const &value, InkscapeApplication *app)
+void options_body(ActionContext &c)
 {
-    run_action(options_spec, value, app, [](ActionContext &c) {
         if (c.params.has("halt-on-error")) {
             set_halt_on_error(c.params.at("halt-on-error").boolean);
         }
         c.record.data["halt-on-error"] = halt_on_error();
-    }, false);
+}
+
+void options(Glib::VariantBase const &value, InkscapeApplication *app)
+{
+    run_action(options_spec, value, app, options_body, false);
 }
 
 constexpr ActionSpec undo_spec{.name = "vacards-undo", .mode = "session",
@@ -215,9 +205,8 @@ constexpr ActionSpec redo_spec{.name = "vacards-redo", .mode = "session",
 
 // Upstream undo/redo exist only as document/window actions, which --actions
 // cannot reach. These make "one action is one Undo step" observable and usable.
-void undo_redo(Glib::VariantBase const &value, InkscapeApplication *app, bool redo)
+void history_body(ActionContext &c, bool redo)
 {
-    run_action(redo ? redo_spec : undo_spec, value, app, [redo](ActionContext &c) {
         bool const done = redo ? DocumentUndo::redo(c.document) : DocumentUndo::undo(c.document);
         if (done) {
             c.document->ensureUpToDate();
@@ -228,15 +217,19 @@ void undo_redo(Glib::VariantBase const &value, InkscapeApplication *app, bool re
             c.record.reason = redo ? "nothing-to-redo" : "nothing-to-undo";
             c.record.message = redo ? "There is nothing to redo." : "There is nothing to undo.";
         }
-    });
+}
+void undo_body(ActionContext &c) { history_body(c, false); }
+void redo_body(ActionContext &c) { history_body(c, true); }
+void undo_redo(Glib::VariantBase const &value, InkscapeApplication *app, bool redo)
+{
+    run_action(redo ? redo_spec : undo_spec, value, app, redo ? redo_body : undo_body);
 }
 
 void undo(Glib::VariantBase const &value, InkscapeApplication *app) { undo_redo(value, app, false); }
 void redo(Glib::VariantBase const &value, InkscapeApplication *app) { undo_redo(value, app, true); }
 
-void describe(Glib::VariantBase const &value, InkscapeApplication *app)
+void describe_body(ActionContext &c)
 {
-    run_action(describe_spec, value, app, [](ActionContext &c) {
         register_action_spec(result_file_spec);
         register_action_spec(options_spec);
         auto &d = c.record.data;
@@ -245,6 +238,9 @@ void describe(Glib::VariantBase const &value, InkscapeApplication *app)
         d["version"] = VACARDS_PRODUCT_VERSION;
         d["inkscape_version"] = Inkscape::version_string;
         d["schema"] = std::string(result_schema);
+        auto catalog = command_catalog();
+        d["catalog_version"] = std::string(catalog_version);
+        d["catalog_hash"] = catalog.at("hash");
         boost::json::object features;
 #ifdef WITH_VACARDS_NESTING
         features["nesting"] = true;
@@ -270,11 +266,41 @@ void describe(Glib::VariantBase const &value, InkscapeApplication *app)
             actions.push_back(describe_action(*s));
         }
         d["actions"] = actions;
-    }, false);
+}
+
+void describe(Glib::VariantBase const &value, InkscapeApplication *app)
+{
+    run_action(describe_spec, value, app, describe_body, false);
 }
 
 } // namespace
 
+
+ActionSpec options_command() {
+    static constexpr std::string_view units[] = {"px","mm","cm","in","pt","pc"};
+    static constexpr ParamSpec params[] = {
+        options_params[0], {.key="preferred-unit", .type=ParamType::Choice, .choices=units,
+            .help="Session display unit; changing it never changes physical recipes."}};
+    auto s=options_spec; s.params=params; s.handler=options_body; s.needs_document=false; return s;
+}
+ActionSpec describe_command() { auto s = describe_spec; s.handler = describe_body; s.needs_document = false; return s; }
+ActionSpec undo_command() { auto s = undo_spec; s.handler = undo_body; s.needs_document = true; return s; }
+ActionSpec redo_command() { auto s = redo_spec; s.handler = redo_body; s.needs_document = true; return s; }
+void result_file_body(ActionContext &c)
+{
+    auto const &target = c.params.at("target").text;
+    std::string error;
+    if (!open_result_channel(target, error)) {
+        c.record.status = Status::Rejected;
+        c.record.reason = "cannot-open-result-file";
+        c.record.message = error;
+    } else c.record.data["target"] = target;
+}
+ActionSpec result_file_command() {
+    static constexpr ParamSpec params[] = {{.key="target", .type=ParamType::Text, .required=true}};
+    auto s = result_file_spec; s.params = params; s.handler = result_file_body;
+    s.needs_document = false; return s;
+}
 } // namespace Inkscape::VACardsCli
 
 std::vector<std::vector<Glib::ustring>> raw_data_vacards_cli = {
@@ -287,6 +313,14 @@ std::vector<std::vector<Glib::ustring>> raw_data_vacards_cli = {
 void add_actions_vacards_cli(InkscapeApplication *app)
 {
     auto *gapp = app->gio_app();
+    for (auto name : {"system.catalog", "system.options"}) {
+        gapp->add_action_with_parameter(name, Glib::VariantType(Glib::VARIANT_TYPE_STRING),
+            [app, name](Glib::VariantBase const &value) {
+                auto spec = *Inkscape::VACardsCli::find_command(name);
+                spec.name = name;
+                Inkscape::VACardsCli::run_action(spec, value, app, spec.handler, false);
+            });
+    }
     Glib::VariantType String(Glib::VARIANT_TYPE_STRING);
     gapp->add_action_with_parameter("vacards-result-file", String, sigc::bind(sigc::ptr_fun(&Inkscape::VACardsCli::result_file), app));
     gapp->add_action_with_parameter("vacards-options", String, sigc::bind(sigc::ptr_fun(&Inkscape::VACardsCli::options), app));

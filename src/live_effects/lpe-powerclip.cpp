@@ -223,8 +223,9 @@ LPEPowerClip::doOnRemove (SPLPEItem const* /*lpeitem*/)
     if (!document) {
         return;
     }
-    Inkscape::Preferences *prefs = Inkscape::Preferences::get();
-    if (keep_paths || prefs->getBool("/options/onungroup", false)) {
+    if (keep_paths || (_request_onungroup.has_value()
+        ? *_request_onungroup
+        : Inkscape::Preferences::get()->getBool("/options/onungroup", false))) {
         SPObject *clip_path = sp_lpe_item->getClipObject();
         if (clip_path) {
             auto childitem = cast<SPLPEItem>(clip_path->childList(true).front());
@@ -267,6 +268,46 @@ LPEPowerClip::doEffect_path(Geom::PathVector const & path_in){
 }
 
 void LPEPowerClip::doOnVisibilityToggled(SPLPEItem const *lpeitem) { upd(); }
+
+void LPEPowerClip::removeFrom(SPLPEItem *item)
+{
+    _request_onungroup = false;
+    item->removeCurrentPathEffect(false);
+    _request_onungroup.reset();
+}
+
+void sp_inverse_powerclip(SPDocument *document, SPLPEItem *item)
+{
+    // Supply every parameter before attaching the definition. Effect's parameter
+    // reader consequently never looks up saved user defaults; reset=false also
+    // avoids resetDefaults. Geometry and lifecycle remain native PowerClip.
+    auto repr = document->getReprDoc()->createElement("inkscape:path-effect");
+    repr->setAttribute("effect", "powerclip");
+    repr->setAttribute("is_visible", "true");
+    repr->setAttribute("lpeversion", "1");
+    repr->setAttribute("inverse", "true");
+    repr->setAttribute("flatten", "false");
+    repr->setAttribute("hide_clip", "false");
+    repr->setAttribute("message", "");
+    auto object = cast<LivePathEffectObject>(document->getDefs()->appendChildRepr(repr));
+    Inkscape::GC::release(repr);
+    item->addPathEffect(object);
+}
+
+void sp_remove_powerclip(SPLPEItem *item)
+{
+    if (!item || !item->hasPathEffect() || !item->pathEffectsEnabled()) return;
+    PathEffectList effects(*item->path_effect_list);
+    for (auto const &ref : effects) {
+        if (auto object = ref->lpeobject) {
+            if (auto effect = dynamic_cast<LPEPowerClip *>(object->get_lpe())) {
+                item->setCurrentPathEffect(ref);
+                effect->removeFrom(item);
+                break;
+            }
+        }
+    }
+}
 
 void sp_remove_powerclip(Inkscape::Selection *sel)
 {

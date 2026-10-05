@@ -1,0 +1,234 @@
+{
+  "description": "P9 independent M2 open-format-png",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "open",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/rgba.png",
+          "format": "png",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/inputs/rgba.png",
+          "sha256": "e5d2dfc2ed2fcebed9d3c1894cca862da10d8ec806e2126f59e4e2318f5b9765",
+          "reported": true,
+          "hash_field": "data.source_version.sha256",
+          "bytes_field": "data.source_version.bytes"
+        }
+      ],
+      "expect_nonempty": [
+        "document_id",
+        "data.source_version.identity",
+        "data.intake"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "save",
+        "command": "file.save",
+        "params": {
+          "path": "{WORK}/saved.svg",
+          "embedding-policy": "embed",
+          "overwrite": false
+        },
+        "if_revision": 0,
+        "document": {
+          "$ref": "open.document_id"
+        }
+      },
+      "command": "file.save",
+      "cells": [
+        "success",
+        "save"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "published",
+          "persisted": true
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/saved.svg",
+          "format": "svg",
+          "reported": true,
+          "embedded": true
+        }
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "file.close",
+        "params": {
+          "discard": true
+        },
+        "if_revision": 1,
+        "document": {
+          "$ref": "open.document_id"
+        }
+      },
+      "command": "file.close",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "reopen",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/saved.svg",
+          "format": "svg",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false
+        },
+        "if_revision": 2
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "export",
+        "command": "file.export",
+        "params": {
+          "path": "{WORK}/output.png",
+          "format": "png",
+          "dpi": 96,
+          "background": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "text-policy": "preserve",
+          "overwrite": false,
+          "profile": {
+            "id": "srgb"
+          },
+          "drawing": true
+        },
+        "if_revision": 0,
+        "document": {
+          "$ref": "reopen.document_id"
+        }
+      },
+      "command": "file.export",
+      "cells": [
+        "success",
+        "save"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "published",
+          "persisted": true
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/output.png",
+          "format": "png",
+          "reported": true,
+          "size": [
+            16,
+            8
+          ],
+          "samples": [
+            {
+              "x": 2,
+              "y": 2,
+              "rgba": [
+                255,
+                0,
+                0,
+                255
+              ]
+            },
+            {
+              "x": 12,
+              "y": 4,
+              "rgba": [
+                0,
+                255,
+                0,
+                128
+              ]
+            }
+          ],
+          "dpi": 96
+        }
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

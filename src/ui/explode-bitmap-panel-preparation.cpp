@@ -7,6 +7,7 @@
  * Released under GNU GPL v2+, read the file 'COPYING' for more information.
  */
 
+#include <glib/gi18n.h>
 #include "ui/explode-bitmap-panel-preparation.h"
 
 #include <algorithm>
@@ -17,10 +18,10 @@
 namespace Inkscape::Bitmap::PanelPreparation {
 namespace {
 // B1/B2/B3 allocate as topology. An independent ledger gives them the engine's
-// 256 MiB ceiling without spending the retained analysis topology allowance.
+// OS-backed headroom without spending the retained analysis topology allowance.
 // Reserve that entire peak (fields, raw rings, fit scratch AND fitted output)
 // in the parent before calling any engine code, as for exact outlines below.
-constexpr std::uint64_t contourBytes = 256 * MiB;
+constexpr std::uint64_t contourBytes = 256 * MiB; // admission estimate, not an allocation ceiling
 constexpr std::uint64_t contourEnvelope = sizeof(ContourProduct) + sizeof(Budget) + 256;
 
 }
@@ -74,14 +75,14 @@ ResourcePlan resources(unsigned width, unsigned height, std::uint64_t encoded, s
     // 128-bytes-per-pixel worst case. label counts runs before allocating;
     // label/enclose/attach reserve every actual buffer (including overlap)
     // before allocation through the same Budget. Growth remains bounded by
-    // refreshed J and the combined 256 MiB topology ceiling (§13.2).
+    // refreshed OS-backed J.
     plan.add(Term::topology, 4*MiB + (std::uint64_t(height)+1)*sizeof(std::uint32_t), 2, 2);
     plan.add(Term::recovery, encoded*4, 0, 2);
     plan.add(Term::history, 0, 0, 2); plan.add(Term::redo, 0, 0, 2);
     plan.add(Term::queued, retained, 0, 2);
     if (contour.enabled) {
-        // Analysis topology is retained during contours/encoding. Its existing
-        // 256 MiB engine ceiling includes live Regions and Partition overlap.
+        // Analysis topology is retained during contours/encoding. Reserve a
+        // bootstrap estimate; actual Regions/Partition growth uses OS headroom.
         plan.add(Term::topology, 256*MiB - (4*MiB + (std::uint64_t(height)+1)*4), 2, 2);
         plan.add(Term::canonical, p*4, 2, 2); // immutable FinalGrid copy
         plan.add(Term::prepared, contourBytes + contourEnvelope + sizeof(AnalysisState) + 64, 2, 2);
@@ -116,7 +117,11 @@ Outcome makeProxy(RgbaView source, AlphaLut const &lut, bool bypass, Output &out
     }
     return {};
 }
-Outcome recheck(Budget &b) { auto m = sampleMemory(); return m.ok() ? b.recheck(m.value) : m.outcome; }
+Outcome recheck(Budget &b, MemoryProbe const *probe)
+{
+    auto m = probe ? sampleMemory(*probe) : sampleMemory();
+    return m.ok() ? b.recheckMeasured(m.value) : m.outcome;
+}
 namespace {
 ContourResult contours(AnalysisState const &state, ContourRecipe recipe,
                        std::shared_ptr<Budget> budget, Stop stop, JobReporter &reporter, Observer observer,
@@ -135,24 +140,27 @@ ContourResult contours(AnalysisState const &state, ContourRecipe recipe,
             return {Status::incompatible, "Invalid contour recipe."};
         auto check = recheck(*budget); if (!check.ok()) return check;
         Budget::Token reservation;
-        check = budget->acquire(Stage::prepared, contourBytes + contourEnvelope, reservation);
+        auto free = budget->limit() > budget->reserved() ? budget->limit() - budget->reserved() : 0;
+        if (free <= contourEnvelope) return memoryFailure(N_("contour headroom"), contourEnvelope, free);
+        auto capacity = free - contourEnvelope;
+        check = budget->acquire(Stage::prepared, capacity + contourEnvelope, reservation);
         if (!check.ok()) return check;
         result.peakBudget = budget->reserved();
         auto product = std::make_shared<ContourProduct>();
         product->budget = budget; product->reservation = std::move(reservation);
-        product->ledger = std::make_shared<Budget>(contourBytes);
+        product->ledger = std::make_shared<Budget>(capacity);
         check = recheck(*product->ledger); if (!check.ok()) return check;
         struct Progress {
             JobReporter &reporter;
             JobWork &work;
             static void trace(ContourPhase, void *data) noexcept {
                 auto &p = *static_cast<Progress *>(data);
-                p.reporter.progress({Stage::prepared, std::min<std::uint64_t>(79, 80*p.work.visits()/p.work.limit()),
-                                     100, JobPhase::contourTrace});
+                try { p.reporter.progress({Stage::prepared, std::min<std::uint64_t>(79, 80*p.work.visits()/p.work.limit()),
+                                     100, JobPhase::contourTrace}); } catch (std::bad_alloc const &) {}
             }
             static void fit(FitPhase, void *data) noexcept {
                 auto &p = *static_cast<Progress *>(data);
-                p.reporter.progress({Stage::prepared, 80, 100, JobPhase::contourFit});
+                try { p.reporter.progress({Stage::prepared, 80, 100, JobPhase::contourFit}); } catch (std::bad_alloc const &) {}
             }
         } progress{reporter, work};
         observer(PreparationPhase::contourOffset);
@@ -188,16 +196,17 @@ ContourResult contours(AnalysisState const &state, ContourRecipe recipe,
 }
 }
 JobResult calculateContours(JobInput const &job, Stop stop, JobWork &, JobReporter &reporter)
-{
+try {
     auto const &in = static_cast<ContourInput const &>(*job.storage.payload);
-    if (!in.analysis) return {{Status::incompatible, "Missing retained analysis."}, {}, 0};
+    if (!in.analysis) return {{Status::incompatible, "Missing retained analysis."}, {}, 0,
+        CliBitmapFailure{CliBitmapStage::Contour, CliBitmapReason::ContourFailed}};
     ContourResult value;
     if (in.expectedIdentity != in.analysis->identity) {
         value.outcome = {{Status::unavailable, "Stale retained analysis."}, ContourRefusal::staleAnalysis};
     } else {
         value = contours(*in.analysis, in.contour, job.storage.budget, stop, reporter, in.observer, in.contourFault);
     }
-    if (value.outcome.status == Status::canceled) return {value.outcome, {}, 0};
+    if (value.outcome.status == Status::canceled) return {value.outcome, {}, 0, value.outcome.failure};
     // The result object itself is charged; pin the ledger with an aliasing owner.
     struct Owner {
         std::shared_ptr<Budget> budget;
@@ -206,25 +215,29 @@ JobResult calculateContours(JobInput const &job, Stop stop, JobWork &, JobReport
     };
     Budget::Token envelope;
     auto check = job.storage.budget->acquire(Stage::prepared, sizeof(Owner) + 64, envelope);
-    if (!check.ok()) return {check, {}, 0};
+    if (!check.ok()) return {check, {}, 0, bitmapFailure(check, CliBitmapStage::Contour, CliBitmapReason::MemoryAdmissionFailed)};
     auto owner = std::make_shared<Owner>(); owner->budget = job.storage.budget;
     owner->envelope = std::move(envelope); owner->value = std::move(value);
     JobResult result; result.value.budget = job.storage.budget;
+    result.failure = owner->value.outcome.failure;
     result.value.payload = std::shared_ptr<ContourResult const>(owner, &owner->value);
     return result;
+} catch (std::bad_alloc const &) {
+    return {memoryFailure(N_("Explode job allocation"), job.pixels * 4, 0), {}, 0, CliBitmapFailure{CliBitmapStage::Contour, CliBitmapReason::MemoryAdmissionFailed}};
 }
 JobResult calculate(JobInput const &job, Stop stop, JobWork &work, JobReporter &reporter)
 {
+    auto stage = CliBitmapStage::Analyze;
+try {
     auto const &in = static_cast<Input const &>(*job.storage.payload);
     if (in.recipe.threshold > 255 || in.recipe.softness > 127 || in.recipe.faintFloor > 25)
-        return {{Status::incompatible, "Invalid alpha recipe."}, {}, 0};
+        return {{Status::incompatible, "Invalid alpha recipe."}, {}, 0, CliBitmapFailure{CliBitmapStage::Analyze, CliBitmapReason::AnalysisFailed}};
     auto budget = job.storage.budget;
     // Optional geometry yields to required grid/topology buffers. A refused
     // stage releases its partial result before one retry without outlines.
     auto required = [&](auto run) {
         auto result = run();
-        if (!result.ok() && std::string_view(result.outcome.diagnostic) ==
-                "Reservation exceeds current operation/stage budget" &&
+        if (!result.ok() && result.outcome.insufficientMemory &&
             in.outlineReservation && in.outlineReservation->reservation) {
             result = {};
             in.outlineReservation->reservation.release();
@@ -232,7 +245,8 @@ JobResult calculate(JobInput const &job, Stop stop, JobWork &work, JobReporter &
         }
         return result;
     };
-    auto fail = [](Outcome o) { return JobResult{o, {}, 0}; };
+    auto fail = [&](Outcome o) { return JobResult{o, {}, 0, bitmapFailure(o, stage,
+        stage == CliBitmapStage::Encode ? CliBitmapReason::EncodingFailed : CliBitmapReason::AnalysisFailed)}; };
     auto check = recheck(*budget); if (!check.ok()) return fail(check);
     Budget::Token envelope;
     check = budget->acquire(Stage::prepared, sizeof(Output) + sizeof(PreparedAlpha) + sizeof(Budget) + 256, envelope); if (!check.ok()) return fail(check);
@@ -293,6 +307,7 @@ JobResult calculate(JobInput const &job, Stop stop, JobWork &work, JobReporter &
     if (!check.ok()) return fail(check);
     analyzing(4);
     auto prepareAdjustment = [&]() -> Outcome {
+        auto previousStage = stage;
         // With T/S bypassed, only removing nonzero alpha changes pixels.
         // A nonzero floor alone must not prepare an unchanged Apply payload.
         if (in.recipe.alphaPrepared || (in.recipe.bypassAlpha && !out->lost) || in.candidate.identity || out->pngStarted) return {};
@@ -308,18 +323,23 @@ JobResult calculate(JobInput const &job, Stop stop, JobWork &work, JobReporter &
         source.dpiY = 96 / std::hypot(p[2]*m[0] + p[3]*m[2], p[2]*m[1] + p[3]*m[3]);
         source.pixels = std::move(out->alpha.pixels); source.profile = std::move(out->alpha.profile);
         out->pngStarted = true;
+        stage = CliBitmapStage::Encode;
         check = recheck(*budget); if (!check.ok()) return check;
         EncodeOptions options; options.work = &work; options.maxCropPixels = in.adjustmentPixelLimit;
         in.observer(PreparationPhase::encode);
         auto adjustment = prepareAlpha(source, *budget, stop, options);
         out->alpha.pixels = std::move(source.pixels); out->alpha.profile = std::move(source.profile);
         out->adjustmentOutcome = adjustment.outcome;
+        out->adjustmentFailure = bitmapFailure(adjustment.outcome, CliBitmapStage::Encode, CliBitmapReason::EncodingFailed);
         if (adjustment.outcome.status == Status::canceled) return adjustment.outcome;
         if (adjustment.ok()) out->adjustment = std::make_shared<PreparedAlpha>(std::move(adjustment.value));
+        stage = previousStage;
         return {};
     };
     AlphaLut identity; for (unsigned i = 0; i < 256; ++i) identity[i] = i;
     auto explodeFail = [&](Outcome o) {
+        auto failure = bitmapFailure(o, stage,
+            stage == CliBitmapStage::Encode ? CliBitmapReason::EncodingFailed : CliBitmapReason::AnalysisFailed);
         if (o.status == Status::canceled) return fail(o);
         // Preserve Apply for geometric refusals, but never encode an over-cap partition.
         if (std::string_view(o.diagnostic) != "Final piece cap exceeded") {
@@ -328,6 +348,7 @@ JobResult calculate(JobInput const &job, Stop stop, JobWork &work, JobReporter &
         out->alpha.pixels.reset();
         out->omitOutlines();
         out->explodeOutcome = o;
+        out->explodeFailure = failure;
         JobResult result; result.value.budget = budget; result.value.payload = std::move(out); return result;
     };
     check = recheck(*budget); if (!check.ok()) return explodeFail(check);
@@ -354,7 +375,7 @@ JobResult calculate(JobInput const &job, Stop stop, JobWork &work, JobReporter &
     analyzing(5);
     check = recheck(*budget); if (!check.ok()) return explodeFail(check);
     std::shared_ptr<AnalysisState> retained;
-    if (in.contour.enabled) {
+    if (in.contour.enabled || in.retainAnalysis) {
         Budget::Token token;
         check = budget->acquire(Stage::prepared, sizeof(AnalysisState) + 64, token);
         if (!check.ok()) return explodeFail(check);
@@ -446,12 +467,16 @@ JobResult calculate(JobInput const &job, Stop stop, JobWork &work, JobReporter &
             check = recheck(*budget); if (!check.ok()) return explodeFail(check);
             EncodeOptions options; options.work = &work;
             in.observer(PreparationPhase::encode);
+            stage = CliBitmapStage::Encode;
             auto png = encode(out->grid, p, *budget, stop, options); if (!png.ok()) return explodeFail(png.outcome);
             out->pieces = std::move(png.value);
         }
     }
     preparing(3);
     JobResult result; result.value.budget = budget; result.value.payload = std::move(out); return result;
+} catch (std::bad_alloc const &) {
+    return {memoryFailure(N_("Explode job allocation"), job.pixels * 4, 0), {}, 0, CliBitmapFailure{stage, CliBitmapReason::MemoryAdmissionFailed}};
+}
 }
 
 

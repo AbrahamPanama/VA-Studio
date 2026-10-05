@@ -1,0 +1,473 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "nest.contour-set:invalid",
+      "command": "nest.contour-set",
+      "cell": "invalid",
+      "description": "Independent P9 nest.contour-set:invalid",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/nest.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "nest.contour-set",
+            "params": {
+              "payload-id": "shape1",
+              "contour-id": "contour1",
+              "p9-unknown-property": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "nest.contour-release:invalid",
+      "command": "nest.contour-release",
+      "cell": "invalid",
+      "description": "Independent P9 nest.contour-release:invalid",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/nest.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "nest.contour-set",
+            "params": {
+              "payload-id": "shape1",
+              "contour-id": "contour1"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "nest.contour-release",
+            "params": {
+              "ids": [
+                {
+                  "$ref": "prepare.data.binding-ids.0"
+                }
+              ],
+              "p9-unknown-property": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "nest.analyze:invalid",
+      "command": "nest.analyze",
+      "cell": "invalid",
+      "description": "Independent P9 nest.analyze:invalid",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/nest.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "nest.analyze",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "page": 1,
+              "gap": {
+                "value": 0,
+                "unit": "px"
+              },
+              "margin": {
+                "value": 0,
+                "unit": "px"
+              },
+              "rotations": {
+                "mode": "none"
+              },
+              "fallback": "reject",
+              "p9-unknown-property": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "nest.solve:invalid",
+      "command": "nest.solve",
+      "cell": "invalid",
+      "description": "Independent P9 nest.solve:invalid",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/nest.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "nest.analyze",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "page": 1,
+              "gap": {
+                "value": 0,
+                "unit": "px"
+              },
+              "margin": {
+                "value": 0,
+                "unit": "px"
+              },
+              "rotations": {
+                "mode": "none"
+              },
+              "fallback": "reject"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "nest.solve",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "iterations": 17,
+              "seed": 18446744073709551615,
+              "engine": "native",
+              "p9-unknown-property": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "nest.apply:invalid",
+      "command": "nest.apply",
+      "cell": "invalid",
+      "description": "Independent P9 nest.apply:invalid",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/nest.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "nest.apply",
+            "params": {
+              "analyze": {
+                "ids": [
+                  "shape1"
+                ],
+                "page": 1,
+                "gap": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "margin": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              },
+              "solve": {
+                "iterations": 17,
+                "seed": 0
+              },
+              "partial": "reject",
+              "p9-unknown-property": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    }
+  ]
+}

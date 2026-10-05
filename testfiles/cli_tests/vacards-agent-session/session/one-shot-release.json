@@ -1,0 +1,40 @@
+{
+  "description": "Typed one-shot session.release",
+  "transport": "one-shot",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "one-shot",
+        "command": "session.release",
+        "params": {
+          "tokens": [
+            "unknown"
+          ]
+        }
+      },
+      "command": "session.release",
+      "expect": {
+        "status": "unchanged",
+        "data": {
+          "released": [],
+          "not_found": [
+            "unknown"
+          ]
+        },
+        "publication": {
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0
+}

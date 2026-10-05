@@ -87,6 +87,7 @@ struct UndoInteractionLifetime : std::enable_shared_from_this<UndoInteractionLif
     SPDocument *document = nullptr; // Invalidated before SPDocument emits destroySignal.
     unsigned commit_depth = 0;
     unsigned operation_depth = 0;
+    std::weak_ptr<void> command_operation; // Identity of a sole public operation lease.
     unsigned publication_depth = 0;
     unsigned atomic_publication_depth = 0;
     unsigned settlement_depth = 0;
@@ -320,7 +321,10 @@ bool Inkscape::DocumentUndo::deferUntilInteractionQuiescent(
 std::shared_ptr<void> Inkscape::DocumentUndo::holdInteractionOperation(SPDocument *document)
 {
     if (!document || document->undo_interaction_closing) return {};
-    return std::make_shared<UndoInteractionLifetime::OperationScope>(interactionLifetime(document));
+    auto lifetime = interactionLifetime(document);
+    auto operation = std::make_shared<UndoInteractionLifetime::OperationScope>(lifetime);
+    if (lifetime->operation_depth == 1) lifetime->command_operation = operation;
+    return operation;
 }
 
 std::shared_ptr<void> Inkscape::DocumentUndo::holdPublication(SPDocument *document)
@@ -611,14 +615,28 @@ void Inkscape::DocumentUndo::RollbackableInteraction::rollback() noexcept
 std::optional<Inkscape::DocumentUndo::RollbackableInteraction>
 Inkscape::DocumentUndo::beginRollbackableInteraction(SPDocument *document)
 {
+    return beginRollbackableInteraction(document, nullptr);
+}
+
+std::optional<Inkscape::DocumentUndo::RollbackableInteraction>
+Inkscape::DocumentUndo::beginRollbackableInteraction(
+    SPDocument *document, std::shared_ptr<void> const *owner_lease)
+{
     g_return_val_if_fail(document != nullptr, std::nullopt);
     if (document->undo_interaction_closing) return std::nullopt;
     auto lifetime = interactionLifetime(document);
-    if (lifetime->operation_depth || lifetime->close_requested) return std::nullopt;
+    auto const admitted_operation = [&] {
+        if (!owner_lease) return lifetime->operation_depth == 0;
+        return *owner_lease && lifetime->operation_depth == 1 &&
+            !lifetime->command_operation.expired() &&
+            !lifetime->command_operation.owner_before(*owner_lease) &&
+            !owner_lease->owner_before(lifetime->command_operation);
+    };
+    if (!admitted_operation() || lifetime->close_requested) return std::nullopt;
     g_return_val_if_fail(document->sensitive, std::nullopt);
     g_return_val_if_fail(!document->undo_interaction_active, std::nullopt);
     g_return_val_if_fail(document->rdoc->inTransaction(), std::nullopt);
-    if (!lifetime->safe() || lifetime->operation_depth || lifetime->close_requested) return std::nullopt;
+    if (!lifetime->safe() || !admitted_operation() || lifetime->close_requested) return std::nullopt;
 
     // Keep unrelated pending XML outside the rollback point. During the live
     // interaction ScopedInsensitive sections may move their own changes into
@@ -653,9 +671,23 @@ bool Inkscape::DocumentUndo::interactionActive(SPDocument const *document)
 std::optional<Inkscape::DocumentUndo::RollbackableInteraction>
 Inkscape::DocumentUndo::beginAtomicInteraction(SPDocument *document)
 {
+    return beginAtomicInteraction(document, nullptr);
+}
+
+std::optional<Inkscape::DocumentUndo::RollbackableInteraction>
+Inkscape::DocumentUndo::beginAtomicCommandInteraction(
+    SPDocument *document, std::shared_ptr<void> const &owner_lease)
+{
+    return beginAtomicInteraction(document, &owner_lease);
+}
+
+std::optional<Inkscape::DocumentUndo::RollbackableInteraction>
+Inkscape::DocumentUndo::beginAtomicInteraction(
+    SPDocument *document, std::shared_ptr<void> const *owner_lease)
+{
     if (!document || !document->sensitive || document->undo_interaction_active ||
         document->undo_interaction_closing || !document->rdoc->inTransaction()) return std::nullopt;
-    auto token = beginRollbackableInteraction(document);
+    auto token = beginRollbackableInteraction(document, owner_lease);
     if (!token) return std::nullopt;
     auto state = token->_state;
     if (state->previous_partial) {

@@ -1,0 +1,44 @@
+{
+  "description": "P9 independent M2 open-missing-font-reject",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "font",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/missing-font.pdf",
+          "format": "pdf",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false,
+          "pages": [
+            1
+          ]
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "refusal"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_error": "font-policy-required"
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

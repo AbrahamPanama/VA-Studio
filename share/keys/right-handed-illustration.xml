@@ -233,7 +233,7 @@ Future improvements:
   <bind gaction="win.dialog-open('Messages')" />
   <bind gaction="win.dialog-open('Objects')"                 keys="&lt;primary&gt;&lt;shift&gt;l" />
   <bind gaction="win.dialog-open('Text')"                    keys="&lt;primary&gt;&lt;shift&gt;t"/>
-  <bind gaction="win.dialog-open('Spellcheck')"              keys="&lt;primary&gt;&lt;alt&gt;k"/>
+  <!-- VA Studio: spell checking is off (src/ui/spellcheck-feature.h); no Spellcheck binding. -->
   <bind gaction="win.dialog-open('Memory')" />
 
   <bind gaction="win.dialog-toggle"                          keys="F12"/>

@@ -1183,3 +1183,70 @@ TEST(ExistingFileReplacement, ByteWriterMatchesCallbackOnAllPlatforms)
     g_rmdir(dir);
     g_free(dir);
 }
+
+TEST(ExistingFileReplacement, M2ExpectedVersionRefusesBeforeWriterAndAtBoundary)
+{
+    using namespace Inkscape::IO;
+    auto dir=g_dir_make_tmp("vacards-expected-version-XXXXXX",nullptr); ASSERT_NE(dir,nullptr);
+    auto path=std::string(dir)+G_DIR_SEPARATOR_S+"prior.svg";
+    ASSERT_TRUE(g_file_set_contents(path.c_str(),"AAAA",4,nullptr));
+    auto before=inspect_existing_file_version(path); ASSERT_TRUE(before.version)<<before.error;
+    ASSERT_TRUE(g_file_set_contents(path.c_str(),"BBBB",4,nullptr));
+    bool called=false;
+    auto refused=replace_existing_local_file(path,[&](FILE *){called=true;},*before.version);
+    EXPECT_EQ(refused.outcome,ExistingFileOutcome::Conflict);EXPECT_FALSE(called);EXPECT_EQ(bytes(path),"BBBB");
+    auto current=inspect_existing_file_version(path);ASSERT_TRUE(current.version);
+    auto raced=replace_existing_local_file(path,[&](FILE *f){
+        ASSERT_EQ(std::fwrite("NEW",1,3,f),3u);
+        ASSERT_TRUE(g_file_set_contents(path.c_str(),"CCCC",4,nullptr));
+    },*current.version);
+    EXPECT_EQ(raced.outcome,ExistingFileOutcome::Conflict)<<raced.error;EXPECT_EQ(bytes(path),"CCCC");
+    auto latest=inspect_existing_file_version(path);ASSERT_TRUE(latest.version);
+    auto failed=replace_existing_local_file(path,[](FILE *){throw std::runtime_error("real writer failure");},*latest.version);
+    EXPECT_EQ(failed.outcome,ExistingFileOutcome::FailedBeforePublication);EXPECT_EQ(bytes(path),"CCCC");
+    auto published=replace_existing_local_file(path,[](FILE *f){std::fwrite("DONE",1,4,f);},*latest.version);
+    EXPECT_EQ(published.outcome,ExistingFileOutcome::Published)<<published.error;EXPECT_EQ(bytes(path),"DONE");
+    auto boundary=inspect_existing_file_version(path);ASSERT_TRUE(boundary.version);
+    ExistingFileOptions options;
+    options.stage_observer=[&](unsigned stage) {
+        if (stage==4) {
+            FILE *external=g_fopen(path.c_str(),"wb");
+            if (external) { std::fwrite("RACE",1,4,external);std::fclose(external); }
+        }
+        return false;
+    };
+    auto late=replace_existing_local_file(path,[](FILE *f){std::fwrite("LATE",1,4,f);},*boundary.version,options);
+    EXPECT_EQ(late.outcome,ExistingFileOutcome::Conflict)<<late.error;EXPECT_EQ(bytes(path),"RACE");
+    g_remove(path.c_str());g_rmdir(dir);g_free(dir);
+}
+
+TEST(ExistingFileReplacement, R1CancellationAtReplacementBoundaryPreservesOldBytes)
+{
+    using namespace Inkscape::IO;
+    auto dir=g_dir_make_tmp("vacards-r1-cancel-XXXXXX",nullptr);ASSERT_NE(dir,nullptr);
+    auto path=std::string(dir)+G_DIR_SEPARATOR_S+"old.svg";
+    ASSERT_TRUE(g_file_set_contents(path.c_str(),"OLD",3,nullptr));
+    auto v=inspect_existing_file_version(path);ASSERT_TRUE(v.version);
+    bool staged=false;ExistingFileOptions options;options.cancelled=[&]{return staged;};
+    auto result=replace_existing_local_file(path,[&](FILE *f){std::fwrite("NEW",1,3,f);staged=true;},*v.version,options);
+    EXPECT_EQ(result.outcome,ExistingFileOutcome::Cancelled)<<result.error;EXPECT_EQ(bytes(path),"OLD");
+    g_remove(path.c_str());g_rmdir(dir);g_free(dir);
+}
+
+#ifdef _WIN32
+TEST(ExistingFileReplacement, R1WindowsVerifiedPublicationCleanupWarning)
+{
+    using namespace Inkscape::IO;
+    auto dir=g_dir_make_tmp("vacards-r1-cleanup-XXXXXX",nullptr);ASSERT_NE(dir,nullptr);
+    for(unsigned fail_stage:{5u,6u}) {
+    auto path=std::string(dir)+G_DIR_SEPARATOR_S+"old.svg";
+    ASSERT_TRUE(g_file_set_contents(path.c_str(),"OLD",3,nullptr));
+    ExistingFileOptions options;options.stage_observer=[&](unsigned stage){return stage==fail_stage;};
+    auto result=replace_existing_local_file(path,[](FILE *f){std::fwrite("NEW",1,3,f);},options);
+    EXPECT_EQ(result.outcome,ExistingFileOutcome::Published)<<result.error;EXPECT_EQ(bytes(path),"NEW");
+    EXPECT_FALSE(result.error.empty());if(fail_stage==5) EXPECT_FALSE(result.recovery_path.empty());
+    if(!result.recovery_path.empty()) g_remove(result.recovery_path.c_str());g_remove(path.c_str());
+    }
+    g_rmdir(dir);g_free(dir);
+}
+#endif

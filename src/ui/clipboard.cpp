@@ -114,6 +114,15 @@ namespace {
 
 constexpr bool DEBUG_CLIPBOARD = false;
 
+bool clipboard_unavailable_for_testing = false;
+
+Glib::RefPtr<Gdk::Clipboard> system_clipboard()
+{
+    if (clipboard_unavailable_for_testing) return {};
+    auto display = Gdk::Display::get_default();
+    return display ? display->get_clipboard() : Glib::RefPtr<Gdk::Clipboard>{};
+}
+
 /// Made up mimetype to represent Gdk::Pixbuf clipboard contents.
 constexpr auto CLIPBOARD_GDK_PIXBUF_TARGET = "image/x-gdk-pixbuf";
 
@@ -567,6 +576,7 @@ private:
 class ClipboardManagerImpl : public ClipboardManager
 {
 public:
+    bool ensureClipboard(SPDesktop *desktop) override;
     void copy(ObjectSet *set) override;
     void copyPathParameter(Inkscape::LivePathEffect::PathParam *) override;
     bool copyString(Glib::ustring str) override;
@@ -663,7 +673,7 @@ ClipboardManagerImpl::ClipboardManagerImpl()
       _clipnode(nullptr),
       _doc(nullptr),
       _text_style(nullptr),
-      _clipboard(Gdk::Display::get_default()->get_clipboard())
+      _clipboard(system_clipboard())
 {
     // Clipboard requests on app termination can cause undesired extension
     // popup windows. Clearing the clipboard can prevent this.
@@ -680,11 +690,31 @@ ClipboardManagerImpl::ClipboardManagerImpl()
     }
 }
 
+bool ClipboardManagerImpl::ensureClipboard(SPDesktop *desktop)
+{
+    // Check the current display even if a clipboard was cached earlier. A
+    // singleton first used headless may also acquire a display later.
+    auto clipboard = system_clipboard();
+    if (clipboard) {
+        if (_clipboard != clipboard) {
+            _clipboard = std::move(clipboard);
+            _clipboard_changed_connection = _clipboard->signal_changed().connect([this] { ++_clipboard_generation; });
+        }
+        return true;
+    }
+
+    auto const message = _("Clipboard unavailable (no display)");
+    _userWarn(desktop, message);
+    g_printerr("[clipboard-unavailable] %s\n", message);
+    return false;
+}
+
 /**
  * Copy selection contents to the clipboard.
  */
 void ClipboardManagerImpl::copy(ObjectSet *set)
 {
+    if (!ensureClipboard(set ? set->desktop() : nullptr)) return;
     if (set && Bitmap::publicationBoundaryPending(set->document())) {
         if (set->desktop()) Bitmap::deferPublicationBoundary(*set->desktop(),[](SPDesktop &d) { d.getSelection()->copy(); });
         return; // Headless callers have no lifetime-safe desktop command to replay.
@@ -725,16 +755,22 @@ void ClipboardManagerImpl::copy(ObjectSet *set)
         // Special case for when the text tool is active - if some text is selected, copy plain text,
         // not the object that holds it; also copy the style at cursor into
         if (auto const text_tool = dynamic_cast<Tools::TextTool*>(desktop->getTool())) {
-            _discardInternalClipboard();
             // Publish plain + native rich fragment atomically. The rich fragment
             // is derived from the current selection only; nothing is cached for
             // later pastes, so an external clipboard replacement cannot leak
             // stale formatting.
             auto fragment = text_tool->extractSelectionFragment();
             if (fragment && !fragment->empty()) {
+                _discardInternalClipboard();
                 _publishTextFragment(*fragment);
             } else {
-                _clipboard->set_text(get_selected_text(*text_tool));
+                auto const plain = get_selected_text(*text_tool);
+                if (!plain.empty()) {
+                    _discardInternalClipboard();
+                    _clipboard->set_text(plain);
+                } else {
+                    _userWarn(desktop, _("Nothing was copied."));
+                }
             }
             if (_text_style) {
                 sp_repr_css_attr_unref(_text_style);
@@ -767,6 +803,7 @@ void ClipboardManagerImpl::copy(ObjectSet *set)
  */
 void ClipboardManagerImpl::copyPathParameter(Inkscape::LivePathEffect::PathParam *pp)
 {
+    if (!ensureClipboard(nullptr)) return;
     if (!pp) {
         return;
     }
@@ -798,6 +835,7 @@ void ClipboardManagerImpl::copyPathParameter(Inkscape::LivePathEffect::PathParam
  * @param str string to copy
  */
 bool ClipboardManagerImpl::copyString(Glib::ustring str) {
+    if (!ensureClipboard(nullptr)) return false;
     if (!str.empty()) {
         _discardInternalClipboard();
         _clipboard->set_text(str);
@@ -817,6 +855,7 @@ bool ClipboardManagerImpl::copyString(Glib::ustring str) {
 void ClipboardManagerImpl::copySymbol(Inkscape::XML::Node* symbol, gchar const* style, SPDocument *source, const char* symbol_set,
                                       Geom::Rect const &bbox, bool set_clipboard)
 {
+    if (set_clipboard && !ensureClipboard(nullptr)) return;
     if (!symbol)
         return;
 
@@ -900,6 +939,7 @@ void ClipboardManagerImpl::copySymbol(Inkscape::XML::Node* symbol, gchar const* 
  */
 void ClipboardManagerImpl::insertSymbol(SPDesktop *desktop, Geom::Point const &shift_dt, bool read_clipboard)
 {
+    if (read_clipboard && !ensureClipboard(desktop)) return;
     if (!desktop || !Inkscape::have_viable_layer(desktop, desktop->messageStack())) {
         return;
     }
@@ -933,6 +973,7 @@ void ClipboardManagerImpl::insertSymbol(SPDesktop *desktop, Geom::Point const &s
  */
 bool ClipboardManagerImpl::paste(SPDesktop *desktop, bool in_place, bool on_page)
 {
+    if (!ensureClipboard(desktop)) return false;
     if (desktop && Bitmap::deferPublicationBoundary(*desktop,[in_place,on_page](SPDesktop &d) { sp_selection_paste(&d,in_place,on_page); })) return false;
 
     // paste() pumps the main context while a slow owner (delayed rendering)
@@ -1236,6 +1277,7 @@ bool ClipboardManagerImpl::_pasteNodes(SPDesktop *desktop, SPDocument *clipdoc, 
  */
 Glib::ustring ClipboardManagerImpl::getFirstObjectID()
 {
+    if (!ensureClipboard(nullptr)) return {};
     _retrieveClipboard("image/x-inkscape-svg");
     auto tempdoc = _clipboardSPDoc.get();
     if (!tempdoc) {
@@ -1297,6 +1339,7 @@ void ClipboardManagerImpl::_cleanStyle(SPCSSAttr *style)
  */
 bool ClipboardManagerImpl::pasteStyle(ObjectSet *set)
 {
+    if (!ensureClipboard(set ? set->desktop() : nullptr)) return false;
     if (set && set->desktop() && Bitmap::deferPublicationBoundary(*set->desktop(),[](SPDesktop &d) { d.getSelection()->pasteStyle(); })) return false;
 
     auto dt = set->desktop();
@@ -1369,6 +1412,7 @@ bool ClipboardManagerImpl::pasteStyle(ObjectSet *set)
  */
 bool ClipboardManagerImpl::pasteSize(ObjectSet *set, bool separately, bool apply_x, bool apply_y)
 {
+    if (!ensureClipboard(set ? set->desktop() : nullptr)) return false;
 
     if (set && Bitmap::publicationBoundaryPending(set->document())) {
         if (set->desktop()) Bitmap::deferPublicationBoundary(*set->desktop(),[this,separately,apply_x,apply_y](SPDesktop &d) {
@@ -1442,6 +1486,7 @@ bool ClipboardManagerImpl::pasteSize(ObjectSet *set, bool separately, bool apply
  */
 bool ClipboardManagerImpl::pastePathEffect(ObjectSet *set)
 {
+    if (!ensureClipboard(set ? set->desktop() : nullptr)) return false;
     if (set && set->desktop() && Bitmap::deferPublicationBoundary(*set->desktop(),[](SPDesktop &d) { d.getSelection()->pastePathEffect(); })) return false;
 
     /** @todo FIXME: pastePathEffect crashes when moving the path with the applied effect,
@@ -1498,6 +1543,7 @@ bool ClipboardManagerImpl::pastePathEffect(ObjectSet *set)
  */
 Glib::ustring ClipboardManagerImpl::getPathParameter(SPDesktop* desktop)
 {
+    if (!ensureClipboard(desktop)) return {};
     // The clipboard wait can dispatch window/document destruction.
     ClipboardLease::DestinationLease const lease(desktop, desktop ? desktop->getDocument() : nullptr);
     _retrieveClipboard(); // any target will do here
@@ -1532,6 +1578,7 @@ Glib::ustring ClipboardManagerImpl::getPathParameter(SPDesktop* desktop)
  */
 Glib::ustring ClipboardManagerImpl::getShapeOrTextObjectId(SPDesktop *desktop)
 {
+    if (!ensureClipboard(desktop)) return {};
     // https://bugs.launchpad.net/inkscape/+bug/1293979
     // basically, when we do a depth-first search, we're stopping
     // at the first object to be <svg:path> or <svg:text>.
@@ -1584,6 +1631,7 @@ Glib::ustring ClipboardManagerImpl::getShapeOrTextObjectId(SPDesktop *desktop)
  */
 std::vector<Glib::ustring> ClipboardManagerImpl::getElementsOfType(SPDesktop *desktop, gchar const* type, gint maxdepth)
 {
+    if (!ensureClipboard(desktop)) return {};
     // The clipboard wait can dispatch window/document destruction.
     ClipboardLease::DestinationLease const lease(desktop, desktop ? desktop->getDocument() : nullptr);
     _retrieveClipboard(); // any target will do here
@@ -2254,6 +2302,7 @@ TextPasteOutcome ClipboardManagerImpl::_pasteText(SPDesktop *desktop, bool requi
  */
 bool ClipboardManagerImpl::pasteText(SPDesktop *desktop, TextPasteMode mode)
 {
+    if (!ensureClipboard(desktop)) return false;
 
     if (desktop && Bitmap::deferPublicationBoundary(*desktop,[this,mode](SPDesktop &d) {
         if (pasteText(&d,mode)) DocumentUndo::done(d.getDocument(),RC_("Undo","Paste text"),INKSCAPE_ICON("draw-text"));
@@ -3132,9 +3181,12 @@ bool ClipboardManagerImpl::_pasteTextObject(SPDesktop *desktop, Inkscape::UI::Te
  */
 void ClipboardManagerImpl::_publishTextFragment(Inkscape::UI::TextPaste::Fragment const &fragment)
 {
+    if (fragment.plain.empty()) {
+        return;
+    }
     namespace TP = Inkscape::UI::TextPaste;
     auto const payload = TP::serialize(fragment);
-    if (payload.empty() || payload.size() > TP::MAX_PAYLOAD_BYTES || fragment.plain.empty()) {
+    if (payload.empty() || payload.size() > TP::MAX_PAYLOAD_BYTES) {
         _clipboard->set_text(Glib::ustring(fragment.plain));
         return;
     }
@@ -3698,7 +3750,10 @@ void ClipboardManagerImpl::_setClipboardTargets()
  */
 void ClipboardManagerImpl::_setClipboardColor(Colors::Color const &color)
 {
-    _clipboard->set_text(color.toString());
+    auto const text = color.toString();
+    if (!text.empty()) {
+        _clipboard->set_text(text);
+    }
 }
 
 /**
@@ -4367,6 +4422,11 @@ DetachedSelection copy_selection_detached(ObjectSet &source, SelectionCopyLimits
     if (Bitmap::publicationBoundaryPending(source.document()))
         throw std::runtime_error("Selection publication is in progress");
     return DetachedCopyPlan(source, limits, cancelled).build(source);
+}
+
+void ClipboardManager::setClipboardUnavailableForTesting(bool unavailable)
+{
+    clipboard_unavailable_for_testing = unavailable;
 }
 
 ClipboardManager *ClipboardManager::get()

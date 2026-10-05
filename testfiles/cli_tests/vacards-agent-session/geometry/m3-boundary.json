@@ -1,0 +1,729 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "geometry.move:boundary",
+      "command": "geometry.move",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.move:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.move",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.resize:boundary",
+      "command": "geometry.resize",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.resize:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.resize",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.rotate:boundary",
+      "command": "geometry.rotate",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.rotate:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.rotate",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.skew:boundary",
+      "command": "geometry.skew",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.skew:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.skew",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.flip:boundary",
+      "command": "geometry.flip",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.flip:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.flip",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.matrix:boundary",
+      "command": "geometry.matrix",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.matrix:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.matrix",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.boolean:boundary",
+      "command": "geometry.boolean",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.boolean:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.boolean",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.offset:boundary",
+      "command": "geometry.offset",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.offset:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.offset",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.corners:boundary",
+      "command": "geometry.corners",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.corners:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.corners",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.move:boundary:0",
+      "command": "geometry.move",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.move:boundary:0",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.move",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "dx": {
+                "value": 1000001,
+                "unit": "px"
+              },
+              "dy": {
+                "value": 3,
+                "unit": "px"
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.boolean:boundary:1",
+      "command": "geometry.boolean",
+      "cell": "boundary",
+      "description": "Independent P9 geometry.boolean:boundary:1",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.boolean",
+            "params": {
+              "ids": [
+                "shape1",
+                "shape2",
+                "contour1"
+              ],
+              "op": "division",
+              "empty-result": "reject"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    }
+  ]
+}

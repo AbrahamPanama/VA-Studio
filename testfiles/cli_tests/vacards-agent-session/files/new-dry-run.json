@@ -1,0 +1,61 @@
+{
+  "description": "P9 independent M2 new-dry-run",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "dry",
+        "command": "file.new",
+        "params": {
+          "width": {
+            "value": 16,
+            "unit": "px"
+          },
+          "height": {
+            "value": 8,
+            "unit": "px"
+          },
+          "discard": false
+        },
+        "if_revision": 0,
+        "dry_run": true
+      },
+      "command": "file.new",
+      "cells": [
+        "dry-run"
+      ],
+      "expect": {
+        "status": "ok",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "expect_exact": {
+        "dry_run": true
+      },
+      "file_oracles": [
+        {
+          "path": "{WORK}/saved.svg",
+          "absent": true
+        },
+        {
+          "path": "{WORK}/output.png",
+          "absent": true
+        }
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

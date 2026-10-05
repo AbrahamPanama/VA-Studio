@@ -16,6 +16,7 @@
 #ifndef INKSCAPE_EXTENSION_SYSTEM_H__
 #define INKSCAPE_EXTENSION_SYSTEM_H__
 
+#include <vector>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -165,6 +166,14 @@ void store_file_extension_in_prefs (Glib::ustring extension, FileSaveMethod meth
 void store_save_path_in_prefs (Glib::ustring path, FileSaveMethod method);
 
 } // namespace Inkscape::Extension
+
+// Request-local headless adapter. Uses the same libcdr/RVNG engine as CdrInput,
+// returning generated SVG before native document construction/resource admission.
+namespace Inkscape::Extension {
+struct CdrConversionLimits { std::size_t bytes = 64u << 20; unsigned pages = 1000; };
+std::vector<std::string> cdr_svg_pages(std::string const &pinned_bytes, std::string &error);
+std::vector<std::string> cdr_svg_pages(std::string const &pinned_bytes, std::string &error, CdrConversionLimits limits);
+}
 
 #endif /* INKSCAPE_EXTENSION_SYSTEM_H__ */
 

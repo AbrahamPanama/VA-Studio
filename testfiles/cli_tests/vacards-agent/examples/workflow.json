@@ -1,0 +1,6 @@
+{
+  "catalog_hash": "cca1282df999f5e18a8314f823a3498b05a058b2f0e19a2cac3b3e6cd29e2e36",
+  "description": "Run the Python or PowerShell session example. Bind fresh context; independent P9 outcome validation is pending.",
+  "python": "doc/vacards/cli/examples/session.py",
+  "powershell": "doc/vacards/cli/examples/session.ps1"
+}

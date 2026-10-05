@@ -14,10 +14,12 @@ struct LogicalImageIdentity {
     bool operator==(LogicalImageIdentity const &) const = default;
     explicit operator bool() const { return document && image; }
 };
+struct SessionRecipe;
 struct PreparedBake;
 class OperationIdentity {
     std::shared_ptr<PreparedBake> prepared;
     friend OperationIdentity prepareBaked(LogicalImageIdentity, std::vector<LogicalImageIdentity> const &, AllocationFault *);
+    friend OperationIdentity prepareBaked(LogicalImageIdentity, std::vector<LogicalImageIdentity> const &, SessionRecipe const &, AllocationFault *);
     friend OperationIdentity prepareSessionTransfer(LogicalImageIdentity, LogicalImageIdentity);
     friend bool markBaked(OperationIdentity const &) noexcept;
 public:
@@ -40,6 +42,9 @@ void remember(LogicalImageIdentity, Recipe, bool refine = true);
 // returns an empty receipt: caller must cancel the pending transaction, not publish.
 // All storage is allocated here; preparation changes no session settings/history.
 OperationIdentity prepareBaked(LogicalImageIdentity, std::vector<LogicalImageIdentity> const &, AllocationFault * = nullptr);
+OperationIdentity prepareBaked(LogicalImageIdentity, std::vector<LogicalImageIdentity> const &, SessionRecipe const &, AllocationFault * = nullptr);
+// Request snapshot: bypass is inherited only for the same baked alpha recipe. No writes.
+SessionRecipe requestRecipe(LogicalImageIdentity, SessionRecipe);
 // Unchanged image copy: preserve the recipe AND current baked state. Prepare
 // before done, then settle with markBaked; the same receipt follows Undo/Redo.
 OperationIdentity prepareSessionTransfer(LogicalImageIdentity source, LogicalImageIdentity copy);

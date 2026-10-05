@@ -425,7 +425,7 @@ enum OptimizerPhase {
 pub(crate) struct JaguaSolver;
 
 #[cfg(test)]
-struct SinglePassJaguaSolver;
+pub(crate) struct SinglePassJaguaSolver;
 
 /// Legacy staged NEST-009 wrapper retained for bounded primitive tests. The
 /// public job uses `PortfolioSolver`; this sequential baseline-then-refinement
@@ -3866,6 +3866,7 @@ fn midpoint(left: f32, right: f32) -> f32 {
 
 fn report_queries(control: &RunControl<'_>, iteration: &mut u64) {
     *iteration = iteration.saturating_add(1);
+    control.record_work(*iteration);
     if (*iteration).is_multiple_of(PROGRESS_QUERY_INTERVAL) {
         control.report_heartbeat(*iteration);
     }

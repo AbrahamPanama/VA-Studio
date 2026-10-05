@@ -283,8 +283,8 @@ No lockfile was recorded for the macOS arm64 build. The crate paths embedded in 
 - anyhow 1.0.104: MIT OR Apache-2.0
 - clap_builder 4.6.6: MIT OR Apache-2.0
 - clap_lex 1.1.0: MIT OR Apache-2.0
-- crossbeam-deque 0.8.7: MIT OR Apache-2.0 (not in the Windows lockfile)
-- crossbeam-epoch 0.9.20: MIT OR Apache-2.0 (not in the Windows lockfile)
+- crossbeam-deque 0.8.8: MIT OR Apache-2.0
+- crossbeam-epoch 0.9.21: MIT OR Apache-2.0
 - ctrlc 3.5.2: MIT/Apache-2.0
 - dispatch2 0.3.1: Zlib OR Apache-2.0 OR MIT
 - fern 0.7.1: MIT
@@ -293,9 +293,10 @@ No lockfile was recorded for the macOS arm64 build. The crate paths embedded in 
 - geo-types 0.7.20: MIT OR Apache-2.0
 - itertools 0.15.0: MIT OR Apache-2.0
 - itoa 1.0.18: MIT OR Apache-2.0
-- jagua-rs 0.8.0: MPL-2.0 (not in the Windows lockfile)
+- jagua-rs 0.8.1: MPL-2.0
 - jiff 0.2.35: Unlicense OR MIT
 - jiff-core 0.1.0: Unlicense OR MIT
+- ndarray 0.17.2: MIT OR Apache-2.0
 - numfmt 1.2.0: MIT
 - ordered-float 5.5.0: MIT
 - rand 0.10.2: MIT OR Apache-2.0
@@ -308,6 +309,7 @@ No lockfile was recorded for the macOS arm64 build. The crate paths embedded in 
 - serde_json 1.0.151: MIT OR Apache-2.0
 - slotmap 1.1.1: Zlib
 - strsim 0.11.1: MIT
+- svg 0.18.0: Apache-2.0 OR MIT
 
 ## 4. Runtime libraries linked into the programs
 

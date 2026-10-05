@@ -321,10 +321,10 @@ required curve controls refuse the entire entry instead of substituting lines.
 The API retains its provisional Draft type names pending complete qualification.
 
 The current local read-only private pipeline test confirms 36 of the 37
-entries of a private real-world library convert and pass SVG preflight; one-based entry 19 remains Unsupported
+entries of an owner-created private library convert and pass SVG preflight; one-based entry 19 remains Unsupported
 because two required control ordinates are ambiguous. Six entries retain 13
 tab-bearing shapes and 34 numeric pairs. The source SHA-256 is checked before
-and after. No customer geometry is written to artifacts or published.
+and after. No owner-created sample geometry is written to artifacts or published.
 This is conversion/admission evidence, not visual fidelity or successful canvas
 insertion of those 36 entries. A native LightBurn reference export remains needed
 for entry 19; user-approved partial import still requires visible results.
@@ -357,7 +357,7 @@ No full LIB-001, release, Windows or physical GUI qualification is claimed.
 ### Observed LightBurn library reader
 
 `LbartArchive` implements read-only indexing and decompression for the fixed-record
-variant observed in a real-world LightBurn library. This is **not yet an editable
+variant observed in an owner-created sample LightBurn library. This is **not yet an editable
 LightBurn-to-SVG converter**, a PNG decoder, or support for every `.lbart` version.
 No Qt dependency or arbitrary signature scanning is used.
 
@@ -398,12 +398,12 @@ required before claiming usable `.lbart` import.
 
 The private extraction test is compiled only with `VACARDS_PRIVATE_LBART_TEST`
 and requires explicit `VACARDS_PRIVATE_LBART_SAMPLE`. The ordinary critical test
-target contains only synthetic tests; absence of a private customer file does
-not produce a skipped mandatory test. The original customer file stays outside
-the repository and is never modified or published.
+target contains only synthetic tests; absence of the owner-created sample file
+does not produce a skipped mandatory test. The original file stays outside the
+repository and is never modified, committed, or published.
 
 The archive, manifest and package GTest sources are registered in both the test
 inventory and the critical build-target list. Standalone UBSan evidence is
 recorded in `COMPLETION_WAVE_2026-09-05.md`; full-application, UI, packaging and
-Windows results must be recorded separately. Customer `.lbart` content is not
-part of the committed synthetic test corpus.
+Windows results must be recorded separately. Owner-created sample `.lbart`
+content is not part of the committed synthetic test corpus.

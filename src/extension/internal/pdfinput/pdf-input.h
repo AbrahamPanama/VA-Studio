@@ -167,10 +167,65 @@ private:
 #endif
 };
 
+enum class PdfFontPolicy { RejectMissing, SubstituteMissing };
+
+struct PdfIntakeOptions
+{
+    std::vector<int> pages; // Nonempty, 1-based, imported in this order (including repeats).
+    PdfFontPolicy font_policy = PdfFontPolicy::RejectMissing;
+    PdfImportType import_type = PdfImportType::PDF_IMPORT_INTERNAL;
+    bool page_mode = true;
+    bool embed_images = true;
+    bool convert_colors = true;
+    std::string group_by = "by-xobject";
+    std::string crop_box = "none";
+    double approximation_precision = 2.0;
+};
+
+struct PdfIntakeFontReport
+{
+    std::string name;
+    bool missing = false;
+    std::string substitute; // CSS family used; empty if unchanged or rejected.
+    std::vector<int> pages;
+};
+
+struct PdfIntakeReport
+{
+    int catalog_pages = 0;
+    std::vector<int> imported_pages;
+    std::vector<PdfIntakeFontReport> fonts;
+    PdfIntakeOptions conversion; // Explicit effective conversion settings.
+};
+
+struct PdfIntakeError
+{
+    std::string code; // pages-invalid, fonts-missing, options-invalid, mode-unsupported,
+                      // pdf-invalid, pdf-encrypted, conversion-failed
+    std::string message;
+    std::vector<int> invalid_pages;
+    int poppler_error = 0;
+};
+
+struct PdfIntakeResult
+{
+    PdfIntakeResult();
+    ~PdfIntakeResult();
+    PdfIntakeResult(PdfIntakeResult &&) noexcept;
+    PdfIntakeResult &operator=(PdfIntakeResult &&) noexcept;
+    std::unique_ptr<SPDocument> document;
+    PdfIntakeReport report;
+    std::optional<PdfIntakeError> error;
+};
+
 class PdfInput : public Inkscape::Extension::Implementation::Implementation
 {
 public:
     std::unique_ptr<SPDocument> open(Inkscape::Extension::Input *mod, char const *uri, bool is_importing) override;
+    // Application owner thread, as for open(). Bytes are owned for the entire parse;
+    // logical_name is a display/builder name, never a PDF source path.
+    PdfIntakeResult open_request(std::string pinned_bytes, std::string const &logical_name,
+                                 PdfIntakeOptions const &options);
     static void init();
 
     bool custom_gui() const override { return true; }

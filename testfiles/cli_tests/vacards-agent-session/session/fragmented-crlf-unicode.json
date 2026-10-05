@@ -1,0 +1,38 @@
+{
+  "description": "fragmented-crlf-unicode",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r-é-棋",
+        "command": "session.status",
+        "params": {}
+      },
+      "command": "session.status",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "fragment_bytes": 1,
+      "expect_exact": {
+        "id": "r-é-棋"
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "line_ending": "\r\n"
+}

@@ -103,8 +103,8 @@ RenderOutcome render(RenderRequest const &req, Budget *budget, bool legacy)
     if (req.area.hasZeroArea()) return failure({Status::failed, "Render area is empty"});
 
     double const scale_factor = Util::Quantity::convert(req.dpi, "px", "in");
-    double const w = std::ceil(scale_factor * req.area.width());
-    double const h = std::ceil(scale_factor * req.area.height());
+    double const w = req.exact_size ? (*req.exact_size)[0] : std::ceil(scale_factor * req.area.width());
+    double const h = req.exact_size ? (*req.exact_size)[1] : std::ceil(scale_factor * req.area.height());
     // Cairo cannot create image surfaces beyond 32767 px per side.
     if (!std::isfinite(w) || !std::isfinite(h) || w < 1 || h < 1 || w > 32767 || h > 32767)
         return failure({Status::failed, "Bitmap size is outside the supported range"});
@@ -146,8 +146,8 @@ RenderOutcome render(RenderRequest const &req, Budget *budget, bool legacy)
 
         // Exact-extent publication reverses these per-axis scales. Filling the
         // whole grid avoids squeezing fractional edge padding into the artwork.
-        double const scale_x = req.fit_to_pixel_grid ? width / req.area.width() : scale_factor;
-        double const scale_y = req.fit_to_pixel_grid ? height / req.area.height() : scale_factor;
+        double const scale_x = (req.exact_size || req.fit_to_pixel_grid) ? width / req.area.width() : scale_factor;
+        double const scale_y = (req.exact_size || req.fit_to_pixel_grid) ? height / req.area.height() : scale_factor;
         Geom::Affine const affine = Geom::Translate(-req.area.min()) * Geom::Scale(scale_x, scale_y);
         drawing.root()->setTransform(affine);
         drawing.setExact(); // Maximum quality for blurs.

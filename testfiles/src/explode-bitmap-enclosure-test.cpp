@@ -10,6 +10,7 @@
 #include <iterator>
 #include <random>
 #include <set>
+#include <string>
 #include <vector>
 using namespace Inkscape::Bitmap;
 namespace {
@@ -206,9 +207,13 @@ TEST(ExplodeBitmapEnclosure, T03CapsAndBudgetMinusZeroPlusOne)
           EXPECT_EQ(p.consumed, work.visits() - before); EXPECT_EQ(p.ok(), delta >= 0) << "cap=" << cap;
           if (!p.ok()) {
               char const *messages[] = {"Graph node cap exceeded", "Graph edge cap exceeded",
-                  "Graph queue cap exceeded", "Boundary contact cap exceeded", "Topology byte cap exceeded",
-                  "Reservation exceeds current operation/stage budget"};
-              EXPECT_STREQ(p.outcome.diagnostic, messages[cap]);
+                  "Graph queue cap exceeded", "Boundary contact cap exceeded", "Topology byte cap exceeded"};
+              EXPECT_EQ(p.outcome.status, Status::failed);
+              if (cap == 5) {
+                  EXPECT_EQ(std::string(p.outcome.diagnostic).rfind("Not enough memory", 0), 0u);
+              } else {
+                  EXPECT_STREQ(p.outcome.diagnostic, messages[cap]);
+              }
               EXPECT_EQ(p.value.sourceRuns(), nullptr); EXPECT_EQ(p.value.pieceCount, 0u);
           } }
         EXPECT_EQ(b.reserved(), baseline);

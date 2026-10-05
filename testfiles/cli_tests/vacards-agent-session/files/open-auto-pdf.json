@@ -1,0 +1,60 @@
+{
+  "description": "P9 independent M2 open-auto-pdf",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "open",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/two-pages.pdf",
+          "format": "auto",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false,
+          "pages": [
+            1
+          ]
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/inputs/two-pages.pdf",
+          "sha256": "d71b0295d0a4c4682ec395dd42d04568c9c382a08a55f80745361e585ef3322a",
+          "reported": true,
+          "hash_field": "data.source_version.sha256",
+          "bytes_field": "data.source_version.bytes"
+        }
+      ],
+      "expect_nonempty": [
+        "document_id",
+        "data.source_version.identity",
+        "data.intake"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

@@ -1,0 +1,312 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "bitmap.tone-query:dry-run",
+      "command": "bitmap.tone-query",
+      "cell": "dry-run",
+      "description": "Independent P9 bitmap.tone-query:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.tone-query",
+            "params": {
+              "ids": [
+                "image1"
+              ],
+              "mode": "compatible-members"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.histogram:dry-run",
+      "command": "bitmap.histogram",
+      "cell": "dry-run",
+      "description": "Independent P9 bitmap.histogram:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.histogram",
+            "params": {
+              "ids": [
+                "image1"
+              ],
+              "channel": "luminance",
+              "bins": 256,
+              "remap": "none"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.tone-set:dry-run",
+      "command": "bitmap.tone-set",
+      "cell": "dry-run",
+      "description": "Independent P9 bitmap.tone-set:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.tone-set",
+            "params": {
+              "ids": [
+                "image1"
+              ],
+              "patch": {
+                "brightness": 10
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.copy:dry-run",
+      "command": "bitmap.copy",
+      "cell": "dry-run",
+      "description": "Independent P9 bitmap.copy:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.copy",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "size": {
+                "width": 10,
+                "height": 10
+              },
+              "bbox": "geometric",
+              "background": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "replace": false
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    }
+  ]
+}

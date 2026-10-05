@@ -1,0 +1,57 @@
+{
+  "description": "P9 independent M2 one-shot-export-invalid",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "shot-invalid",
+        "command": "file.export",
+        "params": {
+          "path": "{WORK}/output.png",
+          "format": "png",
+          "drawing": true,
+          "dpi": 96,
+          "background": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "text-policy": "preserve",
+          "overwrite": false,
+          "profile": {
+            "id": "srgb"
+          },
+          "unknown-key": true
+        },
+        "if_revision": 0,
+        "document": "d1"
+      },
+      "command": "file.export",
+      "cells": [
+        "invalid"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_error": "unknown-key",
+      "expect_accepted": false
+    }
+  ],
+  "expect_exit": 3,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}/inputs",
+    "--grant-write",
+    "{WORK}",
+    "--document",
+    "{WORK}/inputs/sheet.svg"
+  ],
+  "transport": "one-shot"
+}

@@ -17,6 +17,7 @@
 
 #include <cstring>
 #include <map>
+#include <optional>
 #include <glibmm/i18n.h>
 
 #include "attributes.h"
@@ -95,13 +96,33 @@ void SPGroup::child_added(Inkscape::XML::Node* child, Inkscape::XML::Node* ref) 
         auto item = cast<SPItem>(get_child_by_repr(child));
         if ( item ) {
             /* TODO: this should be moved into SPItem somehow */
-            unsigned position = item->pos_in_parent();
-
+            // Place the new drawing item directly after the drawing item of the previous SPItem sibling. That
+            // sibling is normally adjacent, so inserting many children in the middle of a group (Ungroup) no longer
+            // pays an O(n) pos_in_parent() count plus an O(n) setZOrder() walk per child. When the previous sibling
+            // has no drawing item in a view, keep the original numeric placement for that view.
+            SPItem *previous = nullptr;
+            for (auto it = children.iterator_to(*item); it != children.begin();) {
+                --it;
+                if (auto candidate = cast<SPItem>(&*it)) {
+                    previous = candidate;
+                    break;
+                }
+            }
+            std::optional<unsigned> position;
             for (auto &v : views) {
                 auto ac = item->invoke_show (v.drawingitem->drawing(), v.key, v.flags);
-                if (ac) {
+                if (!ac) {
+                    continue;
+                }
+                auto const after = previous ? previous->get_arenaitem(v.key) : nullptr;
+                if (!previous || (after && after->parent() == v.drawingitem.get())) {
+                    v.drawingitem->insertChildAfter(ac, after);
+                } else {
+                    if (!position) {
+                        position = item->pos_in_parent();
+                    }
                     v.drawingitem->prependChild(ac);
-                    ac->setZOrder(position);
+                    ac->setZOrder(*position);
                 }
             }
         }
@@ -540,6 +561,7 @@ sp_item_group_ungroup (SPGroup *group, std::vector<SPItem*> &children)
 {
     g_return_if_fail (group != nullptr);
 
+    auto const segment_begin = children.size();
     SPDocument *doc = group->document;
     SPRoot *root = doc->getRoot();
     SPObject *defs = root->defs;
@@ -740,10 +762,10 @@ sp_item_group_ungroup (SPGroup *group, std::vector<SPItem*> &children)
             if (lpeitem) {
                 lpeitems.push_back(lpeitem);
                 sp_lpe_item_enable_path_effects(lpeitem, false);
-                children.insert(children.begin(), shown);
+                children.push_back(shown);
             } else {
                 item->doWriteTransform(item->transform, nullptr, false);
-                children.insert(children.begin(), shown);
+                children.push_back(shown);
                 item->requestModified(SP_OBJECT_MODIFIED_FLAG);
             }
         } else {
@@ -802,6 +824,12 @@ sp_item_group_ungroup (SPGroup *group, std::vector<SPItem*> &children)
         }
         clip->deleteObject(true, false);
     }
+    // Preserve the historical reverse emission order, including callers that
+    // already supplied results. Native Ungroup collects independent segments.
+    auto const segment = children.begin() + segment_begin;
+    std::reverse(segment, children.end());
+    std::rotate(children.begin(), segment, children.end());
+
     prefs->setBool("/options/maskobject/topmost", topmost);
     prefs->setInt("/options/maskobject/grouping", grouping);
     prefs->setBool("/options/onungroup", false);

@@ -1,0 +1,42 @@
+{
+  "description": "P9 independent M2 open-hostile-script-svg",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "hostile",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/script.svg",
+          "format": "auto",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "refusal",
+        "boundary"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_error": "resource-denied"
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

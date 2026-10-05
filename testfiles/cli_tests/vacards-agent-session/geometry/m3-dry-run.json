@@ -1,0 +1,727 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "geometry.move:dry-run",
+      "command": "geometry.move",
+      "cell": "dry-run",
+      "description": "Independent P9 geometry.move:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.move",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "dx": {
+                "value": 2,
+                "unit": "px"
+              },
+              "dy": {
+                "value": 3,
+                "unit": "px"
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.resize:dry-run",
+      "command": "geometry.resize",
+      "cell": "dry-run",
+      "description": "Independent P9 geometry.resize:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.resize",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "width": {
+                "value": 20,
+                "unit": "px"
+              },
+              "height": {
+                "value": 30,
+                "unit": "px"
+              },
+              "bbox": "geometric",
+              "anchor": "nw"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.rotate:dry-run",
+      "command": "geometry.rotate",
+      "cell": "dry-run",
+      "description": "Independent P9 geometry.rotate:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.rotate",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "angle": 90,
+              "pivot": {
+                "x": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "y": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.skew:dry-run",
+      "command": "geometry.skew",
+      "cell": "dry-run",
+      "description": "Independent P9 geometry.skew:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.skew",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "axis": "x",
+              "angle": 45,
+              "pivot": {
+                "x": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "y": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.flip:dry-run",
+      "command": "geometry.flip",
+      "cell": "dry-run",
+      "description": "Independent P9 geometry.flip:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.flip",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "axis": "horizontal",
+              "pivot": {
+                "x": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "y": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.matrix:dry-run",
+      "command": "geometry.matrix",
+      "cell": "dry-run",
+      "description": "Independent P9 geometry.matrix:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.matrix",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "matrix": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ]
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.boolean:dry-run",
+      "command": "geometry.boolean",
+      "cell": "dry-run",
+      "description": "Independent P9 geometry.boolean:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.boolean",
+            "params": {
+              "ids": [
+                "shape1",
+                "shape2"
+              ],
+              "op": "difference",
+              "empty-result": "reject"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.offset:dry-run",
+      "command": "geometry.offset",
+      "cell": "dry-run",
+      "description": "Independent P9 geometry.offset:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.offset",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "distance": {
+                "value": 2,
+                "unit": "px"
+              },
+              "corner": "miter"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.corners:dry-run",
+      "command": "geometry.corners",
+      "cell": "dry-run",
+      "description": "Independent P9 geometry.corners:dry-run",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.corners",
+            "params": {
+              "ids": [
+                "child1"
+              ],
+              "radius": {
+                "value": 1,
+                "unit": "px"
+              },
+              "scope": "all",
+              "mode": "round"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    }
+  ]
+}

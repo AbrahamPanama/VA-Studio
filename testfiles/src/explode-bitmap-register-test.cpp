@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // EB6-register: exercise the real dialog actions, menu model, factory and session restore.
+// The same entry points prove that spell checking stays hidden (ui/spellcheck-feature.h).
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <csignal>
@@ -11,12 +12,15 @@
 #include <gtkmm/listbox.h>
 #include <gtkmm/notebook.h>
 #include <gtkmm/popovermenu.h>
+#include <gtkmm/textview.h>
 #include <gtkmm/window.h>
 #include "actions/actions-dialogs.h"
 #include "document.h"
 #include "inkscape-application.h"
 #include "inkscape-window.h"
 #include "io/resource.h"
+#include "object/sp-item.h"
+#include "ui/contextmenu.h"
 #include "ui/dialog/dialog-container.h"
 #include "ui/dialog/command-palette.h"
 #include "ui/dialog/dialog-data.h"
@@ -26,6 +30,7 @@
 #include "ui/dialog/inkscape-preferences.h"
 #include "ui/explode-bitmap-feature.h"
 #include "ui/shortcuts.h"
+#include "ui/spellcheck-feature.h"
 
 using namespace Inkscape;
 using namespace Inkscape::UI::Dialog;
@@ -138,12 +143,12 @@ protected:
         if (had) prefs->setString(Bitmap::explodeBitmapPreference, saved);
         else prefs->remove(Bitmap::explodeBitmapPreference);
     }
-    InkscapeWindow *window(bool enabled)
+    InkscapeWindow *window(bool enabled,
+                           std::string_view svg = "<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'/>")
     {
         prefs->setBool(Bitmap::explodeBitmapPreference, enabled);
         auto &app = application();
-        auto doc = app.document_add(SPDocument::createNewDocFromMem(std::string_view{
-            "<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'/>"}));
+        auto doc = app.document_add(SPDocument::createNewDocFromMem(svg));
         desktop = app.createDesktop(doc, false, true);
         drain();
         return desktop->getInkscapeWindow();
@@ -424,5 +429,182 @@ TEST_F(ExplodeBitmapRegister, CombineAndBreakApartShortcutsRemainUnchanged)
     EXPECT_EQ(keys.get_triggers("app.path-combine"), combines);
     EXPECT_TRUE(keys.get_triggers(detailed).empty());
     EXPECT_TRUE(keys.get_triggers("win.dialog-open('ExplodeBitmap')").empty());
+}
+
+// True when a menu item (at any depth) opens `dialog`, in GtkBuilder form (action + target)
+// or as a detailed action name, as the canvas context menu builds it.
+bool opensDialog(GMenuModel *model, std::string const &dialog)
+{
+    auto string = [&](int i, char const *attribute) {
+        std::string result;
+        if (auto value = g_menu_model_get_item_attribute_value(model, i, attribute, G_VARIANT_TYPE_STRING)) {
+            result = g_variant_get_string(value, nullptr);
+            g_variant_unref(value);
+        }
+        return result;
+    };
+    for (int i = 0; model && i < g_menu_model_get_n_items(model); ++i) {
+        auto action = string(i, G_MENU_ATTRIBUTE_ACTION);
+        if ((action == "win.dialog-open" && string(i, G_MENU_ATTRIBUTE_TARGET) == dialog) ||
+            action == "win.dialog-open('" + dialog + "')") return true;
+        for (auto link : {G_MENU_LINK_SECTION, G_MENU_LINK_SUBMENU}) {
+            if (auto child = g_menu_model_get_item_link(model, i, link)) {
+                bool found = opensDialog(child, dialog);
+                g_object_unref(child);
+                if (found) return true;
+            }
+        }
+    }
+    return false;
+}
+
+void menuActions(GMenuModel *model, std::vector<std::string> &actions)
+{
+    for (int i = 0; model && i < g_menu_model_get_n_items(model); ++i) {
+        if (auto value = g_menu_model_get_item_attribute_value(model, i, G_MENU_ATTRIBUTE_ACTION, G_VARIANT_TYPE_STRING)) {
+            actions.emplace_back(g_variant_get_string(value, nullptr));
+            g_variant_unref(value);
+        }
+        for (auto link : {G_MENU_LINK_SECTION, G_MENU_LINK_SUBMENU}) {
+            if (auto child = g_menu_model_get_item_link(model, i, link)) {
+                menuActions(child, actions);
+                g_object_unref(child);
+            }
+        }
+    }
+}
+
+void textViews(Gtk::Widget &root, std::vector<Gtk::TextView *> &views)
+{
+    if (auto view = dynamic_cast<Gtk::TextView *>(&root)) views.push_back(view);
+    for (auto child = root.get_first_child(); child; child = child->get_next_sibling()) textViews(*child, views);
+}
+
+int notebooks(Gtk::Widget &root)
+{
+    int count = dynamic_cast<DialogNotebook *>(&root) ? 1 : 0;
+    for (auto child = root.get_first_child(); child; child = child->get_next_sibling()) count += notebooks(*child);
+    return count;
+}
+
+constexpr auto spellcheck = "Spellcheck";
+class SpellcheckHidden : public ExplodeBitmapRegister {};
+
+TEST_F(SpellcheckHidden, NoRegistryMenuSearchShortcutContextMenuOrFactory)
+{
+    static_assert(!UI::spellcheckUiEnabled);
+    auto win = window(false, "<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'>"
+                             "<text id='t' x='10' y='20'>Spell</text></svg>");
+    auto list = get_dialog_data_list();
+    EXPECT_EQ(std::count_if(list.begin(), list.end(), [](auto const &d) { return d.key == spellcheck; }), 0);
+    EXPECT_EQ(get_dialog_data().count(spellcheck), 0u);
+
+    auto builder = Gtk::Builder::create_from_file(IO::Resource::get_filename(IO::Resource::UIS, "menus.ui"));
+    auto text_menu = builder->get_object<Gio::MenuModel>("text-menu");
+    ASSERT_TRUE(text_menu);
+    EXPECT_TRUE(opensDialog(text_menu->gobj(), "Text"));
+    EXPECT_FALSE(opensDialog(text_menu->gobj(), spellcheck));
+
+    auto &keys = Shortcuts::getInstance();
+    auto entries = keys.list_all_detailed_action_names();
+    EXPECT_EQ(std::count(entries.begin(), entries.end(), "win.dialog-open('Spellcheck')"), 0);
+    EXPECT_TRUE(keys.get_triggers("win.dialog-open('Spellcheck')").empty());
+
+    auto text = cast<SPItem>(desktop->getDocument()->getObjectById("t"));
+    ASSERT_TRUE(text);
+    ContextMenu menu(desktop, text, {text});
+    EXPECT_TRUE(opensDialog(menu.get_menu_model()->gobj(), "Text"));
+    EXPECT_FALSE(opensDialog(menu.get_menu_model()->gobj(), spellcheck));
+
+    auto container = desktop->getContainer();
+    win->lookup_action("dialog-open")->activate(Glib::ustring(spellcheck));
+    container->new_dialog(spellcheck);
+    container->new_dialog(spellcheck, nullptr, false);
+    EXPECT_EQ(container->new_floating_dialog(spellcheck), nullptr);
+    EXPECT_EQ(container->get_dialog(spellcheck), nullptr);
+    EXPECT_EQ(DialogManager::singleton().find_floating_dialog(spellcheck), nullptr);
+}
+
+TEST_F(SpellcheckHidden, SavedDockedTabsRestoreWithoutAnEmptyNotebook)
+{
+    auto win = window(false);
+    auto state = Glib::KeyFile::create();
+    state->load_from_data(
+        "[Windows]\nCount=1\n[Window0]\nColumnCount=1\nFloating=false\n"
+        "[Window0Column0]\nNotebookCount=2\nBeforeCanvas=false\n"
+        "Notebook0Dialogs=Spellcheck;FillStroke;\nNotebook0ActiveTab=1\n"
+        "Notebook1Dialogs=Spellcheck;\nNotebook1ActiveTab=0\n");
+    Gtk::Window host;
+    DialogContainer restored(win);
+    host.set_child(restored);
+    gtk_widget_realize(GTK_WIDGET(host.gobj()));
+    restored.load_container_state(state.get(), false);
+    EXPECT_EQ(restored.get_dialog(spellcheck), nullptr);
+    auto fill = restored.get_dialog("FillStroke");
+    ASSERT_TRUE(fill);
+    auto notebook = DialogNotebook::get_page_notebook(*fill);
+    EXPECT_EQ(notebook->get_nth_page(notebook->get_current_page()), fill);
+    EXPECT_EQ(notebooks(restored), 1); // The Spellcheck-only notebook is not restored empty.
+}
+
+TEST_F(SpellcheckHidden, SavedFloatingWindowIsSkippedAndLaterWindowsRestore)
+{
+    window(false);
+    DialogManager::singleton().remove_dialog_floating_state("FillStroke");
+    auto state = Glib::KeyFile::create();
+    state->load_from_data(
+        "[Windows]\nCount=3\n[Window0]\nColumnCount=0\nFloating=false\n"
+        "[Window1]\nColumnCount=1\nFloating=true\n"
+        "[Window1Column0]\nNotebookCount=1\nBeforeCanvas=false\n"
+        "Notebook0Dialogs=Spellcheck;\nNotebook0ActiveTab=0\n"
+        "[Window2]\nColumnCount=1\nFloating=true\n"
+        "[Window2Column0]\nNotebookCount=1\nBeforeCanvas=false\n"
+        "Notebook0Dialogs=FillStroke;\nNotebook0ActiveTab=0\n");
+    auto before = application().gtk_app()->get_windows().size();
+    desktop->getContainer()->load_container_state(state.get(), true);
+    drain();
+    EXPECT_EQ(DialogManager::singleton().find_floating_dialog(spellcheck), nullptr);
+    auto fill = DialogManager::singleton().find_floating_dialog("FillStroke");
+    ASSERT_TRUE(fill); // Skipping the Spellcheck-only window does not abort the restore.
+    EXPECT_EQ(application().gtk_app()->get_windows().size(), before + 1); // No empty window.
+    if (auto floating = dynamic_cast<DialogWindow *>(fill->get_root())) floating->close();
+    drain();
+    DialogManager::singleton().remove_dialog_floating_state("FillStroke");
+}
+
+TEST_F(SpellcheckHidden, PreferencesHaveNoSpellcheckPageAndASavedOneOpensTools)
+{
+    window(false);
+    prefs->setInt("/dialogs/preferences/page", PREFS_PAGE_SPELLCHECK);
+    InkscapePreferences panel;
+    Gtk::Window host;
+    host.set_child(panel);
+    host.present();
+    drain();
+    EXPECT_EQ(prefs->getInt("/dialogs/preferences/page", -1), PREFS_PAGE_TOOLS);
+    EXPECT_EQ(findWidget<Gtk::CheckButton>(panel, "Ignore words with digits"), nullptr);
+    EXPECT_EQ(findWidget<Gtk::CheckButton>(panel, "Ignore words in ALL CAPITALS"), nullptr);
+}
+
+TEST_F(SpellcheckHidden, FontBrowserTextHasNoSpellingMenu)
+{
+    window(false);
+    auto container = desktop->getContainer();
+    container->new_dialog("FontBrowser");
+    auto browser = container->get_dialog("FontBrowser");
+    ASSERT_TRUE(browser);
+    std::vector<Gtk::TextView *> views;
+    textViews(*browser, views);
+    ASSERT_FALSE(views.empty());
+    // The libspelling adapter adds its "spelling.*" suggestions to the text view's extra menu.
+    for (auto view : views) {
+        std::vector<std::string> actions;
+        if (auto extra = view->get_extra_menu()) menuActions(extra->gobj(), actions);
+        std::string listed;
+        for (auto const &action : actions) listed += action + " ";
+        // GtkSourceView's own "source.change-case" entry is expected.
+        EXPECT_EQ(std::count_if(actions.begin(), actions.end(), [](auto const &a) { return a.starts_with("spelling."); }), 0)
+            << G_OBJECT_TYPE_NAME(view->gobj()) << " extra menu: " << listed;
+    }
 }
 } // namespace

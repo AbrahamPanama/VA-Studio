@@ -1,0 +1,39 @@
+{
+  "description": "P9 independent M2 close-boundary",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "boundary",
+        "command": "file.close",
+        "params": {
+          "discard": "yes"
+        },
+        "if_revision": 0
+      },
+      "command": "file.close",
+      "cells": [
+        "boundary",
+        "invalid"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_error": "wrong-type",
+      "expect_accepted": false
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

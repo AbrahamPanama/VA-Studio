@@ -41,6 +41,7 @@
 #include "sp-root.h"
 #include "sp-symbol.h"
 #include "svg/svg.h"
+#include "transform-policy-scope.h"
 
 /* LPEItem base class */
 
@@ -362,7 +363,8 @@ bool SPLPEItem::optimizeTransforms()
     }
 
     Inkscape::Preferences *prefs = Inkscape::Preferences::get();
-    return !prefs->getBool("/options/preservetransform/value", false);
+    auto const *policy = Inkscape::ScopedTransformPolicy::active();
+    return !(policy ? policy->preserve : prefs->getBool("/options/preservetransform/value", false));
 }
 
 /**

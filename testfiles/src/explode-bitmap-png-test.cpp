@@ -447,11 +447,11 @@ TEST(ExplodeBitmapPng, T06ArithmeticBoundariesQHB)
       ASSERT_TRUE(g.pixels.allocate(under, Stage::prepared, 36, 4).ok()); std::memset(g.pixels.data(), 255, 144);
       EXPECT_FALSE(encode(g, f->part.value, under).ok()); EXPECT_EQ(under.reserved(), 144u); }
 
-    // Combined crop + encoder scratch cap is 128 MiB (crop here is 256 bytes).
+    // Crop and encoder scratch now use the shared OS-backed budget.
     o = {}; o.scratchOverride = 128 * MiB - 8 * 8 * 4;
     EXPECT_TRUE(encode(f->grid, f->part.value, *f->budget, {}, o).ok());
     o.scratchOverride += 1;
-    EXPECT_FALSE(encode(f->grid, f->part.value, *f->budget, {}, o).ok());
+    EXPECT_TRUE(encode(f->grid, f->part.value, *f->budget, {}, o).ok());
     // The computed codec scratch is sufficient and not vacuous: the smallest working scratch is below it.
     auto big = make(300, 4, image(300, 4, 100, 3, true), srgb());
     std::uint64_t computed = encoderScratchBytes(302, srgb().size()), lo = 1, hi = computed;

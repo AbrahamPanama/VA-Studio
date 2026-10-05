@@ -23,7 +23,14 @@
 #include <boost/algorithm/string/join.hpp>
 #endif
 
+#if defined(_WIN32) && defined(VACARDS_CLI_EXECUTABLE)
+#include <shellapi.h> // CommandLineToArgvW
+#include <string>
+#include <vector>
+#endif
+
 #include "inkscape-application.h"
+#include "actions/vacards-cli-entry.h"
 #include "actions/vacards-cli-result.h"
 #include "ui/cache/welcome-drawing-preview.h"
 #include "path-prefix.h"
@@ -161,6 +168,41 @@ static void convert_legacy_options(int &argc, char **&argv)
 
 int main(int argc, char *argv[])
 {
+#ifdef VACARDS_CLI_EXECUTABLE
+#ifdef _WIN32
+    // The Windows CRT's narrow argv uses the ANSI code page. Only this CLI
+    // entry needs UTF-8; leave the GUI and inkscape.com argument paths alone.
+    int wide_argc = 0;
+    auto wide_argv = CommandLineToArgvW(GetCommandLineW(), &wide_argc);
+    if (!wide_argv) {
+        fputs("invalid-launch: Cannot read the Windows command line.\n", stderr);
+        return 2;
+    }
+    struct WideArgs {
+        LPWSTR *args;
+        ~WideArgs() { LocalFree(args); }
+    } wide_args{wide_argv};
+    std::vector<std::string> utf8_args;
+    utf8_args.reserve(wide_argc);
+    for (int i = 0; i < wide_argc; ++i) {
+        auto converted = g_utf16_to_utf8(reinterpret_cast<gunichar2 const *>(wide_argv[i]),
+                                        -1, nullptr, nullptr, nullptr);
+        if (!converted) {
+            fputs("invalid-launch: Cannot convert the Windows command line to UTF-8.\n", stderr);
+            return 2;
+        }
+        utf8_args.emplace_back(converted);
+        g_free(converted);
+    }
+    std::vector<char *> utf8_argv;
+    utf8_argv.reserve(utf8_args.size() + 1);
+    for (auto &arg : utf8_args) utf8_argv.push_back(arg.data());
+    utf8_argv.push_back(nullptr);
+    return Inkscape::VACardsCli::agent_main(wide_argc, utf8_argv.data());
+#else
+    return Inkscape::VACardsCli::agent_main(argc, argv);
+#endif
+#endif
     if (argc > 1 && g_str_equal(argv[1], "--vacards-welcome-preview-helper")) {
         return Inkscape::UI::Cache::run_welcome_preview_helper(argc, const_cast<char const *const *>(argv));
     }

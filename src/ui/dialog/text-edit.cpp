@@ -56,6 +56,7 @@
 #include "util/font-collections.h"
 #include "util/recently-used-fonts.h"
 #include "util/units.h"
+#include "ui/spellcheck-feature.h"
 
 namespace Inkscape::UI::Dialog {
 namespace {
@@ -145,12 +146,14 @@ TextEdit::TextEdit(bool use_browser)
     }, false);
 
 #ifdef WITH_LIBSPELLING
-    // TODO: Use computed xml:lang attribute of relevant element, if present, to specify the language.
-    // onReadSelection() looks like a suitable place.
-    auto adapter = spelling_text_buffer_adapter_create(GTK_SOURCE_BUFFER(text_view->get_buffer()->gobj()), spelling_checker_get_default());
-    text_view->set_extra_menu(get_menu_model(*adapter));
-    text_view->insert_action_group("spelling", as_action_group(*adapter));
-    set_enabled(*adapter, true);
+    if constexpr (UI::spellcheckUiEnabled) {
+        // TODO: Use computed xml:lang attribute of relevant element, if present, to specify the language.
+        // onReadSelection() looks like a suitable place.
+        auto adapter = spelling_text_buffer_adapter_create(GTK_SOURCE_BUFFER(text_view->get_buffer()->gobj()), spelling_checker_get_default());
+        text_view->set_extra_menu(get_menu_model(*adapter));
+        text_view->insert_action_group("spelling", as_action_group(*adapter));
+        set_enabled(*adapter, true);
+    }
 #endif
 
     append(*contents);

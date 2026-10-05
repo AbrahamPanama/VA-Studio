@@ -1,0 +1,35 @@
+{
+  "description": "Typed one-shot session.close",
+  "transport": "one-shot",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "one-shot",
+        "command": "session.close",
+        "params": {
+          "discard": true
+        }
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true
+        },
+        "publication": {
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0
+}

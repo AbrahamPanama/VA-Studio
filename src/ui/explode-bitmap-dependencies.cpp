@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <sigc++/scoped_connection.h>
 #include "desktop.h"
+#include "ui/explode-bitmap-context.h"
 #include "display/drawing-image.h"
 #include "document.h"
 #include "inkgc/gc-core.h"
@@ -36,7 +37,12 @@ bool same(std::optional<std::string> const &expected, char const *value) {
 }
 }
 struct DependencyLease::State final : XML::NodeObserver {
-    SPDesktop *desktop;
+    SPDesktop *desktop = nullptr;
+    DocumentPublicationContext *context = nullptr;
+    Selection *ownerSelection() const { return context ? context->getSelection() : desktop->getSelection(); }
+    std::uintptr_t ownerIdentity() const { return context ? context->identity() : id(desktop); }
+    SPDocument *ownerDocument() const { return context ? context->getDocument() : desktop ? desktop->getDocument() : nullptr; }
+    unsigned ownerKey() const { return context ? context->drawingKey() : desktop->dkey; }
     SPDocument *document;
     XML::Node *root;
     std::uint64_t lease = ++nextLease, generation = 1, captured = 0, epoch = 0;
@@ -78,17 +84,42 @@ struct DependencyLease::State final : XML::NodeObserver {
         observationLimit(measuredLimits(e).observationUnits) {
         destroyed = d.connectDestroy([this](auto) { detach(); desktop = nullptr; });
         replaced = d.connectDocumentReplaced([this](auto, auto) { detach(); });
-        selection = d.getSelection()->items_vector();
-        selected = d.getSelection()->connectChanged([this](auto) {
-            auto next = desktop->getSelection()->items_vector();
+        connectSelection();
+        layer = d.layerManager().connectCurrentLayerChanged([this](auto) { invalidate(); });
+        tool = d.connectEventContextChanged([this](auto, auto tool) { if (!compatibleExplodeBitmapTool(tool)) invalidate(); });
+        if (document) {
+            root = document->getReprRoot();
+            closed = document->connectDestroy([this] { detach(); });
+            GC::anchor(root); root->addSubtreeObserver(*this); attached = true;
+        }
+    }
+    State(DocumentPublicationContext &c, PlatformEvidence const &e) : context(&c),
+        document(c.getDocument()), root(nullptr), observationLimit(measuredLimits(e).observationUnits) {
+        connectSelection();
+        if (auto d = c.desktopView()) {
+            destroyed = d->connectDestroy([this](auto) { detach(); });
+            replaced = d->connectDocumentReplaced([this](auto, auto) { detach(); });
+            layer = d->layerManager().connectCurrentLayerChanged([this](auto) { invalidate(); });
+            tool = d->connectEventContextChanged([this](auto, auto t) { if (!compatibleExplodeBitmapTool(t)) invalidate(); });
+        }
+        if (document) {
+            root = document->getReprRoot();
+            closed = document->connectDestroy([this] { detach(); });
+            GC::anchor(root); root->addSubtreeObserver(*this); attached = true;
+        }
+    }
+    void connectSelection() {
+        selection = ownerSelection()->items_vector();
+        selected = ownerSelection()->connectChanged([this](auto) {
+            auto next = ownerSelection()->items_vector();
             bool changed = next != selection;
             selection = std::move(next);
             if (!epoch) { if (changed) ++generation; return; }
             if (!revision || document->getReprDoc()->contentRevision() != revision) { failed = true; return; }
             if (consumed >= expected.size() || expected[consumed].kind != MutationKind::Selection ||
-                expected[consumed].node != id(desktop)) { failed = true; return; }
+                expected[consumed].node != ownerIdentity()) { failed = true; return; }
             try {
-                auto items = desktop->getSelection()->items_vector();
+                auto items = ownerSelection()->items_vector();
                 auto const &e = expected[consumed];
                 auto const &ids = e.stagedSelection ? *e.stagedSelection : e.selection;
                 if (items.size() != ids.size() || !std::equal(items.begin(), items.end(), ids.begin(),
@@ -101,13 +132,6 @@ struct DependencyLease::State final : XML::NodeObserver {
                 else { ++consumed; ++epochTarget.generation; }
             } catch (...) { failed = true; }
         });
-        layer = d.layerManager().connectCurrentLayerChanged([this](auto) { invalidate(); });
-        tool = d.connectEventContextChanged([this](auto, auto tool) { if (!compatibleExplodeBitmapTool(tool)) invalidate(); });
-        if (document) {
-            root = document->getReprRoot();
-            closed = document->connectDestroy([this] { detach(); });
-            GC::anchor(root); root->addSubtreeObserver(*this); attached = true;
-        }
     }
     ~State() override { detach(); }
     void invalidate() { ++generation; if (epoch) failed = true; }
@@ -198,9 +222,17 @@ DependencyLease::DependencyLease(SPDesktop &d) : DependencyLease(d, macDependenc
 DependencyLease::DependencyLease(SPDesktop &desktop, PlatformEvidence const &e) {
     checkThread();
     for (auto const &[key, value] : states())
-        if (static_cast<State *>(value)->desktop == &desktop)
+        if (static_cast<State *>(value)->ownerIdentity() == id(&desktop))
             throw std::logic_error("A bitmap dependency lease already owns this desktop");
     _state = std::make_unique<State>(desktop, e); states().emplace(_state->lease, _state.get());
+}
+DependencyLease::DependencyLease(DocumentPublicationContext &c) : DependencyLease(c, macDependencyEvidence()) {}
+DependencyLease::DependencyLease(DocumentPublicationContext &c, PlatformEvidence const &e) {
+    checkThread();
+    for (auto const &[key, value] : states())
+        if (static_cast<State *>(value)->ownerIdentity() == c.identity())
+            throw std::logic_error("A bitmap dependency lease already owns this context");
+    _state = std::make_unique<State>(c, e); states().emplace(_state->lease, _state.get());
 }
 DependencyLease::~DependencyLease() { checkThread(); states().erase(_state->lease); }
 void DependencyLease::invalidate() { checkThread(); _state->invalidate(); }
@@ -209,11 +241,11 @@ DependencyToken capture(TargetSnapshot const &target) try {
     if (!main() || target.supportability == Supportability::Refused) return {};
     for (auto const &[key, value] : states()) {
         auto &s = *static_cast<DependencyLease::State *>(value);
-        if (!s.desktop || id(s.desktop) != target.desktop || !s.document || s.epoch ||
+        if (!s.ownerDocument() || s.ownerIdentity() != target.desktop || !s.document || s.epoch ||
             !valid(target, *s.document)) continue;
         // EB2 validation proves all opaque identities live before constructing weak refs.
         s.clearNative(); s.bitmaps.clear(); s.parent.reset(); ++s.captured;
-        s.target = target; s.dkey = s.desktop->dkey;
+        s.target = target; s.dkey = s.ownerKey();
         s.revision = s.document->getReprDoc()->contentRevision();
         if (!s.revision) return {};
         if (!s.observe(s.document->getRoot())) { s.invalidate(); s.clearNative(); return {}; }
@@ -237,9 +269,9 @@ bool valid(DependencyToken const &token, PublicationEpoch epoch) {
     if (!main() || !token) return false;
     auto found = states().find(token.lease); if (found == states().end()) return false;
     auto &s = *static_cast<DependencyLease::State *>(found->second);
-    if (!s.desktop || !s.document || s.desktop->getDocument() != s.document ||
+    if (!s.document || s.ownerDocument() != s.document ||
         s.document->serial() != s.target.documentSerial || s.captured != token.capture ||
-        s.generation != token.generation || s.desktop->dkey != s.dkey || !s.revision ||
+        s.generation != token.generation || s.ownerKey() != s.dkey || !s.revision ||
         s.document->getReprDoc()->contentRevision() != s.revision) return false;
     bool publishing = epoch.value && epoch.lease == token.lease && epoch.value == s.epoch &&
         !s.failed && s.guard && s.guard->validAtomicFor(s.document);
@@ -311,7 +343,7 @@ DependencyPublication::DependencyPublication(DependencyToken token, DocumentUndo
             }
         }
         for (auto const &e : expected) if (e.stagedSelection) {
-            if (e.kind != MutationKind::Selection || e.node != id(s.desktop) || !e.selection.empty() ||
+            if (e.kind != MutationKind::Selection || e.node != s.ownerIdentity() || !e.selection.empty() ||
                 e.stagedSelection->size() > units) {
                 s.staged.clear(); return;
             }

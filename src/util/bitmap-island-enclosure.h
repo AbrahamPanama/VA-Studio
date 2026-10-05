@@ -67,7 +67,7 @@ struct EnclosureOptions {
     // Final reserve also accounts for actual runs, frozen areas and reach rows.
     // If labeling already exhausted that share, refuse without further visits.
     std::uint32_t nodes = 16000001, edges = 64000000, queue = 16000001;
-    std::uint64_t boundaries = 64000000, topologyBytes = 256 * MiB;
+    std::uint64_t boundaries = 64000000, topologyBytes = std::numeric_limits<std::uint64_t>::max();
     std::uint64_t visits = 50000000;
     // Pixel-axis DPI for the following attachment; attach rechecks its metric.
     double speckDpiX = 300, speckDpiY = 300;

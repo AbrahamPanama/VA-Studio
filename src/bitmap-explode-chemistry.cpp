@@ -21,6 +21,7 @@
 #include <utility>
 #include <sigc++/scoped_connection.h>
 #include "desktop.h"
+#include "ui/explode-bitmap-context.h"
 #include "display/cairo-utils.h"
 #include "document.h"
 #include "event-log.h"
@@ -47,6 +48,14 @@ std::uintptr_t identity(void const *p) { return reinterpret_cast<std::uintptr_t>
 std::string xml(XML::Node *n) {
     return sp_repr_write_buf(n, 0, false, Glib::QueryQuark(0u), 0, 0).raw();
 }
+unsigned drawingKey(SPDesktop &d) { return d.dkey; }
+unsigned drawingKey(DocumentPublicationContext &c) { return c.drawingKey(); }
+std::uintptr_t ownerIdentity(SPDesktop &d) { return identity(&d); }
+std::uintptr_t ownerIdentity(DocumentPublicationContext &c) { return c.identity(); }
+bool consumePairedPublicationAdmission(DocumentPublicationContext &, Prepared const &, Ticket) { return false; }
+OperationIdentity bakePrepared(Prepared const &p, std::vector<LogicalImageIdentity> const &results) {
+    return p.requestRecipe ? prepareBaked(p.session.image, results, *p.requestRecipe) : prepareBaked(p.session.image, results);
+}
 struct Anchor {
     XML::Node *node;
     explicit Anchor(XML::Node *n) : node(n) { GC::anchor(node); }
@@ -60,10 +69,29 @@ struct Staged {
     Geom::PathVector curve;
     double strokeWidth = 0;
 };
+void stageSelectionAfter(SPDesktop &, SPImage const &) {}
+void stageSelectionAfter(SPDesktop &, std::vector<Staged> const &) {}
+void stageSelectionAfter(DocumentPublicationContext &c, SPImage const &image) {
+    if (!image.getId()) throw std::runtime_error("Missing selected bitmap ID");
+    c.stageSelectionAfter({image.getId()});
+}
+void stageSelectionAfter(DocumentPublicationContext &c, std::vector<Staged> const &staged) {
+    std::vector<std::string> ids; ids.reserve(staged.size());
+    for (auto const &s : staged) {
+        auto id = s.node->attribute("id");
+        if (!id) throw std::runtime_error("Missing staged selection ID");
+        ids.emplace_back(id);
+    }
+    c.stageSelectionAfter(std::move(ids));
+}
 void checkpoint(Prepared const &p, PublishStage s, unsigned i = 0) {
     if (p.hooks.checkpoint) p.hooks.checkpoint(s, i, p.hooks.data);
 }
 Outcome failed(char const *s) { return {Status::failed, s}; }
+CliBitmapOutcome rolledBackFailure(char const *s) {
+    CliBitmapOutcome outcome(Status::failed, s, CliBitmapReason::PublicationFailed);
+    outcome.rolledBack = true; return outcome;
+}
 std::string number(double value) {
     if (!std::isfinite(value)) throw std::runtime_error("Nonfinite contour coordinate");
     char buffer[64];
@@ -118,6 +146,11 @@ Outcome contourSuccess(bool only, unsigned absent) {
 
 }
 
+std::string serializeContours(FittedContourSet const &f, unsigned begin, unsigned end) {
+    if (begin > end || end > f.ringCount) throw std::out_of_range("Contour ring range");
+    return contourData(f, begin, end);
+}
+
 Result<PreparedAlpha> prepareAlpha(FinalGrid const &grid, Budget &budget, Stop stop, EncodeOptions options) noexcept try {
     Result<PreparedAlpha> result;
     if (std::this_thread::get_id() == mainThread) {
@@ -131,18 +164,19 @@ Result<PreparedAlpha> prepareAlpha(FinalGrid const &grid, Budget &budget, Stop s
     return result;
 } catch (...) { Result<PreparedAlpha> result; result.outcome = failed("Adjustment preparation failed."); return result; }
 
-Outcome publishAlpha(SPDesktop &desktop, PreparedAlpha const &alpha, Ticket ticket) try {
-    auto const &p = alpha.publication;
+template <typename Owner>
+static CliBitmapOutcome publishAlphaNative(Owner &desktop, PreparedAlpha const &alpha, Ticket ticket, Prepared const *request = nullptr) try {
+    auto const &p = request ? *request : alpha.publication;
     if (std::this_thread::get_id() != mainThread || !p.activation || !p.budget || alpha.image.count() != 1)
         return {Status::unavailable, "No prepared adjustment is available."};
     auto confirmation = p.activation->confirm(ticket, p.dependencies);
-    if (!confirmation.ok()) return confirmation;
+    if (!confirmation.ok()) return {confirmation, CliBitmapStage::Publish, CliBitmapReason::StaleCapture};
     auto doc = desktop.getDocument();
-    if (!doc || identity(doc) != p.target.document || identity(&desktop) != p.target.desktop ||
+    if (!doc || identity(doc) != p.target.document || ownerIdentity(desktop) != p.target.desktop ||
         !valid(p.target, *doc) || !valid(p.session) || p.session.target.bitmap != p.target.bitmap ||
         p.target.mode != TargetMode::SingleBitmap || p.target.supportability != Supportability::Supported)
-        return {Status::unavailable, "Bitmap adjustment is stale or unsupported."};
-    auto recipe = query(p.session.image);
+        return {Status::unavailable, "Bitmap adjustment is stale or unsupported.", CliBitmapReason::StaleCapture};
+    auto recipe = p.requestRecipe ? *p.requestRecipe : query(p.session.image);
     if (!recipe.refine && !recipe.faintFloor) return {Status::unchanged, "Refine transparency is off; the bitmap is unchanged."};
     if (recipe.bypassAlpha) return {Status::unchanged, "Adjustment is already baked."};
     auto const &alphaPiece = alpha.image.piece(0);
@@ -150,7 +184,7 @@ Outcome publishAlpha(SPDesktop &desktop, PreparedAlpha const &alpha, Ticket tick
         std::uint64_t(alphaPiece.width) * alphaPiece.height, alpha.image.cropArea, alphaPiece.width, alphaPiece.height}, p.limits);
     if (!latency.ok()) return latency;
     if (!DocumentUndo::interactionIsQuiescent(doc) || !DocumentUndo::fileOperationFreshReady(doc))
-        return {Status::unavailable, "Finish the current document operation before Apply."};
+        return {Status::unavailable, "Finish the current document operation before Apply.", CliBitmapReason::DocumentBusy};
     auto source = cast<SPImage>(reinterpret_cast<SPObject *>(p.target.bitmap));
     if (source && source->pixbuf && (source->pixbuf->width() > int(MaxExplodeSourceAxis) ||
         source->pixbuf->height() > int(MaxExplodeSourceAxis))) return {Status::unavailable, ExplodeSourceSizeMessage};
@@ -178,20 +212,20 @@ Outcome publishAlpha(SPDesktop &desktop, PreparedAlpha const &alpha, Ticket tick
         !postCommitLowerBound(alpha.image.cropArea, png.size, alpha.image.hrefBytes, lower))
         return failed("Adjustment reservation overflow.");
     auto undo = preflightUndo(*doc, {false, 0, payload});
-    if (!undo.admitted) return {Status::unavailable, undo.diagnostic};
+    if (!undo.admitted) return {Status::unavailable, undo.diagnostic, undo.reason == UndoRefusal::settlementUnavailable ? CliBitmapReason::MemoryAdmissionFailed : CliBitmapReason::PublicationFailed};
     auto plan = p.resources;
     if (!plan.add(Term::prepared, stagingBytes, 0, 0) || !plan.add(Term::recovery, recoveryBytes, 0, 0) ||
         !plan.add(Term::cache, cacheBytes, 0, 0) || !plan.add(Term::postCommit, lower, 0, 0) ||
         !plan.add(Term::queued, 0, 0, 0) || !addUndoTerms(plan, undo, 0, 0))
         return failed("Adjustment reservation overflow.");
     auto memory = p.probe ? sampleMemory(*p.probe) : sampleMemory();
-    if (!memory.ok()) return memory.outcome;
+    if (!memory.ok()) return {memory.outcome, CliBitmapStage::Publish, CliBitmapReason::MemoryAdmissionFailed};
     auto admission = admit(plan, memory.value, p.start, {p.budget->limit(), p.budget->reserved()});
-    if (!admission.ok()) return admission.outcome;
-    auto recheck = p.budget->recheck(memory.value); if (!recheck.ok()) return recheck;
+    if (!admission.ok()) return {admission.outcome, CliBitmapStage::Publish, CliBitmapReason::MemoryAdmissionFailed};
+    auto recheck = p.budget->recheck(memory.value); if (!recheck.ok()) return {recheck, CliBitmapStage::Publish, CliBitmapReason::MemoryAdmissionFailed};
     Budget::Token reservation;
     auto reserved = p.budget->acquire(Stage::prepared, admission.value.peak, reservation);
-    if (!reserved.ok()) return reserved;
+    if (!reserved.ok()) return {reserved, CliBitmapStage::Publish, CliBitmapReason::MemoryAdmissionFailed};
     checkpoint(p, PublishStage::Admission); checkpoint(p, PublishStage::Href);
     // Bounded throwing storage, avoiding GLib's aborting base64 allocator.
     std::string href(alpha.image.hrefBytes + 1, '\0');
@@ -209,9 +243,10 @@ Outcome publishAlpha(SPDesktop &desktop, PreparedAlpha const &alpha, Ticket tick
     ExpectedMutation event{MutationKind::Attribute}; event.node = identity(original);
     event.key = g_quark_from_string(key); event.before = original->attribute(key); event.after = href;
     checkpoint(p, PublishStage::Script);
-    if (!valid(p.dependencies) || !valid(p.session)) return failed("Bitmap changed during adjustment preparation.");
+    if (!valid(p.dependencies) || !valid(p.session)) return {Status::unavailable, "Bitmap changed during adjustment preparation.", CliBitmapReason::StaleCapture};
+    stageSelectionAfter(desktop, *source);
     auto guard = DocumentUndo::beginAtomicInteraction(doc);
-    if (!guard) return failed("Atomic adjustment admission refused.");
+    if (!guard) return {Status::unavailable, "Atomic adjustment admission refused.", CliBitmapReason::DocumentBusy};
     auto mark = DocumentUndo::undoStackMark(doc);
     auto history = doc->get_event_log() ? doc->get_event_log()->getCurrEventSerial() : 0;
     auto hold = DocumentUndo::holdPublication(doc);
@@ -223,7 +258,7 @@ Outcome publishAlpha(SPDesktop &desktop, PreparedAlpha const &alpha, Ticket tick
         auto ready = [&] {
             return guard->validAtomicFor(doc) && desktop.getDocument() == doc && doc->getObjectByRepr(original) == source &&
                 original->parent() == parent && original->prev() == previous && xml(original) == expectedXML &&
-                !source->missing && source->pixbuf && source->get_arenaitem(desktop.dkey) &&
+                !source->missing && source->pixbuf && source->get_arenaitem(drawingKey(desktop)) &&
                 source->pixbuf->width() == png.width && source->pixbuf->height() == png.height &&
                 source->href && href == source->href && desktop.getSelection()->singleItem() == source &&
                 sessionJobIdentity(p.session.image, {}).recipeGeneration == p.session.recipeGeneration &&
@@ -236,7 +271,7 @@ Outcome publishAlpha(SPDesktop &desktop, PreparedAlpha const &alpha, Ticket tick
         checkpoint(p, PublishStage::Native);
         checkpoint(p, PublishStage::Selection);
         if (!ready()) throw std::runtime_error("Adjustment dependencies changed");
-        bake = prepareBaked(p.session.image, {p.session.image}); checkpoint(p, PublishStage::Bake);
+        bake = bakePrepared(p, {p.session.image}); checkpoint(p, PublishStage::Bake);
         if (!bake) throw std::bad_alloc();
         checkpoint(p, PublishStage::Settlement);
         settled = guard->commitAtomically(Util::Internal::ContextString("Apply alpha adjustment"), "", [&] {
@@ -259,21 +294,22 @@ Outcome publishAlpha(SPDesktop &desktop, PreparedAlpha const &alpha, Ticket tick
         if (xml(original) != originalXML || doc->getObjectByRepr(original) != source ||
             original->parent() != parent || original->prev() != previous || desktop.getSelection()->singleItem() != source)
             return failed("Adjustment native recovery could not complete (L-EB-3).");
-        return failed("Adjustment failed; the original bitmap was restored.");
+        return rolledBackFailure("Adjustment failed; the original bitmap was restored.");
     }
 } catch (...) { return failed("Adjustment preparation failed before publication."); }
 
-static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticket, bool contourOnly) try {
+template <typename Owner>
+static CliBitmapOutcome publishPieces(Owner &desktop, Prepared const &p, Ticket ticket, bool contourOnly) try {
     if (std::this_thread::get_id() != mainThread)
         return {Status::unavailable, "Bitmap publication is main-thread only."};
     if (!p.activation) return failed("Missing bitmap activation owner.");
     auto confirmation = p.activation->confirm(ticket, p.dependencies); // before any callback
-    if (!confirmation.ok()) return confirmation;
+    if (!confirmation.ok()) return {confirmation, CliBitmapStage::Publish, CliBitmapReason::StaleCapture};
     auto doc = desktop.getDocument();
-    if (!doc || identity(doc) != p.target.document || identity(&desktop) != p.target.desktop ||
+    if (!doc || identity(doc) != p.target.document || ownerIdentity(desktop) != p.target.desktop ||
         !valid(p.target, *doc) || !valid(p.session) || p.session.target.bitmap != p.target.bitmap ||
         p.target.mode != TargetMode::SingleBitmap || p.target.supportability != Supportability::Supported)
-        return {Status::unavailable, "Bitmap preview is stale or unsupported."};
+        return {Status::unavailable, "Bitmap preview is stale or unsupported.", CliBitmapReason::StaleCapture};
     if ((!contourOnly && !p.pieces) || !p.grid || !p.budget || (contourOnly && !p.contours)) return failed("Incomplete prepared bitmap result.");
     std::optional<Colors::Color> contourColor;
     auto count = contourOnly ? 1u : p.pieces->count();
@@ -319,7 +355,7 @@ static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticke
     if (!latency.ok()) return latency;
     auto paired = consumePairedPublicationAdmission(desktop, p, ticket);
     if (!DocumentUndo::interactionIsQuiescent(doc) || (!paired && !DocumentUndo::fileOperationFreshReady(doc)))
-        return {Status::unavailable, "Finish the current document operation before Explode."};
+        return {Status::unavailable, "Finish the current document operation before Explode.", CliBitmapReason::DocumentBusy};
     auto parent = source ? source->parent : nullptr;
     if (!source || !is<SPGroup>(parent) || identity(parent) != p.target.destinationParent ||
         doc->getObjectByRepr(source->getRepr()) != source) return failed("Bitmap binding changed.");
@@ -415,19 +451,19 @@ static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticke
                 return failed("Contour publication size overflow.");
         }
         auto undo = preflightUndo(*doc, {false, 0, payload});
-        if (!undo.admitted) return {Status::unavailable, undo.diagnostic};
+        if (!undo.admitted) return {Status::unavailable, undo.diagnostic, undo.reason == UndoRefusal::settlementUnavailable ? CliBitmapReason::MemoryAdmissionFailed : CliBitmapReason::PublicationFailed};
         auto plan = p.resources;
         if (!plan.add(Term::prepared, stagingBytes, 0, 0) || !plan.add(Term::nodes, nodeBytes, 0, 0) ||
             !plan.add(Term::recovery, recoveryBytes, 0, 0) || !plan.add(Term::cache, cacheBytes, 0, 0) ||
             !plan.add(Term::postCommit, lower, 0, 0) || !plan.add(Term::queued, 0, 0, 0) ||
             !addUndoTerms(plan, undo, 0, 0)) return failed("Bitmap reservation plan overflow.");
         auto memory = p.probe ? sampleMemory(*p.probe) : sampleMemory();
-        if (!memory.ok()) return memory.outcome;
+        if (!memory.ok()) return {memory.outcome, CliBitmapStage::Publish, CliBitmapReason::MemoryAdmissionFailed};
         auto admission = admit(plan, memory.value, p.start, {p.budget->limit(), p.budget->reserved()});
-        if (!admission.ok()) return admission.outcome;
-        auto recheck = p.budget->recheck(memory.value); if (!recheck.ok()) return recheck;
+        if (!admission.ok()) return {admission.outcome, CliBitmapStage::Publish, CliBitmapReason::MemoryAdmissionFailed};
+        auto recheck = p.budget->recheck(memory.value); if (!recheck.ok()) return {recheck, CliBitmapStage::Publish, CliBitmapReason::MemoryAdmissionFailed};
         auto reserved = p.budget->acquire(Stage::prepared, admission.value.peak, reservation);
-        if (!reserved.ok()) return reserved;
+        if (!reserved.ok()) return {reserved, CliBitmapStage::Publish, CliBitmapReason::MemoryAdmissionFailed};
         checkpoint(p, PublishStage::Admission);
         char transform[256]; auto length = serializeGridTransform(p.grid->pixelToParent, transform, sizeof(transform));
         if (!length) return failed("Invalid shared pixel-grid transform.");
@@ -528,7 +564,7 @@ static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticke
         std::vector<ExpectedMutation> script;
         ExpectedMutation remove{MutationKind::Remove}; remove.node = identity(container);
         remove.child = identity(original); remove.previous = identity(predecessor); script.push_back(remove);
-        ExpectedMutation released{MutationKind::Selection}; released.node = identity(&desktop); script.push_back(released);
+        ExpectedMutation released{MutationKind::Selection}; released.node = ownerIdentity(desktop); script.push_back(released);
         // Native source release queues automatic collection in clip/filter/
         // paint order. Consume that cleanup BEFORE native settlement and bake
         // preparation, so the receipt captures the final committed XML revision.
@@ -545,12 +581,13 @@ static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticke
             ExpectedMutation add{MutationKind::Add}; add.node = identity(container); add.child = identity(s.node.get());
             add.previous = identity(previous); script.push_back(add); previous = s.node.get();
         }
-        ExpectedMutation selected{MutationKind::Selection}; selected.node = identity(&desktop);
+        ExpectedMutation selected{MutationKind::Selection}; selected.node = ownerIdentity(desktop);
         selected.stagedSelection.emplace();
         for (auto const &s : staged) selected.stagedSelection->push_back(identity(s.node.get()));
         script.push_back(std::move(selected)); checkpoint(p, PublishStage::Script);
-        if (!valid(p.dependencies) || !valid(p.session)) return failed("Bitmap changed during preparation.");
-        guard = DocumentUndo::beginAtomicInteraction(doc); if (!guard) return failed("Atomic bitmap admission refused.");
+        if (!valid(p.dependencies) || !valid(p.session)) return {Status::unavailable, "Bitmap changed during preparation.", CliBitmapReason::StaleCapture};
+        stageSelectionAfter(desktop, staged);
+        guard = DocumentUndo::beginAtomicInteraction(doc); if (!guard) return {Status::unavailable, "Atomic bitmap admission refused.", CliBitmapReason::DocumentBusy};
         stackMark = DocumentUndo::undoStackMark(doc); // Admission saved the key/timer for rollback.
         publicationHold = DocumentUndo::holdPublication(doc);
         checkpoint(p, PublishStage::Guard);
@@ -579,10 +616,10 @@ static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticke
                     auto image = cast<SPImage>(doc->getObjectByRepr(staged[i].image));
                     if (p.contours) {
                         auto group = cast<SPGroup>(doc->getObjectByRepr(staged[i].node.get()));
-                        if (!group || !group->get_arenaitem(desktop.dkey)) return false;
+                        if (!group || !group->get_arenaitem(drawingKey(desktop))) return false;
                         if (staged[i].path) {
                             auto path = cast<SPPath>(doc->getObjectByRepr(staged[i].path));
-                            if (!path || !path->get_arenaitem(desktop.dkey) || !path->style->fill.isNone() ||
+                            if (!path || !path->get_arenaitem(drawingKey(desktop)) || !path->style->fill.isNone() ||
                                 !path->style->stroke.isColor() || path->style->stroke.getColor() != *contourColor ||
                                 path->style->fill_rule.computed != SP_WIND_RULE_EVENODD ||
                                 !std::isfinite(path->style->stroke_width.computed) ||
@@ -596,7 +633,7 @@ static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticke
                     }
                     if (contourOnly) {
                         auto activeHref = getHrefAttribute(*staged[i].image).second;
-                        if (!image || image->missing || !image->pixbuf || !image->get_arenaitem(desktop.dkey) ||
+                        if (!image || image->missing || !image->pixbuf || !image->get_arenaitem(drawingKey(desktop)) ||
                             !activeHref || !image->href || std::strcmp(image->href, activeHref) ||
                             xml(staged[i].image) != originalXML || image->pixbuf->width() != sourceWidth ||
                             image->pixbuf->height() != sourceHeight || image->transform != sourceTransform ||
@@ -606,7 +643,7 @@ static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticke
                         continue;
                     }
                     auto const &piece = p.pieces->piece(i);
-                    if (!image || image->missing || !image->pixbuf || !image->get_arenaitem(desktop.dkey) ||
+                    if (!image || image->missing || !image->pixbuf || !image->get_arenaitem(drawingKey(desktop)) ||
                         image->pixbuf->width() != piece.width || image->pixbuf->height() != piece.height ||
                         image->x.computed != piece.x || image->y.computed != piece.y ||
                         image->width.computed != piece.width || image->height.computed != piece.height ||
@@ -653,7 +690,7 @@ static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticke
             if (!nativeBindings() || !p.activation->check(p.dependencies, DependencyCheck::Settlement, publication.epoch()).ok())
                 throw std::runtime_error("Piece selection changed");
             for (auto const &s : staged) results.push_back(logicalImageIdentity(*cast<SPImage>(doc->getObjectByRepr(s.image))));
-            bake = contourOnly ? prepareSessionTransfer(p.session.image, results.front()) : prepareBaked(p.session.image, results);
+            bake = contourOnly ? prepareSessionTransfer(p.session.image, results.front()) : bakePrepared(p, results);
             checkpoint(p, PublishStage::Bake);
             if (!bake) throw std::bad_alloc();
             checkpoint(p, PublishStage::Settlement);
@@ -662,7 +699,7 @@ static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticke
                 return nativeBindings() && p.activation->check(p.dependencies, DependencyCheck::Settlement, publication.epoch()).ok();
             });
         }
-        if (!settled) { rollback(); return failed("Explode could not settle; the bitmap was restored."); }
+        if (!settled) { rollback(); return rolledBackFailure("Explode could not settle; the bitmap was restored."); }
         if (!markBaked(bake)) return {Status::changed, "Explode committed; session bake bookkeeping could not settle."};
         if (p.contours) return contourSuccess(contourOnly, noContours);
         return {Status::changed, "Exploded bitmap. Export hints, title and description were not copied to pieces."};
@@ -676,10 +713,52 @@ static Outcome publishPieces(SPDesktop &desktop, Prepared const &p, Ticket ticke
             return {Status::changed, "Explode committed; a post-commit notification failed."};
         }
         try { rollback(); } catch (...) { return failed("Explode failed; native recovery could not complete (L-EB-3)."); }
-        return failed("Explode failed; the original bitmap was restored.");
+        return rolledBackFailure("Explode failed; the original bitmap was restored.");
     }
 } catch (...) { return failed("Explode preparation failed before publication."); }
 
+Outcome publishAlpha(SPDesktop &desktop, PreparedAlpha const &p, Ticket ticket) {
+    return publishAlphaNative(desktop, p, ticket);
+}
+namespace {
+PublicationResult contextAdmission(DocumentPublicationContext &c, Prepared const &p) {
+    if (!c.ownerThread()) return {{Status::unavailable, "Owner thread required."}, PublicationRefusal::wrongThread};
+    if (c.canceled()) return {{Status::canceled, "Publication canceled."}, PublicationRefusal::canceled};
+    if (p.activation != c.activation()) return {{Status::unavailable, "Wrong activation owner."}, PublicationRefusal::wrongActivation};
+    if (!p.requestRecipe) return {{Status::unavailable, "Explicit recipe snapshot required."}, PublicationRefusal::missingRecipe};
+    auto doc = c.getDocument();
+    if (!doc || p.target.desktop != c.identity() || !valid(p.target, *doc))
+        return {{Status::unavailable, "Stale publication target."}, PublicationRefusal::staleTarget};
+    if (!valid(p.dependencies)) return {{Status::unavailable, "Stale publication dependency."}, PublicationRefusal::staleDependency};
+    if (!valid(p.session)) return {{Status::unavailable, "Stale publication session."}, PublicationRefusal::staleSession};
+    return {};
+}
+PublicationResult contextResult(DocumentPublicationContext &c, CliBitmapOutcome outcome) {
+    PublicationResult result(outcome, outcome.ok() ? PublicationRefusal::none : PublicationRefusal::nativePublication);
+    result.failure = outcome.failure;
+    result.rolledBack = outcome.rolledBack;
+    auto ids = c.takeSelectionAfter();
+    if (outcome.status == Status::changed) result.selectionAfter = std::move(ids);
+    return result;
+}
+}
+PublicationResult publishExplode(DocumentPublicationContext &c, Prepared const &p, Ticket ticket) {
+    auto admission = contextAdmission(c, p); if (!admission.ok()) { if (admission.failure) admission.failure->stage = CliBitmapStage::Publish; return admission; }
+    return contextResult(c, publishPieces(c, p, ticket, false));
+}
+PublicationResult publishContourOnly(DocumentPublicationContext &c, PreparedContourOnly const &p, Ticket ticket) {
+    auto admission = contextAdmission(c, p.publication); if (!admission.ok()) { if (admission.failure) admission.failure->stage = CliBitmapStage::Publish; return admission; }
+    return contextResult(c, publishPieces(c, p.publication, ticket, true));
+}
+PublicationResult publishAlpha(DocumentPublicationContext &c, PreparedAlpha const &p, Ticket ticket) {
+    auto admission = contextAdmission(c, p.publication); if (!admission.ok()) { if (admission.failure) admission.failure->stage = CliBitmapStage::Publish; return admission; }
+    return contextResult(c, publishAlphaNative(c, p, ticket));
+}
+PublicationResult publishAlpha(DocumentPublicationContext &c, PreparedAlpha const &alpha, Prepared const &request, Ticket ticket) {
+    auto admission = contextAdmission(c, request);
+    if (!admission.ok()) { if (admission.failure) admission.failure->stage = CliBitmapStage::Publish; return admission; }
+    return contextResult(c, publishAlphaNative(c, alpha, ticket, &request));
+}
 Outcome publishExplode(SPDesktop &desktop, Prepared const &p, Ticket ticket) {
     return publishPieces(desktop, p, ticket, false);
 }

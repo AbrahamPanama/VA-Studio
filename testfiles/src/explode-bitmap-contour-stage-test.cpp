@@ -130,13 +130,14 @@ TEST(ExplodeBitmapContourStage, DisabledMatchesPinnedCommittedOracle) {
     // Admission peak = 8,544,164 pinned + 128 Output + 40 PreparedAlpha
     //                  + 96*96*4 display backing = 8,581,196 bytes.
     // This fixture supplies no Input::display, so live bytes gain metadata only.
-    // Retain the original 256-byte bound on fixed metadata growth.
+    // Fixed metadata now includes owned, allocation-free OOM diagnostics.
+    // Keep its growth below 4 KiB, independent of raster size.
     constexpr std::uint64_t baselineOutputSize=928, baselineBudgetPeak=8544164;
     // Pinned PreparedAlpha was 2320; current ARM64 layout is 2360 bytes.
     constexpr std::uint64_t baselinePreparedAlphaSize=2320;
     auto metadata=sizeof(Output)-baselineOutputSize+sizeof(PreparedAlpha)-baselinePreparedAlphaSize;
     constexpr std::uint64_t displayBytes=96u*96u*4u;
-    ASSERT_LE(metadata,256u);
+    ASSERT_LE(metadata,4096u);
     for (bool nested : {false,true}) for (auto recipe : {ContourRecipe{},ContourRecipe{false,9,7,99}}) {
         Counts c; auto r=execute(input(nested ? donut() : two(),recipe,c),c); auto x=output(r); ASSERT_TRUE(x);
         EXPECT_FALSE(x->analysis); EXPECT_FALSE(x->contours.product); EXPECT_EQ(x->contours.visits,0u);
@@ -212,6 +213,8 @@ TEST(ExplodeBitmapContourStage, TransparencyEditRejectsStaleAnalysisWithoutConto
     ASSERT_TRUE(rejected.result.ok());
     auto f=std::dynamic_pointer_cast<ContourResult const>(rejected.result.value.payload); ASSERT_TRUE(f);
     EXPECT_EQ(f->outcome.refusal,ContourRefusal::staleAnalysis); EXPECT_EQ(f->outcome.status,Status::unavailable);
+    ASSERT_TRUE(f->outcome.failure); EXPECT_EQ(f->outcome.failure->stage,CliBitmapStage::Contour);
+    EXPECT_EQ(f->outcome.failure->reason,CliBitmapReason::StaleCapture);
     EXPECT_FALSE(f->product); EXPECT_EQ(f->visits,0u);
     EXPECT_EQ(next.calls,(std::array<unsigned,6>{}));
     EXPECT_EQ(changed.calls[4],0u); EXPECT_EQ(changed.calls[5],0u);

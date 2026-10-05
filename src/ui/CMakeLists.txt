@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 target_sources(inkscape_base PRIVATE
+    explode-bitmap-context.h
+    explode-bitmap-context.cpp
+    bitmap-tone-member-targets.h
+    bitmap-tone-member-targets.cpp
+
 	builder-utils.cpp
 	bitmap-adjustments-controller.cpp
 	clipboard.cpp
@@ -55,6 +60,7 @@ target_sources(inkscape_base PRIVATE
 	explode-bitmap-feature.h
 	explode-bitmap-panel-preparation.cpp
 	explode-bitmap-panel-preparation.h
+	spellcheck-feature.h
 	stroke-width-command.cpp
 	stroke-width-command.h
 	stroke-width-controller.cpp

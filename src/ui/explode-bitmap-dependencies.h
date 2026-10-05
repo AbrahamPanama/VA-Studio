@@ -28,12 +28,16 @@ struct DependencyToken {
     std::uint64_t lease = 0, generation = 0, capture = 0;
     explicit operator bool() const { return lease && capture; }
 };
+class DocumentPublicationContext;
 struct PlatformEvidence;
 struct PublicationEpoch { std::uint64_t lease = 0, value = 0; };
-// Construct on a LIVE desktop before resolve/capture. One owner per request;
-// destroy on main after closing delivery. Leases neither pin views nor documents.
+// Construct on a live desktop or document context before resolve/capture.
+// One lease per owner; destroy on main after closing delivery. Leases neither
+// pin views nor documents. Context factories retain their lease for their lifetime.
 class DependencyLease {
 public:
+    explicit DependencyLease(DocumentPublicationContext &);
+    DependencyLease(DocumentPublicationContext &, PlatformEvidence const &);
     explicit DependencyLease(SPDesktop &);
     DependencyLease(SPDesktop &, PlatformEvidence const &);
     ~DependencyLease();

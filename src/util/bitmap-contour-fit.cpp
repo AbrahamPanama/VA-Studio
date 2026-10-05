@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include <glib/gi18n.h>
 #include "util/bitmap-contour-fit.h"
 #include <2geom/bezier-utils.h>
 #include <algorithm>
@@ -488,7 +489,7 @@ Result<FittedContourSet> fitContours(ContourSet const &input, FitSettings settin
                         Budget::Token transient;
                         p.outcome=budget.acquire(Stage::topology,std::uint64_t(count)*64,transient);
                         if (!p.outcome.ok() || !p.phase(FitPhase::fitterReservation)) return failed();
-                        if (options.fault && options.fault->fail()) return refuse("Cubic fitter allocation fault");
+                        if (options.fault && options.fault->fail()) { p.outcome = memoryFailure(N_("cubic fitter allocator"), std::uint64_t(count)*64, 0); return failed(); }
                         // Charge the bounded opaque work conservatively before entering 2geom.
                         p.outcome=work.advance(std::uint64_t(count)*32);
                         if (!p.outcome.ok() || !p.flush()) return failed();
@@ -501,7 +502,7 @@ Result<FittedContourSet> fitContours(ContourSet const &input, FitSettings settin
                                                                  Geom::Point(0,0),Geom::Point(0,0),eps*eps,1);
                                 if (fitted == 1) for (unsigned k=0; k<4; ++k) c.q[k]={output[k].x(),output[k].y()};
                             }
-                        } catch (std::bad_alloc const &) { return refuse("Cubic fitter allocation failed"); }
+                        } catch (std::bad_alloc const &) { p.outcome = memoryFailure(N_("cubic fitter allocator"), std::uint64_t(count)*64, 0); return failed(); }
                         catch (...) { return refuse("Cubic fitter exception"); }
                         transient.release();
                         if (!p.flush()) return failed();

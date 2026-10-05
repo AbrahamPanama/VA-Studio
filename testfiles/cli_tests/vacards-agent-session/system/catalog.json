@@ -1,0 +1,65 @@
+{
+  "description": "catalog",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "system.catalog",
+        "params": {}
+      },
+      "command": "system.catalog",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "schema": "va-studio.cli-catalog/1"
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "success",
+        "no-op"
+      ],
+      "expect_absent": [
+        "error"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "system.catalog",
+        "params": {}
+      },
+      "command": "system.catalog",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "schema": "va-studio.cli-catalog/1"
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ]
+}

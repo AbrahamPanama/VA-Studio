@@ -1,0 +1,300 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "bitmap.tone-query:invalid",
+      "command": "bitmap.tone-query",
+      "cell": "invalid",
+      "description": "Independent P9 bitmap.tone-query:invalid",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.tone-query",
+            "params": {
+              "ids": [
+                "image1"
+              ],
+              "mode": "compatible-members",
+              "p9-unknown-property": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.histogram:invalid",
+      "command": "bitmap.histogram",
+      "cell": "invalid",
+      "description": "Independent P9 bitmap.histogram:invalid",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.histogram",
+            "params": {
+              "ids": [
+                "image1"
+              ],
+              "channel": "luminance",
+              "bins": 256,
+              "remap": "none",
+              "p9-unknown-property": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.tone-set:invalid",
+      "command": "bitmap.tone-set",
+      "cell": "invalid",
+      "description": "Independent P9 bitmap.tone-set:invalid",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.tone-set",
+            "params": {
+              "ids": [
+                "image1"
+              ],
+              "patch": {
+                "brightness": 10
+              },
+              "p9-unknown-property": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.copy:invalid",
+      "command": "bitmap.copy",
+      "cell": "invalid",
+      "description": "Independent P9 bitmap.copy:invalid",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.copy",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "size": {
+                "width": 10,
+                "height": 10
+              },
+              "bbox": "geometric",
+              "background": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "replace": false,
+              "p9-unknown-property": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    }
+  ]
+}

@@ -92,6 +92,16 @@ target_sources(inkscape_base PRIVATE
   vacards-cli-dispatch.cpp
   vacards-cli-transaction.h
   vacards-cli-transaction.cpp
+  vacards-cli-session.h
+  vacards-cli-session.cpp
+  vacards-cli-transport.h
+  vacards-cli-transport.cpp
+  vacards-cli-mcp.h
+  vacards-cli-mcp.cpp
+  vacards-cli-entry.h
+  vacards-cli-entry.cpp
+  actions-vacards-query.h
+  actions-vacards-query.cpp
   actions-vacards-cli.h
   actions-vacards-cli.cpp
   actions-vacards-geometry.h
@@ -106,4 +116,14 @@ target_sources(inkscape_base PRIVATE
   actions-vacards-file.cpp
   actions-vacards-nest.h
   actions-vacards-nest.cpp
+  vacards-cli-production.h
+  vacards-cli-production.cpp
+  vacards-cli-tokens.h
+  vacards-cli-tokens.cpp
+  vacards-cli-edit-services.h
+  vacards-cli-edit-services.cpp
+  actions-vacards-selection.h
+  actions-vacards-selection.cpp
+  actions-vacards-clip.h
+  actions-vacards-clip.cpp
 )

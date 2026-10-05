@@ -1,0 +1,176 @@
+{
+  "description": "Inspection has no selection: lower/upper limit boundaries both return zero rows and no continuation.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.selection",
+        "params": {
+          "limit": 1
+        }
+      },
+      "command": "query.selection",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [],
+          "total": 0,
+          "limit": 1,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success",
+        "invalid"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.selection",
+        "params": {
+          "limit": 1000
+        }
+      },
+      "command": "query.selection",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [],
+          "total": 0,
+          "limit": 1000,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success",
+        "no-op"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r3",
+        "command": "query.selection",
+        "params": {
+          "cursor": "foreign:0:garbage:1"
+        }
+      },
+      "command": "query.selection",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "refusal"
+      ],
+      "expect_error": "stale-cursor",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/inspection.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

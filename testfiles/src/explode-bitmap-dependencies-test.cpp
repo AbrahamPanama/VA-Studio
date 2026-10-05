@@ -739,8 +739,8 @@ TEST_F(FixedPublish, FullDomainAdmittedWithRecoveryHeadroom) {
 }
 TEST_F(FixedPublish, FullDomainRefusedWithGenuinelyLowMemory) {
     direct(150,5000,5000,5000,5000); ASSERT_FALSE(HasFatalFailure());
-    room.available=300*MiB; // J=44 MiB; cannot hold even the retained 100 MB grid.
-    outcome(false,150,false,"Plan exceeds RAM limit: recovery",Status::failed);
+    room.available=300*MiB; // J=44 MiB; cannot hold even the retained 100,000,000-byte grid.
+    outcome(false,150,false,"Not enough memory: OS commit/footprint headroom - recovery; estimated need 193.11 MiB, available 44.00 MiB.",Status::failed);
 }
 TEST_F(FixedPublish, OversizedOriginalWithSmallerFinalGridRefused) {
     for(auto size : {ExplodeSourceSize{5001,1}, ExplodeSourceSize{1,5001}}) {

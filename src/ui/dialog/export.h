@@ -38,6 +38,9 @@ class Output;
 
 namespace UI::Dialog {
 
+class ExtensionList;
+void attach_tiff_profile_picker(ExtensionList &list);
+
 class SingleExport;
 class BatchExport;
 

@@ -5,6 +5,8 @@
 #include <cstring>
 #include <limits>
 #include <utility>
+#include <cstdio>
+#include <glib/gi18n.h>
 
 namespace Inkscape::Bitmap {
 namespace {
@@ -15,13 +17,19 @@ std::uint64_t stageLimit(Stage s) noexcept
 {
     switch (s) {
         case Stage::header: return MiB;
-        case Stage::topology: return 256 * MiB;
-        case Stage::encoder: return 128 * MiB;
-        case Stage::href: return 512 * MiB;
-        case Stage::preview: return 4 * MiB;
         default: return std::numeric_limits<std::uint64_t>::max();
     }
 }
+}
+Outcome memoryFailure(char const *limit, std::uint64_t need, std::uint64_t available) noexcept
+{
+    Outcome out{Status::failed, ""};
+    std::snprintf(out.message.data(), out.message.size(),
+                  _("Not enough memory: %s; estimated need %.2f MiB, available %.2f MiB."),
+                  gettext(limit), double(need) / MiB, double(available) / MiB);
+    out.diagnostic = out.message.data();
+    out.insufficientMemory = true;
+    return out;
 }
 bool checkedMul(std::uint64_t a, std::uint64_t b, std::uint64_t &out) noexcept
 {
@@ -73,14 +81,10 @@ Outcome RgbaView::validate() const noexcept
 }
 Outcome admissionLimit(Memory const &m, std::uint64_t &out) noexcept
 {
-    if (!m.measured || !m.physical || !m.available || !m.baseline) return {Status::unavailable, "RAM measurements unavailable"};
+    if (!m.measured || !m.physical || !m.baseline) return {Status::unavailable, "RAM measurements unavailable"};
     constexpr auto recovery = 256 * MiB;
-    constexpr auto process = 3072 * MiB;
-    if (m.baseline >= process - recovery || m.available <= recovery) return failed("No recovery headroom");
-    auto cap = std::min({1536 * MiB, m.physical / 4,
-                         process - recovery - m.baseline, m.available - recovery});
-    if (!cap) return failed("No operation headroom");
-    out = cap;
+    if (m.available <= recovery) return memoryFailure(N_("OS headroom / recovery reserve"), recovery, m.available);
+    out = m.available - recovery;
     return changed();
 }
 void Budget::lock() const noexcept
@@ -117,15 +121,10 @@ Outcome Budget::replace(Token &token, Stage stage, std::uint64_t bytes) noexcept
         return failed("Reservation arithmetic overflow");
     // Retirement/shrink/transfer never needs renewed admission. Transfers move existing
     // storage; callers must acquire a fresh token before allocating in a capped stage.
-    if (growth && (!_admitted || total > _limit || subtotal > stageLimit(stage)))
-        return failed("Reservation exceeds current operation/stage budget");
-    if (growth && (stage == Stage::crop || stage == Stage::encoder)) {
-        std::uint64_t combined = _stages[static_cast<unsigned>(Stage::crop)] +
-                                 _stages[static_cast<unsigned>(Stage::encoder)];
-        if (token._owner && (token._stage == Stage::crop || token._stage == Stage::encoder)) combined -= old;
-        if (!checkedAdd(combined, bytes, combined) || combined > 128 * MiB)
-            return failed("Combined crop/encoder scratch cap exceeded");
-    }
+    if (growth && (!_admitted || total > _limit))
+        return memoryFailure(N_("OS headroom / operation budget"), total, _admitted ? _limit : 0);
+    if (growth && subtotal > stageLimit(stage))
+        return memoryFailure(N_("image header size"), subtotal, stageLimit(stage));
     if (token._owner) _stages[static_cast<unsigned>(token._stage)] -= old;
     _stages[index] = subtotal;
     _total = total;
@@ -145,13 +144,24 @@ void Budget::release(Token &token) noexcept
 Outcome Budget::recheck(Memory const &memory) noexcept
 {
     Guard guard(*this);
+    return recheckLocked(memory);
+}
+Outcome Budget::recheckMeasured(Memory memory) noexcept
+{
+    Guard guard(*this);
+    memory.resident = _start.measured && memory.baseline > _start.baseline
+        ? std::min(_total, memory.baseline - _start.baseline) : 0;
+    return recheckLocked(memory);
+}
+Outcome Budget::recheckLocked(Memory const &memory) noexcept
+{
     Memory effective = memory;
     std::uint64_t cap = 0, recovered;
     Outcome outcome;
-    if (!memory.measured || !memory.baseline || !memory.available)
+    if (!memory.measured || !memory.baseline)
         outcome = {Status::unavailable, "RAM measurements unavailable"};
     else if (memory.resident > _total || memory.resident >= memory.baseline ||
-             !checkedAdd(memory.available, memory.resident, recovered) || recovered > memory.physical)
+             !checkedAdd(memory.available, memory.resident, recovered))
         outcome = failed("Invalid resident RAM measurement");
     else {
         effective.available = _start.measured ? std::min(_start.available, recovered) : recovered;
@@ -165,7 +175,7 @@ Outcome Budget::recheck(Memory const &memory) noexcept
     }
     _admitted = outcome.ok() && _total <= _limit;
     if (!outcome.ok()) return outcome; // retain last known cap for refusal diagnostics
-    return _admitted ? changed() : failed("Live reservations exceed refreshed headroom");
+    return _admitted ? changed() : memoryFailure(N_("OS headroom / operation budget"), _total, _limit);
 }
 std::uint64_t Budget::reserved() const noexcept { Guard guard(*this); return _total; }
 std::uint64_t Budget::limit() const noexcept { Guard guard(*this); return _limit; }
@@ -254,7 +264,7 @@ Outcome PlainBuffer::allocate(Budget &budget, Stage stage, std::uint64_t count,
     auto result = budget.acquire(stage, bytes, token);
     if (!result.ok()) return result;
     auto data = fault && fault->fail() ? nullptr : std::malloc(size);
-    if (!data) return failed("Plain buffer allocation failed");
+    if (!data) return memoryFailure(N_("allocator"), bytes, budget.limit() > budget.reserved() ? budget.limit() - budget.reserved() : 0);
     if (stop.requested()) {
         std::free(data);
         return {Status::canceled, "Stop requested"};

@@ -601,6 +601,25 @@ FontList getPdfFonts(std::shared_ptr<PDFDoc> pdf_doc)
     return fontsList;
 }
 
+FontList getPdfFonts(std::shared_ptr<PDFDoc> pdf_doc, std::vector<int> const &pages)
+{
+    auto fontsList = std::make_shared<std::map<FontPtr, FontData>>();
+    auto catalog = pdf_doc->getCatalog();
+    FontScanCache cache;
+    for (int page_num : pages) {
+        if (page_num < 1 || page_num > catalog->getNumPages()) continue;
+        auto page = catalog->getPage(page_num);
+        if (!page) continue;
+        if (auto resources = page->getResourceDict()) {
+            // Prevent cycles within this page, but visit shared Forms/Patterns
+            // again on later pages so their cached fonts acquire that usage.
+            std::set<int> visitedObjects;
+            _getFontsRecursive(pdf_doc, resources, fontsList, visitedObjects, page_num, cache);
+        }
+    }
+    return fontsList;
+}
+
 /**
  * Convert arbitrary string (e.g. group name in PDF) to a valid SVG ID.
  *

@@ -18,6 +18,7 @@
 #include "object/sp-pattern.h"
 #include "object/sp-use.h"
 #include "selection.h"
+#include "ui/explode-bitmap-context.h"
 #include "style.h"
 #include "ui/tools/text-tool.h"
 #include "util/bitmap-input-header.h"
@@ -41,13 +42,15 @@ std::string_view attr(Node const *n, char const *key)
 // Conservative subtree invalidation covers CSS, defs, href bytes, ancestors and slots.
 // Selection/tool signals invalidate even a change followed by a revert. No save revision.
 struct Tracker : XML::NodeObserver {
-    SPDesktop &desktop;
+    SPDesktop *desktop;
+    Selection &selected;
+    DocumentPublicationContext *context = nullptr;
     SPDocument &document;
     Node *root;
     std::uint64_t incarnation, generation = 1;
     std::vector<SPItem *> selection;
     void selectionChanged() {
-        auto next = desktop.getSelection()->items_vector();
+        auto next = selected.items_vector();
         if (next != selection) { selection = std::move(next); bump(); }
     }
     std::vector<sigc::connection> connections, nativeConnections;
@@ -61,8 +64,14 @@ struct Tracker : XML::NodeObserver {
         };
         observe(observe, document.getRoot());
     }
-    Tracker(SPDesktop &d, std::uint64_t epoch) : desktop(d), document(*d.getDocument()),
+    Tracker(SPDesktop &d, std::uint64_t epoch) : desktop(&d), selected(*d.getSelection()), document(*d.getDocument()),
         root(document.getReprRoot()), incarnation(epoch) { GC::anchor(root); root->addSubtreeObserver(*this); }
+    Tracker(DocumentPublicationContext &c) : desktop(nullptr), selected(*c.getSelection()), context(&c),
+        document(*c.getDocument()), root(document.getReprRoot()), incarnation(c.incarnation()) {
+        generation = c.targetGeneration(); GC::anchor(root); root->addSubtreeObserver(*this);
+        selection = selected.items_vector();
+        connections.push_back(selected.connectChanged([this](Selection *) { selectionChanged(); }));
+    }
     ~Tracker() override {
         for (auto &c : nativeConnections) c.disconnect();
         for (auto &c : connections) c.disconnect();
@@ -223,7 +232,9 @@ void intake(TargetSnapshot &s, SPImage *image) {
     }
     if (!uri.ok()) { refuse(s, image, Refusal::InvalidIntake, uri.outcome.diagnostic); return; }
     // Header parsing is bounded, before controls; pixel decoding belongs to EB2-decode.
-    Budget budget(Budget::FixedLimitForTest{}, HeaderLimits{}.scratchBytes);
+    // The ledger ceiling matches the existing encoded bound; only the actual header
+    // prefix is reserved, including permitted profile/text metadata beyond 1 MiB.
+    Budget budget(Budget::FixedLimitForTest{}, HeaderLimits{}.maxEncodedBytes);
     auto header = inspectHref(href, HeaderLimits{}, budget);
     if (!header.ok()) refuse(s, image, Refusal::InvalidIntake, header.outcome.diagnostic);
     else if (!BitmapAdjustments::usable_bitmap(image)) refuse(s, image, Refusal::MissingSource, "Bitmap pixels are unavailable.");
@@ -244,6 +255,15 @@ void context(TargetSnapshot &s, SPObject *o, bool ancestor, std::unordered_set<S
     c.clipResource = identity(item->getClipObject()); c.maskResource = identity(item->getMaskObject());
     c.filterResource = identity(item->style->getFilter());
     c.opacity = item->style->opacity.as_double();
+    if (s.intent == Intent::BitmapCopy) {
+        // Non-destructive Copy uses the native composite renderer; no source or
+        // resource is removed. Protection and decoded-source admission still apply.
+        if (c.hidden) refuse(s, o, Refusal::Hidden, "Hidden targets and ancestors are protected.");
+        if (c.locked) refuse(s, o, Refusal::Locked, "Locked targets and ancestors are protected.");
+        if (auto image = cast<SPImage>(item); image && !BitmapAdjustments::usable_bitmap(image))
+            refuse(s, o, Refusal::MissingSource, "Bitmap pixels are unavailable.");
+        s.contexts.push_back(std::move(c)); return;
+    }
     // Pattern/marker rendering has a separate resource graph (possibly linked raster,
     // clones or recursive dependencies). Do not admit an unqualified graph as vectors.
     if (is<SPPattern>(item->style->getFillPaintServer()) || is<SPPattern>(item->style->getStrokePaintServer()))
@@ -347,23 +367,23 @@ void references(TargetSnapshot &s, SPDocument &doc, std::unordered_set<SPObject 
     });
 }
 } // namespace
-Result<TargetSnapshot> resolve(SPDesktop &desktop, Intent intent) try {
+// Both entry points share all target policy and native observation.
+static Result<TargetSnapshot> resolveOwner(SPDocument *doc, Selection &selection,
+    Tracker &t, std::uintptr_t owner, Intent intent, bool toolCompatible) try {
     Result<TargetSnapshot> result;
     auto &s = result.value; s.intent = intent;
     if (std::this_thread::get_id() != mainThread) {
         refuse(s, nullptr, Refusal::MainThreadOnly, "Resolve Explode Bitmap on the main thread.");
         result.outcome = {Status::unavailable, s.refusals.front().diagnostic}; return result;
     }
-    auto doc = desktop.getDocument();
     if (!doc) { result.outcome = {Status::unavailable, "No document."}; return result; }
-    auto &t = tracker(desktop);
     t.observeNative();
-    s.document = identity(doc); s.documentSerial = doc->serial(); s.desktop = identity(&desktop);
+    s.document = identity(doc); s.documentSerial = doc->serial(); s.desktop = owner;
     s.incarnation = t.incarnation; s.generation = t.generation;
-    auto selected = desktop.getSelection()->items_vector();
+    auto selected = selection.items_vector();
     for (auto item : selected) s.selection.push_back(identity(item));
     if (selected.empty()) refuse(s, nullptr, Refusal::EmptySelection, "Select one bitmap or a conversion unit.");
-    if (!compatibleExplodeBitmapTool(desktop.getTool()))
+    if (!toolCompatible)
         refuse(s, nullptr, Refusal::TextTool, "Leave text editing before using Explode Bitmap.");
     // Do not suppress clone instances through source coverage: conversion renders appearance.
     auto normalized = Util::resolve_composite_targets<SPItem>(selected,
@@ -408,7 +428,7 @@ Result<TargetSnapshot> resolve(SPDesktop &desktop, Intent intent) try {
                 refuse(s, root, Refusal::ResourceTarget, "Resource/clip/mask members are not editable targets.");
         }
     }
-    if (!roots.empty()) {
+    if (!roots.empty() && intent != Intent::BitmapCopy) {
         auto parent = roots.front()->parent;
         s.destinationParent = identity(parent);
         std::unordered_set<SPObject *> span(roots.begin(), roots.end());
@@ -428,7 +448,7 @@ Result<TargetSnapshot> resolve(SPDesktop &desktop, Intent intent) try {
         s.effectiveOpacity *= c.opacity;
         if (c.identity != s.bitmap) s.retainedAncestorOpacity *= c.opacity;
     }
-    references(s, *doc, protectedObjects);
+    if (intent != Intent::BitmapCopy) references(s, *doc, protectedObjects);
     s.supportability = !s.refusals.empty() ? Supportability::Refused : direct ? Supportability::Supported : Supportability::ConversionRequired;
     result.outcome = {s.refusals.empty() ? Status::unchanged : Status::incompatible,
         s.refusals.empty() ? (direct ? "Single embedded bitmap." : "Explicit collective conversion required.") : s.refusals.front().diagnostic};
@@ -436,6 +456,36 @@ Result<TargetSnapshot> resolve(SPDesktop &desktop, Intent intent) try {
 }
 catch (std::bad_alloc const &) { return {{Status::failed, "Target preflight allocation failed."}, {}, 0}; }
 catch (...) { return {{Status::failed, "Target preflight failed."}, {}, 0}; }
+Result<TargetSnapshot> resolve(SPDesktop &desktop, Intent intent) try {
+    if (std::this_thread::get_id() != mainThread) {
+        Result<TargetSnapshot> result; result.value.intent = intent;
+        refuse(result.value, nullptr, Refusal::MainThreadOnly, "Resolve Explode Bitmap on the main thread.");
+        result.outcome = {Status::unavailable, result.value.refusals.front().diagnostic}; return result;
+    }
+    if (!desktop.getDocument()) return {{Status::unavailable, "No document."}, {}};
+    return resolveOwner(desktop.getDocument(), *desktop.getSelection(), tracker(desktop),
+                        identity(&desktop), intent, compatibleExplodeBitmapTool(desktop.getTool()));
+}
+catch (...) { return {{Status::failed, "Target owner observation failed."}, {}}; }
+Result<TargetSnapshot> resolve(DocumentPublicationContext &context, Intent intent) try {
+    if (!context.ownerThread() || !context.getDocument() || context.canceled())
+        return {{Status::unavailable, "No owner-thread document."}, {}};
+    if (auto desktop = context.desktopView()) return resolve(*desktop, intent);
+    auto &entry = trackers()[context.identity()];
+    if (!entry) entry = std::make_unique<Tracker>(context);
+    if (entry->generation != context.targetGeneration())
+        return {{Status::unavailable, "Context target generation has retired."}, {}};
+    return resolveOwner(context.getDocument(), *context.getSelection(), *entry,
+                        context.identity(), intent, true);
+}
+catch (...) { return {{Status::failed, "Target context observation failed."}, {}}; }
+void initializePublicationTarget(DocumentPublicationContext &context) {
+    if (context.ownerThread() && context.getDocument() && !context.desktopView())
+        trackers().try_emplace(context.identity(), std::make_unique<Tracker>(context));
+}
+void retirePublicationTarget(DocumentPublicationContext &context) {
+    if (!context.desktopView()) trackers().erase(context.identity());
+}
 bool valid(TargetSnapshot const &s, SPDocument &doc) {
     if (std::this_thread::get_id() != mainThread || s.document != identity(&doc) || s.documentSerial != doc.serial()) return false;
     auto found = trackers().find(s.desktop);
@@ -444,7 +494,7 @@ bool valid(TargetSnapshot const &s, SPDocument &doc) {
     // Native edits queue updates before modified signals are delivered. Fail closed
     // while pending; after delivery the monotonic generation preserves change/revert.
     if (doc.getRoot()->uflags || doc.getRoot()->mflags) { t.bump(); return false; }
-    return &t.document == &doc && t.root == doc.getReprRoot() && t.desktop.getDocument() == &doc &&
+    return &t.document == &doc && t.root == doc.getReprRoot() && (t.desktop ? t.desktop->getDocument() == &doc : t.context && t.context->getDocument() == &doc) &&
         t.incarnation == s.incarnation && t.generation == s.generation;
 }
 } // namespace Inkscape::Bitmap

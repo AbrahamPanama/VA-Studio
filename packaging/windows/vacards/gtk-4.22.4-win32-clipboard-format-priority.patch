@@ -1,0 +1,145 @@
+--- a/gdk/win32/gdkclipdrop-win32.c
++++ b/gdk/win32/gdkclipdrop-win32.c
+@@ -876,7 +876,7 @@
+                   GdkWin32ClipboardThreadRetrieve *retr)
+ {
+   int i;
+-  UINT fmt, fmt_to_use;
++  UINT fmt_to_use;
+   HANDLE hdata;
+   GdkWin32ContentFormatPair *pair;
+   guchar *data = NULL;
+@@ -932,18 +932,21 @@
+         }
+     }
+ 
+-  for (fmt_to_use = 0, pair = NULL, fmt = 0;
+-       fmt_to_use == 0 && 0 != (fmt = EnumClipboardFormats (fmt));
+-      )
++  /* retr->pairs is in GTK's priority order: for each requested MIME type, as
++   * given by the caller, the as-is format first, then the compatibility
++   * formats (CF_UNICODETEXT before CF_TEXT, and so on). Pick the best format
++   * that the clipboard offers. Walking the owner's enumeration order instead
++   * picks whatever the owner lists first, e.g. Notepad's lossy CF_TEXT ahead
++   * of its CF_UNICODETEXT (BUG-023). */
++  for (fmt_to_use = 0, pair = NULL, i = 0; i < retr->pairs->len; i++)
+     {
+-      for (i = 0; i < retr->pairs->len; i++)
+-        {
+-          pair = &g_array_index (retr->pairs, GdkWin32ContentFormatPair, i);
+-
+-          if (pair->w32format != fmt)
+-            continue;
++      GdkWin32ContentFormatPair *candidate =
++        &g_array_index (retr->pairs, GdkWin32ContentFormatPair, i);
+ 
+-          fmt_to_use = fmt;
++      if (IsClipboardFormatAvailable (candidate->w32format))
++        {
++          pair = candidate;
++          fmt_to_use = candidate->w32format;
+           break;
+         }
+     }
+@@ -2190,6 +2193,44 @@
+   return 0;
+ }
+ 
++/* The ANSI code page CF_TEXT data was written in: the one of the CF_LOCALE
++ * format that Windows keeps next to it, if present. The process code page can
++ * differ (e.g. an application manifest that selects UTF-8). Falls back to
++ * CP_ACP. Only meaningful while the clipboard is open in this thread, which is
++ * the case when retrieving clipboard data; otherwise GetClipboardData fails
++ * and the fallback applies (e.g. for drag and drop data). */
++static UINT
++get_cf_text_codepage (void)
++{
++  UINT codepage = CP_ACP;
++  HANDLE hlocale;
++  const LCID *lcid;
++  DWORD ansi_cp = 0;
++
++  if (!IsClipboardFormatAvailable (CF_LOCALE))
++    return codepage;
++
++  hlocale = GetClipboardData (CF_LOCALE);
++  if (hlocale == NULL)
++    return codepage;
++
++  if (GlobalSize (hlocale) >= sizeof (LCID) &&
++      (lcid = GlobalLock (hlocale)) != NULL)
++    {
++      if (GetLocaleInfoW (*lcid,
++                          LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
++                          (LPWSTR) &ansi_cp,
++                          sizeof (ansi_cp) / sizeof (WCHAR)) > 0 &&
++          ansi_cp != 0 &&
++          IsValidCodePage ((UINT) ansi_cp))
++        codepage = (UINT) ansi_cp;
++
++      GlobalUnlock (hlocale);
++    }
++
++  return codepage;
++}
++
+ static gboolean
+ transmute_cf_text_to_utf8_string (const guchar    *data,
+                                   gsize            length,
+@@ -2201,15 +2242,26 @@
+   char *result;
+   glong u8_len = 0;
+   wchar_t *wstr;
++  gsize text_len;
+ 
+   if (data == NULL)
+     return FALSE;
+ 
+-  /* Strip out \r */
+-  ptr = (char *) data;
++  /* length is a byte count: the text ends at the first NUL, or at length.
++   * Work on a private, terminated copy so that the clipboard owner's memory
++   * is not rewritten. */
++  text_len = 0;
++  while (text_len < length && data[text_len] != 0)
++    text_len++;
++
++  ptr = g_malloc (text_len + 1);
++  memcpy (ptr, data, text_len);
++  ptr[text_len] = '\0';
++
++  /* Replace CR and CR+LF with LF */
+   p = ptr;
+   q = ptr;
+-  endp = ptr + length / 2;
++  endp = ptr + text_len;
+ 
+   while (p < endp)
+     {
+@@ -2217,7 +2269,7 @@
+         {
+           *q++ = *p;
+         }
+-      else if (p + 1 > endp || *(p + 1) != '\n')
++      else if (p + 1 >= endp || *(p + 1) != '\n')
+         {
+           *q++ = '\n';
+         }
+@@ -2225,8 +2277,15 @@
+       p++;
+     }
+ 
+-  if (str_to_wchar (ptr, &wstr, CP_ACP) < 0)
+-    return FALSE;
++  *q = '\0';
++
++  if (str_to_wchar (ptr, &wstr, get_cf_text_codepage ()) < 0)
++    {
++      g_free (ptr);
++      return FALSE;
++    }
++
++  g_free (ptr);
+ 
+   result = g_utf16_to_utf8 (wstr, -1, NULL, &u8_len, NULL);
+ 

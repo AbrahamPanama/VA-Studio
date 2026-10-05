@@ -1,0 +1,463 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "bitmap.explode.analyze:success",
+      "command": "bitmap.explode.analyze",
+      "cell": "success",
+      "description": "Independent P9 bitmap.explode.analyze:success",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success",
+              "piece-count": 3,
+              "pieces": [
+                {
+                  "index": 0,
+                  "pixel-count": 400,
+                  "alpha-sum": 102000
+                },
+                {
+                  "index": 1,
+                  "pixel-count": 400,
+                  "alpha-sum": 102000
+                },
+                {
+                  "index": 2,
+                  "pixel-count": 400,
+                  "alpha-sum": 102000
+                }
+              ]
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.contour:success",
+      "command": "bitmap.explode.contour",
+      "cell": "success",
+      "description": "Independent P9 bitmap.explode.contour:success",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.contour",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "contour": {
+                "offset": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "gap-tolerance": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success",
+              "no-contour-count": 0,
+              "pieces": [
+                {
+                  "index": 0,
+                  "noContour": false,
+                  "topology-count": 1
+                },
+                {
+                  "index": 1,
+                  "noContour": false,
+                  "topology-count": 1
+                },
+                {
+                  "index": 2,
+                  "noContour": false,
+                  "topology-count": 1
+                }
+              ]
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.explode:success",
+      "command": "bitmap.explode.explode",
+      "cell": "success",
+      "description": "Independent P9 bitmap.explode.explode:success",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.explode",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success",
+              "piece-count": 3
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.create-contour-only:success",
+      "command": "bitmap.explode.create-contour-only",
+      "cell": "success",
+      "description": "Independent P9 bitmap.explode.create-contour-only:success",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.create-contour-only",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "gap-tolerance": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success",
+              "source-retained": true
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.apply-adjustment:success",
+      "command": "bitmap.explode.apply-adjustment",
+      "cell": "success",
+      "description": "Independent P9 bitmap.explode.apply-adjustment:success",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.apply-adjustment",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "unchanged",
+            "data": {
+              "variant": "unchanged",
+              "source-retained": true
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    }
+  ]
+}

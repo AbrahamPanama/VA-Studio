@@ -1,0 +1,28 @@
+{
+  "description": "P1 canonical adapter error includes typed error details without changing legacy serialization.",
+  "actions": "vacards-result-file:-;system.options:unknown=true",
+  "records_from": "stdout",
+  "expect_exit": 3,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "system.options",
+      "status": "rejected",
+      "error": {
+        "code": "unknown-key",
+        "retryable": false,
+        "details": {
+          "action": "system.options"
+        }
+      }
+    }
+  ],
+  "expect_records_text_contains": [
+    "\"hint\":",
+    "\"message\":",
+    "\"normalized_params\":"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "description": "No inspection document: query refuses with actionable no-document and the session closes cleanly.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.selection",
+        "params": {}
+      },
+      "command": "query.selection",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0
+      },
+      "cells": [
+        "refusal"
+      ],
+      "expect_error": "no-document",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "expect_hello": {
+    "document": null
+  }
+}

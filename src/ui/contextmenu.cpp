@@ -44,6 +44,7 @@
 #include "preferences.h"
 #include "selection.h"
 #include "ui/desktop/menu-set-tooltips-shift-icons.h"
+#include "ui/spellcheck-feature.h"
 #include "ui/util.h"
 
 static void
@@ -278,7 +279,9 @@ ContextMenu::ContextMenu(SPDesktop *desktop, SPObject *object, std::vector<SPIte
             // Text dialogs.
             if (is<SPText>(item)) {
                 AppendItemFromAction(     gmenu_dialogs, "win.dialog-open('Text')",                      _("_Text and Font..."),     "dialog-text-and-font"  );
-                AppendItemFromAction(     gmenu_dialogs, "win.dialog-open('Spellcheck')",                _("Check Spellin_g..."),    "tools-check-spelling"  );
+                if constexpr (Inkscape::UI::spellcheckUiEnabled) {
+                    AppendItemFromAction( gmenu_dialogs, "win.dialog-open('Spellcheck')",                _("Check Spellin_g..."),    "tools-check-spelling"  );
+                }
             }
             gmenu->append_section(gmenu_dialogs); // We might add to it later...
 

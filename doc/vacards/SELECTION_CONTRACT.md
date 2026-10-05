@@ -215,6 +215,10 @@ authorize first-descendant or nearest-object selection elsewhere.
 
 ### Offset shapes: per-selected-root exception
 
+The agent command line's `geometry.offset` uses this exception, as declared by `selection_mode:
+per-selected-root-geometry` in `src/actions/actions-vacards-geometry.cpp`'s
+command descriptor. Excluded roots are preserved and reported.
+
 `vacards-offset` and the Offset Shapes tool are **per selected root**, not
 compatible-members. Each selected root is one source: a selected group becomes
 one combined silhouette of its eligible closed subpaths, and its members are not
@@ -237,9 +241,13 @@ implemented and must not be inferred from this exception.
 
 ### Corner rounding: single-object exception
 
+The agent command line's `geometry.corners` uses this exception, as declared by `selection_mode:
+single-object` and cardinality exactly one in `src/actions/actions-vacards-geometry.cpp`'s
+command descriptor. It does not expand a selection into independent corner edits.
+
 `vacards-corners` and the Node tool's corner controls are **single-object**:
-exactly one selected, visible, unlocked native shape (rect, ellipse, polygon or
-star). A multi-selection, a group or nested group, text, a clone or a hidden or
+exactly one selected, visible, unlocked native shape (rect, ellipse, polygon,
+polyline with an interior corner, or star). A multi-selection, a group or nested group, text, a clone or a hidden or
 locked shape is refused with `requires-single-shape` or `unsupported-shape`
 and a reason; nothing is changed and no member is chosen for the user. An
 `SPPath` is refused with `path-not-supported` until its node types can be
@@ -254,7 +262,21 @@ defined on one shape's own geometry. Rounding the corners of every eligible
 member of a group would be a compatible-members operation needing an owner
 decision; it is not implemented and must not be inferred from this exception.
 
+Native SVG `SPPolygon` and `SPPolyLine` are the **only native-type change**
+made by this operation: a changing, admitted request converts that one shape
+into an `SPPath`, then evaluates its fillet_chamfer LPE in the same Undo step.
+Its own straight-segment vertices define corner identity (every vertex, except
+an open polyline's two endpoints); AC-8b does not apply to these inputs.
+The id, style, class, transform, other attributes (including points), children
+(including title/desc), parent and z-order survive. One Undo restores the exact
+original element and attributes; Redo reapplies conversion and rounding.
+The GUI reports the conversion; CLI `data.converted` lists id/from/to, including
+planned conversions on dry runs. Inspection/dry run/cancel never convert;
+refusals remain atomic no-ops. No group or multi-selection rule changes.
+
 ### Boolean Assist: groups as one combined shape
+
+The following legacy scope describes the single-output entry point only.
 
 Boolean Assist (`apply_boolean_assist`, shared by the GUI flyout and the
 `vacards-boolean` command line) is **collective geometry per selected root**.
@@ -298,6 +320,34 @@ leaf-by-leaf against the other operands.
 This is a per-root collective-geometry exception, not a compatible-member
 operation over group leaves, and not authorization to flatten groups elsewhere.
 Modes and object transforms remain those of the underlying Boolean engine.
+
+### Agent command line Boolean: ordered explicit operands
+
+The agent command line's `geometry.boolean` uses the ordered explicit-operand overload in
+`src/ui/toolbar/boolean-assist.h`. The exactly-one-output/revert and
+refusal-clears-Redo statements above apply only to legacy Boolean Assist.
+This overload is **collective geometry over explicit whole operands**: input
+order defines subject/cutter roles; division requires exactly two operands.
+Selected groups are admitted as one shape through native eligibility, never
+implicitly expanded into separate CLI operands. Division can return multiple
+outputs. The explicit empty policy either allows committed consumption with zero
+outputs or refuses without changes. Output IDs and consumed IDs describe the
+result, including native ID reuse.
+
+The caller owns one transaction and settlement. Preparation and dry-run do not
+mutate XML or live selection; refusals and rollback preserve Redo. The native
+service does not commit or cancel Undo and publishes no preview itself.
+
+### Agent command line clip.release: compatible selected-roots exception
+
+`clip.release` edits **compatible explicitly selected roots** with their own clip
+relations. It does not recursively discover descendant clips or ungroup helpers;
+`ungroup_helpers` is false. This is a selected-roots exception to recursive
+compatible-member discovery, not permission to flatten groups or alter an
+unselected descendant's clip. Incompatible roots are preserved and reported as
+typed exclusions, and covered roots are reported separately. Preparation and
+refusal do not write. The caller owns one commit/rollback for all roots and one
+Undo/Redo transaction; preview/cancel preserve XML, live selection and history.
 
 ### Nesting: collective geometry of the selected top-level objects
 

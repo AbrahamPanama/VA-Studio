@@ -97,6 +97,9 @@ DetachedSelection copy_selection_detached(ObjectSet &source,
 class ClipboardManager
 {
 public:
+    // Reports clipboard-unavailable and returns false before any mutation.
+    // Cut must check this before invoking its existing copy/delete behavior.
+    virtual bool ensureClipboard(SPDesktop *desktop = nullptr) = 0;
     virtual void copy(ObjectSet *set) = 0;
     virtual void copyPathParameter(Inkscape::LivePathEffect::PathParam *) = 0;
     virtual bool copyString(Glib::ustring str) = 0;
@@ -118,6 +121,8 @@ public:
     virtual Glib::ustring getFirstObjectID() = 0;
 
     static ClipboardManager *get();
+    // Native regression seam: refuses access even when the singleton cached a clipboard.
+    static void setClipboardUnavailableForTesting(bool unavailable);
 
 protected:
     ClipboardManager() = default;

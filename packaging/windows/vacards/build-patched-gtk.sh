@@ -5,7 +5,9 @@
 #
 # Reproduces the MSYS2 mingw-w64-gtk4 4.22.4-1 recipe (MINGW-packages commit
 # d07b8dabb92443fd1daed511ad7b406825964b0d) and adds
-# packaging/windows/vacards/gtk-4.22.4-win32-cairo-buffer.patch.
+# packaging/windows/vacards/gtk-4.22.4-win32-cairo-buffer.patch, followed by
+# gtk-4.22.4-win32-clipboard-empty.patch (BUG-018), then
+# gtk-4.22.4-win32-clipboard-format-priority.patch (BUG-023).
 #
 # Hard rules:
 #   * Never pacman-install, -Sy/-Sw, upgrade, or write into /ucrt64 or any other
@@ -17,7 +19,7 @@
 #     enabled) may be turned off, each with an explicit flag and a recorded
 #     deviation. Neither changes the DLL's exported/imported symbol set.
 #   * Configure and compile require an approval record whose patch sha256
-#     matches the exact implementation patch being built. Absent or mismatched
+#     matches all three exact implementation patches being built. Absent or mismatched
 #     approval is fatal and nothing is configured or compiled.
 #   * Every run uses a unique, initially empty output root; failed runs keep
 #     their logs and are never rewritten to look like the first attempt.
@@ -31,8 +33,20 @@ export LC_ALL=C
 
 fail() { echo "VACards Windows patched-GTK build failed: $*" >&2; exit 1; }
 
+# Optional host-owned gate, e.g. a print-idle or free-space check on a shared host.
+# A failing gate stops the run before its next heavy step.
+heavy_step() {
+    if [[ -n ${VACARDS_GTK_STEP_GATE:-} ]]; then
+        bash "$VACARDS_GTK_STEP_GATE" "$1" || fail "host gate failed: $1"
+    fi
+}
+
 # --- pinned GTK inputs -------------------------------------------------------
 gtk_version=4.22.4
+clipboard_filename=gtk-4.22.4-win32-clipboard-empty.patch
+clipboard_expected_sha=d4a6b4b8a88ba25a50fa8e9f1715e4f65da26be81df5adcce0171c62252ef13c
+clipboard_priority_filename=gtk-4.22.4-win32-clipboard-format-priority.patch
+clipboard_priority_expected_sha=48db45102f21bc0a97d10b79dd8e6ebff65e86a5acc7ac142fee6af784e88615
 gtk_tarball=gtk-${gtk_version}.tar.xz
 gtk_sha=51bd9f60c7d23a665a556c7364c21fb2e4e282566b3e7e092455e8f910330893
 p001=001-fix-font-rendering.patch
@@ -94,8 +108,9 @@ Build control:
   --enable-introspection    build GIR (default off: Python 3.14 + MSYS2
                             g-object-introspection lacks distutils; recorded)
   --disable-man-pages       skip man pages (default: built with rst2man)
-  --approval FILE           approval JSON recording the reviewed patch SHA-256
-                            (default: VACARDS_BUILD_APPROVAL; one is required)
+  --approval FILE           approval JSON recording the reviewed SHA-256 of all
+                            three patches (default: VACARDS_BUILD_APPROVAL; one
+                            is required)
   -h, --help
 
 Vulkan is always enabled. Configure/compile never start without a matching approval record.
@@ -293,6 +308,7 @@ EOF
 }
 
 if [[ $provision == 1 ]]; then
+    heavy_step provision-build-tools
     provision_build_tools
     echo "Provisioned and verified pinned build tools in $tools_prefix"
     echo "Provenance: $tools_prefix/TOOLS-PROVENANCE.txt"
@@ -359,6 +375,17 @@ acquire "$pkgbuild" "$pkgbuild_sha" "$msys2_raw_base/$pkgbuild"
 cp -- "$impl_patch" "$inputs/gtk-${gtk_version}-win32-cairo-buffer.patch"
 impl_sha=$(sha256 "$inputs/gtk-${gtk_version}-win32-cairo-buffer.patch")
 patch_sha=$impl_sha
+clipboard_patch=$script_dir/$clipboard_filename
+[[ -f $clipboard_patch ]] || fail "clipboard patch not found: $clipboard_patch"
+cp -- "$clipboard_patch" "$inputs/$clipboard_filename"
+clipboard_sha=$(sha256 "$inputs/$clipboard_filename")
+[[ $clipboard_sha == "$clipboard_expected_sha" ]] || fail "clipboard patch checksum mismatch"
+
+clipboard_priority_patch=$script_dir/$clipboard_priority_filename
+[[ -f $clipboard_priority_patch ]] || fail "clipboard_priority patch not found: $clipboard_priority_patch"
+cp -- "$clipboard_priority_patch" "$inputs/$clipboard_priority_filename"
+clipboard_priority_sha=$(sha256 "$inputs/$clipboard_priority_filename")
+[[ $clipboard_priority_sha == "$clipboard_priority_expected_sha" ]] || fail "clipboard_priority patch checksum mismatch"
 
 # --- build approval gate (before configure/compile) ---------------------
 approval=${approval_arg:-${VACARDS_BUILD_APPROVAL:-}}
@@ -368,32 +395,43 @@ approval_sha=$(sha256 "$approval")
 approved_patch=$(sed -nE 's/.*"(patch_sha256|impl_patch_sha256|gtk_patch_sha256|candidate_gtk_patch_sha256|patch_sha)"[[:space:]]*:[[:space:]]*"([0-9a-f]{64})".*/\2/p' "$approval" | head -1)
 [[ -n $approved_patch ]] || fail "approval $approval has no patch sha256 field"
 [[ $approved_patch == "$patch_sha" ]] || fail "approval patch sha $approved_patch != current patch $patch_sha; rebuild after re-approval"
-printf 'approval=%s\napproval_sha256=%s\napproved_patch_sha256=%s\n' "$approval" "$approval_sha" "$approved_patch" > "$inputs/approval.txt"
+approved_clipboard_patch=$(sed -nE 's/.*"clipboard_patch_sha256"[[:space:]]*:[[:space:]]*"([0-9a-f]{64})".*/\1/p' "$approval" | head -1)
+[[ -n $approved_clipboard_patch ]] || fail "approval has no clipboard_patch_sha256; re-approval required"
+[[ $approved_clipboard_patch == "$clipboard_sha" ]] || fail "approval clipboard patch SHA differs from current patch"
+approved_clipboard_priority_patch=$(sed -nE 's/.*"clipboard_priority_patch_sha256"[[:space:]]*:[[:space:]]*"([0-9a-f]{64})".*/\1/p' "$approval" | head -1)
+[[ -n $approved_clipboard_priority_patch ]] || fail "approval has no clipboard_priority_patch_sha256; re-approval required"
+[[ $approved_clipboard_priority_patch == "$clipboard_priority_sha" ]] || fail "approval clipboard_priority patch SHA differs from current patch"
+printf 'approval=%s\napproval_sha256=%s\napproved_patch_sha256=%s\napproved_clipboard_patch_sha256=%s\napproved_clipboard_priority_patch_sha256=%s\n' \
+    "$approval" "$approval_sha" "$approved_patch" "$approved_clipboard_patch" "$approved_clipboard_priority_patch" > "$inputs/approval.txt"
 
 # --- extract and patch -------------------------------------------------------
+heavy_step extract-and-patch
 tar -xf "$inputs/$gtk_tarball" -C "$src_dir"
 source_dir=$src_dir/gtk-${gtk_version}
 [[ -f $source_dir/meson.build ]] || fail "unexpected tarball layout"
 [[ -f $source_dir/gtk/theme/Default/Default-light.css ]] || fail "tarball lacks pre-generated theme CSS; sassc is unavailable and required"
 
-apply_patch() { # file label
-    local file=$1 label=$2
-    if ! patch --batch --forward --fuzz=2 -d "$source_dir" -p1 -i "$inputs/$file" 2>&1 | tee -a "$output/patch.log"; then
+apply_patch() { # file label [fuzz: MSYS2 default 2, VA required 0]
+    local file=$1 label=$2 fuzz=${3:-2}
+    if ! patch --batch --forward --fuzz="$fuzz" -d "$source_dir" -p1 -i "$inputs/$file" 2>&1 | tee -a "$output/patch.log"; then
         fail "patch failed: $label"
     fi
-    printf 'applied %s sha256=%s\n' "$label" "$(sha256 "$inputs/$file")" >> "$output/patch.log"
+    printf 'applied %s sha256=%s fuzz=%s\n' "$label" "$(sha256 "$inputs/$file")" "$fuzz" >> "$output/patch.log"
 }
 
 : > "$output/patch.log"
 apply_patch "$p001" "MSYS2 001-fix-font-rendering"
 apply_patch "$p003" "MSYS2 003-default-dcomp-off"
-apply_patch "gtk-${gtk_version}-win32-cairo-buffer.patch" "VACards win32 cairo buffer"
+apply_patch "gtk-${gtk_version}-win32-cairo-buffer.patch" "VACards win32 cairo buffer" 0
+apply_patch "$clipboard_filename" "VACards win32 clipboard empty text" 0
+apply_patch "$clipboard_priority_filename" "VACards win32 clipboard format priority" 0
 
 grep -q 'GTK_FONT_RENDERING_MANUAL' "$source_dir/gtk/gtksettings.c" || fail "001 did not apply"
 grep -q 'GDK_WIN32_FORCE_DCOMP' "$source_dir/gdk/win32/gdkdisplay-win32.c" || fail "003 did not apply"
 grep -q 'gdi_buffer' "$source_dir/gdk/win32/gdkcairocontext-win32.c" || fail "implementation patch did not apply"
 
 # --- scoped tool environment and tool verification ---------------------------
+heavy_step verify-build-tools
 apply_scoped_env
 check_build_tools
 export PKG_CONFIG_PATH="$tools_prefix/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
@@ -426,6 +464,7 @@ cairo_version=$("$pkg_config" --modversion cairo)
 cairo_pc_filedir=$("$pkg_config" --variable=pcfiledir cairo)
 cairo_verifier=${VACARDS_CAIRO_VERIFIER:-$source_root/packaging/windows/vacards/verify-vacards-cairo-prefix.sh}
 [[ -f $cairo_verifier ]] || fail "Cairo verification gate not found: $cairo_verifier (set VACARDS_CAIRO_VERIFIER)"
+heavy_step verify-cairo
 if ! bash "$cairo_verifier" "$cairo_prefix" 2>&1 | tee "$output/cairo-verify.log"; then
     fail "pinned Cairo prefix failed verify-vacards-cairo-prefix.sh"
 fi
@@ -436,19 +475,21 @@ cairo_inventory_sha=$(sha256 "$cairo_prefix/VACARDS-CAIRO.sha256")
 inv=$inputs/inputs.sha256
 (
     cd -- "$inputs"
-    for f in "$gtk_tarball" "$p001" "$p003" "$pkgbuild" gtk-${gtk_version}-win32-cairo-buffer.patch; do
+    for f in "$gtk_tarball" "$p001" "$p003" "$pkgbuild" gtk-${gtk_version}-win32-cairo-buffer.patch "$clipboard_filename" "$clipboard_priority_filename"; do
         printf '%s  %s\n' "$(sha256 "$f")" "$f"
     done
 ) > "$inv"
 
 {
-    printf 'format=2\nplatform=windows-ucrt64\narchitecture=x86_64\n'
+    printf 'format=3\nplatform=windows-ucrt64\narchitecture=x86_64\n'
     printf 'msystem=%s\n' "$MSYSTEM"
     printf 'gtk_version=%s\n' "$gtk_version"
     printf 'gtk_tarball_sha256=%s\n' "$gtk_sha"
     printf 'msys2_commit=%s\nmsys2_pkgbuild_sha256=%s\n' "$msys2_commit" "$pkgbuild_sha"
     printf 'p001_sha256=%s\np003_sha256=%s\n' "$p001_sha" "$p003_sha"
     printf 'impl_patch_sha256=%s\n' "$impl_sha"
+    printf 'clipboard_patch_filename=%s\nclipboard_patch_sha256=%s\n' "$clipboard_filename" "$clipboard_sha"
+    printf 'clipboard_priority_patch_filename=%s\nclipboard_priority_patch_sha256=%s\n' "$clipboard_priority_filename" "$clipboard_priority_sha"
     printf 'approval=%s\napproval_sha256=%s\n' "$approval" "$approval_sha"
     printf 'build_tools_prefix=%s\ntools_provenance_sha256=%s\ntools_inventory_sha256=%s\n' \
         "$tools_prefix" "$(sha256 "$tools_prefix/TOOLS-PROVENANCE.txt")" "$(sha256 "$tools_prefix/TOOLS.sha256")"
@@ -472,6 +513,7 @@ inv=$inputs/inputs.sha256
 } > "$output/toolchain.txt"
 
 # --- configure ---------------------------------------------------------------
+heavy_step configure
 if ! meson setup "$build_dir" "$source_dir" \
     --prefix=C:/install \
     --wrap-mode=nodownload \
@@ -496,14 +538,17 @@ if [[ $configure_only == 1 ]]; then
 fi
 
 # --- compile (<=2 jobs) and install -----------------------------------------
+heavy_step compile
 if ! meson compile -C "$build_dir" -j "$jobs" 2>&1 | tee "$output/build.log"; then
     fail "meson compile failed"
 fi
+heavy_step install
 if ! meson install -C "$build_dir" --no-rebuild --destdir "$output" 2>&1 | tee "$output/install.log"; then
     fail "meson install failed"
 fi
 
 # --- output identities -------------------------------------------------------
+heavy_step output-identities
 dll=$prefix/bin/libgtk-4-1.dll
 [[ -f $dll ]] || fail "installed DLL missing: $dll"
 mkdir -p -- "$output/abi"
@@ -554,6 +599,8 @@ marker=$output/VACARDS-GTK.env
     sed -n '1,200p' "$inv"
     printf 'prefix_posix=%s\nprefix_windows=%s\n' "$prefix" "$(cygpath -w "$prefix")"
     printf 'impl_patch_sha256=%s\napproval_sha256=%s\n' "$impl_sha" "$approval_sha"
+    printf 'clipboard_patch_filename=%s\nclipboard_patch_sha256=%s\n' "$clipboard_filename" "$clipboard_sha"
+    printf 'clipboard_priority_patch_filename=%s\nclipboard_priority_patch_sha256=%s\n' "$clipboard_priority_filename" "$clipboard_priority_sha"
     printf 'libgtk_4_1_dll_sha256=%s\n' "$(sha256 "$dll")"
     printf 'exports_sha256=%s\nexports_count=%s\n' \
         "$(sha256 "$output/abi/libgtk-4-1.exports.txt")" "$(wc -l < "$output/abi/libgtk-4-1.exports.txt")"
@@ -567,6 +614,7 @@ marker=$output/VACARDS-GTK.env
 archive=$output.tar.gz
 [[ ! -e $archive ]] || fail "archive already exists: $archive"
 printf '0\n' > "$output/exit-code.txt"
+heavy_step archive
 tar -czf "$archive" -C "$parent" "$(basename -- "$output")" || fail "run archive failed"
 printf 'run_archive=%s\nrun_archive_sha256=%s\n' "$archive" "$(sha256 "$archive")" >> "$output/toolchain.txt"
 

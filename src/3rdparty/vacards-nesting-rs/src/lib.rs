@@ -707,3 +707,25 @@ mod tests {
         }
     }
 }
+
+#[unsafe(no_mangle)]
+/// # Safety
+/// `job` must be null or a live job; configuration must not race with run.
+pub unsafe extern "C" fn vac_nesting_job_set_work_limit(job: *mut VacNestingJob, limit: u64) -> i32 {
+    guarded_job_status(job, |job| job.set_work_limit(limit))
+}
+
+#[unsafe(no_mangle)]
+/// # Safety
+/// `job` must be null or live; `terminal` must be null or writable.
+/// On failure the output is untouched. Failed jobs have no successful terminal result.
+pub unsafe extern "C" fn vac_nesting_job_get_terminal(
+    job: *const VacNestingJob, terminal: *mut VacNestingTerminal,
+) -> i32 {
+    let Some(job) = (unsafe { job_ref(job) }) else { return STATUS_INVALID_ARGUMENT; };
+    if terminal.is_null() { return STATUS_INVALID_ARGUMENT; }
+    ffi_guard(STATUS_PANIC, || match job.terminal() {
+        Ok(value) => { unsafe { terminal.write(value); } STATUS_OK }
+        Err(status) => status,
+    })
+}

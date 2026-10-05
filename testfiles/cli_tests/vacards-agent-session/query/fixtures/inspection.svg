@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" id="root" width="200" height="100" viewBox="10 20 100 50">
+<title id="title">Inspection sheet</title>
+<metadata id="meta">Fixture metadata</metadata>
+<sodipodi:namedview id="view">
+<inkscape:page id="page1" x="10" y="20" width="100" height="50" inkscape:label="Front"/>
+<inkscape:page id="page2" x="120" y="20" width="40" height="50" inkscape:label="Back"/>
+<inkscape:page id="page3" x="10" y="80" width="30" height="20" inkscape:label="Extra"/>
+</sodipodi:namedview>
+<g id="sheet" inkscape:groupmode="layer" inkscape:label="Sheet" transform="translate(20,30)">
+<g id="nested" transform="scale(2,3)" style="fill:#123456;stroke:#000000;stroke-width:2;opacity:0.75">
+<rect id="rect" inkscape:label="Tile" x="1" y="2" width="3" height="4"/>
+<path id="path" d="M1,2H4V6H1Z"/>
+</g>
+<use id="clone" xlink:href="#rect" x="30" y="0"/>
+<g id="childLayer" inkscape:groupmode="layer" inkscape:label="Child"><circle id="circle" cx="10" cy="10" r="2"/></g>
+</g>
+<g id="hiddenLayer" inkscape:groupmode="layer" inkscape:label="Hidden" style="display:none"><rect id="hidden" width="5" height="6"/></g>
+<g id="lockedLayer" inkscape:groupmode="layer" inkscape:label="Locked" sodipodi:insensitive="true"><rect id="locked" width="7" height="8"/></g>
+<text id="text" x="10" y="40" style="font-family:VA_CLI_MissingFont_9f5e; font-style:italic;font-weight:bold;font-size:10px">Hi</text>
+<image id="embedded" x="10" y="20" width="16" height="12" inkscape:brightness="12" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAYCAYAAACbU/80AAAAK0lEQVR4nO3OIQEAAAgDMDrRiU6khRg3E/Ornr2kEhAQEBAQEBAQEBBIBx5hyZNb1iuQawAAAABJRU5ErkJggg=="/>
+<image id="linked" x="40" y="20" width="16" height="12" xlink:href="linked.png"/>
+<image id="ungranted" x="60" y="20" width="10" height="10" xlink:href="../outside.png"/>
+<image id="remote" x="80" y="20" width="10" height="10" xlink:href="https://example.invalid/image.png"/>
+<image id="missing" width="10" height="10" xlink:href="missing.png"/>
+<rect x="10" y="20" width="1" height="2"/>
+</svg>

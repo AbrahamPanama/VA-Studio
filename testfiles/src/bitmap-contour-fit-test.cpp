@@ -436,7 +436,7 @@ TEST(BitmapContourFit, ExceptionsAreTypedRefusalsAndFitterReservationIsLive) {
         o.fitCubic=oom ? +[](ContourPoint *,ContourPoint const *,std::uint32_t,double)->int { throw std::bad_alloc(); }
                       : +[](ContourPoint *,ContourPoint const *,std::uint32_t,double)->int { throw 7; };
         auto r=f.fit(50,{},o); empty(r); EXPECT_EQ(r.outcome.status,Status::failed); EXPECT_EQ(f.budget.reserved(),baseline);
-        EXPECT_NE(std::strstr(r.outcome.diagnostic,oom ? "allocation" : "exception"),nullptr);
+        EXPECT_NE(std::strstr(r.outcome.diagnostic,oom ? "Not enough memory" : "exception"),nullptr);
     }
     EXPECT_GT(probe.peak,baseline);
 }

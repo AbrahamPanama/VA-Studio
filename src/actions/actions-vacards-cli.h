@@ -8,6 +8,7 @@
 #define SEEN_ACTIONS_VACARDS_CLI_H
 
 #include <functional>
+#include <memory>
 
 #include <glibmm/variant.h>
 
@@ -32,6 +33,7 @@ struct ActionContext
                                                 ///< that needs a document
     Inkscape::Selection *selection = nullptr;   ///< active selection (headless: the document's selection)
     Record &record;                             ///< pre-filled; the body sets status, reason, message, ...
+    std::shared_ptr<void> operation_lease;
 };
 
 /**

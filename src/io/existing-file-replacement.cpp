@@ -271,6 +271,10 @@ ExistingFileResult publish_smb_existing(std::string const &path, std::string con
     }
 
     bool const injected_stage_rename_failure = options.stage_observer && options.stage_observer(4);
+    if (options.cancelled && options.cancelled()) {
+        bool removed=::unlink(recovery.c_str())==0;
+        return {ExistingFileOutcome::Cancelled,"Cancelled before replacement",removed ? std::string() : recovery};
+    }
 #ifdef VACARDS_FILE_IO_TEST_HOOKS
     int const injected_rename_errno = injected_stage_rename_failure ? EIO : options.rename_failure_errno;
     int const renamed = injected_rename_errno ? -1 : ::rename(stage.path.c_str(), path.c_str());
@@ -343,6 +347,16 @@ ExistingFileResult replace_existing_local_file(
     std::string const &path, std::function<void(FILE *)> const &writer,
     ExistingFileOptions const &options)
 {
+    ExistingFileOutcome expected_failure=ExistingFileOutcome::Conflict;
+    auto matches_expected = [&] {
+        if (!options.expected_version) return true;
+        auto found = inspect_existing_file_version(path);
+        expected_failure=found.outcome==ExistingFileOutcome::Unavailable ? ExistingFileOutcome::Unavailable : ExistingFileOutcome::Conflict;
+        auto const &e = *options.expected_version;
+        return found.version && found.version->identity == e.identity &&
+               found.version->bytes == e.bytes && found.version->sha256 == e.sha256;
+    };
+    if (!matches_expected()) return {expected_failure, "expected version mismatch before staging", {}};
     auto const admission_begin = SaveClock::now();
     if (path.empty() || path[0] != '/' || path.find('\0') != std::string::npos || !writer) {
         return {ExistingFileOutcome::Unsupported, "existing-file replacement requires an absolute path and a writer", {}};
@@ -519,6 +533,17 @@ ExistingFileResult replace_existing_local_file(
 
     bool const injected_stage_rename_failure = options.stage_observer && options.stage_observer(4);
 
+
+    if (!matches_expected()) {
+        ::unlink(backup.c_str());
+        return {expected_failure, "expected version mismatch before replacement", {}};
+    }
+
+    if (options.cancelled && options.cancelled()) {
+        bool removed=::unlink(backup.c_str())==0;
+        return {ExistingFileOutcome::Cancelled,"Cancelled before replacement",removed ? std::string() : backup};
+    }
+
     // The backup itself increments the original's link count. Test builds may
     // inject one rename failure; production builds call rename directly.
 #ifdef VACARDS_FILE_IO_TEST_HOOKS
@@ -621,4 +646,56 @@ ExistingFileResult replace_existing_local_file(
 }
 } // namespace Inkscape::IO
 
+#endif
+
+// M2 guarded overload preserves legacy callers and routes checks into native boundaries.
+namespace Inkscape::IO {
+ExistingFileResult replace_existing_local_file(std::string const &path,
+    std::function<void(FILE *)> const &writer, ExpectedFileVersion const &expected,
+    ExistingFileOptions const &options)
+{
+    auto guarded = options;
+    guarded.expected_version = expected;
+    return replace_existing_local_file(path, writer, guarded);
+}
+} // namespace Inkscape::IO
+#ifndef _WIN32
+#include <glib.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+namespace Inkscape::IO {
+FileVersionResult inspect_existing_file_version(std::string const &path)
+{
+    auto conflict = [](char const *s) { return FileVersionResult{std::nullopt, ExistingFileOutcome::Conflict, s}; };
+    if (path.empty() || path[0] != '/' || path.find('\0') != std::string::npos)
+        return conflict("Version inspection requires an absolute local path");
+    int fd = ::open(path.c_str(), O_RDONLY | O_NOFOLLOW | O_NONBLOCK);
+    if (fd < 0) return {std::nullopt, errno==ENOENT ? ExistingFileOutcome::Conflict : ExistingFileOutcome::Unavailable,"Cannot open destination version"};
+    struct Owner { int fd; ~Owner() { ::close(fd); } } owner{fd};
+    struct stat a{}, b{}, named{};
+    if(::fstat(fd,&a)) return {std::nullopt,ExistingFileOutcome::Unavailable,"Version metadata unavailable"};
+    if (!S_ISREG(a.st_mode)) return conflict("Not a regular file");
+    auto sum = g_checksum_new(G_CHECKSUM_SHA256);
+    struct Sum { GChecksum *p; ~Sum() { g_checksum_free(p); } } sum_owner{sum};
+    unsigned char buffer[65536]; std::uint64_t size = 0;
+    for (;;) {
+        auto n = ::read(fd, buffer, sizeof(buffer));
+        if (n < 0) return {std::nullopt,ExistingFileOutcome::Unavailable,"Version read failed"};
+        if (!n) break;
+        size += n; g_checksum_update(sum, buffer, n);
+    }
+    if (::fstat(fd, &b) || ::lstat(path.c_str(), &named) ||
+        a.st_dev != b.st_dev || a.st_ino != b.st_ino || a.st_size != b.st_size ||
+        a.st_mtime != b.st_mtime || a.st_ctime != b.st_ctime ||
+        b.st_dev != named.st_dev || b.st_ino != named.st_ino || size != std::uint64_t(b.st_size))
+        return conflict("Destination changed while hashing");
+#ifdef __APPLE__
+    if (a.st_mtimespec.tv_nsec != b.st_mtimespec.tv_nsec || a.st_ctimespec.tv_nsec != b.st_ctimespec.tv_nsec)
+        return conflict("Destination changed while hashing");
+#endif
+    return {ExpectedFileVersion{std::to_string(b.st_dev) + ":" + std::to_string(b.st_ino),
+            g_checksum_get_string(sum), size}, ExistingFileOutcome::Published, {}};
+}
+} // namespace Inkscape::IO
 #endif

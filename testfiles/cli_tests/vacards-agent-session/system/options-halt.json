@@ -1,0 +1,63 @@
+{
+  "description": "options-halt",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "system.options",
+        "params": {
+          "halt-on-error": false
+        }
+      },
+      "command": "system.options",
+      "expect": {
+        "data": {
+          "halt-on-error": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "success"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "system.options",
+        "params": {
+          "halt-on-error": true
+        }
+      },
+      "command": "system.options",
+      "expect": {
+        "data": {
+          "halt-on-error": true
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ]
+}

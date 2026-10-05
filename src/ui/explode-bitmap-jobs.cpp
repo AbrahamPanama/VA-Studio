@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include <glib/gi18n.h>
 #include "ui/explode-bitmap-jobs.h"
 #include <limits>
 #include <atomic>
@@ -128,6 +129,7 @@ try {
     if (_job && jobReaped(_job)) { _job.reset(); _retiring = false; }
     if (_job || !_pending || _now() < _due || activeBitmapJobs() != 0) return;
     _running = _ticket;
+    auto const stage = _pending->stage;
     try {
         _box = std::make_shared<JobMailbox>();
         _box->input = std::move(*_pending);
@@ -139,11 +141,15 @@ try {
             try {
                 JobWork work(box->input.pixels);
                 JobReporter reporter(*box, now);
-                if (stop.requested()) box->result.outcome = {Status::canceled, "Canceled"};
-                else if (!box->input.work) box->result.outcome = {Status::failed, "Missing job function"};
+                if (stop.requested()) { box->result.outcome = {Status::canceled, "Canceled"}; box->result.failure = CliBitmapFailure{box->input.stage, CliBitmapReason::Canceled}; }
+                else if (!box->input.work) { box->result.outcome = {Status::failed, "Missing job function"}; box->result.failure = CliBitmapFailure{box->input.stage, CliBitmapReason::InternalError}; }
                 else box->result = box->input.work(box->input, stop, work, reporter);
-                if (stop.requested()) box->result.outcome = {Status::canceled, "Canceled"};
-            } catch (...) { box->result.outcome = {Status::failed, "Bitmap worker exception"}; }
+                if (stop.requested()) { box->result.outcome = {Status::canceled, "Canceled"}; box->result.failure = CliBitmapFailure{box->input.stage, CliBitmapReason::Canceled}; }
+            } catch (std::bad_alloc const &) {
+                box->result = {};
+                box->result.outcome = memoryFailure(N_("job allocation"), box->input.pixels * 4, 0);
+                box->result.failure = CliBitmapFailure{box->input.stage, CliBitmapReason::MemoryAdmissionFailed};
+            } catch (...) { box->result.outcome = {Status::failed, "Bitmap worker exception"}; box->result.failure = CliBitmapFailure{box->input.stage, CliBitmapReason::InternalError}; }
             // Wake failures (e.g. allocation) cannot escape the worker root or strand a result.
             try { std::lock_guard lock(box->mutex); box->wake(); } catch (...) {}
         }, [box = _box] {
@@ -157,7 +163,7 @@ try {
         _destination.close();
         _pending.reset();
         _box.reset();
-        if (_complete) { auto callback = _complete; callback(_running, {{Status::failed, "Bitmap launch failed"}, {}, 0}); }
+        if (_complete) { auto callback = _complete; callback(_running, {memoryFailure(N_("job launch allocation"), sizeof(JobMailbox), 0), {}, 0, CliBitmapFailure{stage, CliBitmapReason::MemoryAdmissionFailed}}); }
     }
 }
 catch (...) { std::fputs("Bitmap jobs: main-thread delivery failure contained\n", stderr); std::fflush(stderr); }

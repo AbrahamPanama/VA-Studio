@@ -16,6 +16,7 @@
 
 #include "inkscape-preferences.h"
 #include "ui/explode-bitmap-feature.h"
+#include "ui/spellcheck-feature.h"
 #ifdef _WIN32
 #include "ui/windows-rendering.h"
 #endif
@@ -4072,6 +4073,7 @@ void InkscapePreferences::onKBListKeyboardShortcuts()
 void InkscapePreferences::initPageSpellcheck()
 {
 #if WITH_LIBSPELLING
+    if constexpr (!UI::spellcheckUiEnabled) return;
     _spell_ignorenumbers.init(_("Ignore words with digits"), "/dialogs/spellcheck/ignorenumbers", true);
     _page_spellcheck.add_line(false, "", _spell_ignorenumbers, "", _("Ignore words containing digits, such as \"R2D2\""), true);
 
@@ -4316,6 +4318,10 @@ void InkscapePreferences::on_pagelist_selection_changed()
 void InkscapePreferences::showPage()
 {
     _search.set_text("");
+    if constexpr (!UI::spellcheckUiEnabled) {
+        auto prefs = Inkscape::Preferences::get();
+        if (prefs->getInt("/dialogs/preferences/page", 0) == PREFS_PAGE_SPELLCHECK) prefs->setInt("/dialogs/preferences/page", 0);
+    }
     _page_list.get_model()->foreach_iter(sigc::mem_fun(*this, &InkscapePreferences::matchPage));
 }
 

@@ -22,6 +22,7 @@
 
 class InkscapeWindow;
 class SPItem;
+class SPDocument;
 
 namespace Inkscape {
 class ObjectSet;
@@ -76,6 +77,39 @@ bool boolean_assist_leaves(SPItem *root, std::function<bool(SPItem *)> const &av
 /// operand's address cannot be reused by the fresh result). The caller must cancel on nullptr.
 SPItem *apply_boolean_assist(Inkscape::ObjectSet &set, BooleanAssistOp op,
                              std::vector<std::string> *removed_group_ids = nullptr);
+
+/// Explicit roles for the document service; no stacking-order or preference lookup.
+enum class BooleanOperandOp { Union, Difference, Intersection, Exclusion, Division };
+enum class BooleanEmptyPolicy { Refuse, Allow };
+enum class BooleanOperandStatus { Applied, Refused };
+enum class BooleanOperandReason {
+    None, MissingDocument, InvalidOperation, InvalidCount, InvalidOperand, OverlappingOperands,
+    Unavailable, GroupEffect, NotAShape, EmptyGeometry, EmptyGroup, UnsafeTransform, EmptyResult
+};
+
+struct BooleanOperandResult {
+    BooleanOperandStatus status = BooleanOperandStatus::Refused;
+    BooleanOperandReason reason = BooleanOperandReason::None;
+    std::vector<std::string> output_ids;
+    // Original root geometry consumed, in request order. Layers retain their structural IDs.
+    std::vector<std::string> consumed_ids;
+    std::string offending_id;
+    std::string detail;
+};
+
+/// Collective geometry with whole-operand compatibility: every explicit root must be eligible,
+/// visible/unlocked and distinct, with no ancestor/descendant overlap. Groups are unioned as one shape
+/// using boolean_assist_leaves eligibility; incompatibility refuses the entire request before writing.
+/// The first root is the subject and the source of output properties, parent, transform and position.
+/// Difference subtracts each subsequent root in request order. Division requires exactly two roots;
+/// union permits one, and the other operations require at least two. Empty-policy Refuse writes nothing;
+/// Allow consumes all roots and can return zero paths. Output IDs identify replacements, not retained
+/// operands (the last output reuses the subject ID, as in native division). A layer root retains its
+/// container; its artwork is consumed and outputs with fresh IDs are placed inside that layer.
+/// Caller supplies a current document and owns settlement: no Undo commit/cancel or preferences here.
+/// Refusals preserve the document and pending caller changes. No preview is published by this service.
+BooleanOperandResult apply_boolean_assist(SPDocument *document, std::vector<SPItem *> const &ordered_roots,
+                                         BooleanOperandOp op, BooleanEmptyPolicy empty_policy);
 
 /// The label/icon today's GUI records: Union "Union"/path-union; Intersection "Intersection"/path-intersection;
 /// Exclusion "Exclusion"/path-exclusion; BottomMinusRest: 2 operands "Difference", more "Bottom minus other objects";

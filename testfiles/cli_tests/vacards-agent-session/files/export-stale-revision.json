@@ -1,0 +1,98 @@
+{
+  "description": "P9 independent M2 export-stale-revision",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "open",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/sheet.svg",
+          "format": "svg",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/inputs/sheet.svg",
+          "sha256": "61859ec258372da15bc80e54bf2fb75c5fec636417c5c702aa400c795d691262",
+          "reported": true,
+          "hash_field": "data.source_version.sha256",
+          "bytes_field": "data.source_version.bytes"
+        }
+      ],
+      "expect_nonempty": [
+        "document_id",
+        "data.source_version.identity",
+        "data.intake"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "stale",
+        "command": "file.export",
+        "params": {
+          "path": "{WORK}/output.png",
+          "format": "png",
+          "drawing": true,
+          "dpi": 96,
+          "background": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "text-policy": "preserve",
+          "overwrite": false,
+          "profile": {
+            "id": "srgb"
+          }
+        },
+        "if_revision": 9007199254740991,
+        "document": {
+          "$ref": "open.document_id"
+        }
+      },
+      "command": "file.export",
+      "cells": [
+        "refusal"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_error": "stale-revision"
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

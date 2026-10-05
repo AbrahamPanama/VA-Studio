@@ -108,6 +108,7 @@ SingleExport::SingleExport(BaseObjectType *cobject, const Glib::RefPtr<Gtk::Buil
     auto &pref_button_box = get_widget<Gtk::Box>(builder, "si_prefs");
     auto &pref_button = *si_extension_cb.getPrefButton();
     pref_button_box.append(pref_button);
+    attach_tiff_profile_picker(si_extension_cb);
     pref_button.set_expand(false);
     pref_button_box.set_expand(false);
     pref_button.set_valign(Gtk::Align::BASELINE_CENTER);

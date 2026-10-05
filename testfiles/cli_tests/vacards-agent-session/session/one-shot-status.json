@@ -1,0 +1,38 @@
+{
+  "description": "Typed one-shot session.status",
+  "transport": "one-shot",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "one-shot",
+        "command": "session.status",
+        "params": {}
+      },
+      "command": "session.status",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "active_request": null,
+          "retention": {
+            "tokens": [],
+            "roots": 0,
+            "bytes": 0
+          }
+        },
+        "publication": {
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0
+}

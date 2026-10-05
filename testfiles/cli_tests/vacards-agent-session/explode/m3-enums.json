@@ -1,0 +1,2624 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "bitmap.explode.contour:enums:all-lengths-px",
+      "command": "bitmap.explode.contour",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.contour:enums:all-lengths-px",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.contour",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "px"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.contour:enums:all-lengths-mm",
+      "command": "bitmap.explode.contour",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.contour:enums:all-lengths-mm",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.contour",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "mm"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "mm"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.contour:enums:all-lengths-cm",
+      "command": "bitmap.explode.contour",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.contour:enums:all-lengths-cm",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.contour",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "cm"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "cm"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.contour:enums:all-lengths-in",
+      "command": "bitmap.explode.contour",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.contour:enums:all-lengths-in",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.contour",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "in"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "in"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.contour:enums:all-lengths-pt",
+      "command": "bitmap.explode.contour",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.contour:enums:all-lengths-pt",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.contour",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "pt"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "pt"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.contour:enums:all-lengths-pc",
+      "command": "bitmap.explode.contour",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.contour:enums:all-lengths-pc",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.contour",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "pc"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "pc"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.explode:enums:all-lengths-px",
+      "command": "bitmap.explode.explode",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.explode:enums:all-lengths-px",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.explode",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "px"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "px"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 1.0,
+                  "unit": "px"
+                }
+              },
+              "contours": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.explode:enums:all-lengths-mm",
+      "command": "bitmap.explode.explode",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.explode:enums:all-lengths-mm",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.explode",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "mm"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "mm"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 0.2645833333333333,
+                  "unit": "mm"
+                }
+              },
+              "contours": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.explode:enums:all-lengths-cm",
+      "command": "bitmap.explode.explode",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.explode:enums:all-lengths-cm",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.explode",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "cm"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "cm"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 0.026458333333333337,
+                  "unit": "cm"
+                }
+              },
+              "contours": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.explode:enums:all-lengths-in",
+      "command": "bitmap.explode.explode",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.explode:enums:all-lengths-in",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.explode",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "in"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "in"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 0.010416666666666666,
+                  "unit": "in"
+                }
+              },
+              "contours": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.explode:enums:all-lengths-pt",
+      "command": "bitmap.explode.explode",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.explode:enums:all-lengths-pt",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.explode",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "pt"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "pt"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 0.75,
+                  "unit": "pt"
+                }
+              },
+              "contours": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.explode:enums:all-lengths-pc",
+      "command": "bitmap.explode.explode",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.explode:enums:all-lengths-pc",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.explode",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "pc"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "pc"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 0.0625,
+                  "unit": "pc"
+                }
+              },
+              "contours": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.create-contour-only:enums:all-lengths-px",
+      "command": "bitmap.explode.create-contour-only",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.create-contour-only:enums:all-lengths-px",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.create-contour-only",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "px"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "px"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 1.0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.create-contour-only:enums:all-lengths-mm",
+      "command": "bitmap.explode.create-contour-only",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.create-contour-only:enums:all-lengths-mm",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.create-contour-only",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "mm"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "mm"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 0.2645833333333333,
+                  "unit": "mm"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.create-contour-only:enums:all-lengths-cm",
+      "command": "bitmap.explode.create-contour-only",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.create-contour-only:enums:all-lengths-cm",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.create-contour-only",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "cm"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "cm"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 0.026458333333333337,
+                  "unit": "cm"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.create-contour-only:enums:all-lengths-in",
+      "command": "bitmap.explode.create-contour-only",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.create-contour-only:enums:all-lengths-in",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.create-contour-only",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "in"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "in"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 0.010416666666666666,
+                  "unit": "in"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.create-contour-only:enums:all-lengths-pt",
+      "command": "bitmap.explode.create-contour-only",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.create-contour-only:enums:all-lengths-pt",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.create-contour-only",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "pt"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "pt"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 0.75,
+                  "unit": "pt"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.create-contour-only:enums:all-lengths-pc",
+      "command": "bitmap.explode.create-contour-only",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.create-contour-only:enums:all-lengths-pc",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.create-contour-only",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "contour": {
+                "offset": {
+                  "value": 0.0,
+                  "unit": "pc"
+                },
+                "gap-tolerance": {
+                  "value": 0.0,
+                  "unit": "pc"
+                }
+              },
+              "contour-style": {
+                "stroke-width": {
+                  "value": 0.0625,
+                  "unit": "pc"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.analyze:enums:retain=false",
+      "command": "bitmap.explode.analyze",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.analyze:enums:retain=false",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "retain": false
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "normalized_params.retain": false
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.analyze:enums:retain=true",
+      "command": "bitmap.explode.analyze",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.analyze:enums:retain=true",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              },
+              "retain": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "normalized_params.retain": true
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.contour:enums:retain=false",
+      "command": "bitmap.explode.contour",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.contour:enums:retain=false",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.contour",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "contour": {
+                "offset": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "gap-tolerance": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              },
+              "retain": false
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "normalized_params.retain": false
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.contour:enums:retain=true",
+      "command": "bitmap.explode.contour",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.contour:enums:retain=true",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "ready",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.contour",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "contour": {
+                "offset": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "gap-tolerance": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              },
+              "retain": true
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "ready.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "normalized_params.retain": true
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.explode.explode:enums:retained-token-route",
+      "command": "bitmap.explode.explode",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.explode:enums:retained-token-route",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "retained_guard",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.explode",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "retained_guard.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error",
+            "normalized_params.recipe",
+            "normalized_params.analyze",
+            "normalized_params.solve"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "token_after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data.retention.tokens": []
+          }
+        }
+      ],
+      "expect_exit": 0,
+      "route": "retained-token"
+    },
+    {
+      "id": "bitmap.explode.apply-adjustment:enums:retained-token-route",
+      "command": "bitmap.explode.apply-adjustment",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.apply-adjustment:enums:retained-token-route",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "retained_guard",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.apply-adjustment",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "retained_guard.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "unchanged",
+            "data": {
+              "variant": "unchanged"
+            }
+          },
+          "expect_absent": [
+            "error",
+            "normalized_params.recipe",
+            "normalized_params.analyze",
+            "normalized_params.solve"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "token_after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data.retention.tokens": [
+              {
+                "$ref": "prepare.data.analysis-token"
+              }
+            ]
+          }
+        }
+      ],
+      "expect_exit": 0,
+      "route": "retained-token"
+    },
+    {
+      "id": "bitmap.explode.create-contour-only:enums:retained-token-route",
+      "command": "bitmap.explode.create-contour-only",
+      "cell": "enums",
+      "description": "Independent P9 bitmap.explode.create-contour-only:enums:retained-token-route",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/explode.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "prepare",
+            "command": "bitmap.explode.analyze",
+            "params": {
+              "id": "image1",
+              "recipe": {
+                "refine": false
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "contours",
+            "command": "bitmap.explode.contour",
+            "params": {
+              "analysis-token": {
+                "$ref": "prepare.data.analysis-token"
+              },
+              "contour": {
+                "offset": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "gap-tolerance": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "retained_guard",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.explode.create-contour-only",
+            "params": {
+              "contour-token": {
+                "$ref": "contours.data.contour-token"
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "retained_guard.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error",
+            "normalized_params.recipe",
+            "normalized_params.analyze",
+            "normalized_params.solve"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "token_after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data.retention.tokens": []
+          }
+        }
+      ],
+      "expect_exit": 0,
+      "route": "retained-token"
+    }
+  ]
+}

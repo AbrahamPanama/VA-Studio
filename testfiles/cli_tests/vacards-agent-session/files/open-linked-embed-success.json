@@ -1,0 +1,43 @@
+{
+  "description": "P9 independent M2 open-linked-embed-success",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "linked",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/linked.svg",
+          "format": "svg",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

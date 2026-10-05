@@ -15,6 +15,7 @@
 #ifndef SEEN_OBJECTS_PANEL_H
 #define SEEN_OBJECTS_PANEL_H
 
+#include <unordered_set>
 #include <gtkmm/gesture.h>
 #include <gtkmm/treerowreference.h>
 #include <gtkmm/treeview.h>
@@ -60,6 +61,8 @@ namespace Dialog {
 
 class ObjectsPanel;
 class ObjectWatcher;
+class ObjectsPanelDocumentObserver;
+struct ObjectsPanelRefreshState;
 
 enum {COL_LABEL, COL_VISIBLE, COL_LOCKED};
 
@@ -108,17 +111,44 @@ private:
     std::unique_ptr<ModelColumns> _model;
 
     void setRootWatcher();
+    void queueStructuralRefresh(ObjectWatcher *watcher);
+    void flushStructuralRefresh();
+    void scheduleStructuralRefresh();
+    void updateRowHeightMode();
+    unsigned _variable_height_rows = 0;
+    // Entries never outlive their owned watcher; destruction removes them.
+    std::unordered_set<ObjectWatcher *> _dirty_parents;
+    std::unordered_set<std::string> _expanded_items;
+    std::unordered_set<std::string> _collapsed_items;
+    std::unordered_set<std::string> _materialized_items;
+    sigc::scoped_connection _structural_idle;
+    unsigned long _document_generation = 0;
+    unsigned long _structural_flushes = 0;
+    bool _rebuilding = false;
+    bool _flushing = false;
+    bool _root_reset_pending = false;
+    std::shared_ptr<ObjectsPanelRefreshState> _flush_state;
+    std::unique_ptr<ObjectsPanelDocumentObserver> _document_observer;
+    sigc::scoped_connection _mutation_finished;
+    friend class ObjectsPanelDocumentObserver;
+    bool _preserve_expansion = false;
+    SPWeakPtr<SPObject> _pending_current, _scroll_anchor;
+    std::string _scroll_anchor_id, _cursor_id;
+    int _cursor_column_index = -1;
+    double _scroll_value = 0;
+    int _anchor_y = 0;
+    friend struct ObjectsPanelBulkTestAccess;
 
     Glib::RefPtr<Gtk::Builder> _builder;
     Inkscape::PrefObserver _watch_object_mode;
     std::unique_ptr<ObjectWatcher> root_watcher;
-    SPItem *current_item = nullptr;
+    SPWeakPtr<SPItem> current_item;
     Gtk::TreeModel::Path _initial_path;
     bool _start_new_range = true;
     std::vector<SPWeakPtr<SPObject>> _prev_range;
 
     sigc::scoped_connection layer_changed;
-    SPObject *_layer;
+    SPWeakPtr<SPObject> _layer;
     Gtk::TreeModel::RowReference _hovered_row_ref;
     Gdk::RGBA _hovered_row_color;
     Gdk::RGBA _hovered_row_old_color;
@@ -148,7 +178,7 @@ private:
     Gtk::ScrolledWindow _scroller;
     Gtk::Box _page;
     sigc::scoped_connection _tree_style;
-    Gtk::TreeRow _clicked_item_row;
+    std::optional<Gtk::TreeRow> _clicked_item_row;
     UI::Widget::PopoverBin _popoverbin;
 
     void _activateAction(const std::string& layerAction, const std::string& selectionAction);

@@ -11,6 +11,7 @@
 #include <glib/gstdio.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <zlib.h>
+#include <tiffio.h>
 #include "display/cairo-utils.h"
 #include "document.h"
 #include "object/sp-image.h"
@@ -32,6 +33,7 @@
 #endif
 namespace Inkscape {
 std::uint64_t image_open_memory_budget(Bitmap::Memory const &);
+std::uint64_t image_open_memory_budget(Bitmap::Result<Bitmap::Memory> const &);
 bool image_open_dimensions_fit(std::uint64_t, std::uint64_t, std::uint64_t, std::uint64_t);
 bool image_open_base64_capacity(std::size_t, std::uint64_t, std::size_t &);
 guchar *image_open_decode_base64(std::string_view, std::uint64_t, gsize &, bool);
@@ -136,7 +138,7 @@ TEST(ImageOpenLimits, Base64RefusedBeforeDecodeAndArithmeticNeverWraps) {
     auto budget = 18 * Inkscape::Bitmap::MiB; std::string payload(2*Inkscape::Bitmap::MiB,'A'); gsize len = 777;
     auto before = peak_rss(); auto data = Inkscape::image_open_decode_base64(payload,budget,len,true); EXPECT_EQ(data,nullptr); EXPECT_EQ(len,777); EXPECT_LT(peak_rss()-before,Inkscape::Bitmap::MiB);
     std::size_t capacity = 0; EXPECT_FALSE(Inkscape::image_open_base64_capacity(SIZE_MAX,UINT64_MAX,capacity));
-    Inkscape::Bitmap::Memory m{32ull*1024*Inkscape::Bitmap::MiB,4ull*1024*Inkscape::Bitmap::MiB,1,true,0}; EXPECT_EQ(Inkscape::image_open_memory_budget(m),m.available); EXPECT_TRUE(Inkscape::image_open_dimensions_fit(14400,21600,100*Inkscape::Bitmap::MiB,Inkscape::image_open_memory_budget(m))); m.measured = false; EXPECT_EQ(Inkscape::image_open_memory_budget(m),256*Inkscape::Bitmap::MiB);
+    Inkscape::Bitmap::Memory m{32ull*1024*Inkscape::Bitmap::MiB,4ull*1024*Inkscape::Bitmap::MiB,1,true,0}; EXPECT_EQ(Inkscape::image_open_memory_budget(m),m.available-256*Inkscape::Bitmap::MiB); EXPECT_TRUE(Inkscape::image_open_dimensions_fit(14400,21600,100*Inkscape::Bitmap::MiB,Inkscape::image_open_memory_budget(m))); m.measured = false; EXPECT_EQ(Inkscape::image_open_memory_budget(m),0u);
 }
 TEST(ImageOpenLimits, ValidAndTruncatedPixelsMatchLegacyDecodeAndKeepHref) {
     for (auto format : {"png","jpeg","gif","bmp","tiff","xpm"}) { SCOPED_TRACE(format); parity(fixture(format),format); }
@@ -152,4 +154,242 @@ TEST(ImageOpenLimits, TinyLogicalScreenCannotHideHugeGifFrame) {
     auto b = bomb("gif"); put(b,6,1,2); put(b,8,1,2); Logs logs; auto before = peak_rss(); auto d = document(uri(b,"gif"));
     ASSERT_NE(d,nullptr); auto image = dynamic_cast<SPImage *>(d->getObjectById("bomb-image")); ASSERT_NE(image,nullptr); EXPECT_TRUE(image->missing); EXPECT_LT(peak_rss()-before,64*Inkscape::Bitmap::MiB);
     ASSERT_EQ(logs.messages.size(),1); EXPECT_NE(logs.messages[0].find("limit"),std::string::npos);
+}
+
+TEST(ImageOpenLimits, R3SharedAdmissionRefusalSurvivesOpeningBufferAndDimensionGates) {
+    using namespace Inkscape; using namespace Inkscape::Bitmap;
+    image_open_reset();
+    Memory low{4096*MiB, 200*MiB, 500*MiB, true};
+    auto budget = image_open_memory_budget(low); ASSERT_EQ(budget, 0u);
+    std::string expected = "Not enough memory: OS headroom / recovery reserve; estimated need 256.00 MiB, available 200.00 MiB.";
+    EXPECT_STREQ(image_open_diagnostic(), expected.c_str());
+    auto payload = uri(fixture("png"), "png");
+    auto base64 = std::string_view(payload).substr(payload.find(',') + 1);
+    gsize len = 777;
+    EXPECT_EQ(image_open_decode_base64(base64, budget, len, true), nullptr);
+    EXPECT_EQ(len, 777u); EXPECT_STREQ(image_open_diagnostic(), expected.c_str());
+    EXPECT_FALSE(image_open_dimensions_fit(4, 4, 100, budget));
+    EXPECT_STREQ(image_open_diagnostic(), expected.c_str());
+    image_open_reset();
+    struct Critical : MemoryProbe {
+        bool read(RawMemory &out) const noexcept override {
+            VmStats vm{4096*MiB,0,0,0,0,500*MiB,4}; return fromVmStats(vm, out);
+        }
+    } critical;
+    auto sample = sampleMemory(critical); ASSERT_FALSE(sample.ok());
+    budget = image_open_memory_budget(sample); ASSERT_EQ(budget, 0u);
+    expected = sample.outcome.diagnostic;
+    EXPECT_NE(expected.find("critical macOS memory pressure"), std::string::npos);
+    EXPECT_EQ(image_open_decode_base64(base64, budget, len, true), nullptr);
+    EXPECT_STREQ(image_open_diagnostic(), expected.c_str());
+    image_open_reset();
+    EXPECT_GT(image_open_memory_budget(Memory{4096*MiB,1024*MiB,500*MiB,true}), 0u);
+    EXPECT_TRUE(image_open_dimensions_fit(4,4,100,768*MiB));
+    EXPECT_STREQ(image_open_diagnostic(), "");
+}
+
+namespace {
+// Generate source samples with libtiff, independently of the display decoder.
+Bytes tiff_samples(unsigned bits, unsigned photo, bool alpha, bool associated,
+                   bool planar, bool tiled, unsigned orientation, unsigned compression,
+                   std::vector<std::uint16_t> const &values, unsigned width = 3, unsigned height = 2,
+                   unsigned resolution_unit = RESUNIT_CENTIMETER, double x_resolution = 100.0, double y_resolution = 50.0)
+{
+    gchar *name = nullptr;
+    int fd = g_file_open_tmp("bug024-XXXXXX", &name, nullptr);
+    EXPECT_GE(fd, 0); if (fd < 0) return {};
+    g_close(fd, nullptr);
+    auto tif = TIFFOpen(name, "w");
+    EXPECT_NE(tif, nullptr);
+    if (!tif) { g_unlink(name); g_free(name); return {}; }
+    unsigned channels = (photo == PHOTOMETRIC_RGB ? 3 : 1) + unsigned(alpha);
+    TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width);
+    TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height);
+    TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, channels);
+    TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bits);
+    TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, photo);
+    TIFFSetField(tif, TIFFTAG_PLANARCONFIG, planar ? PLANARCONFIG_SEPARATE : PLANARCONFIG_CONTIG);
+    TIFFSetField(tif, TIFFTAG_ORIENTATION, orientation);
+    TIFFSetField(tif, TIFFTAG_COMPRESSION, compression);
+    if (compression == COMPRESSION_LZW || compression == COMPRESSION_ADOBE_DEFLATE)
+        TIFFSetField(tif, TIFFTAG_PREDICTOR, PREDICTOR_HORIZONTAL);
+    if (alpha) { std::uint16_t type = associated ? EXTRASAMPLE_ASSOCALPHA : EXTRASAMPLE_UNASSALPHA; TIFFSetField(tif, TIFFTAG_EXTRASAMPLES, 1, &type); }
+    std::vector<std::uint16_t> r, g, b;
+    if (photo == PHOTOMETRIC_PALETTE) {
+        r.resize(1u << bits); g.resize(r.size()); b.resize(r.size());
+        r[1] = 65535;
+        if (r.size() > 2) { g[2] = 65535; b[3] = 65535; }
+        TIFFSetField(tif, TIFFTAG_COLORMAP, r.data(), g.data(), b.data());
+    }
+    std::array<unsigned char, 8> profile{1,2,3,4,5,6,7,8};
+    TIFFSetField(tif, TIFFTAG_ICCPROFILE, profile.size(), profile.data());
+    TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, resolution_unit);
+    TIFFSetField(tif, TIFFTAG_XRESOLUTION, x_resolution);
+    TIFFSetField(tif, TIFFTAG_YRESOLUTION, y_resolution);
+    unsigned bw = tiled ? 16 : width, bh = tiled ? 16 : 1;
+    if (tiled) { TIFFSetField(tif, TIFFTAG_TILEWIDTH, bw); TIFFSetField(tif, TIFFTAG_TILELENGTH, bh); }
+    else TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, bh);
+    for (unsigned plane = 0; plane < (planar ? channels : 1); ++plane)
+        for (unsigned y = 0; y < height; y += bh) for (unsigned x = 0; x < width; x += bw) {
+            auto row = (bw * (planar ? 1 : channels) * bits + 7) / 8;
+            Bytes block(row * bh, 0);
+            for (unsigned yy = 0; yy < bh && y + yy < height; ++yy)
+                for (unsigned xx = 0; xx < bw && x + xx < width; ++xx)
+                    for (unsigned c = 0; c < (planar ? 1 : channels); ++c) {
+                        auto v = values[((y + yy) * width + x + xx) * channels + (planar ? plane : c)];
+                        auto index = xx * (planar ? 1 : channels) + c;
+                        auto p = block.data() + yy * row;
+                        if (bits == 16) std::memcpy(p + index * 2, &v, 2);
+                        else if (bits == 8) p[index] = v;
+                        else p[index * bits / 8] |= v << (8 - bits - index * bits % 8);
+                    }
+            auto result = tiled ? TIFFWriteEncodedTile(tif, TIFFComputeTile(tif,x,y,0,plane), block.data(), block.size())
+                                : TIFFWriteEncodedStrip(tif, TIFFComputeStrip(tif,y,plane), block.data(), block.size());
+            EXPECT_GT(result, 0);
+        }
+    TIFFClose(tif);
+    gchar *data = nullptr; gsize size = 0;
+    EXPECT_TRUE(g_file_get_contents(name, &data, &size, nullptr));
+    Bytes result; if (data) result.assign(data, data + size);
+    g_free(data); g_unlink(name); g_free(name); return result;
+}
+void expect_tiff(Bytes const &bytes, std::vector<unsigned> const &expected, unsigned width = 3, unsigned height = 2,
+                 char const *x_dpi = "254", char const *y_dpi = "127")
+{
+    auto pix = std::unique_ptr<Inkscape::Pixbuf>(Inkscape::Pixbuf::create_from_buffer(
+        std::string(reinterpret_cast<char const *>(bytes.data()), bytes.size())));
+    ASSERT_NE(pix, nullptr) << Inkscape::image_open_diagnostic();
+    auto raw = pix->getPixbufRaw();
+    ASSERT_EQ(gdk_pixbuf_get_width(raw), width); ASSERT_EQ(gdk_pixbuf_get_height(raw), height);
+    ASSERT_EQ(expected.size(), width * height * 4);
+    for (unsigned y = 0; y < height; ++y) for (unsigned x = 0; x < width * 4; ++x)
+        EXPECT_EQ(gdk_pixbuf_get_pixels(raw)[y * gdk_pixbuf_get_rowstride(raw) + x], expected[y * width * 4 + x]) << y << ':' << x;
+    EXPECT_STREQ(gdk_pixbuf_get_option(raw,"icc-profile"), "AQIDBAUGBwg=");
+    EXPECT_STREQ(gdk_pixbuf_get_option(raw,"x-dpi"), x_dpi);
+    EXPECT_STREQ(gdk_pixbuf_get_option(raw,"y-dpi"), y_dpi);
+}
+}
+TEST(ImageOpenLimits, TiffExactStraightAndAssociatedAcrossStorageAndPrecision)
+{
+    for (unsigned bits : {8,16}) for (bool alpha : {false,true}) for (bool associated : {false,true})
+        for (bool planar : {false,true}) for (bool tiled : {false,true})
+            for (unsigned compression : {COMPRESSION_NONE, COMPRESSION_LZW, COMPRESSION_ADOBE_DEFLATE, COMPRESSION_PACKBITS}) {
+                if (!alpha && associated) continue;
+                SCOPED_TRACE(::testing::Message() << bits << '/' << alpha << '/' << associated << '/' << planar << '/' << tiled << '/' << compression);
+                unsigned scale = bits == 16 ? 257 : 1;
+                std::vector<std::uint16_t> values;
+                std::vector<unsigned> expected;
+                for (unsigned i = 0; i < 6; ++i) {
+                    // Includes low alpha and hidden RGB: no premultiply/undo can
+                    // recover these straight samples from an 8-bit RGBA loader.
+                    unsigned a = i == 0 ? 128 : i == 1 ? 1 : i == 2 ? 0 : 255;
+                    std::array<unsigned,3> color = associated ? std::array<unsigned,3>{0,a,0} : std::array<unsigned,3>{17,255,93};
+                    if (i == 0) color = {0, associated ? a : 255, 0};
+                    for (auto c : color) values.push_back(c * scale);
+                    if (alpha) values.push_back(a * scale);
+                    for (unsigned c = 0; c < 3; ++c) expected.push_back(associated ? (a && c == 1 ? 255 : 0) : color[c]);
+                    expected.push_back(alpha ? a : 255);
+                }
+                expect_tiff(tiff_samples(bits,PHOTOMETRIC_RGB,alpha,associated,planar,tiled,1,compression,values),expected);
+            }
+}
+TEST(ImageOpenLimits, TiffGrayAlphaAndPalette)
+{
+    for (unsigned bits : {8,16}) for (unsigned photo : {PHOTOMETRIC_MINISBLACK,PHOTOMETRIC_MINISWHITE})
+        for (bool alpha : {false,true}) for (bool associated : {false,true}) for (bool planar : {false,true}) for (bool tiled : {false,true}) {
+            if (!alpha && associated) continue;
+            unsigned scale = bits == 16 ? 257 : 1;
+            std::vector<std::uint16_t> values; std::vector<unsigned> expected;
+            for (unsigned i = 0; i < 6; ++i) {
+                unsigned a = i == 0 ? 0 : 128, v = associated ? a : 73;
+                values.push_back(v * scale); if (alpha) values.push_back(a * scale);
+                unsigned color = associated ? (a ? 255 : 0) : v;
+                if (photo == PHOTOMETRIC_MINISWHITE && (!associated || a)) color = 255 - color;
+                expected.insert(expected.end(), {color,color,color,alpha ? a : 255});
+            }
+            expect_tiff(tiff_samples(bits,photo,alpha,associated,planar,tiled,1,COMPRESSION_LZW,values),expected);
+        }
+    for (unsigned bits : {2,4,8,16}) for (bool tiled : {false,true}) {
+        expect_tiff(tiff_samples(bits,PHOTOMETRIC_PALETTE,false,false,false,tiled,1,COMPRESSION_NONE,{1,2,3,3,2,1}),
+                    {255,0,0,255, 0,255,0,255, 0,0,255,255, 0,0,255,255, 0,255,0,255, 255,0,0,255});
+    }
+}
+TEST(ImageOpenLimits, TiffAllEightOrientations)
+{
+    // TIFF 3x2 source: 1 2 3 / 4 5 6. Expected visual order is explicit.
+    std::array<std::array<unsigned,6>,8> order{{{1,2,3,4,5,6},{3,2,1,6,5,4},{6,5,4,3,2,1},{4,5,6,1,2,3},
+                                              {1,4,2,5,3,6},{4,1,5,2,6,3},{6,3,5,2,4,1},{3,6,2,5,1,4}}};
+    for (unsigned orientation = 1; orientation <= 8; ++orientation) {
+        SCOPED_TRACE(orientation);
+        std::vector<unsigned> expected;
+        for (auto v : order[orientation-1]) expected.insert(expected.end(),{v,v,v,255});
+        expect_tiff(tiff_samples(8,PHOTOMETRIC_MINISBLACK,false,false,false,false,orientation,COMPRESSION_NONE,{1,2,3,4,5,6}),
+                    expected,orientation < 5 ? 3 : 2,orientation < 5 ? 2 : 3,
+                    orientation < 5 ? "254" : "127",orientation < 5 ? "127" : "254");
+    }
+}
+TEST(ImageOpenLimits, TiffOrientationSixSwapsUnequalInchDpi)
+{
+    // The stored and oriented rasters both describe a 2 x 2 inch image.
+    std::vector<std::uint16_t> values(600 * 300, 73);
+    std::vector<unsigned> expected;
+    expected.reserve(300 * 600 * 4);
+    for (unsigned i = 0; i < 300 * 600; ++i) expected.insert(expected.end(), {73,73,73,255});
+    expect_tiff(tiff_samples(8,PHOTOMETRIC_MINISBLACK,false,false,false,false,6,COMPRESSION_LZW,
+                             values,600,300,RESUNIT_INCH,300.0,150.0),
+                expected,300,600,"150","300");
+}
+TEST(ImageOpenLimits, TiffLegacyBilevelOrientationSwapsDpi)
+{
+    // Unsupported packed grayscale exercises the legacy TIFF fallback too.
+    expect_tiff(tiff_samples(1,PHOTOMETRIC_MINISBLACK,false,false,false,false,6,COMPRESSION_NONE,{1,0,1,0,1,0}),
+                {0,0,0,255, 255,255,255,255, 255,255,255,255, 0,0,0,255, 0,0,0,255, 255,255,255,255},
+                2,3,"127","254");
+}
+TEST(ImageOpenLimits, TiffAssociatedUsesSixteenBitPrecisionAndRounds)
+{
+    expect_tiff(tiff_samples(16,PHOTOMETRIC_RGB,true,true,true,true,1,COMPRESSION_ADOBE_DEFLATE,
+        {1,2,3,3, 16384,8192,32768,32768, 1,0,0,0, 1,2,3,3, 16384,8192,32768,32768, 1,0,0,0}),
+        {85,170,255,0, 128,64,255,128, 0,0,0,0, 85,170,255,0, 128,64,255,128, 0,0,0,0});
+}
+TEST(ImageOpenLimits, TiffHugeDimensionsRefuseBeforePixels)
+{
+    auto bytes = tiff_samples(8,PHOTOMETRIC_RGB,true,false,false,false,1,COMPRESSION_NONE,
+                             {0,255,0,128, 0,255,0,128, 0,255,0,128, 0,255,0,128, 0,255,0,128, 0,255,0,128});
+    // libtiff's native-endian test output: replace the SHORT/LONG width and
+    // height values in the IFD, leaving a valid directory and tiny raster.
+    bool little = bytes[0] == 'I';
+    auto get = [&](unsigned p, unsigned n) { unsigned v=0; for (unsigned i=0;i<n;++i) v |= unsigned(bytes.at(p+i)) << (8*(little?i:n-1-i)); return v; };
+    auto ifd = get(4,4); auto entries = get(ifd,2);
+    for (unsigned i=0;i<entries;++i) { auto p=ifd+2+i*12; auto tag=get(p,2); if (tag==256 || tag==257) { put(bytes,p+2,4,2,little); put(bytes,p+8,100000,4,little); } }
+    Logs logs;
+    auto pix = std::unique_ptr<Inkscape::Pixbuf>(Inkscape::Pixbuf::create_from_buffer(std::string(reinterpret_cast<char const *>(bytes.data()),bytes.size())));
+    EXPECT_EQ(pix,nullptr); EXPECT_NE(std::string(Inkscape::image_open_diagnostic()).find("limit"),std::string::npos);
+}
+
+TEST(ImageOpenLimits, TiffMultipleTilesAndPackedPaletteAndLegacyBilevel)
+{
+    // An earlier caller's diagnostic must not short-circuit this attempt's
+    // legacy fallback. Only a refusal in this decode may prevent fallback.
+    EXPECT_FALSE(Inkscape::image_open_dimensions_fit(100000,100000,0,64*Inkscape::Bitmap::MiB));
+    for (bool planar : {false,true}) {
+        std::vector<std::uint16_t> values; std::vector<unsigned> expected;
+        for (unsigned y = 0; y < 18; ++y) for (unsigned x = 0; x < 19; ++x) {
+            values.insert(values.end(), {std::uint16_t(x*11*257),std::uint16_t(y*13*257),65535,32896});
+            expected.insert(expected.end(), {x*11,y*13,255,128});
+        }
+        expect_tiff(tiff_samples(16,PHOTOMETRIC_RGB,true,false,planar,true,1,COMPRESSION_LZW,values,19,18),expected,19,18);
+    }
+    expect_tiff(tiff_samples(1,PHOTOMETRIC_PALETTE,false,false,false,false,1,COMPRESSION_NONE,{1,0,1,0,1,0}),
+                {255,0,0,255, 0,0,0,255, 255,0,0,255, 0,0,0,255, 255,0,0,255, 0,0,0,255});
+    // Unsupported 1-bit grayscale still goes through the existing TIFF loader.
+    expect_tiff(tiff_samples(1,PHOTOMETRIC_MINISBLACK,false,false,false,false,1,COMPRESSION_NONE,{1,0,1,0,1,0}),
+                {255,255,255,255, 0,0,0,255, 255,255,255,255, 0,0,0,255, 255,255,255,255, 0,0,0,255});
+    // Separate open operation: callers reset the shared diagnostic explicitly.
+    Inkscape::image_open_reset();
+    // Corrupt directory must not produce an accepted empty/partial custom raster.
+    std::string broken("II\052\000\377\377\377\177",8);
+    auto pix = std::unique_ptr<Inkscape::Pixbuf>(Inkscape::Pixbuf::create_from_buffer(broken));
+    EXPECT_EQ(pix,nullptr);
+    EXPECT_STREQ(Inkscape::image_open_diagnostic(), "image decoder could not read the image");
 }

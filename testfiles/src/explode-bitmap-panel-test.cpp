@@ -19,6 +19,7 @@
 #include "ui/explode-bitmap-panel-preparation.h"
 #include <png.h>
 #include <lcms2.h>
+#include <zlib.h>
 #include "bitmap-adjustment-chemistry.h"
 #include <gtkmm/window.h>
 #include <gtkmm/settings.h>
@@ -95,6 +96,8 @@ struct ExplodeBitmapPanelTest : testing::Test {
     }
     void closePanel() { host->unset_child(); panel.reset(); }
     void TearDown() override {
+        // A fatal SetUp assertion can leave the host and main-thread setup absent.
+        if (!host) return;
         closePanel(); drainReaper(); EXPECT_TRUE(waitForBitmapReaper(std::chrono::seconds(3)));
         if (desktop) Application::instance().remove_desktop(desktop.get());
     }
@@ -365,6 +368,8 @@ struct ExplodeBitmapPanelTest : testing::Test {
     }
     void drag(bool start) { panel->drag(start); }
     void slider(unsigned i, double value) { panel->_sliders[i].set_value(value); }
+    void worker(JobFunction work) { panel->_options.work = work; }
+    void inputFault(AllocationFault *fault) { panel->_options.inputFault = fault; }
     std::uint64_t memoryLimit() { return panel->_budget->limit(); }
     void refuseOutlineReservation(std::uint64_t bytes=0) { panel->_options.outlineByteLimit=bytes; }
     void refuseDisplay() { panel->_options.displayByteLimit = 0; }
@@ -1423,7 +1428,8 @@ TEST_F(ExplodeBitmapPanelTest, ProxyAdmissionFlowersAnd100MPWithPressureAndOverl
         ASSERT_TRUE(admitted.ok()) << admitted.outcome.diagnostic;
         EXPECT_EQ(admitted.value.termCaps[unsigned(Term::preview)], size.bytes*2);
         EXPECT_GT(admitted.value.termCaps[unsigned(Term::topology)], size.bytes*2);
-        EXPECT_FALSE(admit(resources(w, h, MiB, 1536*MiB), ample).ok());
+        EXPECT_TRUE(admit(resources(w, h, MiB, 1536*MiB), ample).ok());
+        EXPECT_FALSE(admit(resources(w, h, MiB, 8192*MiB), ample).ok());
     }
     EXPECT_FALSE(admit(resources(10000, 10000, MiB, 0), {4096*MiB, 1024*MiB, 256*MiB, true}).ok());
     EXPECT_EQ(proxySize(16385, 10).bytes, 0u);
@@ -1631,23 +1637,63 @@ TEST_F(ExplodeBitmapPanelTest, PublicationAllocationFaultsPreserveXmlHistoryAndA
     }
 }
 
+TEST_F(ExplodeBitmapPanelTest, SharedHeadroomAdmitsJobAboveFormerPanelCeiling) {
+    struct Room : MemoryProbe {
+        bool read(RawMemory &m) const noexcept override {
+            // Simulate macOS physical RAM minus a 2.5 GiB footprint.
+            m = {16384*MiB, (16384-2560)*MiB, 2560*MiB}; return true;
+        }
+    } room;
+    auto sample = sampleMemory(room); ASSERT_TRUE(sample.ok());
+    Budget oldPanel(1536*MiB); ASSERT_TRUE(oldPanel.recheck(sample.value).ok());
+    Budget::Token oldReservation;
+    EXPECT_FALSE(oldPanel.acquire(Stage::topology, 2048*MiB, oldReservation).ok());
+    open(2, 128, false, {}, {}, &room, 0, true, false);
+    auto before = xml();
+    worker(+[](JobInput const &job, Stop stop, JobWork &work, JobReporter &reporter) {
+        // Reserve simulated large-job storage without allocating a 2 GiB buffer.
+        Budget::Token large;
+        auto admitted = job.storage.budget->acquire(Stage::topology, 2048*MiB, large);
+        EXPECT_TRUE(admitted.ok()) << admitted.diagnostic;
+        if (!admitted.ok()) return JobResult{admitted};
+        return countedCalculate(job, stop, work, reporter);
+    });
+    clickPrimary(); EXPECT_EQ(state(), State::Counting) << message();
+    EXPECT_EQ(memoryLimit(), (16384-2560-256)*MiB);
+    finish(); ASSERT_EQ(state(), State::Ready) << message();
+    EXPECT_TRUE(explodeEnabled()); EXPECT_EQ(output().count, 2u);
+    EXPECT_EQ(xml(), before); EXPECT_EQ(preflightUndo(*doc, {false, 0, 1}).usage.undoCount, 0u);
+    closePanel(); // Probe outlives every callback.
+}
+TEST_F(ExplodeBitmapPanelTest, WorkerMemoryRefusalShowsLimitNeedAndAvailable) {
+    open(2, 128, false, {}, {}, nullptr, 0, true, false);
+    auto before = xml();
+    worker(+[](JobInput const &, Stop, JobWork &, JobReporter &) {
+        return JobResult{Bitmap::memoryFailure("OS headroom / operation budget", 2048*MiB, 1024*MiB)};
+    });
+    clickPrimary(); finish(); ASSERT_EQ(state(), State::Failed);
+    EXPECT_EQ(message(), "Not enough memory: OS headroom / operation budget; estimated need 2048.00 MiB, available 1024.00 MiB.");
+    EXPECT_FALSE(resultReady()); EXPECT_FALSE(preview()); EXPECT_EQ(xml(), before);
+    EXPECT_EQ(preflightUndo(*doc, {false, 0, 1}).usage.undoCount, 0u);
+}
+
 TEST_F(ExplodeBitmapPanelTest, RetiredLedgerUsesFreshMemoryAdmissionOnReopen) {
     struct Room : MemoryProbe {
         std::uint64_t available = 1024*MiB;
         bool read(RawMemory &m) const noexcept override { m = {16384*MiB, available, 256*MiB}; return true; }
     } room;
     open(2, 128, false, {}, {}, &room); finish(); ASSERT_EQ(state(), State::Ready) << message(); auto before = xml();
-    // f4587a8f9: J = min(1536, R/4, 3072 - E - 256, A - 256) MiB;
-    // with R=16384, E=256 and A=1024, available headroom binds at 768.
+    // Shared OS headroom minus the 256 MiB recovery reserve binds at 768 MiB.
     EXPECT_EQ(memoryLimit(), 768*MiB); panel->set_visible(false);
     drainReaper(); ASSERT_TRUE(waitForBitmapReaper(std::chrono::seconds(3)));
     room.available = 8192*MiB; panel->set_visible(true); EXPECT_EQ(state(), State::Idle); clickPrimary();
-    EXPECT_EQ(state(), State::Counting); EXPECT_EQ(memoryLimit(), 1536*MiB); EXPECT_EQ(xml(), before);
+    EXPECT_EQ(state(), State::Counting); EXPECT_EQ(memoryLimit(), (8192-256)*MiB); EXPECT_EQ(xml(), before);
     panel->set_visible(false); drainReaper();
     ASSERT_TRUE(waitForBitmapReaper(std::chrono::seconds(3)));
     // Fresh admission must still refuse when A cannot cover the 256 MiB reserve.
     room.available = 256*MiB; panel->set_visible(true); EXPECT_EQ(state(), State::Idle); clickPrimary();
     EXPECT_EQ(state(), State::Failed); EXPECT_EQ(reserved(), 0u);
+    EXPECT_EQ(message(), "Not enough memory: OS headroom / recovery reserve; estimated need 256.00 MiB, available 256.00 MiB.");
     EXPECT_FALSE(working()); EXPECT_FALSE(resultReady());
     EXPECT_FALSE(applyEnabled()); EXPECT_EQ(primary(), "Analyze");
     explode(); EXPECT_FALSE(publicationPending()); EXPECT_EQ(reserved(), 0u); EXPECT_EQ(xml(), before);
@@ -1721,6 +1767,9 @@ TEST_F(ExplodeBitmapPanelTest, WholeImageApplyCapDoesNotDiscardExactExplodePrepa
     ASSERT_TRUE(delivered); ASSERT_TRUE(result.ok()) << result.outcome.diagnostic;
     auto const &out = static_cast<Output const &>(*result.value.payload);
     EXPECT_FALSE(out.adjustment); EXPECT_FALSE(out.adjustmentOutcome.ok()); EXPECT_TRUE(out.explodeOutcome.ok());
+    ASSERT_TRUE(out.adjustmentFailure); EXPECT_EQ(out.adjustmentFailure->stage,CliBitmapStage::Encode);
+    EXPECT_EQ(out.adjustmentFailure->reason,CliBitmapReason::EncodingFailed);
+    EXPECT_FALSE(out.explodeFailure);
     EXPECT_EQ(out.grid.width, 16u); EXPECT_EQ(out.count, 2u); EXPECT_EQ(out.pieces.count(), 2u); EXPECT_TRUE(out.outlines.storage);
 }
 
@@ -2651,5 +2700,83 @@ TEST_F(ExplodeBitmapPanelTest, ContourSliderQuantizationMatchesDisplayAndSession
 TEST_F(ExplodeBitmapPanelTest, ContourOffPreservesAnalysisClassification) { checkContourOffClassification(); }
 TEST_F(ExplodeBitmapPanelTest, ContourOffDisablesControlsDuringInitialAnalysis) { checkContourOffDuringInitialAnalysis(); }
 TEST_F(ExplodeBitmapPanelTest, ContourRefusalSurvivesPreviewWarnings) { checkContourRefusalWithPreviewWarnings(); }
+
+TEST_F(ExplodeBitmapPanelTest, R3MainThreadHrefAllocationRefusalPreservesDocumentAndAllowsRetry) {
+    auto pix = gdk_pixbuf_new(GDK_COLORSPACE_RGB, true, 8, 16, 4); gdk_pixbuf_fill(pix, 0);
+    auto pixels = gdk_pixbuf_get_pixels(pix);
+    for (unsigned x : {0u, 3u}) { pixels[x*4] = 64; pixels[x*4+3] = 128; }
+    Pixbuf source(pix); auto href = sp_image_encode_png_data_uri(source); ASSERT_TRUE(href);
+    *href += std::string(2*MiB, ' '); // valid base64 whitespace makes the main-thread copy large
+    open(2, 128, false, {}, *href, nullptr, 0, true, false);
+    auto before = xml(); auto starts = workerStarts.load();
+    AllocationFault fault{1}; inputFault(&fault);
+    clickPrimary(); ASSERT_EQ(state(), State::Failed) << message();
+    EXPECT_EQ(fault.attempts, 1u); EXPECT_EQ(workerStarts.load(), starts);
+    EXPECT_NE(message().find("main-thread allocator / image input"), std::string::npos);
+    EXPECT_NE(message().find("estimated need 2.00 MiB"), std::string::npos);
+    EXPECT_NE(message().find("estimated need"), std::string::npos);
+    EXPECT_NE(message().find("available"), std::string::npos);
+    EXPECT_NE(message().find("MiB"), std::string::npos);
+    EXPECT_EQ(reserved(), 0u); EXPECT_FALSE(resultReady()); EXPECT_FALSE(preview());
+    EXPECT_EQ(xml(), before); EXPECT_EQ(desktop->getSelection()->singleItem(), image());
+    EXPECT_EQ(preflightUndo(*doc, {false, 0, 1}).usage.undoCount, 0u);
+    inputFault(nullptr); clickPrimary(); finish(); ASSERT_EQ(state(), State::Ready) << message();
+    EXPECT_EQ(output().count, 2u); EXPECT_EQ(xml(), before);
+}
+
+namespace {
+std::string r4ProfilePng(std::size_t profileSize) {
+    std::vector<unsigned char> raw(profileSize - 1024);
+    std::uint32_t random = 0x12345678;
+    for (auto &byte : raw) { random ^= random << 13; random ^= random >> 17; random ^= random << 5; byte = random; }
+    auto profile = cmsCreate_sRGBProfile();
+    EXPECT_TRUE(cmsWriteRawTag(profile, static_cast<cmsTagSignature>(0x74347374), raw.data(), raw.size()));
+    cmsUInt32Number size = 0; EXPECT_TRUE(cmsSaveProfileToMem(profile,nullptr,&size));
+    std::vector<unsigned char> icc(size); EXPECT_TRUE(cmsSaveProfileToMem(profile,icc.data(),&size)); cmsCloseProfile(profile);
+    uLongf compressedSize = compressBound(icc.size()); std::vector<unsigned char> compressed(compressedSize);
+    EXPECT_EQ(compress2(compressed.data(),&compressedSize,icc.data(),icc.size(),Z_BEST_SPEED), Z_OK);
+    compressed.resize(compressedSize);
+    EXPECT_GT(compressed.size(), MiB); EXPECT_LE(compressed.size()+4, 4*MiB);
+    std::vector<unsigned char> bytes{137,80,78,71,13,10,26,10};
+    auto integer = [](auto &out, std::uint32_t v) { for (int shift=24;shift>=0;shift-=8) out.push_back(v>>shift); };
+    auto chunk = [&](char const *name, auto const &data) {
+        integer(bytes,data.size()); auto from=bytes.size(); bytes.insert(bytes.end(),name,name+4);
+        bytes.insert(bytes.end(),data.begin(),data.end()); integer(bytes,crc32(0,bytes.data()+from,bytes.size()-from));
+    };
+    std::vector<unsigned char> ihdr; integer(ihdr,5000); integer(ihdr,5000); ihdr.insert(ihdr.end(),{8,6,0,0,0}); chunk("IHDR",ihdr);
+    std::vector<unsigned char> iccp{'r','4',0,0}; iccp.insert(iccp.end(),compressed.begin(),compressed.end()); chunk("iCCP",iccp);
+    // One opaque component inside a transparent border, with bounded row storage.
+    std::vector<unsigned char> row(5000*4+1,0), border(row.size(),0);
+    for (unsigned x=1;x<4999;++x) row[1+x*4+3]=255;
+    z_stream stream{}; EXPECT_EQ(deflateInit(&stream,Z_BEST_SPEED), Z_OK);
+    std::vector<unsigned char> idat; unsigned char buffer[65536];
+    for (unsigned y=0;y<5000;++y) {
+        stream.next_in=(y==0 || y==4999) ? border.data() : row.data(); stream.avail_in=row.size();
+        do {
+            stream.next_out=buffer; stream.avail_out=sizeof(buffer);
+            EXPECT_EQ(deflate(&stream,Z_NO_FLUSH), Z_OK); idat.insert(idat.end(),buffer,buffer+sizeof(buffer)-stream.avail_out);
+        } while (stream.avail_in);
+    }
+    int result;
+    do { stream.next_out=buffer; stream.avail_out=sizeof(buffer); result=deflate(&stream,Z_FINISH);
+         idat.insert(idat.end(),buffer,buffer+sizeof(buffer)-stream.avail_out); } while (result==Z_OK);
+    EXPECT_EQ(result,Z_STREAM_END); deflateEnd(&stream); chunk("IDAT",idat); chunk("IEND",std::vector<unsigned char>{});
+    auto encoded=g_base64_encode(bytes.data(),bytes.size()); std::string uri=std::string("data:image/png;base64,")+encoded; g_free(encoded); return uri;
+}
+}
+
+TEST_F(ExplodeBitmapPanelTest, R4PermittedLargeProfilesReachAnalysis) {
+    struct Room : MemoryProbe { bool read(RawMemory &m) const noexcept override { m={16384*MiB,8192*MiB,256*MiB}; return true; } } room;
+    for (auto size : {2*MiB,39*MiB/10}) {
+        SCOPED_TRACE(size); auto uri=r4ProfilePng(size);
+        open(1,255,true,{},uri,&room,0,true,false);
+        ASSERT_TRUE(resolve(*desktop, Intent::Explode).ok()) << message(); auto before=xml(); auto starts=workerStarts.load();
+        EXPECT_FALSE(image()->missing); ASSERT_EQ(image()->pixbuf->width(),5000); ASSERT_EQ(image()->pixbuf->height(),5000);
+        clickPrimary(); EXPECT_NE(ticket(),0u); finish();
+        EXPECT_GT(workerStarts.load(),starts); ASSERT_EQ(state(),State::Ready) << message();
+        EXPECT_EQ(output().count,1u); EXPECT_EQ(xml(),before);
+        EXPECT_EQ(preflightUndo(*doc,{false,0,1}).usage.undoCount,0u);
+    }
+}
 
 }

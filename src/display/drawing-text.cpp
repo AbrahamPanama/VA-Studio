@@ -102,7 +102,8 @@ void DrawingGlyphs::setGlyph(std::shared_ptr<FontInstance> font, unsigned int gl
                 // CACHE the pixbuf here
                 pixbuf = _get_svg_glyph(font, _glyph).get();
             }
-            font_descr   = pango_font_description_to_string(font->get_descr());
+            // BUG-032: font_descr is a debugging-only field that nothing reads. pango_font_description_to_string()
+            // allocates, and the default destructor never freed it, leaking one string per glyph per re-show.
             // std::cout << "DrawingGlyphs::setGlyph: " << std::setw(6) << glyph
             //           << "  design_units: " << design_units
             //           << "  bbox_exact: " << bbox_exact

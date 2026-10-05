@@ -16,6 +16,19 @@
  */
 
 #include "export.h"
+#include "io/export-color-profiles.h"
+#include "extension/internal/tiff-output.h"
+#include "ui/widget/export-lists.h"
+#include "ui/dialog/choose-file.h"
+#include <gtkmm/box.h>
+#include <gtkmm/comboboxtext.h>
+#include <gtkmm/label.h>
+#include <gtkmm/menubutton.h>
+#include <gtkmm/popover.h>
+#include <gtkmm/filefilter.h>
+#include <giomm/liststore.h>
+#include <giomm/file.h>
+
 
 #include <glibmm/convert.h>
 #include <glibmm/fileutils.h>
@@ -40,6 +53,109 @@
 #include "ui/interface.h"
 
 namespace Inkscape::UI::Dialog {
+
+namespace {
+class OutputProfilePicker final : public Gtk::Box {
+public:
+    OutputProfilePicker() : Gtk::Box(Gtk::Orientation::VERTICAL, 6), _life(std::make_shared<bool>(true))
+    {
+        set_margin(8);
+        _label.set_text(_("Output color profile"));
+        _label.set_xalign(0);
+        _notice.set_wrap(true);
+        _notice.set_max_width_chars(48);
+        append(_label); append(_choice); append(_notice);
+        reload();
+        _choice.signal_changed().connect([this] { changed(); });
+        _observer = Preferences::get()->createObserver(IO::EXPORT_PROFILE_PREFERENCE, [this] { reload(); });
+    }
+    ~OutputProfilePicker() override { *_life = false; }
+    void reload()
+    {
+        _updating = true;
+        IO::ExportColorProfiles profiles;
+        std::string notice;
+        auto selected = profiles.selected(notice);
+        _catalog = profiles.catalog(&notice);
+        if (std::none_of(_catalog.begin(), _catalog.end(), [&](auto const &p) { return p.id() == selected.id(); }))
+            _catalog.push_back(selected);
+        _choice.remove_all();
+        for (auto const &p : _catalog) {
+            auto label = p.name;
+            // Duplicate descriptions are common. Show path and digest to disambiguate them.
+            if (std::count_if(_catalog.begin(), _catalog.end(), [&](auto const &q) { return q.name == p.name; }) > 1)
+                label += " — " + p.path + " [" + p.sha256.substr(0, 8) + "]";
+            _choice.append(p.id(), label);
+        }
+        _choice.append("add", _("Add profile…"));
+        _choice.set_active_id(selected.id());
+        _choice.set_tooltip_text(selected.path.empty() ? selected.name : selected.path);
+        _notice.set_text(notice);
+        _notice.set_visible(!notice.empty());
+        _updating = false;
+    }
+private:
+    void changed()
+    {
+        if (_updating) return;
+        auto id = _choice.get_active_id();
+        if (id != "add") {
+            for (auto const &p : _catalog) if (p.id() == id) { IO::ExportColorProfiles().select(p); break; }
+            return;
+        }
+        reload();
+        auto window = dynamic_cast<Gtk::Window *>(get_root());
+        if (!window) return;
+        auto filters = Gio::ListStore<Gtk::FileFilter>::create();
+        auto filter = Gtk::FileFilter::create();
+        filter->set_name(_("ICC color profiles (*.icc, *.icm)"));
+        for (auto suffix : {"icc", "icm"}) filter->add_suffix(suffix);
+        filters->append(filter);
+        auto life = _life;
+        choose_file_open_async(_("Add output color profile"), window, filters, {},
+            [this, life](auto file, auto, std::string error) {
+                if (!*life) return;
+                if (file) {
+                    IO::ExportColorProfile profile;
+                    if (IO::ExportColorProfiles().add(file->get_path(), profile, error)) {
+                        IO::ExportColorProfiles().select(profile);
+                        reload();
+                    }
+                }
+                if (!error.empty()) { _notice.set_text(error); _notice.set_visible(true); }
+            });
+    }
+    Gtk::Label _label, _notice;
+    Gtk::ComboBoxText _choice;
+    std::vector<IO::ExportColorProfile> _catalog;
+    bool _updating = false;
+    std::shared_ptr<bool> _life;
+    Inkscape::PrefObserver _observer;
+};
+}
+
+void attach_tiff_profile_picker(ExtensionList &list)
+{
+    auto popover = list.getPrefButton()->get_popover();
+    if (!popover || g_object_get_data(G_OBJECT(popover->gobj()), "vacards-icc-picker")) return;
+    auto box = dynamic_cast<Gtk::Box *>(popover->get_child());
+    if (!box) return;
+    // Construct lazily: normal export-dialog setup need not scan system profiles.
+    g_object_set_data(G_OBJECT(popover->gobj()), "vacards-icc-picker", GINT_TO_POINTER(1));
+    popover->signal_show().connect([&list, box] {
+        auto ext = list.getExtension();
+        auto mime = ext ? std::string(ext->get_mimetype()) : std::string();
+        bool supports_profile = mime == "image/tiff" || mime == "image/png" ||
+                                mime == "image/jpeg" || mime == "image/webp";
+        auto picker = static_cast<OutputProfilePicker *>(g_object_get_data(G_OBJECT(box->gobj()), "vacards-icc-picker"));
+        if (supports_profile && !picker) {
+            picker = Gtk::make_managed<OutputProfilePicker>();
+            box->append(*picker);
+            g_object_set_data(G_OBJECT(box->gobj()), "vacards-icc-picker", picker);
+        }
+        if (picker) { picker->set_visible(supports_profile); if (supports_profile) picker->reload(); }
+    });
+}
 
 namespace {
 // Export can pump the main loop through an overwrite prompt, progress callback
@@ -257,6 +373,21 @@ bool Export::exportRaster(
         return false;
     }
 
+    // Only these containers consume profile-converted intermediate pixels.
+    // TIFF keeps its existing unconverted input and applies its own transform.
+    auto profile_mime = std::string(extension->get_mimetype());
+    bool const profile_output = profile_mime == "image/png" || profile_mime == "image/jpeg" ||
+                                profile_mime == "image/webp";
+    IO::PreparedExportProfile output_profile;
+    if (profile_output) {
+        output_profile = IO::prepare_export_color_profile();
+        if (!output_profile.notice.empty()) {
+            g_warning("%s", output_profile.notice.c_str());
+            sp_ui_error_dialog(output_profile.notice.c_str());
+        }
+        if (!source.current()) return false;
+    }
+
     float pHYs = extension->get_param_float("png_phys", dpi);
     if (pHYs < 0.01) pHYs = dpi;
 
@@ -314,7 +445,8 @@ bool Export::exportRaster(
     ExportResult result = sp_export_png_file(
         doc, Glib::filename_to_utf8(png_filename).c_str(), area, width, height, pHYs,
         pHYs, // previously xdpi, ydpi.
-        bgcolor, Progress::update, &progress, true, selected, use_interlacing, color_type, bit_depth, zlib, antialiasing);
+        bgcolor, Progress::update, &progress, true, selected, use_interlacing, color_type, bit_depth, zlib, antialiasing,
+        profile_output ? &output_profile : nullptr, profile_mime == "image/jpeg" || profile_mime == "image/webp");
 
     // The PNG writer reports a stopped row callback as EXPORT_ERROR. Treat an
     // explicit cancellation/closed source as cancellation, not an error popup.
@@ -344,8 +476,14 @@ bool Export::exportRaster(
 
     Glib::ustring safeFile = Inkscape::IO::sanitizeString(path.c_str());
     if (source.current()) {
+        if (std::string(extension->get_mimetype()) == "image/tiff") {
+            auto name = IO::sanitizeString(Extension::Internal::TiffOutput::last_profile_name().c_str());
+            source.desktop->messageStack()->flashF(Inkscape::INFORMATION_MESSAGE,
+                _("Drawing exported to <b>%s</b>. Output color profile: %s"), safeFile.c_str(), name.c_str());
+        } else {
         source.desktop->messageStack()->flashF(Inkscape::INFORMATION_MESSAGE, _("Drawing exported to <b>%s</b>."),
                                               safeFile.c_str());
+        }
     }
     return true;
 }

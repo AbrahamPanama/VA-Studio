@@ -26,6 +26,10 @@
 #include <OptionalContent.h>
 #include <PDFDoc.h>
 #include <Page.h>
+#include <Stream.h>
+#include <algorithm>
+#include <cmath>
+#include <limits>
 #include <goo/GooString.h>
 
 #ifdef HAVE_POPPLER_CAIRO
@@ -851,6 +855,131 @@ try {
 } catch (...) {
     g_message("PDF import failed: unknown error");
     throw Input::open_failed();
+}
+
+PdfIntakeResult::PdfIntakeResult() = default;
+PdfIntakeResult::~PdfIntakeResult() = default;
+PdfIntakeResult::PdfIntakeResult(PdfIntakeResult &&) noexcept = default;
+PdfIntakeResult &PdfIntakeResult::operator=(PdfIntakeResult &&) noexcept = default;
+
+PdfIntakeResult PdfInput::open_request(std::string pinned_bytes, std::string const &logical_name,
+                                      PdfIntakeOptions const &options)
+{
+    PdfIntakeResult result;
+    auto fail = [&](std::string code, std::string message, std::vector<int> pages = {}, int error = 0) {
+        result.document.reset();
+        result.error = PdfIntakeError{std::move(code), std::move(message), std::move(pages), error};
+        return std::move(result);
+    };
+    try {
+        result.report.conversion = options;
+        if (options.import_type != PdfImportType::PDF_IMPORT_INTERNAL) {
+            return fail("mode-unsupported", "Request intake supports only INTERNAL, including multi-page requests.");
+        }
+        if (options.pages.empty()) {
+            return fail("pages-invalid", "An explicit nonempty list of 1-based pages is required.");
+        }
+        auto const &crop = options.crop_box;
+        if ((options.font_policy != PdfFontPolicy::RejectMissing &&
+             options.font_policy != PdfFontPolicy::SubstituteMissing) ||
+            (options.group_by != "by-xobject" && options.group_by != "by-layer") ||
+            (crop != "none" && crop != "media-box" && crop != "crop-box" &&
+             crop != "trim-box" && crop != "bleed-box" && crop != "art-box") ||
+            !std::isfinite(options.approximation_precision) ||
+            options.approximation_precision < 1 || options.approximation_precision > 100) {
+            return fail("options-invalid", "Invalid font, grouping, crop or approximation option.");
+        }
+        if (pinned_bytes.empty() || pinned_bytes.size() > static_cast<size_t>(std::numeric_limits<Goffset>::max())) {
+            return fail("pdf-invalid", "Empty or oversized PDF data.");
+        }
+
+        // Same owner-thread, initialize-if-absent contract as the GUI entry point.
+        // No request state is placed in Poppler's global configuration.
+        if (!globalParams) {
+            globalParams = _POPPLER_NEW_GLOBAL_PARAMS();
+        }
+        // MemStream borrows pinned_bytes; PDFDoc and all builders die before it.
+        Object dictionary;
+        dictionary.setToNull();
+        auto stream = std::make_unique<MemStream>(pinned_bytes.data(), 0, pinned_bytes.size(), std::move(dictionary));
+#if POPPLER_CHECK_VERSION(26, 6, 0)
+        auto pdf = std::make_shared<PDFDoc>(std::move(stream));
+#else
+        auto pdf = std::make_shared<PDFDoc>(stream.release());
+#endif
+        if (!pdf->isOk()) {
+            auto error = pdf->getErrorCode();
+            return fail(error == errEncrypted ? "pdf-encrypted" : "pdf-invalid",
+                        "Poppler could not open the PDF data.", {}, error);
+        }
+        auto catalog = pdf->getCatalog();
+        if (!catalog || !catalog->isOk() || catalog->getNumPages() < 1) {
+            return fail("pdf-invalid", "PDF has no valid page catalog.");
+        }
+        result.report.catalog_pages = catalog->getNumPages();
+        std::vector<int> invalid;
+        for (int page : options.pages) {
+            if (page < 1 || page > catalog->getNumPages() || !catalog->getPage(page)) {
+                invalid.push_back(page);
+            }
+        }
+        if (!invalid.empty()) {
+            return fail("pages-invalid", "Requested pages are outside or missing from the PDF catalog.", std::move(invalid));
+        }
+
+        auto fonts = getPdfFonts(pdf, options.pages);
+        // Only fonts on requested pages participate in admission and strategies.
+        // The request scan records shared resource membership separately per page.
+        for (auto it = fonts->begin(); it != fonts->end();) {
+            auto const &data = it->second;
+            PdfIntakeFontReport font{data.name, !data.found, {}, {}};
+            for (int page : options.pages) {
+                if (data.pages.count(page)) font.pages.push_back(page);
+            }
+            if (font.pages.empty()) {
+                it = fonts->erase(it);
+                continue;
+            }
+            if (font.missing && options.font_policy == PdfFontPolicy::SubstituteMissing) {
+                font.substitute = data.getSubstitute();
+            }
+            result.report.fonts.push_back(std::move(font));
+            ++it;
+        }
+        if (options.font_policy == PdfFontPolicy::RejectMissing &&
+            std::any_of(result.report.fonts.begin(), result.report.fonts.end(),
+                        [](auto const &font) { return font.missing; })) {
+            return fail("fonts-missing", "Requested pages use fonts unavailable for editable text.");
+        }
+        auto strategies = SvgBuilder::autoFontStrategies(FontStrategy::SUBSTITUTE_MISSING, fonts);
+        auto doc = SPDocument::createNewDoc(nullptr, true);
+        if (!doc) return fail("conversion-failed", "Could not create the SVG document.");
+        DocumentUndo::setUndoSensitive(doc.get(), false);
+        std::unique_ptr<gchar, decltype(&g_free)> name(g_path_get_basename(logical_name.c_str()), &g_free);
+        if (auto dot = g_strrstr(name.get(), ".")) *dot = 0;
+        {
+            SvgBuilder builder(doc.get(), name.get(), pdf->getXRef());
+            builder.setFontStrategies(strategies);
+            builder.setPageMode(options.page_mode);
+            builder.setEmbedImages(options.embed_images);
+            builder.setConvertColors(options.convert_colors);
+            builder.setGroupBy(options.group_by);
+            for (int page : options.pages) {
+                add_builder_page(pdf, &builder, doc.get(), page, crop, options.approximation_precision);
+            }
+        }
+        if (!doc->getRoot()->viewBox_set) {
+            doc->setViewBox(Geom::Rect::from_xywh(0, 0, doc->getWidth().value(doc->getDisplayUnit()),
+                                                doc->getHeight().value(doc->getDisplayUnit())));
+        }
+        result.report.imported_pages = options.pages;
+        result.document = std::move(doc);
+        return result;
+    } catch (std::exception const &e) {
+        return fail("conversion-failed", e.what());
+    } catch (...) {
+        return fail("conversion-failed", "Unknown PDF conversion error.");
+    }
 }
 
 /**

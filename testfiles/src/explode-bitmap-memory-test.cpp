@@ -30,7 +30,7 @@ MemorySample sample(std::uint64_t r, std::uint64_t a, std::uint64_t e)
     EXPECT_TRUE(s.value.measured);
     return s.value;
 }
-MemorySample roomy() { return sample(16 * GiB, 16 * GiB, 100 * MiB); } // J = 1536 MiB
+MemorySample roomy() { return sample(16 * GiB, 16 * GiB, 100 * MiB); } // J = available minus recovery
 ResourcePlan plan(std::initializer_list<Reservation> list)
 {
     ResourcePlan p;
@@ -41,6 +41,20 @@ ResourcePlan plan(std::initializer_list<Reservation> list)
         if (!have) EXPECT_TRUE(p.add(t, 0, 0, maxPhases - 1));
     }
     return p;
+}
+// Both the native smoke and synthetic Windows case use this exact oracle.
+enum class ProbeSemantics { PhysicalFootprint, WindowsCommit };
+void checkSmokePlausibility(Result<MemorySample> const &r, ProbeSemantics semantics)
+{
+    ASSERT_TRUE(r.ok()) << r.outcome.diagnostic;
+    EXPECT_TRUE(r.value.measured);
+    EXPECT_GT(r.value.physical, 0u);
+    EXPECT_GT(r.value.available, 0u);
+    EXPECT_GT(r.value.baseline, 0u);
+    if (semantics == ProbeSemantics::PhysicalFootprint) {
+        EXPECT_LE(r.value.baseline, r.value.physical);
+        EXPECT_EQ(r.value.available, r.value.physical - r.value.baseline);
+    } // Windows commit headroom and private usage can exceed physical RAM.
 }
 } // namespace
 
@@ -59,9 +73,7 @@ TEST(ExplodeBitmapMemory, T05UnavailableProbeNeverGuesses)
 
 TEST(ExplodeBitmapMemory, T05ZeroAndInconsistentValuesRefused)
 {
-    for (auto const &p : {FakeProbe(0, GiB, GiB), FakeProbe(8 * GiB, 0, GiB), FakeProbe(8 * GiB, GiB, 0),
-                          FakeProbe(2 * GiB, 3 * GiB, GiB),     // available > physical
-                          FakeProbe(2 * GiB, GiB, 3 * GiB)}) { // footprint > physical
+    for (auto const &p : {FakeProbe(0, GiB, GiB), FakeProbe(8 * GiB, GiB, 0)}) { // footprint > physical
         auto r = sampleMemory(p);
         EXPECT_EQ(r.outcome.status, Status::unavailable);
         EXPECT_FALSE(r.value.measured);
@@ -74,10 +86,10 @@ TEST(ExplodeBitmapMemory, T05PressuredProbeRefusesBeforeAllocation)
     auto s = sample(8 * GiB, 200 * MiB, GiB);
     auto a = admit(plan({{Term::decode, MiB, 0, 0}}), s);
     EXPECT_EQ(a.outcome.status, Status::failed);
-    EXPECT_STREQ(a.outcome.diagnostic, "No recovery headroom");
-    // High baseline: E >= 3072-256 MiB leaves no process headroom at all.
+    EXPECT_NE(std::string(a.outcome.diagnostic).find("recovery reserve"), std::string::npos);
+    // High footprint no longer triggers an artificial process cap.
     a = admit(plan({{Term::decode, MiB, 0, 0}}), sample(16 * GiB, 16 * GiB, 2816 * MiB));
-    EXPECT_EQ(a.outcome.status, Status::failed);
+    EXPECT_TRUE(a.ok());
 }
 
 TEST(ExplodeBitmapMemory, T05FourGiBPcWithOneGiBAvailable)
@@ -86,7 +98,7 @@ TEST(ExplodeBitmapMemory, T05FourGiBPcWithOneGiBAvailable)
     auto ok = admit(plan({{Term::decode, 768 * MiB, 0, 0}}), s);
     ASSERT_TRUE(ok.ok());
     EXPECT_EQ(ok.value.limit, 768 * MiB); // available minus 256 MiB recovery binds
-    EXPECT_STREQ(ok.value.jBinding, "available RAM - recovery");
+    EXPECT_STREQ(ok.value.jBinding, "OS commit/footprint headroom - recovery");
     auto over = admit(plan({{Term::decode, 768 * MiB + 1, 0, 0}}), s);
     EXPECT_EQ(over.outcome.status, Status::failed);
     EXPECT_EQ(over.value.binding, Term::decode);
@@ -100,31 +112,24 @@ TEST(ExplodeBitmapMemory, T05FourGiBPcWithOneGiBAvailable)
 
 TEST(ExplodeBitmapMemory, T05EveryJBindingTermThroughAdmissionLimit)
 {
-    struct Case { MemorySample m; std::uint64_t expected; char const *term; };
-    Memory ceiling{16 * GiB, 16 * GiB, 100 * MiB, true, 0};
-    Memory available{16 * GiB, GiB, 100 * MiB, true, 0};
-    Memory process{16 * GiB, 16 * GiB, 2500 * MiB, true, 0};
-    Memory recovery{16 * GiB, 300 * MiB, 100 * MiB, true, 0};
-    Case cases[] = {{ceiling, 1536 * MiB, "1.5 GiB ceiling"},
-                    {available, 768 * MiB, "available RAM - recovery"},
-                    {process, 316 * MiB, "process cap (3 GiB - E - recovery)"},
-                    {recovery, 44 * MiB, "available RAM - recovery"}};
-    for (auto &c : cases) {
-        std::uint64_t direct = 0;
-        ASSERT_TRUE(admissionLimit(c.m, direct).ok());
-        auto a = admit(plan({{Term::decode, MiB, 0, 0}}), c.m);
-        ASSERT_TRUE(a.ok()) << c.term;
-        EXPECT_EQ(a.value.limit, direct);
-        EXPECT_EQ(a.value.limit, c.expected) << c.term;
-        EXPECT_STREQ(a.value.jBinding, c.term);
-        EXPECT_STREQ(bindingJTerm(c.m), c.term);
+    for (auto m : {Memory{16*GiB,16*GiB,2560*MiB,true},
+                   Memory{2*GiB,8*GiB,3*GiB,true}, Memory{16*GiB,300*MiB,GiB,true}}) {
+        std::uint64_t limit = 0;
+        ASSERT_TRUE(admissionLimit(m, limit).ok());
+        EXPECT_EQ(limit, m.available - 256*MiB);
+        auto result = admit(plan({{Term::decode, MiB, 0, 0}}), m);
+        ASSERT_TRUE(result.ok()); EXPECT_EQ(result.value.limit, limit);
     }
-    // Synthetic A>R (refused by admit and recheck) isolates R/4 in the raw formula.
-    Memory synthetic{2 * GiB, 8 * GiB, 100 * MiB, true, 0};
-    std::uint64_t j = 0;
-    ASSERT_TRUE(admissionLimit(synthetic, j).ok());
-    EXPECT_EQ(j, 512 * MiB);
-    EXPECT_STREQ(bindingJTerm(synthetic), "physical RAM / 4"); // unique minimum: no tie-break involved
+    WinStatus w{8*GiB,100*MiB,16*GiB,0,2560*MiB,false}; RawMemory raw;
+    ASSERT_TRUE(fromMemoryStatus(w,raw));
+    auto m = sample(raw.physical,raw.available,raw.footprint);
+    EXPECT_TRUE(admit(plan({{Term::decode,4*GiB,0,0}}),m).ok());
+    w.availPageFile=300*MiB; ASSERT_TRUE(fromMemoryStatus(w,raw));
+    auto refused=admit(plan({{Term::decode,100*MiB,0,0}}),sample(raw.physical,raw.available,raw.footprint));
+    EXPECT_FALSE(refused.ok());
+    EXPECT_NE(std::string(refused.outcome.diagnostic).find("commit/footprint"),std::string::npos);
+    EXPECT_NE(std::string(refused.outcome.diagnostic).find("100.00 MiB"),std::string::npos);
+    EXPECT_NE(std::string(refused.outcome.diagnostic).find("44.00 MiB"),std::string::npos);
 }
 
 // ---- T02 overlap accounting ----
@@ -155,7 +160,7 @@ TEST(ExplodeBitmapMemory, T02RecoveryRedoGenerationsAndQueuedResultsAllCount)
     auto refused = build(1);
     EXPECT_EQ(refused.outcome.status, Status::failed);
     EXPECT_EQ(refused.value.binding, Term::queued);
-    EXPECT_STREQ(refused.outcome.diagnostic, "Plan exceeds RAM limit: queued results");
+    EXPECT_NE(std::string(refused.outcome.diagnostic).find("Not enough memory"), std::string::npos);
     // The same bytes in disjoint phases are sequential and fit.
     auto seq = admit(plan({{Term::recovery, 200 * MiB, 0, 0}, {Term::generation, 200 * MiB, 1, 1},
                            {Term::cache, 200 * MiB, 2, 2}}), s);
@@ -223,7 +228,7 @@ TEST(ExplodeBitmapMemory, T04CachesAndPostCommitCountAgainstLimit)
     auto over = build(152 * MiB + 1);
     EXPECT_EQ(over.outcome.status, Status::failed);
     EXPECT_EQ(over.value.binding, Term::cache);
-    EXPECT_STREQ(over.outcome.diagnostic, "Plan exceeds RAM limit: caches");
+    EXPECT_NE(std::string(over.outcome.diagnostic).find("Not enough memory"), std::string::npos);
     // Overlapping crop boxes: B much larger than P still counts fully as 4B decoded caches.
     ASSERT_TRUE(postCommitLowerBound(65 * MiB, 0, 0, post));
     auto amp = admit(plan({{Term::postCommit, post, 0, 0}}), s);
@@ -233,24 +238,10 @@ TEST(ExplodeBitmapMemory, T04CachesAndPostCommitCountAgainstLimit)
 
 TEST(ExplodeBitmapMemory, T04StageCapsRefuseEarly)
 {
-    auto s = roomy();
-    EXPECT_TRUE(admit(plan({{Term::topology, 256 * MiB, 0, 0}}), s).ok());
-    auto topo = admit(plan({{Term::topology, 256 * MiB + 1, 0, 0}}), s);
-    EXPECT_EQ(topo.outcome.status, Status::failed);
-    EXPECT_STREQ(topo.outcome.diagnostic, "Plan exceeds fixed cap: topology 256 MiB");
-    EXPECT_EQ(topo.value.binding, Term::topology);
-    auto prev = admit(plan({{Term::preview, 4 * MiB + 1, 0, 0}}), s);
-    EXPECT_STREQ(prev.outcome.diagnostic, "Plan exceeds fixed cap: preview 4 MiB");
-    auto hr = admit(plan({{Term::href, 512 * MiB + 1, 0, 0}}), s);
-    EXPECT_STREQ(hr.outcome.diagnostic, "Plan exceeds fixed cap: href 512 MiB");
-    EXPECT_TRUE(admit(plan({{Term::preview, 4 * MiB, 0, 0}}), s).ok());
-    // crop + encoder combined 128 MiB only when alive together.
-    EXPECT_TRUE(admit(plan({{Term::crop, 64 * MiB, 0, 0}, {Term::encoder, 64 * MiB, 0, 0}}), s).ok());
-    auto bad = admit(plan({{Term::crop, 64 * MiB, 0, 0}, {Term::encoder, 64 * MiB + 1, 0, 0}}), s);
-    EXPECT_EQ(bad.outcome.status, Status::failed);
-    EXPECT_EQ(bad.value.binding, Term::encoder);
-    EXPECT_STREQ(bad.outcome.diagnostic, "Plan exceeds fixed cap: crops plus encoder 128 MiB");
-    EXPECT_TRUE(admit(plan({{Term::crop, 100 * MiB, 0, 0}, {Term::encoder, 100 * MiB, 1, 1}}), s).ok());
+    for (auto t : {Term::topology,Term::preview,Term::href,Term::crop,Term::encoder}) {
+        EXPECT_TRUE(admit(plan({{t, 1024*MiB, 0, 0}}),roomy()).ok());
+    }
+    EXPECT_TRUE(admit(plan({{Term::crop,GiB,0,0},{Term::encoder,GiB,0,0}}),roomy()).ok());
 }
 
 // ---- round 2 ----
@@ -295,7 +286,7 @@ TEST(ExplodeBitmapMemory, R3MandatoryTermsMustCoverThePeakPhase)
 
 TEST(ExplodeBitmapMemory, R3CeilingAndLedgerFollowRecheck)
 {
-    auto s = sample(16 * GiB, 16 * GiB, 100 * MiB); // J = 1536 MiB
+    auto s = sample(16 * GiB, 16 * GiB, 100 * MiB); // J = available minus recovery
     Budget small(100 * MiB);
     ASSERT_TRUE(small.recheck(s).ok());
     EXPECT_EQ(small.limit(), 100 * MiB);
@@ -363,41 +354,22 @@ TEST(ExplodeBitmapMemory, R2NeverOptimisticAboveOperationStart)
     EXPECT_EQ(admit(big, bad).outcome.status, Status::failed);
     bad = {4 * GiB, 4 * GiB, 500 * MiB, true, 100 * MiB};
     EXPECT_EQ(admit(big, bad, &first.value.effective, AdmitBudget{~std::uint64_t(0), GiB}).outcome.status,
-              Status::failed); // A + r > R
+              Status::failed); // Operation-start anchor still limits this job
 }
 
 TEST(ExplodeBitmapMemory, R2MacMappingConservative)
 {
-    VmStats v{8 * GiB, 100, 5000, 1000, 16384, 600 * MiB, 1};
-    RawMemory raw;
-    ASSERT_TRUE(fromVmStats(v, raw));
-    EXPECT_EQ(raw.available, (100 + 1000) * 16384u); // inactive capped by file-backed pages
-    EXPECT_EQ(raw.physical, 8 * GiB);
-    EXPECT_EQ(raw.footprint, 600 * MiB);
-    v.inactivePages = 10; // fewer inactive than external
-    ASSERT_TRUE(fromVmStats(v, raw));
-    EXPECT_EQ(raw.available, 110 * 16384u);
-    v.inactivePages = 5000; v.pressureLevel = 2; // warn halves
-    ASSERT_TRUE(fromVmStats(v, raw));
-    EXPECT_EQ(raw.available, 1100 * 16384u / 2);
-    v.pressureLevel = 4; EXPECT_FALSE(fromVmStats(v, raw)); // critical refuses
-    v.pressureLevel = 0; EXPECT_FALSE(fromVmStats(v, raw)); // unknown refuses
-    v.pressureLevel = 1; v.pageSize = 0; EXPECT_FALSE(fromVmStats(v, raw));
-    v.pageSize = ~std::uint64_t(0); EXPECT_FALSE(fromVmStats(v, raw)); // overflow
-    // Speculative pages are already in free; they must not count again through external.
-    VmStats spec{8 * GiB, 100, 5000, 1000, 16384, 600 * MiB, 1, 400};
-    ASSERT_TRUE(fromVmStats(spec, raw));
-    EXPECT_EQ(raw.available, (100 + 600) * 16384u);
-    EXPECT_LT(raw.available, (spec.freePages + spec.inactivePages) * spec.pageSize); // conservative
-    spec.speculativePages = 2000; // more speculative than external: no file-backed credit at all
-    ASSERT_TRUE(fromVmStats(spec, raw));
-    EXPECT_EQ(raw.available, 100 * 16384u);
-    // Pressured values reach admission as a small A and refuse.
-    VmStats tight{8 * GiB, 5000, 0, 0, 16384, GiB, 1}; // ~78 MiB available
-    ASSERT_TRUE(fromVmStats(tight, raw));
-    auto s = sampleMemory(FakeProbe(raw.physical, raw.available, raw.footprint));
-    ASSERT_TRUE(s.ok());
-    EXPECT_FALSE(admit(plan({{Term::decode, MiB, 0, 0}}), s.value).ok());
+    VmStats v{16*GiB,0,0,0,0,2560*MiB,1}; RawMemory raw;
+    ASSERT_TRUE(fromVmStats(v,raw)); EXPECT_EQ(raw.available,16*GiB-2560*MiB);
+    v.pressureLevel=2; ASSERT_TRUE(fromVmStats(v,raw));
+    EXPECT_EQ(raw.available,16*GiB-2560*MiB);
+    v.pressureLevel=4; EXPECT_FALSE(fromVmStats(v,raw));
+    EXPECT_STREQ(raw.refusal,"critical macOS memory pressure");
+    v.pressureLevel=0; EXPECT_FALSE(fromVmStats(v,raw));
+    v.pressureLevel=1; v.footprint=17*GiB; ASSERT_TRUE(fromVmStats(v,raw));
+    EXPECT_EQ(raw.available,0u);
+    auto exhausted=sample(raw.physical,raw.available,raw.footprint);
+    EXPECT_FALSE(admit(plan({{Term::decode,MiB,0,0}}),exhausted).ok());
 }
 
 TEST(ExplodeBitmapMemory, R2WindowsMappingUsesCommitLimit)
@@ -413,7 +385,7 @@ TEST(ExplodeBitmapMemory, R2WindowsMappingUsesCommitLimit)
     EXPECT_EQ(raw.available, 100 * MiB); // address space binds on 32-bit
     w = {4 * GiB, 500 * MiB, 3 * GiB, 0, 700 * MiB, false};
     ASSERT_TRUE(fromMemoryStatus(w, raw));
-    EXPECT_EQ(raw.available, 500 * MiB);
+    EXPECT_EQ(raw.available, 3 * GiB);
 }
 
 TEST(ExplodeBitmapMemory, R2TermCapsAndNames)
@@ -435,14 +407,10 @@ TEST(ExplodeBitmapMemory, R2TermCapsAndNames)
 TEST(ExplodeBitmapMemory, NativeSmokePlausibility)
 {
     auto r = sampleMemory();
-#if defined(__APPLE__) || defined(_WIN32)
-    ASSERT_TRUE(r.ok()) << r.outcome.diagnostic;
-    EXPECT_TRUE(r.value.measured);
-    EXPECT_GT(r.value.physical, 0u);
-    EXPECT_GT(r.value.available, 0u);
-    EXPECT_LE(r.value.available, r.value.physical);
-    EXPECT_GT(r.value.baseline, 0u);
-    EXPECT_LE(r.value.baseline, r.value.physical);
+#if defined(__APPLE__)
+    checkSmokePlausibility(r, ProbeSemantics::PhysicalFootprint);
+#elif defined(_WIN32)
+    checkSmokePlausibility(r, ProbeSemantics::WindowsCommit);
 #else
     EXPECT_EQ(r.outcome.status, Status::unavailable);
     EXPECT_FALSE(r.value.measured);
@@ -481,4 +449,64 @@ TEST(ExplodeBitmapMemory, P3OutlineReservationIsOptionalBoundedAndOwnedBeforeDis
     reservation.value.reset(); EXPECT_EQ(budget->reserved(),64*MiB);
     EXPECT_FALSE(PanelPreparation::reserveOutlines(budget,0).ok());
     pressure.release(); EXPECT_EQ(budget->reserved(),0u);
+}
+
+TEST(ExplodeBitmapMemory, B30SupportedSheetWithContoursAndLargeFootprint) {
+    VmStats v{16*GiB,0,0,0,0,2560*MiB,2}; RawMemory raw;
+    ASSERT_TRUE(fromVmStats(v,raw));
+    auto m=sample(raw.physical,raw.available,raw.footprint);
+    PanelPreparation::ContourRecipe contour; contour.enabled=true;
+    auto p=PanelPreparation::resources(5000,5000,100*MiB,0,contour);
+    // 150 separated pieces, total crop area no larger than the supported sheet.
+    ASSERT_TRUE(p.add(Term::crop,5000ULL*5000*4,2,2));
+    ASSERT_TRUE(p.add(Term::encoder,5000ULL*5000*4 + 150*4096,2,2));
+    auto result=admit(p,m); ASSERT_TRUE(result.ok()) << result.outcome.diagnostic;
+    EXPECT_EQ(result.value.limit,16*GiB-2560*MiB-256*MiB);
+}
+
+TEST(ExplodeBitmapMemory, B30HrefBoundIncludes150MaximumProfiles) {
+    // The encoder crop contract allows at most 2P = 50M crop pixels. Using
+    // 150 copies of a 4MiB profile is the worst metadata amplification.
+    auto png = worstPngBytes(5002,5002,4*MiB);
+    std::uint64_t href = 0;
+    ASSERT_TRUE(checkedBase64Length(2*png + 150*worstPngBytes(1,1,4*MiB),href));
+    EXPECT_LT(href,maxHrefBytes);
+}
+
+TEST(ExplodeBitmapMemory, R3PreparationRestoresMeasuredResidentBeforeStartAnchor)
+{
+    FakeProbe probe(4*GiB, 512*MiB, 500*MiB);
+    Budget budget(UINT64_MAX);
+    ASSERT_TRUE(PanelPreparation::recheck(budget, &probe).ok());
+    Budget::Token resident;
+    ASSERT_TRUE(budget.acquire(Stage::decode, 200*MiB, resident).ok());
+    probe.raw.available = 312*MiB; probe.raw.footprint = 700*MiB;
+    ASSERT_TRUE(PanelPreparation::recheck(budget, &probe).ok());
+    EXPECT_EQ(budget.limit(), 256*MiB); // formerly 56 MiB and rejected the same storage
+    EXPECT_EQ(budget.reserved(), 200*MiB);
+    // Unallocated reservations cannot restore more than the measured increase.
+    probe.raw.footprint = 600*MiB;
+    auto refused = PanelPreparation::recheck(budget, &probe);
+    EXPECT_FALSE(refused.ok()); EXPECT_TRUE(refused.insufficientMemory);
+    EXPECT_EQ(budget.limit(), 156*MiB);
+    // Improved OS headroom still cannot raise the operation-start allowance.
+    probe.raw.available = 2*GiB; probe.raw.footprint = 700*MiB;
+    ASSERT_TRUE(PanelPreparation::recheck(budget, &probe).ok());
+    EXPECT_EQ(budget.limit(), 256*MiB);
+    resident.release(); probe.raw.available = 300*MiB;
+    ASSERT_TRUE(PanelPreparation::recheck(budget, &probe).ok());
+    EXPECT_EQ(budget.limit(), 44*MiB); // a high footprint without live job bytes is not restored
+}
+
+TEST(ExplodeBitmapMemory, R3WindowsCommitAndPrivateUsageMayExceedPhysicalRam)
+{
+    WinStatus status{4*GiB, GiB, 8*GiB, 16*GiB, 6*GiB, false};
+    RawMemory raw; ASSERT_TRUE(fromMemoryStatus(status, raw));
+    auto measured = sampleMemory(FakeProbe(raw.physical, raw.available, raw.footprint));
+    checkSmokePlausibility(measured, ProbeSemantics::WindowsCommit);
+    ASSERT_TRUE(measured.ok());
+    EXPECT_GT(measured.value.available, measured.value.physical);
+    EXPECT_GT(measured.value.baseline, measured.value.physical);
+    std::uint64_t limit = 0; ASSERT_TRUE(admissionLimit(measured.value, limit).ok());
+    EXPECT_EQ(limit, 8*GiB - 256*MiB);
 }

@@ -35,6 +35,8 @@
 #include <mach-o/dyld.h>
 #elif defined(_WIN32)
 #include <windows.h>
+// Wincon macro collides with Gdk::ToplevelState::DOUBLE_CLICK below.
+#undef DOUBLE_CLICK
 #endif
 
 #include "desktop.h"

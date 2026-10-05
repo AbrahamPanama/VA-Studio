@@ -103,6 +103,7 @@ struct CapturedInput
     std::vector<CapturedCandidate> candidates;
     std::vector<CapturedObstacle> obstacles;
     double flatten_tolerance = 0.05;
+    bool reject_conservative = false; // request-local; GUI keeps existing recovery
 };
 
 } // namespace Inkscape::Nesting

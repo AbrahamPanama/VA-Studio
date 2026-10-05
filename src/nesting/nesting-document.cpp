@@ -32,12 +32,18 @@
 
 #include "document-undo.h"
 #include "document.h"
+#include "selection.h"
+#include "id-clash.h"
 #include "display/cairo-utils.h"
 #include "object/sp-flowtext.h"
 #include "object/sp-clippath.h"
 #include "object/sp-image.h"
 #include "object/sp-item-group.h"
 #include "object/sp-shape.h"
+#include "object/sp-page.h"
+#include "object/object-set.h"
+#include "page-manager.h"
+#include "xml/repr.h"
 #include "object/sp-text.h"
 #include "path/path-boolop.h"
 #include "path/path-outline.h"
@@ -2493,11 +2499,12 @@ bool geometry_still_matches(PreparedDocumentNesting const &snapshot, std::size_t
     bool const document_unchanged = snapshot.revision && !snapshot.revision->changed();
     PixelHashMemo pixel_hashes;
     auto *container = snapshot.container.get();
-    if (!container || container->document != snapshot.document || container->isHidden() || container->isLocked() ||
-        !affine_near(container->i2doc_affine(), snapshot.container_item_to_document)) {
+    if (snapshot.request_local_sheet && !document_unchanged) return false;
+    if (!snapshot.request_local_sheet && (!container || container->document != snapshot.document || container->isHidden() || container->isLocked() ||
+        !affine_near(container->i2doc_affine(), snapshot.container_item_to_document))) {
         return false;
     }
-    if (!document_unchanged || snapshot.container_always_revalidate) {
+    if (!snapshot.request_local_sheet && (!document_unchanged || snapshot.container_always_revalidate)) {
         ValidationBudget container_geometry_budget;
         auto container_geometry =
             prepare_container_geometry(container, snapshot.flatten_tolerance, &container_geometry_budget);
@@ -2576,6 +2583,116 @@ bool geometry_still_matches(PreparedDocumentNesting const &snapshot, std::size_t
 }
 
 } // namespace
+
+bool preparedNestingFresh(PreparedDocumentNesting const &snapshot) {
+    std::size_t count=0; return geometry_still_matches(snapshot,count);
+}
+
+ContourBindingResult setNestingContour(SPDocument &document, SPItem *payload, SPItem *contour,
+                                      bool dry_run, std::shared_ptr<void> const &owner_lease)
+{
+    using R = ContourBindingReason;
+    using S = ContourBindingStatus;
+    if (!payload || !contour || payload->document != &document || contour->document != &document ||
+        !payload->getId() || !contour->getId())
+        return {.reason = R::InvalidItem};
+    if (payload == contour || payload->isAncestorOf(contour) || contour->isAncestorOf(payload))
+        return {.reason = R::OverlappingRoles};
+    if (payload->parent != contour->parent || payload->isHidden() || payload->isLocked() ||
+        contour->isHidden() || contour->isLocked() || !finite(payload->i2doc_affine()) ||
+        !finite(contour->i2doc_affine()) || payload->cloned || contour->cloned)
+        return {.reason = R::UnsafeContext};
+    if (!is<SPShape>(contour) || !prepare_container_geometry(contour, 0.05))
+        return {.reason = R::UnsupportedContour};
+    ContourBindingResult result;
+    result.payload_ids.emplace_back(payload->getId());
+    result.contour_ids.emplace_back(contour->getId());
+    if (dry_run) { result.status = S::Prepared; return result; }
+    auto transaction = owner_lease ? DocumentUndo::beginAtomicCommandInteraction(&document, owner_lease)
+                                   : DocumentUndo::beginAtomicInteraction(&document);
+    if (!transaction) return {.reason = R::Busy};
+    std::vector<std::string> selected;
+    for (auto *item : document.getSelection()->items()) if (item->getId()) selected.emplace_back(item->getId());
+    auto restore = [&] {
+        transaction->rollback();
+        std::vector<SPItem *> items;
+        for (auto const &id : selected)
+            if (auto *item = cast<SPItem>(document.getObjectById(id))) items.push_back(item);
+        document.getSelection()->setList(items);
+    };
+    try {
+    ObjectSet targets(&document);
+    targets.add(payload); targets.add(contour);
+    contour->setAttribute("inkscape:nesting-contour", "true");
+    auto *group = targets.group();
+    if (!group) { restore(); return {.reason = R::PublicationFailed}; }
+    group->setAttribute("inkscape:nesting-contour-version", "1");
+    if (auto id = group->attribute("id")) result.binding_ids.emplace_back(id);
+    if (!transaction->commitAtomically(Util::Internal::ContextString{"Set nesting contour"},
+                                      INKSCAPE_ICON("object-group"), [] { return true; })) {
+        restore(); return {.reason = R::PublicationFailed};
+    }
+    } catch (...) { restore(); return {.reason = R::PublicationFailed}; }
+    result.status = S::Applied;
+    return result;
+}
+
+ContourBindingResult releaseNestingContour(SPDocument &document, std::span<SPItem *const> roots,
+                                          bool dry_run, std::shared_ptr<void> const &owner_lease)
+{
+    using R = ContourBindingReason;
+    using S = ContourBindingStatus;
+    ContourBindingResult result;
+    std::vector<SPObject *> changes;
+    std::unordered_set<SPObject *> seen;
+    std::function<bool(SPObject *)> visit = [&](SPObject *object) {
+        if (!object || object->cloned || !seen.emplace(object).second) return true;
+        auto *repr = object->getRepr();
+        bool binding = repr->attribute("inkscape:nesting-contour-version");
+        bool contour = repr->attribute("inkscape:nesting-contour");
+        if (binding || contour) {
+            if (auto item = cast<SPItem>(object); item && (item->isHidden() || item->isLocked())) return false;
+            changes.push_back(object);
+            if (object->getId()) {
+                if (binding) {
+                    result.binding_ids.emplace_back(object->getId());
+                    // Preserve payload-root identity, including a grouped payload.
+                    // The binding wrapper itself is not artwork.
+                    for (auto &child : object->children) {
+                        if (is<SPItem>(&child) && child.getId() &&
+                            !child.getRepr()->attribute("inkscape:nesting-contour") &&
+                            !child.getRepr()->attribute("inkscape:nesting-contour-version"))
+                            result.payload_ids.emplace_back(child.getId());
+                    }
+                }
+                if (contour) result.contour_ids.emplace_back(object->getId());
+            }
+        }
+        for (auto &child : object->children) if (!visit(&child)) return false;
+        return true;
+    };
+    for (auto *root : roots) {
+        if (!root || root->document != &document) return {.reason = R::InvalidItem};
+        if (root->isHidden() || root->isLocked() || !visit(root)) return {.reason = R::UnsafeContext};
+    }
+    if (changes.empty()) { result.status = S::Unchanged; return result; }
+    if (dry_run) { result.status = S::Prepared; return result; }
+    auto transaction = owner_lease ? DocumentUndo::beginAtomicCommandInteraction(&document, owner_lease)
+                                   : DocumentUndo::beginAtomicInteraction(&document);
+    if (!transaction) return {.reason = R::Busy};
+    try {
+    for (auto *object : changes) {
+        object->getRepr()->removeAttribute("inkscape:nesting-contour");
+        object->getRepr()->removeAttribute("inkscape:nesting-contour-version");
+    }
+    if (!transaction->commitAtomically(Util::Internal::ContextString{"Release nesting contour"},
+                                      INKSCAPE_ICON("object-group"), [] { return true; })) {
+        transaction->rollback(); return {.reason = R::PublicationFailed};
+    }
+    } catch (...) { transaction->rollback(); return {.reason = R::PublicationFailed}; }
+    result.status = S::Applied;
+    return result;
+}
 
 SheetObstacles collectSheetObstacles(SPItem *sheet, unsigned dkey, std::span<SPItem *const> parts)
 {
@@ -2706,21 +2823,23 @@ std::optional<std::string> sheetIneligibility(SPItem *item)
     return container_ineligibility(item);
 }
 
-CaptureResult captureDocumentNesting(SPItem *container, std::span<SPItem *const> candidate_parts,
-                                     double flatten_tolerance, std::span<SPItem *const> obstacles)
+static CaptureResult capture_nesting(SPDocument *document, SPItem *container,
+                                     std::span<SPItem *const> candidate_parts,
+                                     double flatten_tolerance, std::span<SPItem *const> obstacles,
+                                     std::optional<Geom::Rect> sheet = {})
 {
     auto const started = std::chrono::steady_clock::now();
-    if (!container)
+    if (!container && !sheet)
         return {.error = "no nesting container was provided"};
-    if (!container->document)
+    if (!document)
         return {.error = "nesting container is detached from a document"};
-    if (container->isHidden() || container->isLocked()) {
+    if (container && (container->isHidden() || container->isLocked())) {
         return {.error = "nesting container is hidden or locked"};
     }
     if (!std::isfinite(flatten_tolerance) || flatten_tolerance < MIN_ABSOLUTE_TOLERANCE) {
         return {.error = "flatten tolerance must be finite and at least 0.000001 document units"};
     }
-    if (!finite(container->i2doc_affine())) {
+    if (container && !finite(container->i2doc_affine())) {
         return {.error = "nesting container has a non-finite transform"};
     }
     // Watch the document from before anything is read (R2). Ignored: the
@@ -2730,28 +2849,37 @@ CaptureResult captureDocumentNesting(SPItem *container, std::span<SPItem *const>
     // still counts as a change.
     auto const code = [](char const *name) { return static_cast<int>(g_quark_from_static_string(name)); };
     auto revision = std::make_shared<Inkscape::XML::SubtreeRevision const>(
-        *container->document->getReprRoot(), code("sodipodi:namedview"),
+        *document->getReprRoot(), sheet ? 0 : code("sodipodi:namedview"),
         std::vector<int>{code("sodipodi:guide"), code("inkscape:page"), code("inkscape:grid")});
 
     // The same rules as the tool's hover check, so the two cannot disagree.
-    if (auto reason = container_ineligibility(container))
+    if (auto reason = container ? container_ineligibility(container) : std::nullopt)
         return {.error = "invalid nesting container: " + *reason};
 
     auto input = std::make_shared<CapturedInput>();
-    input->container_path = *curve_for_item(container) * container->i2doc_affine();
-    input->container_wind_rule = container->style ? container->style->fill_rule.computed : SP_WIND_RULE_NONZERO;
+    if (sheet) {
+        Geom::Path path(sheet->corner(0));
+        for (unsigned i = 1; i < 4; ++i) path.appendNew<Geom::LineSegment>(sheet->corner(i));
+        path.close();
+        input->container_path.push_back(path);
+        input->container_wind_rule = SP_WIND_RULE_NONZERO;
+    } else {
+        input->container_path = *curve_for_item(container) * container->i2doc_affine();
+        input->container_wind_rule = container->style ? container->style->fill_rule.computed : SP_WIND_RULE_NONZERO;
+    }
     input->flatten_tolerance = flatten_tolerance;
 
     CaptureResult result;
     auto &skeleton = result.skeleton;
-    skeleton.document = container->document;
+    skeleton.document = document;
+    skeleton.request_local_sheet = sheet.has_value();
     skeleton.container = SPWeakPtr<SPItem>(container);
-    skeleton.container_item_to_document = container->i2doc_affine();
+    if (container) skeleton.container_item_to_document = container->i2doc_affine();
     skeleton.flatten_tolerance = flatten_tolerance;
     skeleton.revision = std::move(revision);
     CaptureContext context;
     auto &pixel_hashes = context.pixel_hashes;
-    {
+    if (container) {
         FingerprintFacts container_facts;
         (void)item_content_fingerprint(container, &container_facts, &pixel_hashes);
         // Container bitmaps are rare; keep them on the full path rather than
@@ -2830,6 +2958,84 @@ CaptureResult captureDocumentNesting(SPItem *container, std::span<SPItem *const>
     return result;
 }
 
+CaptureResult captureDocumentNesting(SPItem *container, std::span<SPItem *const> candidate_parts,
+                                     double flatten_tolerance, std::span<SPItem *const> obstacles)
+{
+    return capture_nesting(container ? container->document : nullptr, container, candidate_parts,
+                           flatten_tolerance, obstacles);
+}
+
+PreparationResult prepareRequestNesting(SPDocument &document, std::span<SPItem *const> candidates,
+    RequestPreparationOptions const &request, double tolerance, std::span<SPItem *const> obstacles)
+{
+    if (request.sheet.has_value() == request.page.has_value())
+        return {.error = "supply exactly one request-local sheet or page", .reason = PreparationReason::InvalidSheet};
+    auto sheet = request.sheet;
+    if (request.page) {
+        if (!*request.page) return {.error = "page is one-based", .reason = PreparationReason::InvalidSheet};
+        auto const &pages = document.getPageManager().getPages();
+        if (pages.empty() && *request.page == 1) {
+            sheet = Geom::Rect(Geom::Point(0, 0), document.getDimensions());
+        } else if (*request.page <= pages.size()) {
+            sheet = pages[*request.page - 1]->getDocumentRect();
+        } else return {.error = "page not found", .reason = PreparationReason::InvalidSheet};
+    }
+    if (!std::isfinite(sheet->left()) || !std::isfinite(sheet->top()) ||
+        !std::isfinite(sheet->right()) || !std::isfinite(sheet->bottom()) ||
+        sheet->width() <= 0 || sheet->height() <= 0)
+        return {.error = "invalid request-local sheet", .reason = PreparationReason::InvalidSheet};
+    if (!request.copies.empty() && request.copies.size() != candidates.size())
+        return {.error = "copy counts must match candidates", .reason = PreparationReason::InvalidCopies};
+    std::size_t count = 0;
+    for (std::size_t i = 0; i < candidates.size(); ++i) {
+        auto copies = request.copies.empty() ? 1u : request.copies[i];
+        if (!copies || copies > 100000 || count + copies > 100000)
+            return {.error = "expanded copies exceed 100000", .reason = PreparationReason::ResourceLimit};
+        count += copies;
+    }
+    auto capture = capture_nesting(&document, nullptr, candidates, tolerance, obstacles, sheet);
+    if (!capture) return {.error = capture.error};
+    auto input = std::make_shared<CapturedInput>(*capture.input);
+    input->reject_conservative = request.reject_conservative;
+    capture.input = input;
+    auto geometry = prepareCapturedGeometry(*capture.input);
+    if (!geometry) {
+        PreparationResult failed{.error = geometry.error,
+            .reason = geometry.conservative_refused ? PreparationReason::ConservativeRejected : geometry.no_usable_parts ? PreparationReason::NoUsableParts : PreparationReason::None};
+        for (auto const &skip : geometry.skipped)
+            failed.skipped_parts.push_back({SPWeakPtr<SPItem>(candidates[skip.candidate]), skip.reason, skip.detail});
+        return failed;
+    }
+    if (request.reject_conservative && geometry.metrics.fallback_count)
+        return {.error = "conservative capture forbidden by fallback=reject", .reason = PreparationReason::ConservativeRejected};
+    // Expand polygons and their source identities before assembly. The solver
+    // sees distinct native IDs; only apply creates positive-index copies.
+    auto originals = std::move(geometry.parts);
+    geometry.parts.clear();
+    std::vector<std::uint32_t> copy_indices;
+    std::uint64_t next_id = 1;
+    geometry.metrics.selected_contour_area = 0;
+    for (auto const &part : originals) {
+        auto copies = request.copies.empty() ? 1u : request.copies[part.candidate];
+        for (std::uint32_t copy = 0; copy < copies; ++copy) {
+            auto expanded = part;
+            expanded.id = next_id++;
+            geometry.metrics.selected_contour_area += part_area(expanded.components);
+            geometry.parts.push_back(std::move(expanded));
+            copy_indices.push_back(copy);
+        }
+    }
+    geometry.metrics.prepared_count = geometry.parts.size();
+    auto prepared = assemblePreparedNesting(std::move(capture), std::move(geometry));
+    if (prepared) {
+        if (prepared.snapshot->parts.size() != copy_indices.size())
+            return {.error = "copy assembly cardinality mismatch"};
+        for (std::size_t i = 0; i < copy_indices.size(); ++i) prepared.snapshot->parts[i].copy = copy_indices[i];
+        prepared.snapshot->apply_validation_options = request.solver_options;
+    }
+    return prepared;
+}
+
 CapturedGeometry prepareCapturedGeometry(CapturedInput const &input, std::stop_token stop,
                                          PreparationProgress const &progress)
 {
@@ -2899,6 +3105,11 @@ CapturedGeometry prepareCapturedGeometry(CapturedInput const &input, std::stop_t
             result.skipped.push_back({.candidate = index, .reason = reason, .detail = std::move(geometry.error)});
             continue;
         }
+        if (input.reject_conservative &&
+            (geometry.geometry->source == ContourSource::ConservativeHull ||
+             geometry.geometry->source == ContourSource::ConservativeBounds ||
+             geometry.geometry->recovery == RecoveryKind::ConservativeFallback))
+            return {.error="conservative capture forbidden by fallback=reject", .conservative_refused=true};
         auto const fingerprint = geometry_fingerprint(*geometry.geometry);
         result.parts.push_back({
             .candidate = index,
@@ -2956,6 +3167,11 @@ CapturedGeometry prepareCapturedGeometry(CapturedInput const &input, std::stop_t
             return fail("an object on the sheet cannot be measured, so parts could overlap it: " +
                         obstacle.item.label + " (" + geometry.error + "). Move it off the sheet or hide it.");
         }
+        if (input.reject_conservative &&
+            (geometry.geometry->source == ContourSource::ConservativeHull ||
+             geometry.geometry->source == ContourSource::ConservativeBounds ||
+             geometry.geometry->recovery == RecoveryKind::ConservativeFallback))
+            return {.error="conservative obstacle forbidden by fallback=reject", .conservative_refused=true};
         metrics.obstacle_area += filled_footprint_area(geometry.geometry->components);
         auto const obstacle_geometry = geometry_fingerprint(*geometry.geometry);
         result.obstacles.push_back({.index = index,
@@ -2965,7 +3181,9 @@ CapturedGeometry prepareCapturedGeometry(CapturedInput const &input, std::stop_t
     metrics.obstacle_count = result.obstacles.size();
 
     if (result.parts.empty()) {
-        return fail("selection contains no nestable parts");
+        result.error = "selection contains no nestable parts";
+        result.no_usable_parts = true;
+        return result;
     }
     metrics.prepared_count = result.parts.size();
     metrics.skipped_count = result.skipped.size();
@@ -2992,7 +3210,7 @@ PreparationResult assemblePreparedNesting(CaptureResult &&capture, CapturedGeome
     auto skip = geometry.skipped.begin();
     for (std::size_t index = 0; index < capture.candidates.size(); ++index) {
         auto &id = capture.candidates[index];
-        if (part != geometry.parts.end() && part->candidate == index) {
+        while (part != geometry.parts.end() && part->candidate == index) {
             snapshot.parts.push_back({
                 .id = part->id,
                 .item = id.item,
@@ -3003,11 +3221,12 @@ PreparationResult assemblePreparedNesting(CaptureResult &&capture, CapturedGeome
                 .content_fingerprint = id.content_fingerprint,
                 .recovery = part->recovery,
                 .recovery_reason = std::move(part->recovery_reason),
-                .image_alpha_hashes = std::move(id.image_alpha_hashes),
+                .image_alpha_hashes = id.image_alpha_hashes,
                 .always_revalidate = id.always_revalidate,
             });
             ++part;
-        } else if (skip != geometry.skipped.end() && skip->candidate == index) {
+        }
+        if (skip != geometry.skipped.end() && skip->candidate == index) {
             snapshot.skipped_parts.push_back({id.item, skip->reason, std::move(skip->detail)});
             ++skip;
         }
@@ -3066,18 +3285,22 @@ PreparationResult prepareDocumentNesting(SPItem *container, std::span<SPItem *co
 }
 
 static SolveResult solveNativeNesting(PreparedDocumentNesting const &snapshot, Options const &options,
-                                 Job::ProgressCallback const &progress, std::stop_token cancellation)
+                                 Job::ProgressCallback const &progress, std::stop_token cancellation,
+                                 std::uint64_t work_limit = 0)
 {
     auto const started = std::chrono::steady_clock::now();
     if (!snapshot.document || snapshot.container_outline.size() < 3 || snapshot.parts.empty()) {
         return {.status = Status::InvalidArgument, .error = "nesting snapshot is incomplete"};
     }
     if (cancellation.stop_requested()) {
-        return {.status = Status::Cancelled, .error = statusMessage(Status::Cancelled)};
+        return {.status = Status::Cancelled, .error = statusMessage(Status::Cancelled),
+                .terminal = TerminalResult{StopReason::Cancelled, 0}, .deterministic = work_limit != 0};
     }
 
     try {
         Job job(options);
+        auto work_status = job.setWorkLimit(work_limit);
+        if (work_status != Status::Ok) return {.status = work_status, .error = job.error()};
         std::stop_callback cancel_job(cancellation, [&job] { job.cancel(); });
         auto status = job.setContainer(snapshot.container_outline);
         if (status != Status::Ok)
@@ -3112,9 +3335,10 @@ static SolveResult solveNativeNesting(PreparedDocumentNesting const &snapshot, O
                 progress(value);
             }
         });
+        auto terminal = job.terminalResult();
         auto const elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
         SolveMetrics metrics{
-            .iterations = latest_progress.iteration,
+            .iterations = work_limit && terminal ? terminal->completed_work : latest_progress.iteration,
             .placed_count = latest_progress.placed_count,
             .placed_contour_area = latest_progress.best_score,
             .utilization_percent = snapshot.metrics.container_usable_area > 0.0
@@ -3129,12 +3353,25 @@ static SolveResult solveNativeNesting(PreparedDocumentNesting const &snapshot, O
             .placements = status == Status::Ok ? job.results() : std::vector<Placement>{},
             .error = status == Status::Ok ? std::string{} : job.error(),
             .metrics = metrics,
+            .terminal = terminal,
+            .deterministic = work_limit != 0,
         };
     } catch (std::exception const &exception) {
         return {.status = Status::InternalError, .error = exception.what()};
     } catch (...) {
         return {.status = Status::InternalError, .error = "unknown exception while solving nesting job"};
     }
+}
+
+SolveResult solvePreparedNesting(PreparedDocumentNesting const &snapshot, Options const &options,
+                                 EngineSelection engine, std::uint64_t work_limit,
+                                 Job::ProgressCallback const &progress, std::stop_token cancellation)
+{
+    if (work_limit && (engine != EngineSelection::NativeOnly || options.worker_count != 1 || options.time_limit_ms))
+        return {.status = Status::InvalidArgument, .error = "fixed work requires native-only, one worker and no deadline"};
+    if (engine == EngineSelection::NativeOnly)
+        return solveNativeNesting(snapshot, options, progress, cancellation, work_limit);
+    return solvePreparedNesting(snapshot, options, progress, cancellation);
 }
 
 SolveResult solvePreparedNesting(PreparedDocumentNesting const &snapshot, Options const &options,
@@ -3230,7 +3467,8 @@ SolveResult solvePreparedNesting(PreparedDocumentNesting const &snapshot, Option
 }
 
 ApplyResult applyNestingPlacements(PreparedDocumentNesting const &snapshot, std::span<Placement const> placements,
-                                   LeftoverPlacement const &leftovers)
+                                   LeftoverPlacement const &leftovers,
+                                   std::shared_ptr<void> const &owner_lease)
 {
     ApplyResult result;
     result.skipped_count = snapshot.skipped_parts.size();
@@ -3255,6 +3493,24 @@ ApplyResult applyNestingPlacements(PreparedDocumentNesting const &snapshot, std:
         }
     }
 
+    if (snapshot.apply_validation_options) {
+        auto options = *snapshot.apply_validation_options;
+        options.time_limit_ms = 0;
+        options.worker_count = 1;
+        Job validator(options);
+        auto status = validator.setContainer(snapshot.container_outline);
+        for (auto const &hole : snapshot.container_holes)
+            if (status == Status::Ok) status = validator.addContainerHole(hole);
+        for (auto const &obstacle : snapshot.obstacles)
+            for (auto const &component : obstacle.components)
+                if (status == Status::Ok) status = validator.addObstacle(component.outer);
+        for (auto const &part : snapshot.parts)
+            if (status == Status::Ok) status = validator.addPart(part.id, part.components);
+        if (status != Status::Ok || validator.validate(placements) != Status::Ok) {
+            result.error = "native placement validation failed: " + validator.error();
+            return result;
+        }
+    }
     auto const validation_started = std::chrono::steady_clock::now();
     bool const fresh = geometry_still_matches(snapshot, result.revalidated_count);
     result.validation_seconds =
@@ -3269,6 +3525,8 @@ ApplyResult applyNestingPlacements(PreparedDocumentNesting const &snapshot, std:
     {
         SPItem *item = nullptr;
         Geom::Affine item_to_document;
+        bool duplicate = false;
+        std::uint64_t part_id = 0;
     };
     std::vector<PendingTransform> pending;
     pending.reserve(snapshot.parts.size());
@@ -3282,8 +3540,8 @@ ApplyResult applyNestingPlacements(PreparedDocumentNesting const &snapshot, std:
         auto const transform = Geom::Rotate::from_degrees(placement.rotation_degrees) *
                                Geom::Translate(placement.translation_x, placement.translation_y);
         auto const item_to_document = part.original_item_to_document * transform;
-        if (!affine_near(item_to_document, part.original_item_to_document)) {
-            pending.push_back({part.item.get(), item_to_document});
+        if (part.copy || !affine_near(item_to_document, part.original_item_to_document)) {
+            pending.push_back({part.item.get(), item_to_document, part.copy != 0, part.id});
         }
     }
     if (leftovers.move_beside_container) {
@@ -3293,7 +3551,8 @@ ApplyResult applyNestingPlacements(PreparedDocumentNesting const &snapshot, std:
         // other artwork (known limitation, like gap G1).
         // Visual bounds, like the parts': a leftover never sits on the sheet's
         // stroke. The freshness check above guarantees the container exists.
-        Geom::OptRect sheet = snapshot.container.get()->documentVisualBounds();
+        Geom::OptRect sheet;
+        if (snapshot.container) sheet = snapshot.container.get()->documentVisualBounds();
         if (!sheet) {
             for (auto const &point : snapshot.container_outline) {
                 sheet.expandTo(Geom::Point(point.x, point.y));
@@ -3307,7 +3566,7 @@ ApplyResult applyNestingPlacements(PreparedDocumentNesting const &snapshot, std:
             double y = sheet->top();
             double column_width = 0.0;
             for (auto const &part : snapshot.parts) {
-                if (by_id.at(part.id)->placed)
+                if (part.copy || by_id.at(part.id)->placed)
                     continue;
                 // Visual extent at the part's current (= original) transform,
                 // in document coordinates like original_item_to_document.
@@ -3338,13 +3597,50 @@ ApplyResult applyNestingPlacements(PreparedDocumentNesting const &snapshot, std:
         return result;
     }
 
-    auto interaction = DocumentUndo::beginRollbackableInteraction(snapshot.document);
+    auto interaction = snapshot.apply_validation_options
+        ? (owner_lease ? DocumentUndo::beginAtomicCommandInteraction(snapshot.document, owner_lease)
+                       : DocumentUndo::beginAtomicInteraction(snapshot.document))
+        : DocumentUndo::beginRollbackableInteraction(snapshot.document);
     if (!interaction) {
         result.status = ApplyStatus::UndoUnavailable;
         result.error = "another rollbackable document interaction is active";
         return result;
     }
 
+    try {
+    // Duplicate before moving any source, so every copy starts with the
+    // captured payload. Document attachment assigns unique subtree IDs.
+    for (auto &change : pending) {
+        if (!change.duplicate) continue;
+        auto *source = change.item->getRepr();
+        // Reuse import's reference-aware ID remapping in a disposable document.
+        // Attaching raw duplicates alone renames IDs but leaves internal clones
+        // and cutline references pointing back into the original source.
+        constexpr std::string_view empty_svg =
+            R"svg(<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"/>)svg";
+        auto fragment = SPDocument::createNewDocFromMem(std::span<char const>(empty_svg.data(), empty_svg.size()));
+        if (!fragment) {
+            interaction->rollback();
+            result.status = ApplyStatus::PublicationFailed;
+            result.error = "could not stage nesting copy";
+            return result;
+        }
+        auto *staged = source->duplicate(fragment->getReprDoc());
+        fragment->getReprRoot()->appendChild(staged);
+        Inkscape::GC::release(staged);
+        prevent_id_clashes(fragment.get(), snapshot.document, IdClashPolicy::RenameAllCollisions);
+        auto *copy = staged->duplicate(snapshot.document->getReprDoc());
+        source->parent()->addChild(copy, source);
+        auto *created = cast<SPItem>(snapshot.document->getObjectByRepr(copy));
+        Inkscape::GC::release(copy);
+        if (!created) {
+            interaction->rollback();
+            result.status = ApplyStatus::PublicationFailed;
+            result.error = "could not publish nesting copy";
+            return result;
+        }
+        change.item = created;
+    }
     for (auto const &change : pending) {
         auto *item = change.item;
         // Keep the solved placement in the item's SVG transform attribute.
@@ -3372,10 +3668,35 @@ ApplyResult applyNestingPlacements(PreparedDocumentNesting const &snapshot, std:
         item->getRepr()->setAttributeOrRemoveIfEmpty("transform", sp_svg_transform_write(parent_relative));
         item->_transformed_signal.emit(&relative, item);
     }
-    interaction->commit(Util::Internal::ContextString{"Nest objects"}, INKSCAPE_ICON("tool-nesting"));
+    if (snapshot.apply_validation_options) {
+        bool committed = interaction->commitAtomically(Util::Internal::ContextString{"Nest objects"},
+            INKSCAPE_ICON("tool-nesting"), [&] {
+                return std::all_of(pending.begin(), pending.end(), [&](auto const &change) {
+                    return change.item && change.item->document == snapshot.document &&
+                           affine_near(change.item->i2doc_affine(), change.item_to_document);
+                });
+            });
+        if (!committed) {
+            interaction->rollback();
+            result.status = ApplyStatus::PublicationFailed;
+            result.error = "atomic nesting publication refused";
+            return result;
+        }
+    } else {
+        interaction->commit(Util::Internal::ContextString{"Nest objects"}, INKSCAPE_ICON("tool-nesting"));
+    }
+    } catch (...) {
+        interaction->rollback();
+        result.status = ApplyStatus::PublicationFailed;
+            result.error = "atomic nesting publication refused";
+        return result;
+    }
     snapshot.document->ensureUpToDate();
     result.status = ApplyStatus::Applied;
     result.moved_count = pending.size();
+    for (auto const &change : pending)
+        if (change.duplicate && change.item->getId())
+            result.created_copies.emplace_back(change.part_id, change.item->getId());
     return result;
 }
 

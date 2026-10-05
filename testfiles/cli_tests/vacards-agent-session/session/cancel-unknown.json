@@ -1,0 +1,72 @@
+{
+  "description": "cancel-unknown",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "session.cancel",
+        "params": {
+          "id": "never-accepted"
+        }
+      },
+      "command": "session.cancel",
+      "expect": {
+        "status": "unchanged",
+        "data": {
+          "found": false,
+          "cancellation_requested": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "success",
+        "no-op"
+      ],
+      "expect_absent": [
+        "error"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "after",
+        "command": "session.status",
+        "params": {}
+      },
+      "command": "session.status",
+      "expect": {
+        "data": {
+          "active_request": null,
+          "retention": {
+            "tokens": [],
+            "roots": 0,
+            "bytes": 0
+          }
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ]
+}

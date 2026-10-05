@@ -1,0 +1,44 @@
+{
+  "description": "P9 independent M2 open-pdf-pages-empty",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "pages",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/two-pages.pdf",
+          "format": "pdf",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false,
+          "pages": []
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "boundary",
+        "refusal"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_error": "out-of-range",
+      "expect_accepted": false
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

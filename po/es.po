@@ -58476,8 +58476,9 @@ msgstr "Porcentaje"
 #~ "No se pudo determinar el <b>orden-z</b> de los objetos seleccionados para "
 #~ "la diferencia, XOR, división o corte de trayecto."
 
-#~ msgid "Nothing was copied."
-#~ msgstr "No se ha copiado nada."
+#: ../src/ui/clipboard.cpp:772
+msgid "Nothing was copied."
+msgstr "No se ha copiado nada."
 
 #~ msgid "Image _Properties..."
 #~ msgstr "_Propiedades de la imagen..."
@@ -68585,3 +68586,238 @@ msgstr "Introduzca un número de %1 a %2."
 #: src/ui/dialog/explode-bitmap.cpp
 msgid "Zoom in to see piece outlines."
 msgstr "Acerca la vista para ver los contornos de las piezas."
+
+# Build 30: ICC export, OS memory admission, clipboard and import/conversion messages.
+#: ../src/ui/dialog/export.cpp:115
+msgid "Add output color profile"
+msgstr "Añadir perfil de color de salida"
+
+#: ../src/ui/dialog/export.cpp:90
+msgid "Add profile…"
+msgstr "Añadir perfil…"
+
+#: ../src/bitmap-copy-outcome.cpp:327
+msgid "Bitmap Copy OS headroom"
+msgstr "margen de memoria del sistema operativo para copiar el mapa de bits"
+
+#: ../src/io/export-color-profiles.h:55
+msgid "Choose an RGB display or output ICC profile supporting relative-colorimetric output."
+msgstr "Seleccione un perfil ICC RGB de pantalla o de salida compatible con la intención de salida colorimétrica relativa."
+
+#: ../src/ui/clipboard.cpp:706
+msgid "Clipboard unavailable (no display)"
+msgstr "Portapapeles no disponible (sin pantalla)"
+
+#: ../src/ui/tools/corner-rounding-controller.cpp:200
+msgid "Converted polygon to path to round its corners"
+msgstr "Se convirtió el polígono en trayecto para redondear sus esquinas"
+
+#: ../src/ui/tools/corner-rounding-controller.cpp:201
+msgid "Converted polyline to path to round its corners"
+msgstr "Se convirtió la polilínea en trayecto para redondear sus esquinas"
+
+#: ../src/extension/internal/cdr-input.cpp:59
+msgid "CorelDRAW 7-13 template files (*.cdt)"
+msgstr "Archivos de plantilla de CorelDRAW 7-13 (*.cdt)"
+
+#: ../src/extension/internal/cdr-input.cpp:71
+msgid "CorelDRAW Compressed Exchange files (*.ccx)"
+msgstr "Archivos de intercambio comprimidos de CorelDRAW (*.ccx)"
+
+#: ../src/extension/internal/cdr-input.cpp:66
+msgid "CorelDRAW Compressed Exchange files input"
+msgstr "Entrada de archivos de intercambio comprimidos de CorelDRAW"
+
+#: ../src/extension/internal/cdr-input.cpp:42
+msgid "CorelDRAW Input"
+msgstr "Entrada de CorelDRAW"
+
+#: ../src/extension/internal/cdr-input.cpp:83
+msgid "CorelDRAW Presentation Exchange files (*.cmx)"
+msgstr "Archivos de intercambio de presentaciones de CorelDRAW (*.cmx)"
+
+#: ../src/extension/internal/cdr-input.cpp:78
+msgid "CorelDRAW Presentation Exchange files input"
+msgstr "Entrada de archivos de intercambio de presentaciones de CorelDRAW"
+
+#: ../src/extension/internal/cdr-input.cpp:54
+msgid "CorelDRAW templates input"
+msgstr "Entrada de plantillas de CorelDRAW"
+
+#: ../src/io/export-color-profiles.cpp:171
+msgid "Could not copy ICC profile."
+msgstr "No se pudo copiar el perfil ICC."
+
+#: ../src/io/export-color-profiles.cpp:157
+msgid "Could not create the user ICC profile folder."
+msgstr "No se pudo crear la carpeta de perfiles ICC del usuario."
+
+#: ../src/io/export-color-profiles.cpp:141
+msgid "Could not read ICC profile folder %1; skipped. %2\n"
+msgstr "No se pudo leer la carpeta de perfiles ICC %1; se omitió. %2\n"
+
+#: ../src/io/export-color-profiles.cpp:65
+msgid "Could not read ICC profile."
+msgstr "No se pudo leer el perfil ICC."
+
+#: ../src/ui/dialog/export.cpp:482
+#, c-format
+msgid "Drawing exported to <b>%s</b>. Output color profile: %s"
+msgstr "Dibujo exportado a <b>%s</b>. Perfil de color de salida: %s"
+
+#: ../src/ui/explode-bitmap-panel-preparation.cpp:224 ../src/ui/explode-bitmap-panel-preparation.cpp:465
+msgid "Explode job allocation"
+msgstr "asignación de memoria para la tarea de Explotar"
+
+#: ../src/ui/dialog/export.cpp:111
+msgid "ICC color profiles (*.icc, *.icm)"
+msgstr "Perfiles de color ICC (*.icc, *.icm)"
+
+#: ../src/io/export-color-profiles.cpp:81
+msgid "ICC profile changed while reading."
+msgstr "El perfil ICC cambió durante la lectura."
+
+#: ../src/io/export-color-profiles.cpp:62 ../src/io/export-color-profiles.h:31
+msgid "ICC profile exceeds the maximum supported size of 15 MiB."
+msgstr "El perfil ICC supera el tamaño máximo admitido de 15 MiB."
+
+#: ../src/io/export-color-profiles.cpp:59
+msgid "ICC profile is missing or too small."
+msgstr "El perfil ICC no se encuentra o es demasiado pequeño."
+
+#: ../src/io/export-color-profiles.cpp:74 ../src/io/export-color-profiles.h:41
+msgid "ICC profile size does not match its header."
+msgstr "El tamaño del perfil ICC no coincide con su cabecera."
+
+#: ../src/io/export-color-profiles.h:35
+msgid "Invalid ICC header or profile size."
+msgstr "La cabecera ICC o el tamaño del perfil no son válidos."
+
+#: ../src/io/export-color-profiles.cpp:70
+msgid "Invalid ICC header."
+msgstr "La cabecera ICC no es válida."
+
+#: ../src/io/export-color-profiles.h:45
+msgid "Invalid ICC profile."
+msgstr "El perfil ICC no es válido."
+
+#: ../src/io/export-color-profiles.cpp:77
+msgid "Not enough memory to read ICC profile."
+msgstr "No hay memoria suficiente para leer el perfil ICC."
+
+#: ../src/util/bitmap-island-budget.cpp:28
+#, c-format
+msgid "Not enough memory: %s; estimated need %.2f MiB, available %.2f MiB."
+msgstr "No hay memoria suficiente: %s; se estima que se necesitan %.2f MiB, disponibles %.2f MiB."
+
+#: ../src/util/bitmap-memory-admission.cpp:114
+msgid "OS commit/footprint headroom - recovery"
+msgstr "margen de memoria comprometida/utilizada del sistema operativo - recuperación"
+
+#: ../src/util/bitmap-island-budget.cpp:125 ../src/util/bitmap-island-budget.cpp:178
+msgid "OS headroom / operation budget"
+msgstr "margen de memoria del sistema operativo / presupuesto de la operación"
+
+#: ../src/util/bitmap-island-budget.cpp:86
+msgid "OS headroom / recovery reserve"
+msgstr "margen de memoria del sistema operativo / reserva de recuperación"
+
+#: ../src/extension/internal/cdr-input.cpp:72
+msgid "Open compressed exchange files saved in CorelDRAW"
+msgstr "Abrir archivos de intercambio comprimidos guardados en CorelDRAW"
+
+#: ../src/extension/internal/cdr-input.cpp:60
+msgid "Open files saved in CorelDRAW 7-13"
+msgstr "Abrir archivos guardados en CorelDRAW 7-13"
+
+#: ../src/extension/internal/cdr-input.cpp:84
+msgid "Open presentation exchange files saved in CorelDRAW"
+msgstr "Abrir archivos de intercambio de presentaciones guardados en CorelDRAW"
+
+#: ../src/ui/dialog/export.cpp:63
+msgid "Output color profile"
+msgstr "Perfil de color de salida"
+
+#: ../src/util/bitmap-piece-encoder.cpp:450 ../src/util/bitmap-piece-encoder.cpp:513
+msgid "PNG encoder allocator"
+msgstr "asignador de memoria del codificador PNG"
+
+#: ../src/util/bitmap-piece-encoder.cpp:440 ../src/util/bitmap-piece-encoder.cpp:502
+msgid "PNG output allocator"
+msgstr "asignador de memoria de la salida PNG"
+
+#: ../src/extension/internal/tiff-output.cpp:82
+msgid "RGB TIFF with selected output profile"
+msgstr "TIFF RGB con el perfil de salida seleccionado"
+
+#: ../src/extension/internal/tiff-output.cpp:52
+msgid "TIFF exported with output color profile: %1"
+msgstr "TIFF exportado con el perfil de color de salida: %1"
+
+#: ../src/io/export-color-profiles.cpp:97
+msgid "The ICC environment override is unavailable; using the default profile. "
+msgstr "El perfil ICC indicado mediante la variable de entorno no está disponible; se usará el perfil predeterminado. "
+
+#: ../src/io/export-color-profiles.cpp:102
+msgid "The bundled ICC profile is invalid; using sRGB. "
+msgstr "El perfil ICC incluido no es válido; se usará sRGB. "
+
+#: ../src/io/export-color-profiles.cpp:182
+msgid "The saved output color profile is missing or invalid; using the default profile. "
+msgstr "El perfil de color de salida guardado no se encuentra o no es válido; se usará el perfil predeterminado. "
+
+#: ../src/io/export-color-profiles.cpp:165
+msgid "The stored ICC profile conflicts with this import."
+msgstr "El perfil ICC almacenado entra en conflicto con esta importación."
+
+#: ../src/util/bitmap-island-budget.cpp:267
+msgid "allocator"
+msgstr "asignador de memoria"
+
+#: ../src/ui/explode-bitmap-grid.cpp:267
+msgid "canonical grid allocation"
+msgstr "asignación de memoria de la cuadrícula canónica"
+
+#: ../src/ui/explode-bitmap-panel-preparation.cpp:144
+msgid "contour headroom"
+msgstr "margen de memoria para el contorno"
+
+#: ../src/util/bitmap-memory-admission.cpp:92
+msgid "critical macOS memory pressure"
+msgstr "presión de memoria crítica en macOS"
+
+#: ../src/util/bitmap-contour-fit.cpp:492 ../src/util/bitmap-contour-fit.cpp:505
+msgid "cubic fitter allocator"
+msgstr "asignador de memoria del ajuste de curvas cúbicas"
+
+#: ../src/util/bitmap-piece-encoder.cpp:405
+msgid "encoder row allocator"
+msgstr "asignador de memoria de filas del codificador"
+
+#: ../src/util/bitmap-island-budget.cpp:127
+msgid "image header size"
+msgstr "tamaño indicado en la cabecera de la imagen"
+
+#: ../src/util/bitmap-piece-encoder.cpp:499
+msgid "image index allocator"
+msgstr "asignador de memoria del índice de la imagen"
+
+#: ../src/ui/explode-bitmap-jobs.cpp:149
+msgid "job allocation"
+msgstr "asignación de memoria de la tarea"
+
+#: ../src/ui/explode-bitmap-jobs.cpp:164
+msgid "job launch allocation"
+msgstr "asignación de memoria para iniciar la tarea"
+
+#: ../src/ui/dialog/explode-bitmap.cpp:975
+msgid "main-thread allocator / image input"
+msgstr "asignador de memoria del hilo principal / entrada de imagen"
+
+#: ../src/util/bitmap-piece-encoder.cpp:399
+msgid "piece index allocator"
+msgstr "asignador de memoria del índice de piezas"
+
+#: ../src/io/export-color-profiles.cpp:52
+msgid "sRGB (built-in)"
+msgstr "sRGB (incorporado)"

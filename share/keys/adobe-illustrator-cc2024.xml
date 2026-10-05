@@ -64,7 +64,7 @@
     <bind gaction="win.dialog-open('ObjectProperties')"    keys="&lt;Primary&gt;F11" />
     <bind gaction="win.dialog-open('Objects')"             keys="F7" />
     <bind gaction="app.preferences"                        keys="&lt;Primary&gt;k" />
-    <bind gaction="win.dialog-open('Spellcheck')"          keys="&lt;Primary&gt;i" />
+    <!-- VA Studio: spell checking is off (src/ui/spellcheck-feature.h); no Spellcheck binding. -->
     <bind gaction="win.dialog-open('Symbols')" 		   keys="&lt;Primary&gt;&lt;Shift&gt;F11" />
     <bind gaction="win.dialog-open('Text')"                keys="&lt;Primary&gt;t, &lt;Primary&gt;&lt;Shift&gt;&lt;Alt&gt;t" />
     <bind gaction="win.dialog-open('Transform')"           keys="&lt;Shift&gt;F8"  />

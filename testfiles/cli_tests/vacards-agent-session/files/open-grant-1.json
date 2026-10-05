@@ -1,0 +1,39 @@
+{
+  "description": "P9 independent M2 open-grant-1",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "open",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/linked.svg",
+          "format": "svg",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "refusal"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_error": "read-grant-denied"
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-write",
+    "{WORK}"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "description": "P9 independent M2 one-shot-new-success",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "shot",
+        "command": "file.new",
+        "params": {
+          "width": {
+            "value": 16,
+            "unit": "px"
+          },
+          "height": {
+            "value": 8,
+            "unit": "px"
+          },
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.new",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}/inputs",
+    "--grant-write",
+    "{WORK}"
+  ],
+  "transport": "one-shot"
+}

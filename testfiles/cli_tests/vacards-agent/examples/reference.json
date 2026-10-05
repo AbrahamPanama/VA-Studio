@@ -1,0 +1,623 @@
+{
+  "catalog_hash": "cca1282df999f5e18a8314f823a3498b05a058b2f0e19a2cac3b3e6cd29e2e36",
+  "examples": [
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "bitmap.copy",
+      "params": {
+        "ids": [
+          "image1"
+        ]
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "bitmap.explode.analyze",
+      "params": {
+        "id": "image1",
+        "recipe": {}
+      },
+      "document": "document-id"
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "bitmap.explode.apply-adjustment",
+      "params": {
+        "id": "image1",
+        "recipe": {}
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "bitmap.explode.contour",
+      "params": {
+        "analysis-token": "token-example",
+        "contour": {}
+      },
+      "document": "document-id"
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "bitmap.explode.create-contour-only",
+      "params": {
+        "id": "image1",
+        "recipe": {},
+        "contour": {}
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "bitmap.explode.explode",
+      "params": {
+        "id": "image1",
+        "recipe": {}
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "bitmap.histogram",
+      "params": {
+        "ids": [
+          "image1"
+        ]
+      },
+      "document": "document-id"
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "bitmap.tone-query",
+      "params": {
+        "ids": [
+          "image1"
+        ]
+      },
+      "document": "document-id"
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "bitmap.tone-set",
+      "params": {
+        "ids": [
+          "image1"
+        ],
+        "patch": {
+          "brightness": 10
+        }
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "clip.destructive",
+      "params": {
+        "target-id": "image1",
+        "cutter-id": "cutter1"
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "clip.release",
+      "params": {
+        "ids": [
+          "shape1"
+        ]
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "clip.set",
+      "params": {
+        "target-id": "image1",
+        "cutter-id": "cutter1"
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "file.close",
+      "params": {},
+      "dry_run": false,
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "file.export",
+      "params": {
+        "path": "/tmp/sheet.png",
+        "format": "png",
+        "drawing": true
+      },
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "file.import",
+      "params": {
+        "path": "/tmp/sheet.svg",
+        "resource-policy": "embed",
+        "font-policy": "reject",
+        "position": {
+          "x": {
+            "value": 100,
+            "unit": "mm"
+          },
+          "y": {
+            "value": 100,
+            "unit": "mm"
+          }
+        }
+      },
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "file.new",
+      "params": {
+        "width": {
+          "value": 100,
+          "unit": "mm"
+        },
+        "height": {
+          "value": 100,
+          "unit": "mm"
+        }
+      },
+      "dry_run": false,
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "file.open",
+      "params": {
+        "path": "/tmp/sheet.svg",
+        "resource-policy": "embed",
+        "font-policy": "reject"
+      },
+      "dry_run": false,
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "file.save",
+      "params": {
+        "path": "/tmp/sheet.svg",
+        "embedding-policy": "embed"
+      },
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "geometry.boolean",
+      "params": {
+        "ids": [
+          "shape1",
+          "shape2"
+        ],
+        "op": "union",
+        "empty-result": "reject"
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "geometry.corners",
+      "params": {
+        "ids": [
+          "shape1"
+        ],
+        "radius": {
+          "value": 1,
+          "unit": "mm"
+        }
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "geometry.flip",
+      "params": {
+        "ids": [
+          "shape1"
+        ],
+        "axis": "horizontal"
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "geometry.matrix",
+      "params": {
+        "ids": [
+          "shape1"
+        ],
+        "matrix": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "geometry.move",
+      "params": {
+        "ids": [
+          "shape1"
+        ],
+        "dx": {
+          "value": 1,
+          "unit": "mm"
+        },
+        "dy": {
+          "value": 1,
+          "unit": "mm"
+        }
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "geometry.offset",
+      "params": {
+        "ids": [
+          "shape1"
+        ],
+        "distance": {
+          "value": 1,
+          "unit": "mm"
+        }
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "geometry.resize",
+      "params": {
+        "ids": [
+          "shape1"
+        ],
+        "width": {
+          "value": 1,
+          "unit": "mm"
+        }
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "geometry.rotate",
+      "params": {
+        "ids": [
+          "shape1"
+        ],
+        "angle": 15
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "geometry.skew",
+      "params": {
+        "ids": [
+          "shape1"
+        ],
+        "axis": "x",
+        "angle": 15
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "history.query",
+      "params": {},
+      "document": "document-id"
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "history.redo",
+      "params": {},
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "history.undo",
+      "params": {},
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "nest.analyze",
+      "params": {
+        "ids": [
+          "shape1"
+        ],
+        "page": 1
+      },
+      "document": "document-id"
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "nest.apply",
+      "params": {
+        "solution-token": "solution-example"
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "nest.contour-release",
+      "params": {
+        "ids": [
+          "shape1"
+        ]
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "nest.contour-set",
+      "params": {
+        "payload-id": "shape1",
+        "contour-id": "contour1"
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "nest.solve",
+      "params": {
+        "analysis-token": "token-example",
+        "iterations": 1000
+      },
+      "document": "document-id"
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "query.document",
+      "params": {},
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "query.fonts",
+      "params": {},
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "query.geometry",
+      "params": {},
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "query.images",
+      "params": {},
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "query.layers",
+      "params": {},
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "query.objects",
+      "params": {
+        "type": "path",
+        "bounds": "geometric"
+      },
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "query.pages",
+      "params": {
+        "limit": 100
+      },
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "query.selection",
+      "params": {},
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "query.styles",
+      "params": {
+        "properties": [
+          "fill",
+          "stroke-width"
+        ]
+      },
+      "dry_run": false,
+      "document": "d1",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "selection.clear",
+      "params": {},
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "selection.set",
+      "params": {
+        "ids": [
+          "shape1"
+        ]
+      },
+      "document": "document-id",
+      "if_revision": 0
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "session.cancel",
+      "params": {
+        "id": "request-1"
+      },
+      "dry_run": false
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "session.close",
+      "params": {},
+      "dry_run": false
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "session.release",
+      "params": {
+        "tokens": [
+          "token-1"
+        ]
+      },
+      "dry_run": false
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "session.status",
+      "params": {},
+      "dry_run": false
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "system.catalog",
+      "params": {},
+      "dry_run": false
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "system.describe",
+      "params": {},
+      "dry_run": false
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "system.options",
+      "params": {},
+      "dry_run": false
+    },
+    {
+      "schema": "va-studio.cli-request/1",
+      "id": "example",
+      "command": "system.result-file",
+      "params": {
+        "target": "-"
+      },
+      "dry_run": false
+    }
+  ]
+}

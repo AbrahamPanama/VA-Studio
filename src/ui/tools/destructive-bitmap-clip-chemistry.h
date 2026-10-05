@@ -161,6 +161,11 @@ struct ResolvedTargets {
 [[nodiscard]] CommitStatus commit_selection(Inkscape::Selection &selection, Mode mode,
                                             std::stop_token cancellation);
 
+// Request-only caller settlement; caller must own one active atomic transaction.
+// Pixel preparation/publication and cutter policy are identical to the native route.
+[[nodiscard]] CommitStatus commit_selection(Inkscape::Selection &, Mode, std::stop_token,
+                                            bool caller_owned_settlement);
+
 } // namespace Inkscape::UI::Tools::DestructiveBitmapClip
 
 #endif // INKSCAPE_UI_TOOLS_DESTRUCTIVE_BITMAP_CLIP_CHEMISTRY_H

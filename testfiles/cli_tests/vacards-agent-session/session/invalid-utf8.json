@@ -1,0 +1,49 @@
+{
+  "description": "invalid-utf8",
+  "timeout": 30,
+  "requests": [
+    {
+      "id": "",
+      "command": "system.catalog",
+      "expect_accepted": false,
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "expect_error": "invalid-utf8",
+      "raw_hex": "ff",
+      "cells": [
+        "invalid"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "after",
+        "command": "session.status",
+        "params": {}
+      },
+      "command": "session.status",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "publication": {
+          "persisted": false
+        },
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0
+}

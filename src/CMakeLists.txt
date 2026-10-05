@@ -360,6 +360,17 @@ if(WIN32)
 endif()
 
 
+# VA Studio agent command line (in development, installed entry points): the shared entry
+# compiled as a console program that only accepts the agent modes.
+if(NOT ANDROID)
+  add_executable(vastudio_cli ${main_SRC})
+  set_target_properties(vastudio_cli PROPERTIES OUTPUT_NAME "vastudio-cli")
+  target_compile_definitions(vastudio_cli PRIVATE VACARDS_CLI_EXECUTABLE=1)
+  if(WIN32)
+    set_target_properties(vastudio_cli PROPERTIES LINK_FLAGS "-mconsole")
+  endif()
+endif()
+
 set_target_properties(inkscape_base PROPERTIES SOVERSION "${INKSCAPE_VERSION_MAJOR}.${INKSCAPE_VERSION_MINOR}.${INKSCAPE_VERSION_PATCH}.0")
 set_target_properties(inkscape_base PROPERTIES INSTALL_RPATH "${LIBINKSCAPE_INSTALL_RPATH}")
 
@@ -385,6 +396,11 @@ target_link_libraries(inkscape inkscape_base)
 target_link_libraries(inkview inkscape_base)
 set_target_properties(inkscape PROPERTIES INSTALL_RPATH "${BINS_INSTALL_RPATH}")
 set_target_properties(inkview PROPERTIES INSTALL_RPATH "${BINS_INSTALL_RPATH}")
+if(NOT ANDROID)
+    target_link_libraries(vastudio_cli inkscape_base)
+    set_target_properties(vastudio_cli PROPERTIES INSTALL_RPATH "${BINS_INSTALL_RPATH}")
+    install(TARGETS vastudio_cli RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 if(WIN32)
     target_link_libraries(inkscape_com inkscape_base)
     target_link_libraries(inkview_com inkscape_base)

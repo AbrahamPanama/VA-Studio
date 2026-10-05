@@ -2,7 +2,13 @@
 // Full native GTK host tests. Main only: exact app/library build, isolated
 // profile/fonts, real display, serial and fatal criticals. No skipped acceptance.
 #include <gtest/gtest.h>
+#include <glibmm/i18n.h>
+#include "message-stack.h"
 #include <algorithm>
+#include <cstring>
+#include <new>
+#include <string_view>
+#include "live_effects/lpeobject.h"
 #include <csignal>
 #include <cmath>
 #include <memory>
@@ -21,6 +27,9 @@
 #include "live_effects/lpe-fillet-chamfer.h"
 #include "object/sp-path.h"
 #include "object/sp-rect.h"
+#include "object/sp-polygon.h"
+#include "object/sp-polyline.h"
+#include "xml/attribute-record.h"
 #include "object/sp-root.h"
 #include "object/sp-defs.h"
 #include "selection.h"
@@ -40,6 +49,35 @@
 using namespace Inkscape;
 namespace CE = LivePathEffect::CornerEdit;
 using Controller = UI::Tools::CornerRoundingController;
+// No desktop: recycled allocation storage must not become an exception flag.
+TEST(CornerRoundingInitialization, FreshEffectHasNoExceptionInReusedStorage)
+{
+    constexpr std::string_view xml = R"svg(
+      <svg xmlns="http://www.w3.org/2000/svg"
+           xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+        <defs><inkscape:path-effect id="corners" effect="fillet_chamfer"/></defs>
+      </svg>)svg";
+    auto doc = SPDocument::createNewDocFromMem(std::span<char const>(xml.data(), xml.size()));
+    ASSERT_TRUE(doc);
+    auto owner = cast<LivePathEffectObject>(doc->getObjectById("corners"));
+    ASSERT_TRUE(owner);
+    using Effect = LivePathEffect::LPEFilletChamfer;
+    alignas(Effect) unsigned char storage[sizeof(Effect)];
+    // Volatile writes keep the poison from being removed as a dead store
+    // when the placement constructor starts the new object lifetime.
+    volatile unsigned char *reused = storage;
+    for (auto &byte : storage) reused[&byte - storage] = 0xa5;
+    auto effect = ::new (static_cast<void *>(storage)) Effect(owner);
+    struct Destroy { Effect *effect; ~Destroy() { effect->~Effect(); } } destroy{effect};
+    // Inspect the representation first, so the regression does not itself read
+    // an indeterminate bool when run against the unfixed constructor.
+    bool no_exception = false;
+    ASSERT_EQ(std::memcmp(&effect->has_exception, &no_exception, sizeof(bool)), 0);
+    EXPECT_FALSE(effect->has_exception);
+    effect->doOnException(nullptr);
+    EXPECT_TRUE(effect->has_exception);
+}
+
 namespace {
 void drain()
 {
@@ -758,4 +796,216 @@ TEST_F(CornerRoundingHost, CommandLineApplyRefusesWhenUndoRecordingIsOff)
     EXPECT_FALSE(result.mutation_started);
     EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()), before);
 }
+}
+
+
+namespace {
+std::vector<std::pair<std::string, std::string>> vertex_attributes(XML::Node *node)
+{
+    std::vector<std::pair<std::string, std::string>> result;
+    for (auto const &a : node->attributeList())
+        result.emplace_back(g_quark_to_string(a.key), static_cast<char const *>(a.value));
+    std::sort(result.begin(), result.end());
+    return result;
+}
+}
+
+class CornerRoundingVertices : public CornerRoundingHost {
+protected:
+    SPShape *vertex_shape(char const *kind) {
+        auto repr = doc->getReprDoc()->createElement(kind);
+        for (auto [name, value] : {
+                std::pair{"id", "vertices"}, {"points", "0,0 100,0 100,100 0,100"},
+                {"style", "fill:#ab1234;stroke:#123456;stroke-width:2"},
+                {"class", "imported"}, {"transform", "translate(3,7)"},
+                {"data-owner", "keep me"}, {"aria-label", "Vertex example"}})
+            repr->setAttribute(name, value);
+        for (auto kind : {"svg:title", "svg:desc"}) {
+            auto child = doc->getReprDoc()->createElement(kind);
+            auto text = doc->getReprDoc()->createTextNode("Preserve this text");
+            child->appendChild(text); GC::release(text);
+            repr->appendChild(child); GC::release(child);
+        }
+        path()->getRepr()->parent()->addChild(repr, path()->getRepr());
+        GC::release(repr);
+        auto shape = cast<SPShape>(doc->getObjectById("vertices"));
+        desktop->getSelection()->set(shape);
+        doc->ensureUpToDate(); drain();
+        DocumentUndo::done(doc, Util::Internal::ContextString{"Vertex fixture"}, "");
+        DocumentUndo::clearUndo(doc); DocumentUndo::clearRedo(doc);
+        return shape;
+    }
+    void round_vertices(char const *kind, bool open) {
+        auto shape = vertex_shape(kind); ASSERT_TRUE(shape);
+        auto original_attributes = vertex_attributes(shape->getRepr());
+        auto parent = shape->parent;
+        auto position = shape->getRepr()->position();
+        auto original_geometry = *shape->curve();
+        auto transform = shape->i2doc_affine();
+        auto before = sp_repr_save_buf(doc->getReprDoc());
+        auto context = UI::Tools::capture_corner_rounding_document(*shape, 0);
+        ASSERT_TRUE(context.snapshot);
+        CE::Request request{CE::Scope::All, CE::Mode::Round, 10};
+        auto check = UI::Tools::check_corner_plan(false, *context.snapshot, request);
+        ASSERT_TRUE(check.ready);
+        EXPECT_EQ(check.plan.count, open ? 2u : 4u);
+        EXPECT_EQ(UI::Tools::corner_conversion_from(*shape), open ? "polyline" : "polygon");
+        EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()), before); // read-only dry plan
+        EXPECT_FALSE(DocumentUndo::undo(doc));
+        auto view = controller->inspect(CE::Scope::All);
+        ASSERT_TRUE(view.context.snapshot);
+        ASSERT_EQ(controller->apply(request, view.generation).outcome, Controller::Outcome::Applied);
+        EXPECT_STREQ(desktop->messageStack()->currentMessage(), open
+            ? _("Converted polyline to path to round its corners")
+            : _("Converted polygon to path to round its corners"));
+        auto rounded = cast<SPPath>(doc->getObjectById("vertices")); ASSERT_TRUE(rounded);
+        EXPECT_EQ(desktop->getSelection()->singleItem(), rounded);
+        EXPECT_EQ(rounded->parent, parent);
+        EXPECT_EQ(rounded->getRepr()->position(), position);
+        EXPECT_EQ(rounded->i2doc_affine(), transform);
+        for (auto const &[name, value] : original_attributes)
+            EXPECT_EQ(std::string(rounded->getRepr()->attribute(name.c_str())), value) << name;
+        auto child = rounded->getRepr()->firstChild(); ASSERT_TRUE(child);
+        EXPECT_STREQ(child->name(), "svg:title"); ASSERT_TRUE(child->firstChild());
+        EXPECT_STREQ(child->firstChild()->content(), "Preserve this text");
+        child = child->next(); ASSERT_TRUE(child); EXPECT_STREQ(child->name(), "svg:desc");
+        ASSERT_TRUE(child->firstChild()); EXPECT_STREQ(child->firstChild()->content(), "Preserve this text");
+        ASSERT_TRUE(rounded->curve());
+        EXPECT_NE(*rounded->curve(), original_geometry);
+        unsigned curves = 0;
+        for (auto const &sub : *rounded->curve()) for (auto const &segment : sub)
+            if (!segment.isLineSegment()) ++curves;
+        EXPECT_GE(curves, open ? 2u : 4u); // actual persisted/rendered curve, not just LPE presence
+        if (open) {
+            auto const &output = rounded->curve()->front();
+            EXPECT_FALSE(output.closed());
+            EXPECT_EQ(output.initialPoint(), original_geometry.front().initialPoint());
+            EXPECT_EQ(output.finalPoint(), original_geometry.front().finalPoint());
+            EXPECT_TRUE(output.front().isLineSegment());
+            EXPECT_TRUE(output.back().isLineSegment());
+        }
+        auto rounded_d = std::string(rounded->getRepr()->attribute("d"));
+        ASSERT_TRUE(DocumentUndo::undo(doc));
+        auto restored = cast<SPShape>(doc->getObjectById("vertices")); ASSERT_TRUE(restored);
+        EXPECT_STREQ(restored->getRepr()->name(), kind);
+        EXPECT_EQ(vertex_attributes(restored->getRepr()), original_attributes);
+        EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()), before);
+        EXPECT_FALSE(DocumentUndo::undo(doc));
+        ASSERT_TRUE(DocumentUndo::redo(doc));
+        rounded = cast<SPPath>(doc->getObjectById("vertices")); ASSERT_TRUE(rounded);
+        EXPECT_EQ(std::string(rounded->getRepr()->attribute("d")), rounded_d);
+        EXPECT_FALSE(DocumentUndo::redo(doc));
+    }
+};
+TEST_F(CornerRoundingVertices, PolygonCurvesPreservationDryRunAndOneUndoRedo)
+{
+    round_vertices("svg:polygon", false);
+}
+TEST_F(CornerRoundingVertices, PolylineCurvesEndpointsPreservationDryRunAndOneUndoRedo)
+{
+    round_vertices("svg:polyline", true);
+}
+TEST_F(CornerRoundingVertices, HiddenAndLockedPolygonRefusedUnchanged)
+{
+    auto shape = vertex_shape("svg:polygon"); ASSERT_TRUE(shape);
+    for (auto [name, value] : {std::pair{"display", "none"}, {"sodipodi:insensitive", "true"}}) {
+        shape->getRepr()->setAttribute(name, value);
+        doc->ensureUpToDate(); drain();
+        DocumentUndo::done(doc, Util::Internal::ContextString{"Protected fixture"}, "");
+        DocumentUndo::clearUndo(doc);
+        auto before = sp_repr_save_buf(doc->getReprDoc());
+        EXPECT_FALSE(UI::Tools::capture_corner_rounding_document(*shape, 0).snapshot);
+        auto view = controller->inspect(CE::Scope::All);
+        EXPECT_FALSE(view.context.snapshot);
+        EXPECT_EQ(controller->apply({CE::Scope::All, CE::Mode::Round, 10}, view.generation).outcome,
+                  Controller::Outcome::Rejected);
+        EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()), before);
+        EXPECT_FALSE(DocumentUndo::undo(doc));
+        shape->getRepr()->setAttribute(name, nullptr);
+    }
+}
+
+TEST_F(CornerRoundingVertices, PolygonToolboxClickRoundsOnlyRequestedVertex)
+{
+    auto shape = vertex_shape("svg:polygon"); ASSERT_TRUE(shape);
+    auto before = sp_repr_save_buf(doc->getReprDoc());
+    auto button = named(GTK_WIDGET(desktop->getDesktopWidget()->gobj()), "corners-tool-button");
+    ASSERT_TRUE(button); g_signal_emit_by_name(button, "clicked"); drain();
+    ASSERT_TRUE(tool()->corner_mode());
+    auto position = desktop->d2w((*shape->curveForEdit())[0][1].initialPoint() * shape->i2dt_affine());
+    ButtonPressEvent press; press.button = 1; press.pos = position;
+    ButtonReleaseEvent release; release.button = 1; release.pos = position;
+    EXPECT_TRUE(tool()->root_handler(press)); EXPECT_TRUE(tool()->root_handler(release));
+    drain(); doc->ensureUpToDate();
+    auto rounded = cast<SPPath>(doc->getObjectById("vertices")); ASSERT_TRUE(rounded);
+    auto lpe = dynamic_cast<LivePathEffect::LPEFilletChamfer *>(
+        rounded->getFirstPathEffectOfType(LivePathEffect::FILLET_CHAMFER)); ASSERT_TRUE(lpe);
+    auto data = lpe->nodesatellites_param.data();
+    ASSERT_EQ(data.size(), 1u); ASSERT_EQ(data[0].size(), 4u);
+    EXPECT_GT(data[0][1].amount, 0);
+    for (auto i : {0, 2, 3}) EXPECT_EQ(data[0][i].amount, 0);
+    unsigned curves = 0;
+    for (auto const &sub : *rounded->curve()) for (auto const &segment : sub)
+        if (!segment.isLineSegment()) ++curves;
+    EXPECT_GE(curves, 1u);
+    ASSERT_TRUE(DocumentUndo::undo(doc));
+    EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()), before);
+    EXPECT_FALSE(DocumentUndo::undo(doc));
+}
+TEST_F(CornerRoundingVertices, PolylineEndpointsOnlyAndShortPolylineRefuseWithoutConversion)
+{
+    auto shape = vertex_shape("svg:polyline"); ASSERT_TRUE(shape);
+    for (bool short_line : {false, true}) {
+        if (short_line) {
+            shape->getRepr()->setAttribute("points", "0,0 100,0");
+            doc->ensureUpToDate();
+            DocumentUndo::done(doc, Util::Internal::ContextString{"Short line"}, "");
+            DocumentUndo::clearUndo(doc);
+        }
+        auto before = sp_repr_save_buf(doc->getReprDoc());
+        auto context = UI::Tools::capture_corner_rounding_document(*shape, 0); ASSERT_TRUE(context.snapshot);
+        context.snapshot->selected = {{0,0}, {0, short_line ? 1u : 3u}};
+        auto result = UI::Tools::apply_corner_plan(*shape, nullptr, *context.snapshot,
+            {short_line ? CE::Scope::All : CE::Scope::Selected, CE::Mode::Round, 10},
+            UI::Tools::CornerCommitProtocol::CommandLine, [] { return true; });
+        EXPECT_EQ(result.outcome, Controller::Outcome::Rejected);
+        EXPECT_FALSE(result.mutation_started);
+        EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()), before);
+        EXPECT_FALSE(DocumentUndo::undo(doc));
+    }
+}
+
+TEST_F(CornerRoundingVertices, PolylinePopoverRoundsThroughLiveToolbar)
+{
+    auto shape = vertex_shape("svg:polyline"); ASSERT_TRUE(shape);
+    auto before = sp_repr_save_buf(doc->getReprDoc());
+    UI::Toolbar::NodeToolbar toolbar; toolbar.setDesktop(desktop);
+    auto find = [](auto &&self, GtkWidget *widget) -> GtkMenuButton * {
+        if (GTK_IS_MENU_BUTTON(widget)) {
+            auto pop = gtk_menu_button_get_popover(GTK_MENU_BUTTON(widget));
+            if (pop && dynamic_cast<UI::Widget::CornerRoundingPopover *>(Glib::wrap(pop)))
+                return GTK_MENU_BUTTON(widget);
+        }
+        for (auto child = gtk_widget_get_first_child(widget); child; child = gtk_widget_get_next_sibling(child))
+            if (auto result = self(self, child)) return result;
+        return nullptr;
+    };
+    auto menu = find(find, GTK_WIDGET(toolbar.gobj())); ASSERT_TRUE(menu);
+    auto pop = GTK_WIDGET(gtk_menu_button_get_popover(menu)); ASSERT_TRUE(pop);
+    auto all = dynamic_cast<Gtk::CheckButton *>(Glib::wrap(named(pop, "corner-all"))); ASSERT_TRUE(all);
+    toolbar.setActiveUnit(Util::UnitTable::get().getUnit("px")); all->set_active(true);
+    auto radius = dynamic_cast<Gtk::Entry *>(Glib::wrap(named(pop, "corner-radius"))); ASSERT_TRUE(radius);
+    radius->set_text("10");
+    EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()), before);
+    settle();
+    auto rounded = cast<SPPath>(doc->getObjectById("vertices")); ASSERT_TRUE(rounded);
+    unsigned curves = 0;
+    for (auto const &sub : *rounded->curve()) for (auto const &segment : sub)
+        if (!segment.isLineSegment()) ++curves;
+    EXPECT_GE(curves, 2u);
+    EXPECT_EQ(rounded->curve()->front().initialPoint(), Geom::Point(0,0));
+    EXPECT_EQ(rounded->curve()->front().finalPoint(), Geom::Point(0,100));
+    ASSERT_TRUE(DocumentUndo::undo(doc)); EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()), before);
+    EXPECT_FALSE(DocumentUndo::undo(doc));
+    toolbar.setDesktop(nullptr);
 }

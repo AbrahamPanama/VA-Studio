@@ -1,0 +1,341 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "bitmap.tone-query:boundary",
+      "command": "bitmap.tone-query",
+      "cell": "boundary",
+      "description": "Independent P9 bitmap.tone-query:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.tone-query",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.histogram:boundary",
+      "command": "bitmap.histogram",
+      "cell": "boundary",
+      "description": "Independent P9 bitmap.histogram:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.histogram",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.tone-set:boundary",
+      "command": "bitmap.tone-set",
+      "cell": "boundary",
+      "description": "Independent P9 bitmap.tone-set:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.tone-set",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.copy:boundary",
+      "command": "bitmap.copy",
+      "cell": "boundary",
+      "description": "Independent P9 bitmap.copy:boundary",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.copy",
+            "params": [],
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.copy:boundary:2",
+      "command": "bitmap.copy",
+      "cell": "boundary",
+      "description": "Independent P9 bitmap.copy:boundary:2",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.copy",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "size": {
+                "width": 0,
+                "height": 10
+              },
+              "bbox": "geometric",
+              "background": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "replace": false
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "rejected",
+            "undo_effect": "none"
+          },
+          "expect_error": "invalid-argument",
+          "expect_accepted": false
+        }
+      ],
+      "expect_exit": 0
+    }
+  ]
+}

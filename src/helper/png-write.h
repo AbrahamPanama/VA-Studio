@@ -27,12 +27,18 @@ namespace Inkscape::Colors {
 class Color;
 }
 
+namespace Inkscape::IO { struct PreparedExportProfile; }
+
 enum ExportResult {
     EXPORT_ERROR = 0,
     EXPORT_OK,
     EXPORT_ABORTED
 };
 
+// output_profile is opt-in: internal PNG consumers retain unconverted sRGB.
+// Built-in sRGB keeps historical PNG bytes unless embed_srgb is requested
+// for JPEG/WebP intermediate files. Custom RGB profiles
+// require RGB/RGBA output; grayscale must not be tagged with an RGB profile.
 /**
  * Export the given document as a Portable Network Graphics (PNG) file.
  *
@@ -54,7 +60,9 @@ ExportResult sp_export_png_file(SPDocument *doc,
                                 int color_type = 6,
                                 int bit_depth = 8,
                                 int zlib = 6,
-                                int antialiasing = 2);
+                                int antialiasing = 2,
+                                Inkscape::IO::PreparedExportProfile const *output_profile = nullptr,
+                                bool embed_srgb = false);
 
 ExportResult sp_export_png_file(SPDocument *doc,
                                 gchar const *filename,
@@ -72,6 +80,8 @@ ExportResult sp_export_png_file(SPDocument *doc,
                                 int color_type = 6,
                                 int bit_depth = 8,
                                 int zlib = 6,
-                                int antialiasing = 2);
+                                int antialiasing = 2,
+                                Inkscape::IO::PreparedExportProfile const *output_profile = nullptr,
+                                bool embed_srgb = false);
 
 #endif // SEEN_SP_PNG_WRITE_H

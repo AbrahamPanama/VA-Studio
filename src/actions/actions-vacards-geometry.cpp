@@ -42,6 +42,7 @@
 
 #include "actions-vacards-cli.h"
 #include "vacards-cli-result.h"
+#include "vacards-cli-transaction.h"
 #include "document-undo.h"
 #include "document.h"
 #include "inkscape-application.h"
@@ -92,9 +93,8 @@ constexpr ParamSpec boolean_params[] = {
 constexpr ActionSpec boolean_spec{.name = "vacards-boolean", .mode = "collective-geometry",
     .summary = "Combine the selected paths like Boolean Assist.", .params = boolean_params};
 
-void boolean(Glib::VariantBase const &value, InkscapeApplication *app)
+void boolean_body(ActionContext &c)
 {
-    run_action(boolean_spec, value, app, [](ActionContext &c) {
         Record &r = c.record;
 
         if (!c.selection || c.selection->size() < 2) {
@@ -146,6 +146,13 @@ void boolean(Glib::VariantBase const &value, InkscapeApplication *app)
             return;
         }
 
+        EditTransaction transaction(c.document, c.selection, c.operation_lease);
+        if (!transaction.active()) {
+            r.status = Status::Rejected;
+            r.reason = "transaction-unavailable";
+            r.message = "The document cannot start an isolated edit.";
+            return;
+        }
         auto const before_rev = c.document->getReprDoc()->contentRevision();
 
         // Exactly the Boolean Assist mapping, shared with the GUI; skip_undo/silent so this body owns the
@@ -186,7 +193,7 @@ void boolean(Glib::VariantBase const &value, InkscapeApplication *app)
         // fail rather than commit that original.
         SPItem *const single = c.selection->singleItem();
         if (!boolean_result || c.selection->size() != 1 || !is<SPPath>(single) || single != boolean_result) {
-            Inkscape::DocumentUndo::cancel(c.document);
+            transaction.rollback();
             r.status = Status::Failed;
             r.reason = "boolean-failed";
             r.message = "The boolean operation did not produce one path; the document was restored.";
@@ -194,7 +201,7 @@ void boolean(Glib::VariantBase const &value, InkscapeApplication *app)
         }
 
         auto const label = UI::Toolbar::boolean_assist_undo_label(assist_op, operands.size());
-        DocumentUndo::done(c.document, label.first, label.second);
+        transaction.commit(label.first, label.second);
 
         r.status = Status::Changed;
         r.reason = "success";
@@ -225,7 +232,11 @@ void boolean(Glib::VariantBase const &value, InkscapeApplication *app)
                 r.deleted.push_back(id);
             }
         }
-    });
+}
+
+void boolean(Glib::VariantBase const &value, InkscapeApplication *app)
+{
+    run_action(boolean_spec, value, app, boolean_body);
 }
 
 // ---- vacards-transform-resize ---------------------------------------------------------------
@@ -263,9 +274,8 @@ UI::Toolbar::TransformReferencePoint anchor_from_name(std::string const &name)
     return TransformReferencePoint::TopLeft; // nw (default)
 }
 
-void transform_resize(Glib::VariantBase const &value, InkscapeApplication *app)
+void transform_resize_body(ActionContext &c)
 {
-    run_action(resize_spec, value, app, [](ActionContext &c) {
         Record &r = c.record;
 
         if (!c.selection || c.selection->isEmpty()) {
@@ -396,7 +406,11 @@ void transform_resize(Glib::VariantBase const &value, InkscapeApplication *app)
         r.metrics["new_height"] = new_height;
         r.data["transform_stroke"] = transform_stroke;
         r.data["preserve_transform"] = preserve;
-    });
+}
+
+void transform_resize(Glib::VariantBase const &value, InkscapeApplication *app)
+{
+    run_action(resize_spec, value, app, transform_resize_body);
 }
 
 // ---- vacards-offset --------------------------------------------------------------------------
@@ -453,9 +467,8 @@ OffsetShapes::Options offset_options(ParseResult const &params)
     return options;
 }
 
-void offset(Glib::VariantBase const &value, InkscapeApplication *app)
+void offset_body(ActionContext &c)
 {
-    run_action(offset_spec, value, app, [](ActionContext &c) {
         Record &r = c.record;
 
         if (!c.selection || c.selection->isEmpty()) {
@@ -519,8 +532,15 @@ void offset(Glib::VariantBase const &value, InkscapeApplication *app)
             return;
         }
 
+        EditTransaction transaction(c.document, c.selection, c.operation_lease);
+        if (!transaction.active()) {
+            r.status = Status::Rejected;
+            r.reason = "transaction-unavailable";
+            r.message = "The document cannot start an isolated edit.";
+            return;
+        }
         auto const committed = OffsetShapes::commit(c.document, prepared, built, options,
-                                                    OffsetShapes::CommitProtocol::CommandLine);
+                                                    OffsetShapes::CommitProtocol::CallerOwnedAtomic);
         if (!committed) {
             r.status = Status::Failed;
             r.reason = "offset-failed";
@@ -531,7 +551,6 @@ void offset(Glib::VariantBase const &value, InkscapeApplication *app)
         r.status = Status::Changed;
         r.reason = "success";
         r.message = "Created " + std::to_string(committed.created.size()) + " offset path(s).";
-        r.one_undo_step = true;
 
         bool missing_id = false;
         for (auto *item : committed.created) {
@@ -572,7 +591,13 @@ void offset(Glib::VariantBase const &value, InkscapeApplication *app)
             }
             c.selection->setList(surviving);
         }
-    });
+        transaction.commit(Util::Internal::ContextString("Offset shapes"), "path-offset-dynamic");
+        r.one_undo_step = true;
+}
+
+void offset(Glib::VariantBase const &value, InkscapeApplication *app)
+{
+    run_action(offset_spec, value, app, offset_body);
 }
 
 // ---- vacards-corners -------------------------------------------------------------------------
@@ -618,9 +643,8 @@ constexpr ActionSpec corner_spec{.name = "vacards-corners", .mode = "single-obje
     .summary = "Round or inverse-round the corners of one selected native shape like the Node tool's corner controls.",
     .params = corner_params};
 
-void corners(Glib::VariantBase const &value, InkscapeApplication *app)
+void corners_body(ActionContext &c)
 {
-    run_action(corner_spec, value, app, [](ActionContext &c) {
         Record &r = c.record;
 
         // Single-object, like the Node tool's singleItem(): exactly one visible,
@@ -635,6 +659,13 @@ void corners(Glib::VariantBase const &value, InkscapeApplication *app)
         }
         r.selected = 1;
         auto &shape = *cast<SPShape>(item);
+        auto const target_id = item_id(item); // Replacement invalidates item.
+        auto const converted_from = Tools::corner_conversion_from(shape);
+        auto report_conversion = [&] {
+            if (!converted_from.empty())
+                r.data["converted"] = boost::json::array{
+                    boost::json::object{{"id", target_id}, {"from", converted_from}, {"to", "path"}}};
+        };
 
         // The document-level capture, shared with the Node tool: an SPPath is not
         // in scope here (AC-8b), a native shape with a corner-capable input is.
@@ -728,6 +759,7 @@ void corners(Glib::VariantBase const &value, InkscapeApplication *app)
                 r.reason = "success";
                 r.message = "Dry run: " + std::to_string(plan.count) + " corner(s) would change.";
                 r.data["status"] = "would-change";
+                report_conversion();
             } else if (check.outcome == Tools::CornerRoundingController::Outcome::NoChange) {
                 r.status = Status::Unchanged;
                 r.reason = "unchanged";
@@ -747,10 +779,14 @@ void corners(Glib::VariantBase const &value, InkscapeApplication *app)
         case Tools::CornerRoundingController::Outcome::Applied:
             r.status = Status::Changed;
             r.reason = "success";
-            r.message = "Rounded corners on " + item_id(item) + ".";
+            r.message = "Rounded corners on " + target_id + ".";
+            if (!result.converted_from.empty()) {
+                report_conversion();
+                c.selection->set(c.document->getObjectById(target_id));
+            }
             r.one_undo_step = true;
             r.eligible = 1;
-            r.modified.push_back(item_id(item));
+            r.modified.push_back(target_id);
             break;
         case Tools::CornerRoundingController::Outcome::NoChange:
             r.status = Status::Unchanged;
@@ -771,10 +807,19 @@ void corners(Glib::VariantBase const &value, InkscapeApplication *app)
             r.message = result.reason;
             break;
         }
-    });
+}
+
+void corners(Glib::VariantBase const &value, InkscapeApplication *app)
+{
+    run_action(corner_spec, value, app, corners_body);
 }
 
 } // namespace
+ActionSpec boolean_command() { auto s = boolean_spec; s.handler = boolean_body; return s; }
+ActionSpec transform_resize_command() { auto s = resize_spec; s.handler = transform_resize_body; return s; }
+ActionSpec offset_command() { auto s = offset_spec; s.handler = offset_body; return s; }
+ActionSpec corners_command() { auto s = corner_spec; s.handler = corners_body; return s; }
+
 } // namespace Inkscape::VACardsCli
 
 std::vector<std::vector<Glib::ustring>> raw_data_vacards_geometry = {
@@ -818,3 +863,7937 @@ void add_actions_vacards_geometry(InkscapeApplication *app)
   End:
 */
 // vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4 :
+
+#include "vacards-cli-production.h"
+#include <boost/json.hpp>
+namespace Inkscape::VACardsCli {
+namespace {
+// | `geometry.move` | ids; `dx:L,dy:L` | roots, root affine and geometric/visual bounds before/after | T, no-bounds, invalid-transform | E / one / computed / G |
+TypeDescriptor const m3_0{boost::json::parse(R"m3({
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 100000,
+      "uniqueItems": true
+    },
+    "dx": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": -1000000.0,
+          "maximum": 1000000.0
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "px",
+            "mm",
+            "cm",
+            "in",
+            "pt",
+            "pc"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "x-css-px-absolute-maximum": 1000000,
+      "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "px"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -264583.3333333333,
+                "maximum": 264583.3333333333
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "cm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -26458.333333333336,
+                "maximum": 26458.333333333336
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "in"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -10416.666666666666,
+                "maximum": 10416.666666666666
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pt"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -750000.0,
+                "maximum": 750000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pc"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -62500.0,
+                "maximum": 62500.0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "dy": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": -1000000.0,
+          "maximum": 1000000.0
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "px",
+            "mm",
+            "cm",
+            "in",
+            "pt",
+            "pc"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "x-css-px-absolute-maximum": 1000000,
+      "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "px"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -1000000.0,
+                "maximum": 1000000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -264583.3333333333,
+                "maximum": 264583.3333333333
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "cm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -26458.333333333336,
+                "maximum": 26458.333333333336
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "in"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -10416.666666666666,
+                "maximum": 10416.666666666666
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pt"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -750000.0,
+                "maximum": 750000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pc"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": -62500.0,
+                "maximum": 62500.0
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "required": [
+    "ids",
+    "dx",
+    "dy"
+  ],
+  "additionalProperties": false,
+  "x-m3-contract": {
+    "guard_domain": "document",
+    "guard_required": true,
+    "needs_document": true,
+    "selection_mode": "collective-geometry",
+    "target_cardinality": {
+      "min": 1,
+      "max": 100000
+    },
+    "normalization": "ordered-composite-roots; ancestor covers descendant, preserving surviving input order",
+    "partial_policy": "reject-any-incompatible",
+    "role_order": "input-order; each normalized root once",
+    "normalization_order": [
+      "validate raw schema and exclusive route",
+      "select route",
+      "fill defaults recursively only in selected branch; pivot suppresses anchor, size suppresses dpi, token suppresses recipe/analyze/solve",
+      "parse exact integers",
+      "convert all lengths including nested recipes to CSS px and enforce bounds",
+      "resolve and normalize targets",
+      "canonicalize normalized params for token binding"
+    ],
+    "native_service": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+    "transform_policy": {
+      "space": "document-root-css-px",
+      "stroke": 1,
+      "rectcorners": 1,
+      "pattern": 1,
+      "gradient": 1,
+      "preservetransform": 0,
+      "dash-scale": 1,
+      "group-relative-layout": "preserved",
+      "matrix-without-bounds": "allowed; null bounds"
+    },
+    "warnings": [],
+    "error_rows": [
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: request-too-large",
+        "code": "request-too-large",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: request-too-large",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:transport/schema:request-too-large:parse_request: request-too-large",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: repeated-key",
+        "code": "repeated-key",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: repeated-key",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:transport/schema:repeated-key:parse_request: repeated-key",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: invalid-utf8",
+        "code": "invalid-utf8",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: invalid-utf8",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:transport/schema:invalid-utf8:parse_request: invalid-utf8",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: malformed-json",
+        "code": "malformed-json",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: malformed-json",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:transport/schema:malformed-json:parse_request: malformed-json",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "raw schema/type/range/route/uniqueItems violation",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "raw schema/type/range/route/uniqueItems violation",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:transport/schema:invalid-argument:raw schema/type/range/route/uniqueItems violation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "missing current document",
+        "code": "no-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "missing current document",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:identity/admission:no-document:missing current document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "document identity mismatch",
+        "code": "stale-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document identity mismatch",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:identity/admission:stale-document:document identity mismatch",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "supplied guard differs from document revision",
+        "code": "stale-revision",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "supplied guard differs from document revision",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:identity/admission:stale-revision:supplied guard differs from document revision",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "cancellation observed before commit",
+        "code": "cancelled",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "cancellation observed before commit",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:identity/admission:cancelled:cancellation observed before commit",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "explicit ID cannot resolve",
+        "code": "unknown-id",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "explicit-target route",
+        "detail.reason": "explicit ID cannot resolve",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:identity/admission:unknown-id:explicit ID cannot resolve",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "fresh readiness guard rejects busy document",
+        "code": "transaction-unavailable",
+        "retryable": true,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document operation admission busy",
+        "native_evidence": "`DocumentUndo::fileOperationFreshReady` / `fileOperationOutputReady`, `src/actions/vacards-cli-edit-services.cpp:361-363`",
+        "oracle": "P9:geometry.move:identity/admission:transaction-unavailable:fresh readiness guard rejects busy document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "applyAffine: nonfinite or singular affine",
+        "code": "invalid-transform",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "applyAffine",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:command-service:invalid-transform:applyAffine: nonfinite or singular affine",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "collective bounds absent",
+        "code": "no-bounds",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "collective bounds absent",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:command-service:no-bounds:collective bounds absent",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "read-only session rejects requested document mutation",
+        "code": "document-read-only",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "document-edit or history mutation only",
+        "detail.reason": "read-only session rejects requested document mutation",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:identity/admission:document-read-only:read-only session rejects requested document mutation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "unexpected service exception; rollback before return",
+        "code": "internal-error",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "unexpected service exception; rollback before return",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809` (native move forwarding `:2074`)",
+        "oracle": "P9:geometry.move:command-service:internal-error:unexpected service exception; rollback before return",
+        "evidence_status": "required-unimplemented"
+      }
+    ],
+    "success_native_branches": [
+      "native successful outcome",
+      "native unchanged outcome when applicable",
+      "read-only computed preparation"
+    ],
+    "variant_applicability": {
+      "success": "ok or changed",
+      "unchanged": "native no-op only; query/preparation/history empty are not successful unchanged",
+      "computed-dry-run": "successful read-only preflight; no retention, publication, Undo or Redo change"
+    },
+    "success_rows": [
+      {
+        "native_branch": "native successful outcome",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "committed",
+        "data_variant": "success",
+        "evidence_route": "P9:geometry.move:native:native successful outcome",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "native unchanged outcome when applicable",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "unchanged",
+        "evidence_route": "P9:geometry.move:native:native unchanged outcome when applicable",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "read-only computed preparation",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "computed-dry-run",
+        "evidence_route": "P9:geometry.move:native:read-only computed preparation",
+        "evidence_status": "required-unimplemented"
+      }
+    ]
+  }
+})m3").as_object()};
+// | `geometry.resize` | ids; width and/or height positive L; `keep-ratio=false`, `anchor=nw`, `bbox=visual`; anchor nw/n/ne/w/center/e/sw/s/se | dimensions/bounds/affines before/after; keep-ratio-ignored warning when applicable | T, no-bounds, zero-dimension | E / one / computed / G; existing native resize contract |
+TypeDescriptor const m3_1{boost::json::parse(R"m3({
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 100000,
+      "uniqueItems": true
+    },
+    "width": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000.0,
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "px",
+            "mm",
+            "cm",
+            "in",
+            "pt",
+            "pc"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "x-css-px-absolute-maximum": 1000000,
+      "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "px"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 1000000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 264583.3333333333
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "cm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 26458.333333333336
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "in"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 10416.666666666666
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pt"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 750000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pc"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 62500.0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "height": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000.0,
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "px",
+            "mm",
+            "cm",
+            "in",
+            "pt",
+            "pc"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "x-css-px-absolute-maximum": 1000000,
+      "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "px"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 1000000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 264583.3333333333
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "cm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 26458.333333333336
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "in"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 10416.666666666666
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pt"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 750000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pc"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 62500.0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "keep-ratio": {
+      "type": "boolean",
+      "default": false
+    },
+    "anchor": {
+      "type": "string",
+      "enum": [
+        "nw",
+        "n",
+        "ne",
+        "w",
+        "center",
+        "e",
+        "sw",
+        "s",
+        "se"
+      ],
+      "default": "nw"
+    },
+    "bbox": {
+      "type": "string",
+      "enum": [
+        "visual",
+        "geometric"
+      ],
+      "default": "visual"
+    }
+  },
+  "required": [
+    "ids"
+  ],
+  "additionalProperties": false,
+  "anyOf": [
+    {
+      "required": [
+        "width"
+      ]
+    },
+    {
+      "required": [
+        "height"
+      ]
+    }
+  ],
+  "x-m3-contract": {
+    "guard_domain": "document",
+    "guard_required": true,
+    "needs_document": true,
+    "selection_mode": "collective-geometry",
+    "target_cardinality": {
+      "min": 1,
+      "max": 100000
+    },
+    "normalization": "ordered-composite-roots; ancestor covers descendant, preserving surviving input order",
+    "partial_policy": "reject-any-incompatible",
+    "role_order": "input-order; each normalized root once",
+    "normalization_order": [
+      "validate raw schema and exclusive route",
+      "select route",
+      "fill defaults recursively only in selected branch; pivot suppresses anchor, size suppresses dpi, token suppresses recipe/analyze/solve",
+      "parse exact integers",
+      "convert all lengths including nested recipes to CSS px and enforce bounds",
+      "resolve and normalize targets",
+      "canonicalize normalized params for token binding"
+    ],
+    "native_service": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+    "transform_policy": {
+      "space": "document-root-css-px",
+      "stroke": 1,
+      "rectcorners": 1,
+      "pattern": 1,
+      "gradient": 1,
+      "preservetransform": 0,
+      "dash-scale": 1,
+      "group-relative-layout": "preserved",
+      "matrix-without-bounds": "allowed; null bounds"
+    },
+    "warnings": [
+      {
+        "code": "keep-ratio-ignored",
+        "emit_site": "resize admission: both width and height supplied with keep-ratio=true"
+      }
+    ],
+    "error_rows": [
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: request-too-large",
+        "code": "request-too-large",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: request-too-large",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:transport/schema:request-too-large:parse_request: request-too-large",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: repeated-key",
+        "code": "repeated-key",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: repeated-key",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:transport/schema:repeated-key:parse_request: repeated-key",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: invalid-utf8",
+        "code": "invalid-utf8",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: invalid-utf8",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:transport/schema:invalid-utf8:parse_request: invalid-utf8",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: malformed-json",
+        "code": "malformed-json",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: malformed-json",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:transport/schema:malformed-json:parse_request: malformed-json",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "raw schema/type/range/route/uniqueItems violation",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "raw schema/type/range/route/uniqueItems violation",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:transport/schema:invalid-argument:raw schema/type/range/route/uniqueItems violation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "missing current document",
+        "code": "no-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "missing current document",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:identity/admission:no-document:missing current document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "document identity mismatch",
+        "code": "stale-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document identity mismatch",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:identity/admission:stale-document:document identity mismatch",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "supplied guard differs from document revision",
+        "code": "stale-revision",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "supplied guard differs from document revision",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:identity/admission:stale-revision:supplied guard differs from document revision",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "cancellation observed before commit",
+        "code": "cancelled",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "cancellation observed before commit",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:identity/admission:cancelled:cancellation observed before commit",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "explicit ID cannot resolve",
+        "code": "unknown-id",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "explicit-target route",
+        "detail.reason": "explicit ID cannot resolve",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:identity/admission:unknown-id:explicit ID cannot resolve",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "fresh readiness guard rejects busy document",
+        "code": "transaction-unavailable",
+        "retryable": true,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document operation admission busy",
+        "native_evidence": "`DocumentUndo::fileOperationFreshReady` / `fileOperationOutputReady`, `src/actions/vacards-cli-edit-services.cpp:361-363`",
+        "oracle": "P9:geometry.resize:identity/admission:transaction-unavailable:fresh readiness guard rejects busy document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "applyAffine: nonfinite or singular affine",
+        "code": "invalid-transform",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "applyAffine",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:command-service:invalid-transform:applyAffine: nonfinite or singular affine",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "collective bounds absent",
+        "code": "no-bounds",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "collective bounds absent",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:command-service:no-bounds:collective bounds absent",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "collective dimension zero",
+        "code": "zero-dimension",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "collective dimension zero",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:command-service:zero-dimension:collective dimension zero",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "read-only session rejects requested document mutation",
+        "code": "document-read-only",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "document-edit or history mutation only",
+        "detail.reason": "read-only session rejects requested document mutation",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:identity/admission:document-read-only:read-only session rejects requested document mutation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "unexpected service exception; rollback before return",
+        "code": "internal-error",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "unexpected service exception; rollback before return",
+        "native_evidence": "`selection_resize_affine`, `src/object/sp-item-transform.cpp:394`, then `ObjectSet::applyAffine`, `selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.resize:command-service:internal-error:unexpected service exception; rollback before return",
+        "evidence_status": "required-unimplemented"
+      }
+    ],
+    "success_native_branches": [
+      "native successful outcome",
+      "native unchanged outcome when applicable",
+      "read-only computed preparation"
+    ],
+    "variant_applicability": {
+      "success": "ok or changed",
+      "unchanged": "native no-op only; query/preparation/history empty are not successful unchanged",
+      "computed-dry-run": "successful read-only preflight; no retention, publication, Undo or Redo change"
+    },
+    "success_rows": [
+      {
+        "native_branch": "native successful outcome",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "committed",
+        "data_variant": "success",
+        "evidence_route": "P9:geometry.resize:native:native successful outcome",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "native unchanged outcome when applicable",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "unchanged",
+        "evidence_route": "P9:geometry.resize:native:native unchanged outcome when applicable",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "read-only computed preparation",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "computed-dry-run",
+        "evidence_route": "P9:geometry.resize:native:read-only computed preparation",
+        "evidence_status": "required-unimplemented"
+      }
+    ]
+  }
+})m3").as_object()};
+// | `geometry.rotate` | ids; finite `angle`; `pivot:{x:L,y:L}` or `anchor=center`; `bbox=geometric` | collective pivot/affine/bounds before/after | T, no-bounds, invalid-transform | E / one / computed / G; pivot/anchor mutually exclusive |
+TypeDescriptor const m3_2{boost::json::parse(R"m3({
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 100000,
+      "uniqueItems": true
+    },
+    "pivot": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": -1000000.0,
+              "maximum": 1000000.0
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "px",
+                "mm",
+                "cm",
+                "in",
+                "pt",
+                "pc"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "additionalProperties": false,
+          "x-css-px-absolute-maximum": 1000000,
+          "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "px"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -1000000.0,
+                    "maximum": 1000000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "mm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -264583.3333333333,
+                    "maximum": 264583.3333333333
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "cm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -26458.333333333336,
+                    "maximum": 26458.333333333336
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "in"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -10416.666666666666,
+                    "maximum": 10416.666666666666
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pt"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -750000.0,
+                    "maximum": 750000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pc"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -62500.0,
+                    "maximum": 62500.0
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "y": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": -1000000.0,
+              "maximum": 1000000.0
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "px",
+                "mm",
+                "cm",
+                "in",
+                "pt",
+                "pc"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "additionalProperties": false,
+          "x-css-px-absolute-maximum": 1000000,
+          "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "px"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -1000000.0,
+                    "maximum": 1000000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "mm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -264583.3333333333,
+                    "maximum": 264583.3333333333
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "cm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -26458.333333333336,
+                    "maximum": 26458.333333333336
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "in"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -10416.666666666666,
+                    "maximum": 10416.666666666666
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pt"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -750000.0,
+                    "maximum": 750000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pc"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -62500.0,
+                    "maximum": 62500.0
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    },
+    "anchor": {
+      "type": "string",
+      "enum": [
+        "nw",
+        "n",
+        "ne",
+        "w",
+        "center",
+        "e",
+        "sw",
+        "s",
+        "se"
+      ],
+      "default": "center"
+    },
+    "bbox": {
+      "type": "string",
+      "enum": [
+        "visual",
+        "geometric"
+      ],
+      "default": "geometric"
+    },
+    "angle": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "ids",
+    "angle"
+  ],
+  "additionalProperties": false,
+  "not": {
+    "required": [
+      "pivot",
+      "anchor"
+    ]
+  },
+  "x-m3-contract": {
+    "guard_domain": "document",
+    "guard_required": true,
+    "needs_document": true,
+    "selection_mode": "collective-geometry",
+    "target_cardinality": {
+      "min": 1,
+      "max": 100000
+    },
+    "normalization": "ordered-composite-roots; ancestor covers descendant, preserving surviving input order",
+    "partial_policy": "reject-any-incompatible",
+    "role_order": "input-order; each normalized root once",
+    "normalization_order": [
+      "validate raw schema and exclusive route",
+      "select route",
+      "fill defaults recursively only in selected branch; pivot suppresses anchor, size suppresses dpi, token suppresses recipe/analyze/solve",
+      "parse exact integers",
+      "convert all lengths including nested recipes to CSS px and enforce bounds",
+      "resolve and normalize targets",
+      "canonicalize normalized params for token binding"
+    ],
+    "native_service": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+    "transform_policy": {
+      "space": "document-root-css-px",
+      "stroke": 1,
+      "rectcorners": 1,
+      "pattern": 1,
+      "gradient": 1,
+      "preservetransform": 0,
+      "dash-scale": 1,
+      "group-relative-layout": "preserved",
+      "matrix-without-bounds": "allowed; null bounds"
+    },
+    "warnings": [],
+    "error_rows": [
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: request-too-large",
+        "code": "request-too-large",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: request-too-large",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:transport/schema:request-too-large:parse_request: request-too-large",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: repeated-key",
+        "code": "repeated-key",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: repeated-key",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:transport/schema:repeated-key:parse_request: repeated-key",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: invalid-utf8",
+        "code": "invalid-utf8",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: invalid-utf8",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:transport/schema:invalid-utf8:parse_request: invalid-utf8",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: malformed-json",
+        "code": "malformed-json",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: malformed-json",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:transport/schema:malformed-json:parse_request: malformed-json",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "raw schema/type/range/route/uniqueItems violation",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "raw schema/type/range/route/uniqueItems violation",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:transport/schema:invalid-argument:raw schema/type/range/route/uniqueItems violation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "missing current document",
+        "code": "no-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "missing current document",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:identity/admission:no-document:missing current document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "document identity mismatch",
+        "code": "stale-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document identity mismatch",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:identity/admission:stale-document:document identity mismatch",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "supplied guard differs from document revision",
+        "code": "stale-revision",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "supplied guard differs from document revision",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:identity/admission:stale-revision:supplied guard differs from document revision",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "cancellation observed before commit",
+        "code": "cancelled",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "cancellation observed before commit",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:identity/admission:cancelled:cancellation observed before commit",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "explicit ID cannot resolve",
+        "code": "unknown-id",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "explicit-target route",
+        "detail.reason": "explicit ID cannot resolve",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:identity/admission:unknown-id:explicit ID cannot resolve",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "fresh readiness guard rejects busy document",
+        "code": "transaction-unavailable",
+        "retryable": true,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document operation admission busy",
+        "native_evidence": "`DocumentUndo::fileOperationFreshReady` / `fileOperationOutputReady`, `src/actions/vacards-cli-edit-services.cpp:361-363`",
+        "oracle": "P9:geometry.rotate:identity/admission:transaction-unavailable:fresh readiness guard rejects busy document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "applyAffine: nonfinite or singular affine",
+        "code": "invalid-transform",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "applyAffine",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:command-service:invalid-transform:applyAffine: nonfinite or singular affine",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "collective bounds absent",
+        "code": "no-bounds",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "collective bounds absent",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:command-service:no-bounds:collective bounds absent",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "read-only session rejects requested document mutation",
+        "code": "document-read-only",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "document-edit or history mutation only",
+        "detail.reason": "read-only session rejects requested document mutation",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:identity/admission:document-read-only:read-only session rejects requested document mutation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "unexpected service exception; rollback before return",
+        "code": "internal-error",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "unexpected service exception; rollback before return",
+        "native_evidence": "`ObjectSet::applyAffine`, `src/selection-chemistry.cpp:1809`",
+        "oracle": "P9:geometry.rotate:command-service:internal-error:unexpected service exception; rollback before return",
+        "evidence_status": "required-unimplemented"
+      }
+    ],
+    "success_native_branches": [
+      "native successful outcome",
+      "native unchanged outcome when applicable",
+      "read-only computed preparation"
+    ],
+    "variant_applicability": {
+      "success": "ok or changed",
+      "unchanged": "native no-op only; query/preparation/history empty are not successful unchanged",
+      "computed-dry-run": "successful read-only preflight; no retention, publication, Undo or Redo change"
+    },
+    "success_rows": [
+      {
+        "native_branch": "native successful outcome",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "committed",
+        "data_variant": "success",
+        "evidence_route": "P9:geometry.rotate:native:native successful outcome",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "native unchanged outcome when applicable",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "unchanged",
+        "evidence_route": "P9:geometry.rotate:native:native unchanged outcome when applicable",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "read-only computed preparation",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "computed-dry-run",
+        "evidence_route": "P9:geometry.rotate:native:read-only computed preparation",
+        "evidence_status": "required-unimplemented"
+      }
+    ]
+  }
+})m3").as_object()};
+// | `geometry.skew` | ids; `axis=x|y`, finite `angle` strictly between -90 and 90; same pivot/anchor/bbox | collective affine/bounds before/after | T, no-bounds, zero-dimension, invalid-transform | E / one / computed / G; delta skew; degenerate collective target refuses |
+TypeDescriptor const m3_3{boost::json::parse(R"m3({
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 100000,
+      "uniqueItems": true
+    },
+    "pivot": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": -1000000.0,
+              "maximum": 1000000.0
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "px",
+                "mm",
+                "cm",
+                "in",
+                "pt",
+                "pc"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "additionalProperties": false,
+          "x-css-px-absolute-maximum": 1000000,
+          "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "px"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -1000000.0,
+                    "maximum": 1000000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "mm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -264583.3333333333,
+                    "maximum": 264583.3333333333
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "cm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -26458.333333333336,
+                    "maximum": 26458.333333333336
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "in"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -10416.666666666666,
+                    "maximum": 10416.666666666666
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pt"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -750000.0,
+                    "maximum": 750000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pc"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -62500.0,
+                    "maximum": 62500.0
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "y": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": -1000000.0,
+              "maximum": 1000000.0
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "px",
+                "mm",
+                "cm",
+                "in",
+                "pt",
+                "pc"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "additionalProperties": false,
+          "x-css-px-absolute-maximum": 1000000,
+          "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "px"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -1000000.0,
+                    "maximum": 1000000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "mm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -264583.3333333333,
+                    "maximum": 264583.3333333333
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "cm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -26458.333333333336,
+                    "maximum": 26458.333333333336
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "in"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -10416.666666666666,
+                    "maximum": 10416.666666666666
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pt"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -750000.0,
+                    "maximum": 750000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pc"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -62500.0,
+                    "maximum": 62500.0
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    },
+    "anchor": {
+      "type": "string",
+      "enum": [
+        "nw",
+        "n",
+        "ne",
+        "w",
+        "center",
+        "e",
+        "sw",
+        "s",
+        "se"
+      ],
+      "default": "center"
+    },
+    "bbox": {
+      "type": "string",
+      "enum": [
+        "visual",
+        "geometric"
+      ],
+      "default": "geometric"
+    },
+    "axis": {
+      "type": "string",
+      "enum": [
+        "x",
+        "y"
+      ]
+    },
+    "angle": {
+      "type": "number",
+      "exclusiveMinimum": -90,
+      "exclusiveMaximum": 90
+    }
+  },
+  "required": [
+    "ids",
+    "axis",
+    "angle"
+  ],
+  "additionalProperties": false,
+  "not": {
+    "required": [
+      "pivot",
+      "anchor"
+    ]
+  },
+  "x-m3-contract": {
+    "guard_domain": "document",
+    "guard_required": true,
+    "needs_document": true,
+    "selection_mode": "collective-geometry",
+    "target_cardinality": {
+      "min": 1,
+      "max": 100000
+    },
+    "normalization": "ordered-composite-roots; ancestor covers descendant, preserving surviving input order",
+    "partial_policy": "reject-any-incompatible",
+    "role_order": "input-order; each normalized root once",
+    "normalization_order": [
+      "validate raw schema and exclusive route",
+      "select route",
+      "fill defaults recursively only in selected branch; pivot suppresses anchor, size suppresses dpi, token suppresses recipe/analyze/solve",
+      "parse exact integers",
+      "convert all lengths including nested recipes to CSS px and enforce bounds",
+      "resolve and normalize targets",
+      "canonicalize normalized params for token binding"
+    ],
+    "native_service": "same `ObjectSet::applyAffine`, `:1809`",
+    "transform_policy": {
+      "space": "document-root-css-px",
+      "stroke": 1,
+      "rectcorners": 1,
+      "pattern": 1,
+      "gradient": 1,
+      "preservetransform": 0,
+      "dash-scale": 1,
+      "group-relative-layout": "preserved",
+      "matrix-without-bounds": "allowed; null bounds"
+    },
+    "warnings": [],
+    "error_rows": [
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: request-too-large",
+        "code": "request-too-large",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: request-too-large",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:transport/schema:request-too-large:parse_request: request-too-large",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: repeated-key",
+        "code": "repeated-key",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: repeated-key",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:transport/schema:repeated-key:parse_request: repeated-key",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: invalid-utf8",
+        "code": "invalid-utf8",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: invalid-utf8",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:transport/schema:invalid-utf8:parse_request: invalid-utf8",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: malformed-json",
+        "code": "malformed-json",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: malformed-json",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:transport/schema:malformed-json:parse_request: malformed-json",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "raw schema/type/range/route/uniqueItems violation",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "raw schema/type/range/route/uniqueItems violation",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:transport/schema:invalid-argument:raw schema/type/range/route/uniqueItems violation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "missing current document",
+        "code": "no-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "missing current document",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:identity/admission:no-document:missing current document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "document identity mismatch",
+        "code": "stale-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document identity mismatch",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:identity/admission:stale-document:document identity mismatch",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "supplied guard differs from document revision",
+        "code": "stale-revision",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "supplied guard differs from document revision",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:identity/admission:stale-revision:supplied guard differs from document revision",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "cancellation observed before commit",
+        "code": "cancelled",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "cancellation observed before commit",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:identity/admission:cancelled:cancellation observed before commit",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "explicit ID cannot resolve",
+        "code": "unknown-id",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "explicit-target route",
+        "detail.reason": "explicit ID cannot resolve",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:identity/admission:unknown-id:explicit ID cannot resolve",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "fresh readiness guard rejects busy document",
+        "code": "transaction-unavailable",
+        "retryable": true,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document operation admission busy",
+        "native_evidence": "`DocumentUndo::fileOperationFreshReady` / `fileOperationOutputReady`, `src/actions/vacards-cli-edit-services.cpp:361-363`",
+        "oracle": "P9:geometry.skew:identity/admission:transaction-unavailable:fresh readiness guard rejects busy document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "applyAffine: nonfinite or singular affine",
+        "code": "invalid-transform",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "applyAffine",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:command-service:invalid-transform:applyAffine: nonfinite or singular affine",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "collective bounds absent",
+        "code": "no-bounds",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "collective bounds absent",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:command-service:no-bounds:collective bounds absent",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "collective dimension zero",
+        "code": "zero-dimension",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "collective dimension zero",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:command-service:zero-dimension:collective dimension zero",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "read-only session rejects requested document mutation",
+        "code": "document-read-only",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "document-edit or history mutation only",
+        "detail.reason": "read-only session rejects requested document mutation",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:identity/admission:document-read-only:read-only session rejects requested document mutation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "unexpected service exception; rollback before return",
+        "code": "internal-error",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "unexpected service exception; rollback before return",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.skew:command-service:internal-error:unexpected service exception; rollback before return",
+        "evidence_status": "required-unimplemented"
+      }
+    ],
+    "success_native_branches": [
+      "native successful outcome",
+      "native unchanged outcome when applicable",
+      "read-only computed preparation"
+    ],
+    "variant_applicability": {
+      "success": "ok or changed",
+      "unchanged": "native no-op only; query/preparation/history empty are not successful unchanged",
+      "computed-dry-run": "successful read-only preflight; no retention, publication, Undo or Redo change"
+    },
+    "success_rows": [
+      {
+        "native_branch": "native successful outcome",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "committed",
+        "data_variant": "success",
+        "evidence_route": "P9:geometry.skew:native:native successful outcome",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "native unchanged outcome when applicable",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "unchanged",
+        "evidence_route": "P9:geometry.skew:native:native unchanged outcome when applicable",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "read-only computed preparation",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "computed-dry-run",
+        "evidence_route": "P9:geometry.skew:native:read-only computed preparation",
+        "evidence_status": "required-unimplemented"
+      }
+    ]
+  }
+})m3").as_object()};
+// | `geometry.flip` | ids; `axis=horizontal|vertical`; same pivot/anchor/bbox | collective affine/bounds before/after | T, no-bounds, invalid-transform | E / one / computed / G |
+TypeDescriptor const m3_4{boost::json::parse(R"m3({
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 100000,
+      "uniqueItems": true
+    },
+    "pivot": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": -1000000.0,
+              "maximum": 1000000.0
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "px",
+                "mm",
+                "cm",
+                "in",
+                "pt",
+                "pc"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "additionalProperties": false,
+          "x-css-px-absolute-maximum": 1000000,
+          "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "px"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -1000000.0,
+                    "maximum": 1000000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "mm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -264583.3333333333,
+                    "maximum": 264583.3333333333
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "cm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -26458.333333333336,
+                    "maximum": 26458.333333333336
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "in"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -10416.666666666666,
+                    "maximum": 10416.666666666666
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pt"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -750000.0,
+                    "maximum": 750000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pc"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -62500.0,
+                    "maximum": 62500.0
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "y": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": -1000000.0,
+              "maximum": 1000000.0
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "px",
+                "mm",
+                "cm",
+                "in",
+                "pt",
+                "pc"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "additionalProperties": false,
+          "x-css-px-absolute-maximum": 1000000,
+          "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "px"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -1000000.0,
+                    "maximum": 1000000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "mm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -264583.3333333333,
+                    "maximum": 264583.3333333333
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "cm"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -26458.333333333336,
+                    "maximum": 26458.333333333336
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "in"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -10416.666666666666,
+                    "maximum": 10416.666666666666
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pt"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -750000.0,
+                    "maximum": 750000.0
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "unit": {
+                    "const": "pc"
+                  }
+                },
+                "required": [
+                  "unit"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -62500.0,
+                    "maximum": 62500.0
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    },
+    "anchor": {
+      "type": "string",
+      "enum": [
+        "nw",
+        "n",
+        "ne",
+        "w",
+        "center",
+        "e",
+        "sw",
+        "s",
+        "se"
+      ],
+      "default": "center"
+    },
+    "bbox": {
+      "type": "string",
+      "enum": [
+        "visual",
+        "geometric"
+      ],
+      "default": "geometric"
+    },
+    "axis": {
+      "type": "string",
+      "enum": [
+        "horizontal",
+        "vertical"
+      ]
+    }
+  },
+  "required": [
+    "ids",
+    "axis"
+  ],
+  "additionalProperties": false,
+  "not": {
+    "required": [
+      "pivot",
+      "anchor"
+    ]
+  },
+  "x-m3-contract": {
+    "guard_domain": "document",
+    "guard_required": true,
+    "needs_document": true,
+    "selection_mode": "collective-geometry",
+    "target_cardinality": {
+      "min": 1,
+      "max": 100000
+    },
+    "normalization": "ordered-composite-roots; ancestor covers descendant, preserving surviving input order",
+    "partial_policy": "reject-any-incompatible",
+    "role_order": "input-order; each normalized root once",
+    "normalization_order": [
+      "validate raw schema and exclusive route",
+      "select route",
+      "fill defaults recursively only in selected branch; pivot suppresses anchor, size suppresses dpi, token suppresses recipe/analyze/solve",
+      "parse exact integers",
+      "convert all lengths including nested recipes to CSS px and enforce bounds",
+      "resolve and normalize targets",
+      "canonicalize normalized params for token binding"
+    ],
+    "native_service": "same `ObjectSet::applyAffine`, `:1809`",
+    "transform_policy": {
+      "space": "document-root-css-px",
+      "stroke": 1,
+      "rectcorners": 1,
+      "pattern": 1,
+      "gradient": 1,
+      "preservetransform": 0,
+      "dash-scale": 1,
+      "group-relative-layout": "preserved",
+      "matrix-without-bounds": "allowed; null bounds"
+    },
+    "warnings": [],
+    "error_rows": [
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: request-too-large",
+        "code": "request-too-large",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: request-too-large",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:transport/schema:request-too-large:parse_request: request-too-large",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: repeated-key",
+        "code": "repeated-key",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: repeated-key",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:transport/schema:repeated-key:parse_request: repeated-key",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: invalid-utf8",
+        "code": "invalid-utf8",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: invalid-utf8",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:transport/schema:invalid-utf8:parse_request: invalid-utf8",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: malformed-json",
+        "code": "malformed-json",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: malformed-json",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:transport/schema:malformed-json:parse_request: malformed-json",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "raw schema/type/range/route/uniqueItems violation",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "raw schema/type/range/route/uniqueItems violation",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:transport/schema:invalid-argument:raw schema/type/range/route/uniqueItems violation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "missing current document",
+        "code": "no-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "missing current document",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:identity/admission:no-document:missing current document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "document identity mismatch",
+        "code": "stale-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document identity mismatch",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:identity/admission:stale-document:document identity mismatch",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "supplied guard differs from document revision",
+        "code": "stale-revision",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "supplied guard differs from document revision",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:identity/admission:stale-revision:supplied guard differs from document revision",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "cancellation observed before commit",
+        "code": "cancelled",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "cancellation observed before commit",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:identity/admission:cancelled:cancellation observed before commit",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "explicit ID cannot resolve",
+        "code": "unknown-id",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "explicit-target route",
+        "detail.reason": "explicit ID cannot resolve",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:identity/admission:unknown-id:explicit ID cannot resolve",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "fresh readiness guard rejects busy document",
+        "code": "transaction-unavailable",
+        "retryable": true,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document operation admission busy",
+        "native_evidence": "`DocumentUndo::fileOperationFreshReady` / `fileOperationOutputReady`, `src/actions/vacards-cli-edit-services.cpp:361-363`",
+        "oracle": "P9:geometry.flip:identity/admission:transaction-unavailable:fresh readiness guard rejects busy document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "applyAffine: nonfinite or singular affine",
+        "code": "invalid-transform",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "applyAffine",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:command-service:invalid-transform:applyAffine: nonfinite or singular affine",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "collective bounds absent",
+        "code": "no-bounds",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "collective bounds absent",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:command-service:no-bounds:collective bounds absent",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "read-only session rejects requested document mutation",
+        "code": "document-read-only",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "document-edit or history mutation only",
+        "detail.reason": "read-only session rejects requested document mutation",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:identity/admission:document-read-only:read-only session rejects requested document mutation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "unexpected service exception; rollback before return",
+        "code": "internal-error",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "unexpected service exception; rollback before return",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.flip:command-service:internal-error:unexpected service exception; rollback before return",
+        "evidence_status": "required-unimplemented"
+      }
+    ],
+    "success_native_branches": [
+      "native successful outcome",
+      "native unchanged outcome when applicable",
+      "read-only computed preparation"
+    ],
+    "variant_applicability": {
+      "success": "ok or changed",
+      "unchanged": "native no-op only; query/preparation/history empty are not successful unchanged",
+      "computed-dry-run": "successful read-only preflight; no retention, publication, Undo or Redo change"
+    },
+    "success_rows": [
+      {
+        "native_branch": "native successful outcome",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "committed",
+        "data_variant": "success",
+        "evidence_route": "P9:geometry.flip:native:native successful outcome",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "native unchanged outcome when applicable",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "unchanged",
+        "evidence_route": "P9:geometry.flip:native:native unchanged outcome when applicable",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "read-only computed preparation",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "computed-dry-run",
+        "evidence_route": "P9:geometry.flip:native:read-only computed preparation",
+        "evidence_status": "required-unimplemented"
+      }
+    ]
+  }
+})m3").as_object()};
+// | `geometry.matrix` | ids; `matrix:[a,b,c,d,e,f]` finite, nonsingular | composed root affines/bounds before/after | T, invalid-transform | E / one / computed / G; apply once in root space, convert to each parent's space |
+TypeDescriptor const m3_5{boost::json::parse(R"m3({
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 100000,
+      "uniqueItems": true
+    },
+    "matrix": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 6,
+      "maxItems": 6
+    }
+  },
+  "required": [
+    "ids",
+    "matrix"
+  ],
+  "additionalProperties": false,
+  "x-m3-contract": {
+    "guard_domain": "document",
+    "guard_required": true,
+    "needs_document": true,
+    "selection_mode": "collective-geometry",
+    "target_cardinality": {
+      "min": 1,
+      "max": 100000
+    },
+    "normalization": "ordered-composite-roots; ancestor covers descendant, preserving surviving input order",
+    "partial_policy": "reject-any-incompatible",
+    "role_order": "input-order; each normalized root once",
+    "normalization_order": [
+      "validate raw schema and exclusive route",
+      "select route",
+      "fill defaults recursively only in selected branch; pivot suppresses anchor, size suppresses dpi, token suppresses recipe/analyze/solve",
+      "parse exact integers",
+      "convert all lengths including nested recipes to CSS px and enforce bounds",
+      "resolve and normalize targets",
+      "canonicalize normalized params for token binding"
+    ],
+    "native_service": "same `ObjectSet::applyAffine`, `:1809`",
+    "transform_policy": {
+      "space": "document-root-css-px",
+      "stroke": 1,
+      "rectcorners": 1,
+      "pattern": 1,
+      "gradient": 1,
+      "preservetransform": 0,
+      "dash-scale": 1,
+      "group-relative-layout": "preserved",
+      "matrix-without-bounds": "allowed; null bounds"
+    },
+    "warnings": [],
+    "error_rows": [
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: request-too-large",
+        "code": "request-too-large",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: request-too-large",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:transport/schema:request-too-large:parse_request: request-too-large",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: repeated-key",
+        "code": "repeated-key",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: repeated-key",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:transport/schema:repeated-key:parse_request: repeated-key",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: invalid-utf8",
+        "code": "invalid-utf8",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: invalid-utf8",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:transport/schema:invalid-utf8:parse_request: invalid-utf8",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: malformed-json",
+        "code": "malformed-json",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: malformed-json",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:transport/schema:malformed-json:parse_request: malformed-json",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "raw schema/type/range/route/uniqueItems violation",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "raw schema/type/range/route/uniqueItems violation",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:transport/schema:invalid-argument:raw schema/type/range/route/uniqueItems violation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "missing current document",
+        "code": "no-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "missing current document",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:identity/admission:no-document:missing current document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "document identity mismatch",
+        "code": "stale-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document identity mismatch",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:identity/admission:stale-document:document identity mismatch",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "supplied guard differs from document revision",
+        "code": "stale-revision",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "supplied guard differs from document revision",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:identity/admission:stale-revision:supplied guard differs from document revision",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "cancellation observed before commit",
+        "code": "cancelled",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "cancellation observed before commit",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:identity/admission:cancelled:cancellation observed before commit",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "explicit ID cannot resolve",
+        "code": "unknown-id",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "explicit-target route",
+        "detail.reason": "explicit ID cannot resolve",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:identity/admission:unknown-id:explicit ID cannot resolve",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "fresh readiness guard rejects busy document",
+        "code": "transaction-unavailable",
+        "retryable": true,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document operation admission busy",
+        "native_evidence": "`DocumentUndo::fileOperationFreshReady` / `fileOperationOutputReady`, `src/actions/vacards-cli-edit-services.cpp:361-363`",
+        "oracle": "P9:geometry.matrix:identity/admission:transaction-unavailable:fresh readiness guard rejects busy document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "applyAffine: nonfinite or singular affine",
+        "code": "invalid-transform",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "applyAffine",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:command-service:invalid-transform:applyAffine: nonfinite or singular affine",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "read-only session rejects requested document mutation",
+        "code": "document-read-only",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "document-edit or history mutation only",
+        "detail.reason": "read-only session rejects requested document mutation",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:identity/admission:document-read-only:read-only session rejects requested document mutation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "unexpected service exception; rollback before return",
+        "code": "internal-error",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "unexpected service exception; rollback before return",
+        "native_evidence": "same `ObjectSet::applyAffine`, `:1809`",
+        "oracle": "P9:geometry.matrix:command-service:internal-error:unexpected service exception; rollback before return",
+        "evidence_status": "required-unimplemented"
+      }
+    ],
+    "success_native_branches": [
+      "native successful outcome",
+      "native unchanged outcome when applicable",
+      "read-only computed preparation"
+    ],
+    "variant_applicability": {
+      "success": "ok or changed",
+      "unchanged": "native no-op only; query/preparation/history empty are not successful unchanged",
+      "computed-dry-run": "successful read-only preflight; no retention, publication, Undo or Redo change"
+    },
+    "success_rows": [
+      {
+        "native_branch": "native successful outcome",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "committed",
+        "data_variant": "success",
+        "evidence_route": "P9:geometry.matrix:native:native successful outcome",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "native unchanged outcome when applicable",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "unchanged",
+        "evidence_route": "P9:geometry.matrix:native:native unchanged outcome when applicable",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "read-only computed preparation",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "computed-dry-run",
+        "evidence_route": "P9:geometry.matrix:native:read-only computed preparation",
+        "evidence_status": "required-unimplemented"
+      }
+    ]
+  }
+})m3").as_object()};
+// | `geometry.boolean` | ordered ids; `op=union|intersection|difference|xor|division`; `empty-result=reject|allow` default reject | output IDs, paths/bounds, operands consumed | T, needs-two-operands, incompatible-operands, boolean-failed, empty-result | E / one / computed / G with explicit ordered operand policy; first is subject for difference/division |
+TypeDescriptor const m3_6{boost::json::parse(R"m3({
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 100000,
+      "uniqueItems": true
+    },
+    "op": {
+      "type": "string",
+      "enum": [
+        "union",
+        "intersection",
+        "difference",
+        "xor",
+        "division"
+      ]
+    },
+    "empty-result": {
+      "type": "string",
+      "enum": [
+        "reject",
+        "allow"
+      ]
+    }
+  },
+  "required": [
+    "ids",
+    "op",
+    "empty-result"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "division"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "properties": {
+          "ids": {
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "enum": [
+              "intersection",
+              "difference",
+              "xor"
+            ]
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "properties": {
+          "ids": {
+            "minItems": 2
+          }
+        }
+      }
+    }
+  ],
+  "x-m3-contract": {
+    "guard_domain": "document",
+    "guard_required": true,
+    "needs_document": true,
+    "selection_mode": "collective-geometry",
+    "target_cardinality": {
+      "min": 1,
+      "max": 100000,
+      "division": {
+        "min": 2,
+        "max": 2
+      },
+      "other-than-union": {
+        "min": 2,
+        "max": 100000
+      }
+    },
+    "normalization": "ordered distinct whole operand roots; reject ancestor/descendant overlap, never silently drop an operand",
+    "partial_policy": "reject-any-incompatible",
+    "role_order": "input[0] subject; remaining roots ordered operands; division input[1] cutter; stacking ignored; xor maps to native exclusion",
+    "normalization_order": [
+      "validate raw schema and exclusive route",
+      "select route",
+      "fill defaults recursively only in selected branch; pivot suppresses anchor, size suppresses dpi, token suppresses recipe/analyze/solve",
+      "parse exact integers",
+      "convert all lengths including nested recipes to CSS px and enforce bounds",
+      "resolve and normalize targets",
+      "canonicalize normalized params for token binding"
+    ],
+    "native_service": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+    "warnings": [],
+    "error_rows": [
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: request-too-large",
+        "code": "request-too-large",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: request-too-large",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:transport/schema:request-too-large:parse_request: request-too-large",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: repeated-key",
+        "code": "repeated-key",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: repeated-key",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:transport/schema:repeated-key:parse_request: repeated-key",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: invalid-utf8",
+        "code": "invalid-utf8",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: invalid-utf8",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:transport/schema:invalid-utf8:parse_request: invalid-utf8",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: malformed-json",
+        "code": "malformed-json",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: malformed-json",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:transport/schema:malformed-json:parse_request: malformed-json",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "raw schema/type/range/route/uniqueItems violation",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "raw schema/type/range/route/uniqueItems violation",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:transport/schema:invalid-argument:raw schema/type/range/route/uniqueItems violation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "missing current document",
+        "code": "no-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "missing current document",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:identity/admission:no-document:missing current document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "document identity mismatch",
+        "code": "stale-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document identity mismatch",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:identity/admission:stale-document:document identity mismatch",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "supplied guard differs from document revision",
+        "code": "stale-revision",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "supplied guard differs from document revision",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:identity/admission:stale-revision:supplied guard differs from document revision",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "cancellation observed before commit",
+        "code": "cancelled",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "cancellation observed before commit",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:identity/admission:cancelled:cancellation observed before commit",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "explicit ID cannot resolve",
+        "code": "unknown-id",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "explicit-target route",
+        "detail.reason": "explicit ID cannot resolve",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:identity/admission:unknown-id:explicit ID cannot resolve",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "EditTransaction inactive",
+        "code": "transaction-unavailable",
+        "retryable": true,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "EditTransaction inactive",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:identity/admission:transaction-unavailable:EditTransaction inactive",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "read-only session rejects requested document mutation",
+        "code": "document-read-only",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "document-edit or history mutation only",
+        "detail.reason": "read-only session rejects requested document mutation",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:identity/admission:document-read-only:read-only session rejects requested document mutation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "BooleanOperandReason::InvalidOperation",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "raw request schema rejects before native call; defensive native status maps identically",
+        "detail.reason": "BooleanOperandReason::InvalidOperation",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:transport/schema:invalid-argument:BooleanOperandReason::InvalidOperation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "BooleanOperandReason::InvalidCount",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "raw request schema rejects before native call; defensive native status maps identically",
+        "detail.reason": "BooleanOperandReason::InvalidCount",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:transport/schema:invalid-argument:BooleanOperandReason::InvalidCount",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "BooleanOperandReason::InvalidOperand",
+        "code": "unknown-id",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "BooleanOperandReason::InvalidOperand",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:command-service:unknown-id:BooleanOperandReason::InvalidOperand",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "BooleanOperandReason::OverlappingOperands",
+        "code": "incompatible-operands",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "BooleanOperandReason::OverlappingOperands",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:command-service:incompatible-operands:BooleanOperandReason::OverlappingOperands",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "BooleanOperandReason::Unavailable",
+        "code": "unavailable",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "BooleanOperandReason::Unavailable",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:command-service:unavailable:BooleanOperandReason::Unavailable",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "BooleanOperandReason::GroupEffect",
+        "code": "incompatible-operands",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "BooleanOperandReason::GroupEffect",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:command-service:incompatible-operands:BooleanOperandReason::GroupEffect",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "BooleanOperandReason::NotAShape",
+        "code": "incompatible-operands",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "BooleanOperandReason::NotAShape",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:command-service:incompatible-operands:BooleanOperandReason::NotAShape",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "BooleanOperandReason::EmptyGeometry",
+        "code": "incompatible-operands",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "BooleanOperandReason::EmptyGeometry",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:command-service:incompatible-operands:BooleanOperandReason::EmptyGeometry",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "BooleanOperandReason::EmptyGroup",
+        "code": "incompatible-operands",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "BooleanOperandReason::EmptyGroup",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:command-service:incompatible-operands:BooleanOperandReason::EmptyGroup",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "BooleanOperandReason::UnsafeTransform",
+        "code": "invalid-transform",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "BooleanOperandReason::UnsafeTransform",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:command-service:invalid-transform:BooleanOperandReason::UnsafeTransform",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "BooleanOperandReason::EmptyResult",
+        "code": "empty-result",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "BooleanOperandReason::EmptyResult",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:command-service:empty-result:BooleanOperandReason::EmptyResult",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "unexpected service exception; rollback before return",
+        "code": "internal-error",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "unexpected service exception; rollback before return",
+        "native_evidence": "`apply_boolean_assist`, `src/ui/toolbar/boolean-assist.cpp:340`; native `pathUnion/pathIntersect/pathDiff/pathSymDiff/pathCut`, `src/path/path-object-set.cpp:43,48,53,122,127`",
+        "oracle": "P9:geometry.boolean:command-service:internal-error:unexpected service exception; rollback before return",
+        "evidence_status": "required-unimplemented"
+      }
+    ],
+    "success_native_branches": [
+      "BooleanOperandStatus::Applied (outputs nonempty)",
+      "BooleanOperandStatus::Applied (empty policy allow; consumed roots)"
+    ],
+    "variant_applicability": {
+      "success": "ok or changed",
+      "unchanged": "native no-op only; query/preparation/history empty are not successful unchanged",
+      "computed-dry-run": "successful read-only preflight; no retention, publication, Undo or Redo change"
+    },
+    "success_rows": [
+      {
+        "native_branch": "BooleanOperandStatus::Applied (outputs nonempty)",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "committed",
+        "data_variant": "success",
+        "evidence_route": "P9:geometry.boolean:native:BooleanOperandStatus::Applied (outputs nonempty)",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "BooleanOperandStatus::Applied (empty policy allow; consumed roots)",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "committed",
+        "data_variant": "success",
+        "evidence_route": "P9:geometry.boolean:native:BooleanOperandStatus::Applied (empty policy allow; consumed roots)",
+        "evidence_status": "required-unimplemented"
+      }
+    ]
+  }
+})m3").as_object()};
+// | `geometry.offset` | ids; positive `distance:L`; `direction=outward|inward|both` default outward, `corner=round|bevel|miter` default miter; `miter-limit=4` in 1..100; `outer-only=false`, `delete-originals=false`, `simplify=false`, `simplify-tolerance=0.05px`, `select-results=true` | paths/bounds, source→output map, exclusions | T, no-closed-shapes, offset-failed | E / one / computed / G refined per-selected-root, existing partial policy; never delete an excluded source |
+TypeDescriptor const m3_7{boost::json::parse(R"m3({
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 100000,
+      "uniqueItems": true
+    },
+    "distance": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000.0,
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "px",
+            "mm",
+            "cm",
+            "in",
+            "pt",
+            "pc"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "x-css-px-absolute-maximum": 1000000,
+      "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "px"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 1000000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 264583.3333333333
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "cm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 26458.333333333336
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "in"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 10416.666666666666
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pt"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 750000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pc"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 62500.0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "outward",
+        "inward",
+        "both"
+      ],
+      "default": "outward"
+    },
+    "corner": {
+      "type": "string",
+      "enum": [
+        "round",
+        "bevel",
+        "miter"
+      ],
+      "default": "miter"
+    },
+    "miter-limit": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 4
+    },
+    "outer-only": {
+      "type": "boolean",
+      "default": false
+    },
+    "delete-originals": {
+      "type": "boolean",
+      "default": false
+    },
+    "simplify": {
+      "type": "boolean",
+      "default": false
+    },
+    "simplify-tolerance": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000.0
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "px",
+            "mm",
+            "cm",
+            "in",
+            "pt",
+            "pc"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "x-css-px-absolute-maximum": 1000000,
+      "default": {
+        "value": 0.05,
+        "unit": "px"
+      },
+      "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "px"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 1000000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 264583.3333333333
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "cm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 26458.333333333336
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "in"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 10416.666666666666
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pt"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 750000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pc"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 62500.0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "select-results": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "ids",
+    "distance"
+  ],
+  "additionalProperties": false,
+  "x-m3-contract": {
+    "guard_domain": "document",
+    "guard_required": true,
+    "needs_document": true,
+    "selection_mode": "per-selected-root-geometry",
+    "target_cardinality": {
+      "min": 1,
+      "max": 100000
+    },
+    "normalization": "ordered-composite-roots; ancestor covers descendant, preserving surviving input order",
+    "partial_policy": "preserve-and-report-exclusions",
+    "role_order": "input-order; each normalized root once",
+    "normalization_order": [
+      "validate raw schema and exclusive route",
+      "select route",
+      "fill defaults recursively only in selected branch; pivot suppresses anchor, size suppresses dpi, token suppresses recipe/analyze/solve",
+      "parse exact integers",
+      "convert all lengths including nested recipes to CSS px and enforce bounds",
+      "resolve and normalize targets",
+      "canonicalize normalized params for token binding"
+    ],
+    "native_service": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+    "warnings": [
+      {
+        "code": "exclusions",
+        "emit_site": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`; after target resolution, nonempty exclusions"
+      },
+      {
+        "code": "simplify-skipped",
+        "emit_site": "OffsetShapes::Build::simplify_skipped > 0; original built geometry retained"
+      }
+    ],
+    "error_rows": [
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: request-too-large",
+        "code": "request-too-large",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: request-too-large",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:transport/schema:request-too-large:parse_request: request-too-large",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: repeated-key",
+        "code": "repeated-key",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: repeated-key",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:transport/schema:repeated-key:parse_request: repeated-key",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: invalid-utf8",
+        "code": "invalid-utf8",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: invalid-utf8",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:transport/schema:invalid-utf8:parse_request: invalid-utf8",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: malformed-json",
+        "code": "malformed-json",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: malformed-json",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:transport/schema:malformed-json:parse_request: malformed-json",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "raw schema/type/range/route/uniqueItems violation",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "raw schema/type/range/route/uniqueItems violation",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:transport/schema:invalid-argument:raw schema/type/range/route/uniqueItems violation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "missing current document",
+        "code": "no-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "missing current document",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:identity/admission:no-document:missing current document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "document identity mismatch",
+        "code": "stale-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document identity mismatch",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:identity/admission:stale-document:document identity mismatch",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "supplied guard differs from document revision",
+        "code": "stale-revision",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "supplied guard differs from document revision",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:identity/admission:stale-revision:supplied guard differs from document revision",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "cancellation observed before commit",
+        "code": "cancelled",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "cancellation observed before commit",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:identity/admission:cancelled:cancellation observed before commit",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "explicit ID cannot resolve",
+        "code": "unknown-id",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "explicit-target route",
+        "detail.reason": "explicit ID cannot resolve",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:identity/admission:unknown-id:explicit ID cannot resolve",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "EditTransaction inactive",
+        "code": "transaction-unavailable",
+        "retryable": true,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "EditTransaction inactive",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:identity/admission:transaction-unavailable:EditTransaction inactive",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "prepare: no closed compatible sources",
+        "code": "no-closed-shapes",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "prepare",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:command-service:no-closed-shapes:prepare: no closed compatible sources",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "build: failed geometry",
+        "code": "offset-failed",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "build",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:command-service:offset-failed:build: failed geometry",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "commit: geometry_still_matches false",
+        "code": "stale-dependency",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "commit",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:command-service:stale-dependency:commit: geometry_still_matches false",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "commit failure; caller rollback",
+        "code": "offset-failed",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "commit failure; caller rollback",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:command-service:offset-failed:commit failure; caller rollback",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "read-only session rejects requested document mutation",
+        "code": "document-read-only",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "document-edit or history mutation only",
+        "detail.reason": "read-only session rejects requested document mutation",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:identity/admission:document-read-only:read-only session rejects requested document mutation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "unexpected service exception; rollback before return",
+        "code": "internal-error",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "unexpected service exception; rollback before return",
+        "native_evidence": "`OffsetShapes::prepare/build/commit`, `src/path/offset-shapes.cpp:317,354,427`",
+        "oracle": "P9:geometry.offset:command-service:internal-error:unexpected service exception; rollback before return",
+        "evidence_status": "required-unimplemented"
+      }
+    ],
+    "success_native_branches": [
+      "native successful outcome",
+      "native unchanged outcome when applicable",
+      "read-only computed preparation"
+    ],
+    "variant_applicability": {
+      "success": "ok or changed",
+      "unchanged": "native no-op only; query/preparation/history empty are not successful unchanged",
+      "computed-dry-run": "successful read-only preflight; no retention, publication, Undo or Redo change"
+    },
+    "success_rows": [
+      {
+        "native_branch": "native successful outcome",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "committed",
+        "data_variant": "success",
+        "evidence_route": "P9:geometry.offset:native:native successful outcome",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "native unchanged outcome when applicable",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "unchanged",
+        "evidence_route": "P9:geometry.offset:native:native unchanged outcome when applicable",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "read-only computed preparation",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "computed-dry-run",
+        "evidence_route": "P9:geometry.offset:native:read-only computed preparation",
+        "evidence_status": "required-unimplemented"
+      }
+    ]
+  }
+})m3").as_object()};
+// | `geometry.corners` | exactly one id; `radius:L>=0`, `mode=round|inverse-round` default round; `scope=all|nodes` default all; nodes list `P:N` only when nodes | output/path/bounds, converted polygon/polyline report | T, requires-single-shape, unsupported-shape, path-not-supported, non-similarity-transform, no-such-node, no-corners, corner-edit-failed | E / one / computed / G single-shape exception; preserve AC-8b/native vertex restrictions |
+TypeDescriptor const m3_8{boost::json::parse(R"m3({
+  "type": "object",
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128
+      },
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true
+    },
+    "radius": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000.0
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "px",
+            "mm",
+            "cm",
+            "in",
+            "pt",
+            "pc"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "x-css-px-absolute-maximum": 1000000,
+      "x-nonnegative-css-px": true,
+      "description": "Convert recursively to CSS px at 96 dpi, then enforce absolute <=1000000 and sign bound. No rounding or clamping.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "px"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 1000000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "mm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 264583.3333333333
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "cm"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 26458.333333333336
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "in"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 10416.666666666666
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pt"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 750000.0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "pc"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "minimum": 0,
+                "maximum": 62500.0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "round",
+        "inverse-round"
+      ],
+      "default": "round"
+    },
+    "scope": {
+      "type": "string",
+      "enum": [
+        "all",
+        "nodes"
+      ],
+      "default": "all"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]+:[0-9]+$"
+      },
+      "minItems": 1,
+      "maxItems": 100000
+    }
+  },
+  "required": [
+    "ids",
+    "radius"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "scope": {
+            "const": "nodes"
+          }
+        },
+        "required": [
+          "scope"
+        ]
+      },
+      "then": {
+        "required": [
+          "nodes"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "nodes"
+        ]
+      },
+      "then": {
+        "properties": {
+          "scope": {
+            "const": "nodes"
+          }
+        },
+        "required": [
+          "scope"
+        ]
+      }
+    }
+  ],
+  "x-m3-contract": {
+    "guard_domain": "document",
+    "guard_required": true,
+    "needs_document": true,
+    "selection_mode": "single-object",
+    "target_cardinality": {
+      "min": 1,
+      "max": 1
+    },
+    "normalization": "one explicit root or retained target; no member expansion",
+    "partial_policy": "reject-any-incompatible",
+    "role_order": "input-order; each normalized root once",
+    "normalization_order": [
+      "validate raw schema and exclusive route",
+      "select route",
+      "fill defaults recursively only in selected branch; pivot suppresses anchor, size suppresses dpi, token suppresses recipe/analyze/solve",
+      "parse exact integers",
+      "convert all lengths including nested recipes to CSS px and enforce bounds",
+      "resolve and normalize targets",
+      "canonicalize normalized params for token binding"
+    ],
+    "native_service": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+    "warnings": [],
+    "error_rows": [
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: request-too-large",
+        "code": "request-too-large",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: request-too-large",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:transport/schema:request-too-large:parse_request: request-too-large",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: repeated-key",
+        "code": "repeated-key",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: repeated-key",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:transport/schema:repeated-key:parse_request: repeated-key",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: invalid-utf8",
+        "code": "invalid-utf8",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: invalid-utf8",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:transport/schema:invalid-utf8:parse_request: invalid-utf8",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "parse_request: malformed-json",
+        "code": "malformed-json",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "parse_request: malformed-json",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:transport/schema:malformed-json:parse_request: malformed-json",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "transport/schema",
+        "native_branch": "raw schema/type/range/route/uniqueItems violation",
+        "code": "invalid-argument",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "raw schema/type/range/route/uniqueItems violation",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:transport/schema:invalid-argument:raw schema/type/range/route/uniqueItems violation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "missing current document",
+        "code": "no-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "missing current document",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:identity/admission:no-document:missing current document",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "document identity mismatch",
+        "code": "stale-document",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document identity mismatch",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:identity/admission:stale-document:document identity mismatch",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "supplied guard differs from document revision",
+        "code": "stale-revision",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "supplied guard differs from document revision",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:identity/admission:stale-revision:supplied guard differs from document revision",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "cancellation observed before commit",
+        "code": "cancelled",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "cancellation observed before commit",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:identity/admission:cancelled:cancellation observed before commit",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "explicit ID cannot resolve",
+        "code": "unknown-id",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "explicit-target route",
+        "detail.reason": "explicit ID cannot resolve",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:identity/admission:unknown-id:explicit ID cannot resolve",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "requires-single-shape",
+        "code": "requires-single-shape",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "requires-single-shape",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:command-service:requires-single-shape:requires-single-shape",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "unsupported-shape",
+        "code": "unsupported-shape",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "unsupported-shape",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:command-service:unsupported-shape:unsupported-shape",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "path-not-supported",
+        "code": "path-not-supported",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "path-not-supported",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:command-service:path-not-supported:path-not-supported",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "non-similarity-transform",
+        "code": "non-similarity-transform",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "non-similarity-transform",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:command-service:non-similarity-transform:non-similarity-transform",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "no-such-node",
+        "code": "no-such-node",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "no-such-node",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:command-service:no-such-node:no-such-node",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "no-corners",
+        "code": "no-corners",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "no-corners",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:command-service:no-corners:no-corners",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "invalid-input",
+        "code": "invalid-input",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "invalid-input",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:command-service:invalid-input:invalid-input",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "document-busy",
+        "code": "document-busy",
+        "retryable": true,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "document-busy",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:command-service:document-busy:document-busy",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "apply refused before mutation",
+        "code": "corner-edit-failed",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "native pre-mutation refusal reason",
+        "native_evidence": "`apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:247-286`; `execute_corners`, `src/actions/vacards-cli-edit-services.cpp:469-471`",
+        "oracle": "P9:geometry.corners:command-service:corner-edit-failed:apply refused before mutation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "apply failed after mutation; settled rollback",
+        "code": "corner-edit-failed",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "native post-mutation failure reason",
+        "native_evidence": "`apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:288-393`; `execute_corners`, `src/actions/vacards-cli-edit-services.cpp:469-471`",
+        "oracle": "P9:geometry.corners:command-service:corner-edit-failed:apply failed after mutation; settled rollback",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "identity/admission",
+        "native_branch": "read-only session rejects requested document mutation",
+        "code": "document-read-only",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "document-edit or history mutation only",
+        "detail.reason": "read-only session rejects requested document mutation",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:identity/admission:document-read-only:read-only session rejects requested document mutation",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "CornerEdit::Status::EngineLimit",
+        "code": "engine-limit",
+        "retryable": false,
+        "mutation_state": "none",
+        "route": "all",
+        "detail.reason": "CornerEdit::Status::EngineLimit",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:command-service:engine-limit:CornerEdit::Status::EngineLimit",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "layer": "command-service",
+        "native_branch": "unexpected service exception; rollback before return",
+        "code": "internal-error",
+        "retryable": false,
+        "mutation_state": "rolled-back",
+        "route": "all",
+        "detail.reason": "unexpected service exception; rollback before return",
+        "native_evidence": "`capture_corner_rounding_document`, `src/ui/tools/corner-rounding-context.cpp:124`; `check_corner_plan/apply_corner_plan`, `src/ui/tools/corner-rounding-controller.cpp:217,247`",
+        "oracle": "P9:geometry.corners:command-service:internal-error:unexpected service exception; rollback before return",
+        "evidence_status": "required-unimplemented"
+      }
+    ],
+    "success_native_branches": [
+      "native successful outcome",
+      "native unchanged outcome when applicable",
+      "read-only computed preparation"
+    ],
+    "variant_applicability": {
+      "success": "ok or changed",
+      "unchanged": "native no-op only; query/preparation/history empty are not successful unchanged",
+      "computed-dry-run": "successful read-only preflight; no retention, publication, Undo or Redo change"
+    },
+    "success_rows": [
+      {
+        "native_branch": "native successful outcome",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "committed",
+        "data_variant": "success",
+        "evidence_route": "P9:geometry.corners:native:native successful outcome",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "native unchanged outcome when applicable",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "unchanged",
+        "evidence_route": "P9:geometry.corners:native:native unchanged outcome when applicable",
+        "evidence_status": "required-unimplemented"
+      },
+      {
+        "native_branch": "read-only computed preparation",
+        "code": null,
+        "retryable": false,
+        "mutation_state": "none",
+        "data_variant": "computed-dry-run",
+        "evidence_route": "P9:geometry.corners:native:read-only computed preparation",
+        "evidence_status": "required-unimplemented"
+      }
+    ]
+  }
+})m3").as_object()};
+}
+std::vector<PackageCommand> geometry_commands()
+{
+    std::vector<PackageCommand> out;
+    out.push_back({ActionSpec{.name="geometry.move", .mode="G", .summary="Move selected objects by the requested offset.", .canonical_id="geometry.move", .handler=production_unavailable_action, .version=2, .effects="document-edit", .target_policy="G", .undo_policy="one-step", .dry_run_grade="computed", .cancellation_boundary="before-native-publication", .input=&m3_0}, "geometry.move", "document-edit", "G", {}, {{"type","object"},{"properties",boost::json::object{}},{"additionalProperties",false}}, {"slice-unavailable"}, {}});
+    out.push_back({ActionSpec{.name="geometry.resize", .mode="G", .summary="Resize selected objects to the requested dimensions.", .canonical_id="geometry.resize", .handler=production_unavailable_action, .version=2, .effects="document-edit", .target_policy="G", .undo_policy="one-step", .dry_run_grade="computed", .cancellation_boundary="before-native-publication", .input=&m3_1}, "geometry.resize", "document-edit", "G", {}, {{"type","object"},{"properties",boost::json::object{}},{"additionalProperties",false}}, {"slice-unavailable"}, {}});
+    out.push_back({ActionSpec{.name="geometry.rotate", .mode="G", .summary="Rotate selected objects around the requested pivot.", .canonical_id="geometry.rotate", .handler=production_unavailable_action, .version=2, .effects="document-edit", .target_policy="G", .undo_policy="one-step", .dry_run_grade="computed", .cancellation_boundary="before-native-publication", .input=&m3_2}, "geometry.rotate", "document-edit", "G", {}, {{"type","object"},{"properties",boost::json::object{}},{"additionalProperties",false}}, {"slice-unavailable"}, {}});
+    out.push_back({ActionSpec{.name="geometry.skew", .mode="G", .summary="Skew selected objects by the requested angles.", .canonical_id="geometry.skew", .handler=production_unavailable_action, .version=2, .effects="document-edit", .target_policy="G", .undo_policy="one-step", .dry_run_grade="computed", .cancellation_boundary="before-native-publication", .input=&m3_3}, "geometry.skew", "document-edit", "G", {}, {{"type","object"},{"properties",boost::json::object{}},{"additionalProperties",false}}, {"slice-unavailable"}, {}});
+    out.push_back({ActionSpec{.name="geometry.flip", .mode="G", .summary="Flip selected objects across the requested axis.", .canonical_id="geometry.flip", .handler=production_unavailable_action, .version=2, .effects="document-edit", .target_policy="G", .undo_policy="one-step", .dry_run_grade="computed", .cancellation_boundary="before-native-publication", .input=&m3_4}, "geometry.flip", "document-edit", "G", {}, {{"type","object"},{"properties",boost::json::object{}},{"additionalProperties",false}}, {"slice-unavailable"}, {}});
+    out.push_back({ActionSpec{.name="geometry.matrix", .mode="G", .summary="Apply the requested matrix to selected objects.", .canonical_id="geometry.matrix", .handler=production_unavailable_action, .version=2, .effects="document-edit", .target_policy="G", .undo_policy="one-step", .dry_run_grade="computed", .cancellation_boundary="before-native-publication", .input=&m3_5}, "geometry.matrix", "document-edit", "G", {}, {{"type","object"},{"properties",boost::json::object{}},{"additionalProperties",false}}, {"slice-unavailable"}, {}});
+    out.push_back({ActionSpec{.name="geometry.boolean", .mode="G", .summary="Apply the requested Boolean operation to selected shapes.", .canonical_id="geometry.boolean", .handler=production_unavailable_action, .version=2, .effects="document-edit", .target_policy="G", .undo_policy="one-step", .dry_run_grade="computed", .cancellation_boundary="before-native-publication", .input=&m3_6}, "geometry.boolean", "document-edit", "G", {}, {{"type","object"},{"properties",boost::json::object{}},{"additionalProperties",false}}, {"slice-unavailable"}, {}});
+    out.push_back({ActionSpec{.name="geometry.offset", .mode="G", .summary="Offset selected paths by the requested distance.", .canonical_id="geometry.offset", .handler=production_unavailable_action, .version=2, .effects="document-edit", .target_policy="G", .undo_policy="one-step", .dry_run_grade="computed", .cancellation_boundary="before-native-publication", .input=&m3_7}, "geometry.offset", "document-edit", "G", {}, {{"type","object"},{"properties",boost::json::object{}},{"additionalProperties",false}}, {"slice-unavailable"}, {}});
+    out.push_back({ActionSpec{.name="geometry.corners", .mode="G", .summary="Round or chamfer the corners of the selected shape by the requested radius.", .canonical_id="geometry.corners", .handler=production_unavailable_action, .version=2, .effects="document-edit", .target_policy="G", .undo_policy="one-step", .dry_run_grade="computed", .cancellation_boundary="before-native-publication", .input=&m3_8}, "geometry.corners", "document-edit", "G", {}, {{"type","object"},{"properties",boost::json::object{}},{"additionalProperties",false}}, {"slice-unavailable"}, {}});
+    out[0].example = boost::json::parse(R"m3({
+  "ids": [
+    "shape1"
+  ],
+  "dx": {
+    "value": 1,
+    "unit": "mm"
+  },
+  "dy": {
+    "value": 1,
+    "unit": "mm"
+  }
+})m3").as_object();
+    out[0].result_data = boost::json::parse(R"m3({
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "success"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "unchanged"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "computed-dry-run"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Data only; common va-studio.cli-result/1 envelope authoritative. Variant selected by status/dry_run; any duplicated fields must equal envelope. Preview IDs never claim live publication."
+})m3").as_object();
+    out[0].errors = {"request-too-large","repeated-key","invalid-utf8","malformed-json","invalid-argument","no-document","stale-document","stale-revision","cancelled","unknown-id","transaction-unavailable","invalid-transform","no-bounds","document-read-only","internal-error"};
+    out[1].example = boost::json::parse(R"m3({
+  "ids": [
+    "shape1"
+  ],
+  "width": {
+    "value": 1,
+    "unit": "mm"
+  }
+})m3").as_object();
+    out[1].result_data = boost::json::parse(R"m3({
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "success"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "unchanged"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "computed-dry-run"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Data only; common va-studio.cli-result/1 envelope authoritative. Variant selected by status/dry_run; any duplicated fields must equal envelope. Preview IDs never claim live publication."
+})m3").as_object();
+    out[1].errors = {"request-too-large","repeated-key","invalid-utf8","malformed-json","invalid-argument","no-document","stale-document","stale-revision","cancelled","unknown-id","transaction-unavailable","invalid-transform","no-bounds","zero-dimension","document-read-only","internal-error"};
+    out[2].example = boost::json::parse(R"m3({
+  "ids": [
+    "shape1"
+  ],
+  "angle": 15
+})m3").as_object();
+    out[2].result_data = boost::json::parse(R"m3({
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "success"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "unchanged"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "computed-dry-run"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Data only; common va-studio.cli-result/1 envelope authoritative. Variant selected by status/dry_run; any duplicated fields must equal envelope. Preview IDs never claim live publication."
+})m3").as_object();
+    out[2].errors = {"request-too-large","repeated-key","invalid-utf8","malformed-json","invalid-argument","no-document","stale-document","stale-revision","cancelled","unknown-id","transaction-unavailable","invalid-transform","no-bounds","document-read-only","internal-error"};
+    out[3].example = boost::json::parse(R"m3({
+  "ids": [
+    "shape1"
+  ],
+  "axis": "x",
+  "angle": 15
+})m3").as_object();
+    out[3].result_data = boost::json::parse(R"m3({
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "success"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "unchanged"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "computed-dry-run"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Data only; common va-studio.cli-result/1 envelope authoritative. Variant selected by status/dry_run; any duplicated fields must equal envelope. Preview IDs never claim live publication."
+})m3").as_object();
+    out[3].errors = {"request-too-large","repeated-key","invalid-utf8","malformed-json","invalid-argument","no-document","stale-document","stale-revision","cancelled","unknown-id","transaction-unavailable","invalid-transform","no-bounds","zero-dimension","document-read-only","internal-error"};
+    out[4].example = boost::json::parse(R"m3({
+  "ids": [
+    "shape1"
+  ],
+  "axis": "horizontal"
+})m3").as_object();
+    out[4].result_data = boost::json::parse(R"m3({
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "success"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "unchanged"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "computed-dry-run"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pivot": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after",
+        "pivot"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Data only; common va-studio.cli-result/1 envelope authoritative. Variant selected by status/dry_run; any duplicated fields must equal envelope. Preview IDs never claim live publication."
+})m3").as_object();
+    out[4].errors = {"request-too-large","repeated-key","invalid-utf8","malformed-json","invalid-argument","no-document","stale-document","stale-revision","cancelled","unknown-id","transaction-unavailable","invalid-transform","no-bounds","document-read-only","internal-error"};
+    out[5].example = boost::json::parse(R"m3({
+  "ids": [
+    "shape1"
+  ],
+  "matrix": [
+    1,
+    0,
+    0,
+    1,
+    0,
+    0
+  ]
+})m3").as_object();
+    out[5].result_data = boost::json::parse(R"m3({
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "success"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "unchanged"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "computed-dry-run"
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "before": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "after": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            },
+            "required": [
+              "id",
+              "before",
+              "after"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "coordinate-space": {
+          "const": "document-css-px"
+        },
+        "applied-affine": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "bounds-before": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bounds-after": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "variant",
+        "transforms",
+        "coordinate-space",
+        "applied-affine",
+        "bounds-before",
+        "bounds-after"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Data only; common va-studio.cli-result/1 envelope authoritative. Variant selected by status/dry_run; any duplicated fields must equal envelope. Preview IDs never claim live publication."
+})m3").as_object();
+    out[5].errors = {"request-too-large","repeated-key","invalid-utf8","malformed-json","invalid-argument","no-document","stale-document","stale-revision","cancelled","unknown-id","transaction-unavailable","invalid-transform","document-read-only","internal-error"};
+    out[6].example = boost::json::parse(R"m3({
+  "ids": [
+    "shape1",
+    "shape2"
+  ],
+  "op": "union",
+  "empty-result": "reject"
+})m3").as_object();
+    out[6].result_data = boost::json::parse(R"m3({
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "success"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "d": {
+                "type": "string"
+              },
+              "bounds": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "d",
+              "bounds"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "consumed-ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "source-output": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 0,
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "source",
+              "outputs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        }
+      },
+      "required": [
+        "variant",
+        "paths",
+        "consumed-ids",
+        "source-output"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "unchanged"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "d": {
+                "type": "string"
+              },
+              "bounds": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "d",
+              "bounds"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "consumed-ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "source-output": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 0,
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "source",
+              "outputs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        }
+      },
+      "required": [
+        "variant",
+        "paths",
+        "consumed-ids",
+        "source-output"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "computed-dry-run"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "d": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "bounds": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "d",
+              "bounds"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "consumed-ids": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "null for prospective output; existing source IDs remain strings"
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "source-output": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "null for prospective output; existing source IDs remain strings"
+                },
+                "minItems": 0,
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "source",
+              "outputs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        }
+      },
+      "required": [
+        "variant",
+        "paths",
+        "consumed-ids",
+        "source-output"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Data only; common va-studio.cli-result/1 envelope authoritative. Variant selected by status/dry_run; any duplicated fields must equal envelope. Preview IDs never claim live publication."
+})m3").as_object();
+    out[6].errors = {"request-too-large","repeated-key","invalid-utf8","malformed-json","invalid-argument","no-document","stale-document","stale-revision","cancelled","unknown-id","transaction-unavailable","document-read-only","incompatible-operands","unavailable","invalid-transform","empty-result","internal-error"};
+    out[7].example = boost::json::parse(R"m3({
+  "ids": [
+    "shape1"
+  ],
+  "distance": {
+    "value": 1,
+    "unit": "mm"
+  }
+})m3").as_object();
+    out[7].result_data = boost::json::parse(R"m3({
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "success"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "d": {
+                "type": "string"
+              },
+              "bounds": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "d",
+              "bounds"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "consumed-ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "source-output": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 0,
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "source",
+              "outputs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        }
+      },
+      "required": [
+        "variant",
+        "paths",
+        "consumed-ids",
+        "source-output"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "unchanged"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "d": {
+                "type": "string"
+              },
+              "bounds": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "d",
+              "bounds"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "consumed-ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "source-output": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 0,
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "source",
+              "outputs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        }
+      },
+      "required": [
+        "variant",
+        "paths",
+        "consumed-ids",
+        "source-output"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "computed-dry-run"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "d": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "bounds": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "d",
+              "bounds"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "consumed-ids": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "null for prospective output; existing source IDs remain strings"
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "source-output": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "null for prospective output; existing source IDs remain strings"
+                },
+                "minItems": 0,
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "source",
+              "outputs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        }
+      },
+      "required": [
+        "variant",
+        "paths",
+        "consumed-ids",
+        "source-output"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Data only; common va-studio.cli-result/1 envelope authoritative. Variant selected by status/dry_run; any duplicated fields must equal envelope. Preview IDs never claim live publication."
+})m3").as_object();
+    out[7].errors = {"request-too-large","repeated-key","invalid-utf8","malformed-json","invalid-argument","no-document","stale-document","stale-revision","cancelled","unknown-id","transaction-unavailable","no-closed-shapes","offset-failed","stale-dependency","document-read-only","internal-error"};
+    out[8].example = boost::json::parse(R"m3({
+  "ids": [
+    "shape1"
+  ],
+  "radius": {
+    "value": 1,
+    "unit": "mm"
+  }
+})m3").as_object();
+    out[8].result_data = boost::json::parse(R"m3({
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "success"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "d": {
+                "type": "string"
+              },
+              "bounds": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "d",
+              "bounds"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "consumed-ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "source-output": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 0,
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "source",
+              "outputs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "converted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "enum": [
+                  "polygon",
+                  "polyline"
+                ]
+              },
+              "to": {
+                "const": "path"
+              }
+            },
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        }
+      },
+      "required": [
+        "variant",
+        "paths",
+        "consumed-ids",
+        "source-output",
+        "converted"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "unchanged"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "d": {
+                "type": "string"
+              },
+              "bounds": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "d",
+              "bounds"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "consumed-ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "source-output": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 0,
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "source",
+              "outputs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "converted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "from": {
+                "enum": [
+                  "polygon",
+                  "polyline"
+                ]
+              },
+              "to": {
+                "const": "path"
+              }
+            },
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        }
+      },
+      "required": [
+        "variant",
+        "paths",
+        "consumed-ids",
+        "source-output",
+        "converted"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "variant": {
+          "const": "computed-dry-run"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "d": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "bounds": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 4,
+                    "maxItems": 4
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "d",
+              "bounds"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "consumed-ids": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "null for prospective output; existing source IDs remain strings"
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "source-output": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "outputs": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "null for prospective output; existing source IDs remain strings"
+                },
+                "minItems": 0,
+                "maxItems": 100000
+              }
+            },
+            "required": [
+              "source",
+              "outputs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        },
+        "converted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "null for prospective output; existing source IDs remain strings"
+              },
+              "from": {
+                "enum": [
+                  "polygon",
+                  "polyline"
+                ]
+              },
+              "to": {
+                "const": "path"
+              }
+            },
+            "required": [
+              "id",
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 100000
+        }
+      },
+      "required": [
+        "variant",
+        "paths",
+        "consumed-ids",
+        "source-output",
+        "converted"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Data only; common va-studio.cli-result/1 envelope authoritative. Variant selected by status/dry_run; any duplicated fields must equal envelope. Preview IDs never claim live publication."
+})m3").as_object();
+    out[8].errors = {"request-too-large","repeated-key","invalid-utf8","malformed-json","invalid-argument","no-document","stale-document","stale-revision","cancelled","unknown-id","requires-single-shape","unsupported-shape","path-not-supported","non-similarity-transform","no-such-node","no-corners","invalid-input","document-busy","corner-edit-failed","document-read-only","engine-limit","internal-error"};
+    out[0].policy = "collective-geometry"; out[0].spec.target_policy = "collective-geometry";
+    out[1].policy = "collective-geometry"; out[1].spec.target_policy = "collective-geometry";
+    out[2].policy = "collective-geometry"; out[2].spec.target_policy = "collective-geometry";
+    out[3].policy = "collective-geometry"; out[3].spec.target_policy = "collective-geometry";
+    out[4].policy = "collective-geometry"; out[4].spec.target_policy = "collective-geometry";
+    out[5].policy = "collective-geometry"; out[5].spec.target_policy = "collective-geometry";
+    out[6].policy = "collective-geometry"; out[6].spec.target_policy = "collective-geometry";
+    out[7].policy = "per-selected-root-geometry"; out[7].spec.target_policy = "per-selected-root-geometry";
+    out[8].policy = "single-object"; out[8].spec.target_policy = "single-object";
+    out[0].warnings = {};
+    out[1].warnings = {"keep-ratio-ignored"};
+    out[2].warnings = {};
+    out[3].warnings = {};
+    out[4].warnings = {};
+    out[5].warnings = {};
+    out[6].warnings = {};
+    out[7].warnings = {"exclusions","simplify-skipped"};
+    out[8].warnings = {};
+    return out;
+}
+}

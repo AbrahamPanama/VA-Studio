@@ -6,6 +6,7 @@
 #include <thread>
 #include <glibmm/i18n.h>
 #include "desktop.h"
+#include "ui/explode-bitmap-context.h"
 #include "document.h"
 #include "display/cairo-utils.h"
 #include "helper/pixbuf-ops.h"
@@ -36,8 +37,13 @@ namespace {
 std::uint64_t nextCandidate = 0;
 auto const mainThread = std::this_thread::get_id();
 std::uintptr_t identity(void const *p) { return reinterpret_cast<std::uintptr_t>(p); }
-BitmapCopyOutcome result(Status status, char const *why) {
-    BitmapCopyOutcome r; r.outcome = {status, why}; return r;
+BitmapCopyOutcome result(Outcome outcome, CliBitmapStage stage, CliBitmapReason reason) {
+    BitmapCopyOutcome r; r.outcome = outcome; r.failure = bitmapFailure(outcome, stage, reason); return r;
+}
+BitmapCopyOutcome result(Status status, char const *why,
+                         CliBitmapReason reason = CliBitmapReason::UnsupportedTarget,
+                         CliBitmapStage stage = CliBitmapStage::Resolve) {
+    return result(Outcome{status, why}, stage, reason);
 }
 // Safe conversion requires the current token's atomic settlement fence.
 bool validAtomicGuard(DocumentUndo::RollbackableInteraction const *guard, SPDocument const *doc) {
@@ -107,7 +113,7 @@ struct PreparedBitmapCopy::State {
     std::string transform, href;
     Budget::Token storage;
     RenderOutcome render; // pixels die before storage
-    bool consumed = false;
+    bool consumed = false, request = false;
     ~State() { destroyed.disconnect(); }
 };
 PreparedBitmapCopy::PreparedBitmapCopy() = default;
@@ -157,24 +163,26 @@ Result<CandidateGridInput> PreparedBitmapCopy::gridInput(Budget &budget, Stop st
     out.outcome={Status::changed,"Candidate grid input captured."}; return out;
 } catch (...) { Result<CandidateGridInput> out; out.outcome={Status::failed,"Candidate capture failed."}; return out; }
 
-BitmapCopyOutcome prepareBitmapCopy(ObjectSet &set, BitmapCopyOptions const &options,
-                                    PlacementPolicy policy, Budget &budget, CandidateHooks hooks) try {
+BitmapCopyOutcome prepareBitmapCopyCore(ObjectSet &set, BitmapCopyOptions const &options,
+                                    PlacementPolicy policy, Budget &budget, CandidateHooks hooks,
+                                    BitmapCopyRequestOptions const *request, DocumentPublicationContext *context) try {
     if (std::this_thread::get_id() != mainThread) return result(Status::unavailable, "Prepare bitmap copy on the main thread.");
     auto doc = set.document();
     if (!doc) return result(Status::unavailable, "No document.");
     if (set.isEmpty()) return result(Status::unchanged, "Empty selection.");
     bool resize = policy == PlacementPolicy::SingleImageResize;
-    bool safe = policy != PlacementPolicy::NativeCopy;
-    if (safe && (!set.desktop() || set.desktop()->getSelection() != &set))
+    bool safe = request || policy != PlacementPolicy::NativeCopy;
+    bool replacement = policy != PlacementPolicy::NativeCopy;
+    if (safe && !context && (!set.desktop() || set.desktop()->getSelection() != &set))
         return result(Status::unavailable, "Conversion requires the desktop selection.");
     // Safe preparation must not settle pending unrelated XML/automatic updates.
     if (safe && (doc->getRoot()->uflags || doc->getRoot()->mflags))
-        return result(Status::unavailable, "Settle pending document updates before conversion.");
+        return result(Status::unavailable, "Settle pending document updates before conversion.", CliBitmapReason::DocumentBusy);
     if (!safe) doc->ensureUpToDate();
     auto s = std::make_unique<PreparedBitmapCopy::State>();
     s->document = doc; s->serial = doc->serial(); s->budget = &budget;
     s->destroyed = doc->connectDestroy([state = s.get()] { state->document = nullptr; });
-    s->options = options; s->policy = policy; s->hooks = hooks;
+    s->options = options; s->policy = policy; s->hooks = hooks; s->request = request;
     s->hooks.renderLimits = nullptr; // Only prepare borrows the caller's admission limits.
     auto &m = s->meta;
     if (safe) {
@@ -183,17 +191,20 @@ BitmapCopyOutcome prepareBitmapCopy(ObjectSet &set, BitmapCopyOptions const &opt
     }
     std::vector<SPItem const *> items;
     if (safe) {
-        auto targets = resolve(*set.desktop(), resize ? Intent::Explode : Intent::ConversionCandidate);
+        auto intent = request && request->keep_original ? Intent::BitmapCopy : resize ? Intent::Explode : Intent::ConversionCandidate;
+        auto targets = context ? resolve(*context, intent) : resolve(*set.desktop(), intent);
         if (!targets.ok()) {
             auto out=result(targets.outcome.status, targets.outcome.diagnostic);
             out.refusals=std::move(targets.value.refusals);
+            if (std::any_of(out.refusals.begin(),out.refusals.end(),[](auto const &r) { return r.reason==Refusal::MissingSource; }))
+                out.failure=CliBitmapFailure{CliBitmapStage::Resolve,CliBitmapReason::MissingSource};
             return out;
         }
         if (resize && targets.value.mode != TargetMode::SingleBitmap)
             return result(Status::incompatible, "Resize requires one selected bitmap.");
         m.token = std::move(targets.value);
         for (auto p : m.token.roots) items.push_back(reinterpret_cast<SPItem const *>(p));
-        s->options.keep_original = false; s->options.transparent = true; s->options.commit_undo = false;
+        s->options.keep_original = request && request->keep_original; s->options.transparent = true; s->options.commit_undo = false;
     } else {
         auto range = set.items(); items.assign(range.begin(), range.end());
     }
@@ -201,19 +212,19 @@ BitmapCopyOutcome prepareBitmapCopy(ObjectSet &set, BitmapCopyOptions const &opt
     if (safe) for (auto item:items) s->selected.emplace_back(const_cast<SPItem *>(item));
     else for (auto item:set.items()) s->selected.emplace_back(item);
     // Use the native selection bounds, including its original parent/child handling.
-    auto bbox = set.documentBounds(SPItem::VISUAL_BBOX);
+    auto bbox = set.documentBounds(request && request->bounds == CopyBounds::Geometric ? SPItem::GEOMETRIC_BBOX : SPItem::VISUAL_BBOX);
     if (!bbox || bbox->width()<=0 || bbox->height()<=0 || !bbox->isFinite()) return result(Status::unchanged, "Selection has no visible bounds.");
     s->bounds = *bbox;
     auto top = items.back();
     s->parent = top->parent; s->after = const_cast<SPItem *>(top);
     for (auto p = top->parent; p && p != doc->getRoot(); p = p->parent) {
         if (auto i = cast<SPItem>(p); i && effect(i)) {
-            if (safe) return result(Status::incompatible, "Cannot convert this selection without changing its layer or stacking order. Select contiguous objects in one layer without ancestor effects.");
+            if (replacement) return result(Status::incompatible, "Cannot convert this selection without changing its layer or stacking order. Select contiguous objects in one layer without ancestor effects.");
             s->parent = p->parent; s->after = p;
         }
     }
     // All selected roots' ancestor contexts, not just the topmost root.
-    if (safe) for (auto const &c : m.token.contexts) {
+    if (replacement) for (auto const &c : m.token.contexts) {
         if (std::find(m.token.roots.begin(), m.token.roots.end(), c.identity) == m.token.roots.end() &&
             std::any_of(items.begin(), items.end(), [&](auto i) { for (auto p=i->parent; p; p=p->parent) if (identity(p)==c.identity) return true; return false; }) &&
             (c.opacity != 1 || c.clip || c.mask || c.filter))
@@ -223,7 +234,7 @@ BitmapCopyOutcome prepareBitmapCopy(ObjectSet &set, BitmapCopyOptions const &opt
     if (!parentItem) return result(Status::incompatible, "No bitmap destination parent.");
     m.parent = identity(s->parent.get());
     for (auto p=s->parent.get(); p; p=p->parent) if (auto g=cast<SPGroup>(p); g && g->layerMode()==SPGroup::LAYER) { m.layer=identity(p); break; }
-    m.slot = safe ? items.front()->getRepr()->position() : s->after->getRepr()->position()+1;
+    m.slot = replacement ? items.front()->getRepr()->position() : s->after->getRepr()->position()+1;
     std::size_t renderNodes=items.size()+1;
     m.requestedDpi = std::clamp(options.dpi, 1, BitmapCopyOptions::max_dpi);
     if (safe) {
@@ -233,7 +244,7 @@ BitmapCopyOutcome prepareBitmapCopy(ObjectSet &set, BitmapCopyOptions const &opt
         std::vector<SPObject const *> pending(items.begin(),items.end());
         for (std::size_t k=0;k<pending.size();++k) {
             auto object=pending[k];
-            if (auto lpe=cast<SPLPEItem>(object); lpe && lpe->hasPathEffect())
+            if (auto lpe=cast<SPLPEItem>(object); lpe && lpe->hasPathEffect() && (!request || !request->keep_original))
                 return result(Status::incompatible,"Live path-effect conversion requires qualified dependency preparation.");
             if (pending.size()>20'000) return result(Status::unavailable,"Candidate instance graph exceeds admission limits.");
             if (auto image=cast<SPImage>(object)) {
@@ -247,15 +258,19 @@ BitmapCopyOutcome prepareBitmapCopy(ObjectSet &set, BitmapCopyOptions const &opt
             }
         }
         renderNodes=pending.size()+1;
-        if (!resize) m.requestedDpi = native ? native : std::max(300.0, double(options.dpi));
+        if (!resize && !request) m.requestedDpi = native ? native : std::max(300.0, double(options.dpi));
     }
-    m.renderDpi = std::min(m.requestedDpi, double(BitmapCopyOptions::max_dpi));
+    if (request) m.requestedDpi = std::holds_alternative<Dpi>(request->sizing) ? std::get<Dpi>(request->sizing).value : 96;
+    m.renderDpi = request ? m.requestedDpi : std::min(m.requestedDpi, double(BitmapCopyOptions::max_dpi));
     m.clamped = m.renderDpi < m.requestedDpi;
     m.resolutionReason = m.clamped ? "Native resolution exceeds the 600 dpi ceiling." : "";
-    if (!resize && m.renderDpi == 96) s->bounds = s->bounds.roundOutwards();
+    if (!request && !resize && m.renderDpi == 96) s->bounds = s->bounds.roundOutwards();
     // Preserve the renderer's floating-point operation order at fractional boundaries.
     double const scale = Util::Quantity::convert(m.renderDpi, "px", "in");
     double w = std::ceil(scale*s->bounds.width()), h = std::ceil(scale*s->bounds.height());
+    if (request && std::holds_alternative<ExactPixels>(request->sizing)) {
+        auto size = std::get<ExactPixels>(request->sizing); w = size.width; h = size.height;
+    }
     if (hooks.renderLimits && std::isfinite(w) && std::isfinite(h) && w >= 1 && h >= 1 && w <= UINT_MAX && h <= UINT_MAX) {
         LatencyWork work; work.width = w; work.height = h;
         // Use the renderer's actual ceil grid, not source pixels or a unit cost.
@@ -270,7 +285,7 @@ BitmapCopyOutcome prepareBitmapCopy(ObjectSet &set, BitmapCopyOptions const &opt
     }
     if (!std::isfinite(w) || !std::isfinite(h) || w<1 || h<1 || w>32767 || h>32767 ||
         (safe && (w>16384 || h>16384 || w*h>100'000'000)))
-        return result(Status::unavailable, "Candidate grid exceeds raster limits; resolution reduction requires explicit confirmation.");
+        return result(Status::unavailable, "Candidate grid exceeds raster limits; resolution reduction requires explicit confirmation.", CliBitmapReason::EngineLimit);
     m.width = w; m.height = h;
     m.widthMm = s->bounds.width()*25.4/96; m.heightMm = s->bounds.height()*25.4/96;
     m.dpiX = m.width*25.4/m.widthMm; m.dpiY = m.height*25.4/m.heightMm;
@@ -295,11 +310,14 @@ BitmapCopyOutcome prepareBitmapCopy(ObjectSet &set, BitmapCopyOptions const &opt
     } else s->transform = sp_svg_transform_write(placement);
     for (auto i : set.items()) s->selectionIds.emplace_back(i->getId() ? i->getId() : "");
     RenderRequest req; req.document = doc; req.area = s->bounds; req.dpi = m.renderDpi; req.items = items;
-    req.fit_to_pixel_grid = resize;
+    req.fit_to_pixel_grid = resize || request;
+    if (request && std::holds_alternative<ExactPixels>(request->sizing)) {
+        auto size = std::get<ExactPixels>(request->sizing); req.exact_size = std::array<unsigned,2>{size.width,size.height};
+    }
     if (!options.antialias || (doc->getNamedView() && !doc->getNamedView()->antialias_rendering)) req.antialias = Antialiasing::None;
     req.create_surface = hooks.createSurface; req.hide_probe = hooks.hideProbe;
     if (safe) {
-        auto admission = refresh(budget, hooks); if (!admission.ok()) return result(admission.status, admission.diagnostic);
+        auto admission = refresh(budget, hooks); if (!admission.ok()) return result(admission, CliBitmapStage::Analyze, CliBitmapReason::MemoryAdmissionFailed);
         // Reserve PNG worst case, base64 + XML/history copies, new decoded cache and nodes,
         // while renderCommitted separately holds final pixels and intermediate scratch.
         std::uint64_t pixels=0, bytes=0, encoded=0, peak=0;
@@ -307,53 +325,96 @@ BitmapCopyOutcome prepareBitmapCopy(ObjectSet &set, BitmapCopyOptions const &opt
             !checkedAdd(bytes,bytes/100+MiB,encoded) || !checkedMul(encoded,12,peak) ||
             !checkedAdd(peak,bytes+4096*renderNodes,peak)) return result(Status::failed,"Candidate memory arithmetic overflow.");
         admission = budget.acquire(Stage::prepared,peak,s->storage);
-        if (!admission.ok()) return result(admission.status,admission.diagnostic);
+        if (!admission.ok()) return result(admission, CliBitmapStage::Analyze, CliBitmapReason::MemoryAdmissionFailed);
         s->render = renderCommitted(req,budget);
     } else {
-        // The native command retains unmetered legacy admission and exception behavior.
+        // Native Copy has no operation ledger (its caller passes Budget(0)), but
+        // must use the same OS headroom and recovery reserve before rendering.
+        // Preserve its existing renderer, geometry and pixel/size limits.
+        auto sample = hooks.memory ? sampleMemory(*hooks.memory) : sampleMemory();
+        if (!sample.ok()) return result(sample.outcome, CliBitmapStage::Analyze, CliBitmapReason::MemoryAdmissionFailed);
+        std::uint64_t limit = 0, pixels = 0, bytes = 0, encoded = 0, peak = 0;
+        auto admission = admissionLimit(sample.value, limit);
+        if (!admission.ok()) return result(admission, CliBitmapStage::Analyze, CliBitmapReason::MemoryAdmissionFailed);
+        // Same payload/cache estimate as safe Copy; no artificial RAM ceiling.
+        if (!checkedMul(m.width, m.height, pixels) || !checkedMul(pixels, 4, bytes) ||
+            !checkedAdd(bytes, bytes / 100 + MiB, encoded) || !checkedMul(encoded, 12, peak) ||
+            !checkedAdd(peak, bytes + 4096 * renderNodes, peak))
+            return result(Status::failed, "Candidate memory arithmetic overflow.");
+        if (peak > limit) {
+            auto refused = memoryFailure(N_("Bitmap Copy OS headroom"), peak, limit);
+            return result(refused, CliBitmapStage::Analyze, CliBitmapReason::MemoryAdmissionFailed);
+        }
         s->render.pixbuf.reset(sp_generate_internal_bitmap(doc,s->bounds,m.renderDpi,items,false,nullptr,1,req.antialias));
         s->render.outcome = {s->render.pixbuf ? Status::changed : Status::failed,"Could not render bitmap copy."};
     }
-    if (!s->render.ok()) return result(s->render.outcome.status,s->render.outcome.diagnostic);
+    if (!s->render.ok()) return result(s->render.outcome, CliBitmapStage::Analyze, CliBitmapReason::AnalysisFailed);
     // Metadata and white compositing use the actual rendered grid.
     m.width=s->render.pixbuf->width(); m.height=s->render.pixbuf->height();
     m.dpiX=m.width*25.4/m.widthMm; m.dpiY=m.height*25.4/m.heightMm;
-    if (!s->options.transparent) {
+    if (request || !s->options.transparent) {
         auto white = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,m.width,m.height);
         auto cleanup = scope_exit([&] { if (white) cairo_surface_destroy(white); });
         if (cairo_surface_status(white)!=CAIRO_STATUS_SUCCESS) return result(Status::failed,"Could not render white background.");
-        auto cr = cairo_create(white); cairo_set_source_rgb(cr,1,1,1); cairo_paint(cr);
+        auto cr = cairo_create(white);
+        auto background = request ? request->background : std::array<double,4>{1,1,1,1};
+        cairo_set_source_rgba(cr,background[0],background[1],background[2],background[3]); cairo_paint(cr);
         cairo_set_source_surface(cr,s->render.pixbuf->getSurfaceRaw(),0,0); cairo_paint(cr);
         auto status = cairo_status(cr); cairo_destroy(cr);
         if (status!=CAIRO_STATUS_SUCCESS) return result(Status::failed,"White background render failed.");
         s->render.pixbuf = std::make_unique<Pixbuf>(white); white = nullptr;
     }
     if (safe) {
-        auto admission = refresh(budget,hooks); if (!admission.ok()) return result(admission.status,admission.diagnostic);
+        auto admission = refresh(budget,hooks); if (!admission.ok()) return result(admission, CliBitmapStage::Analyze, CliBitmapReason::MemoryAdmissionFailed);
         // Canonical straight RGBA is the exact PNG input exposed to downstream preparation.
         s->render.pixbuf->ensurePixelFormat(Pixbuf::PF_GDK);
         auto href = sp_image_encode_png_data_uri(*s->render.pixbuf);
-        if (!href) return result(Status::failed,"Candidate PNG preparation failed.");
+        if (!href) return result(Status::failed,"Candidate PNG preparation failed.", CliBitmapReason::EncodingFailed, CliBitmapStage::Encode);
         s->href = std::move(*href);
-        if (!valid(m.token,*doc)) return result(Status::unavailable,"Candidate dependencies changed while rendering.");
+        if (!valid(m.token,*doc)) return result(Status::unavailable,"Candidate dependencies changed while rendering.", CliBitmapReason::StaleCapture);
     }
     BitmapCopyOutcome out; out.outcome = {Status::changed,""}; out.candidate._state = std::move(s); return out;
-} catch (std::bad_alloc const &) { if (policy==PlacementPolicy::NativeCopy) throw; return result(Status::failed,"Bitmap copy allocation failed."); }
-catch (...) { if (policy==PlacementPolicy::NativeCopy) throw; return result(Status::failed,"Bitmap copy preparation failed."); }
+} catch (std::bad_alloc const &) { if (!request && policy==PlacementPolicy::NativeCopy) throw; return result(Status::failed,"Bitmap copy allocation failed.", CliBitmapReason::MemoryAdmissionFailed, CliBitmapStage::Analyze); }
+catch (...) { if (!request && policy==PlacementPolicy::NativeCopy) throw; return result(Status::failed,"Bitmap copy preparation failed.", CliBitmapReason::AnalysisFailed, CliBitmapStage::Analyze); }
+
+BitmapCopyOutcome prepareBitmapCopy(ObjectSet &set, BitmapCopyOptions const &options, PlacementPolicy policy,
+                                    Budget &budget, CandidateHooks hooks) {
+    return prepareBitmapCopyCore(set, options, policy, budget, hooks, nullptr, nullptr);
+}
+BitmapCopyOutcome prepareBitmapCopy(DocumentPublicationContext &context, BitmapCopyRequestOptions const &request,
+                                    Budget &budget, CandidateHooks hooks) {
+    if (!context.ownerThread() || !context.getDocument() || context.canceled())
+        return result(Status::unavailable,"Bitmap Copy context is unavailable.",CliBitmapReason::StaleCapture);
+    if (request.keep_original != (request.placement == PlacementPolicy::NativeCopy) ||
+        request.placement == PlacementPolicy::SingleImageResize)
+        return result(Status::incompatible,"Invalid request placement policy.");
+    if (auto dpi=std::get_if<Dpi>(&request.sizing); dpi && (!std::isfinite(dpi->value) || dpi->value<=0))
+        return result(Status::incompatible,"DPI must be finite and positive.");
+    if (auto size=std::get_if<ExactPixels>(&request.sizing); size && (!size->width || !size->height))
+        return result(Status::incompatible,"Pixel dimensions must be positive.");
+    for (auto value:request.background) if(!std::isfinite(value) || value<0 || value>1)
+        return result(Status::incompatible,"Background components must be in [0,1].");
+    BitmapCopyOptions legacy; legacy.keep_original=request.keep_original; legacy.commit_undo=false;
+    return prepareBitmapCopyCore(*context.getSelection(),legacy,request.placement,budget,hooks,&request,&context);
+}
 
 BitmapCopyOutcome publishBitmapCopy(ObjectSet &set, PreparedBitmapCopy const &candidate,
                                     DocumentUndo::RollbackableInteraction *guard) try {
+    auto result = [](Status status, char const *message,
+                     CliBitmapReason reason = CliBitmapReason::PublicationFailed) {
+        return Inkscape::Bitmap::result(Outcome{status, message}, CliBitmapStage::Publish, reason);
+    };
     auto s = candidate._state.get();
     if (std::this_thread::get_id()!=mainThread || !s || s->consumed || !s->document || !s->parent)
-        return result(Status::unavailable,"Bitmap candidate is unavailable or already consumed.");
-    auto doc=s->document; bool safe=s->policy!=PlacementPolicy::NativeCopy;
-    if (set.document()!=doc || doc->serial()!=s->serial) return result(Status::unavailable,"Candidate document changed.");
-    if (safe && !validAtomicGuard(guard,doc)) return result(Status::unavailable,"Conversion requires a caller-owned atomic interaction.");
+        return result(Status::unavailable,"Bitmap candidate is unavailable or already consumed.", CliBitmapReason::StaleCapture);
+    auto doc=s->document; bool safe=s->request || s->policy!=PlacementPolicy::NativeCopy;
+    if (set.document()!=doc || doc->serial()!=s->serial) return result(Status::unavailable,"Candidate document changed.", CliBitmapReason::StaleCapture);
+    if (safe && !validAtomicGuard(guard,doc)) return result(Status::unavailable,"Conversion requires a caller-owned atomic interaction.", CliBitmapReason::DocumentBusy);
     auto operation=safe ? DocumentUndo::holdInteractionOperation(doc) : std::shared_ptr<void>{};
-    if (safe && (!operation || !validAtomicGuard(guard,doc) || !valid(s->meta.token,*doc))) return result(Status::unavailable,"Candidate dependencies changed.");
-    if (safe) { auto a=refresh(*s->budget,s->hooks); if (!a.ok()) return result(a.status,a.diagnostic); }
+    if (safe && (!operation || !validAtomicGuard(guard,doc) || !valid(s->meta.token,*doc))) return result(Status::unavailable,"Candidate dependencies changed.", CliBitmapReason::StaleCapture);
+    if (safe) { auto a=refresh(*s->budget,s->hooks); if (!a.ok()) return Inkscape::Bitmap::result(a, CliBitmapStage::Publish, CliBitmapReason::MemoryAdmissionFailed); }
     std::vector<SPItem *> originals;
-    for (auto const &i:s->selected) { if (!i) return result(Status::unavailable,"Selected source was released."); originals.push_back(i.get()); }
+    for (auto const &i:s->selected) { if (!i) return result(Status::unavailable,"Selected source was released.", CliBitmapReason::StaleCapture); originals.push_back(i.get()); }
     // Hold all sources across selection/XML callbacks, including release on deletion.
     for (auto item:originals) sp_object_ref(item,nullptr);
     auto releaseSources=scope_exit([&] { for (auto item:originals) sp_object_unref(item,nullptr); });
@@ -365,7 +426,7 @@ BitmapCopyOutcome publishBitmapCopy(ObjectSet &set, PreparedBitmapCopy const &ca
         repr=doc->getReprDoc()->createElement("svg:image");
         if (safe) { repr->setAttribute("xlink:href",s->href); repr->setAttribute("preserveAspectRatio","none"); }
         else sp_embed_image(repr,s->render.pixbuf.get());
-        if (s->policy == PlacementPolicy::SingleImageResize) {
+        if (s->request || s->policy == PlacementPolicy::SingleImageResize) {
             // SVG output precision preferences must not round the retained extent.
             char value[G_ASCII_DTOSTR_BUF_SIZE];
             g_ascii_formatd(value, sizeof(value), "%.17g", s->bounds.width()); repr->setAttribute("width", value);
@@ -375,15 +436,17 @@ BitmapCopyOutcome publishBitmapCopy(ObjectSet &set, PreparedBitmapCopy const &ca
         }
         repr->setAttributeOrRemoveIfEmpty("transform",s->transform);
         std::optional<PublicationAudit> audit;
-        if (safe) { audit.emplace(*doc,s->parent->getRepr(),repr,originals);
-            if (!validAtomicGuard(guard,doc) || !valid(s->meta.token,*doc)) return result(Status::unavailable,"Candidate changed before publication.");
+        if (safe) { audit.emplace(*doc,s->parent->getRepr(),repr,s->options.keep_original ? std::vector<SPItem *>{} : originals);
+            if (!validAtomicGuard(guard,doc) || !valid(s->meta.token,*doc)) return result(Status::unavailable,"Candidate changed before publication.", CliBitmapReason::StaleCapture);
             // Delete first in the caller's rollbackable atomic boundary. No duplicate live image.
             set.clear();
             if (audit->unexpected || !validAtomicGuard(guard,doc) || !s->parent)
                 throw std::runtime_error("Unexpected conversion callback edit");
-            audit->deleting=true;
-            ObjectSet deletion(doc); deletion.add(originals.begin(), originals.end()); deletion.deleteItems(true);
-            audit->deleting=false;
+            if (!s->options.keep_original) {
+                audit->deleting=true;
+                ObjectSet deletion(doc); deletion.add(originals.begin(), originals.end()); deletion.deleteItems(true);
+                audit->deleting=false;
+            }
             if (!validAtomicGuard(guard,doc) || !s->parent || audit->unexpected) throw std::runtime_error("Conversion interrupted");
             s->parent->getRepr()->addChildAtPos(repr,s->meta.slot);
         } else {
@@ -412,10 +475,10 @@ BitmapCopyOutcome publishBitmapCopy(ObjectSet &set, PreparedBitmapCopy const &ca
             for (auto const &id:s->selectionIds) if (auto i=cast<SPItem>(doc->getObjectById(id.c_str()))) restored.push_back(i);
             set.clear(); set.add(restored.begin(),restored.end());
         }
-        return result(Status::failed,"Bitmap publication failed; conversion rolled back.");
+        auto failed=result(Status::failed,"Bitmap publication failed; conversion rolled back.");failed.rolledBack=true;return failed;
     }
 } catch (...) {
-    if (candidate._state && candidate._state->policy==PlacementPolicy::NativeCopy) throw;
-    return result(Status::failed,"Bitmap publication allocation failed.");
+    if (candidate._state && !candidate._state->request && candidate._state->policy==PlacementPolicy::NativeCopy) throw;
+    return result(Status::failed,"Bitmap publication allocation failed.", CliBitmapReason::MemoryAdmissionFailed, CliBitmapStage::Publish);
 }
 } // namespace Inkscape::Bitmap

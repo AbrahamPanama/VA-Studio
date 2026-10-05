@@ -29,6 +29,21 @@ class SubtreeRevision;
 
 namespace Inkscape::Nesting {
 
+enum class ContourBindingStatus { Prepared, Applied, Unchanged, Refused };
+enum class ContourBindingReason { None, InvalidItem, OverlappingRoles, UnsupportedContour, UnsafeContext, Busy, PublicationFailed };
+struct ContourBindingResult {
+    ContourBindingStatus status = ContourBindingStatus::Refused;
+    ContourBindingReason reason = ContourBindingReason::None;
+    std::vector<std::string> binding_ids, payload_ids, contour_ids;
+};
+// Explicit roles, same parent/context. Uses native ObjectSet grouping without
+// borrowing live selection. dry_run only prepares; caller may project on a copy.
+[[nodiscard]] ContourBindingResult setNestingContour(SPDocument &, SPItem *payload, SPItem *contour,
+    bool dry_run = false, std::shared_ptr<void> const &owner_lease = {});
+// Clear only native nesting markers; preserve group structure/artwork/affines.
+[[nodiscard]] ContourBindingResult releaseNestingContour(SPDocument &, std::span<SPItem *const> roots,
+    bool dry_run = false, std::shared_ptr<void> const &owner_lease = {});
+
 enum class ContourSource
 {
     ExplicitContour,
@@ -127,6 +142,7 @@ struct SkippedPart
 struct PreparedPart
 {
     std::uint64_t id = 0;
+    std::uint32_t copy = 0; // zero moves source; positive copies publish only when placed
     SPWeakPtr<SPItem> item;
     Geom::Affine original_item_to_document;
     std::vector<CollisionComponent> components;
@@ -189,12 +205,20 @@ struct PreparedDocumentNesting
     std::shared_ptr<XML::SubtreeRevision const> revision;
     /// The container is text, has an external reference or holds bitmaps.
     bool container_always_revalidate = false;
+    // Request-local sheets have no live container object. The strict revision
+    // includes pages/namedview; a page change must invalidate a retained plan.
+    bool request_local_sheet = false;
+    std::optional<Options> apply_validation_options;
 };
+
+enum class PreparationReason { None, InvalidSheet, InvalidCopies, ResourceLimit, ConservativeRejected, NoUsableParts };
 
 struct PreparationResult
 {
     std::optional<PreparedDocumentNesting> snapshot;
     std::string error;
+    PreparationReason reason = PreparationReason::None;
+    std::vector<SkippedPart> skipped_parts;
 
     [[nodiscard]] explicit operator bool() const noexcept { return snapshot.has_value(); }
 };
@@ -207,6 +231,8 @@ struct SolveResult
     SolveMetrics metrics;
     std::string backend = "native";
     std::string backend_detail;
+    std::optional<TerminalResult> terminal;
+    bool deterministic = false;
 
     [[nodiscard]] explicit operator bool() const noexcept { return status == Status::Ok; }
 };
@@ -218,6 +244,7 @@ enum class ApplyStatus
     StaleSnapshot,
     InvalidResult,
     UndoUnavailable,
+    PublicationFailed,
 };
 
 /// What applyNestingPlacements() does with parts that did not fit.
@@ -247,6 +274,8 @@ struct ApplyResult
     /// document unchanged).
     double validation_seconds = 0.0;
     std::size_t revalidated_count = 0;
+    // Native part ID -> published SVG ID, emitted only after committed copies.
+    std::vector<std::pair<std::uint64_t, std::string>> created_copies;
 
     [[nodiscard]] bool changed() const noexcept { return status == ApplyStatus::Applied; }
 };
@@ -281,6 +310,20 @@ struct SheetObstacles
 [[nodiscard]] PreparationResult prepareDocumentNesting(SPItem *container, std::span<SPItem *const> candidate_parts,
                                                        double flatten_tolerance = 0.05,
                                                        std::span<SPItem *const> obstacles = {});
+
+// CLI request state never reads/writes GUI preferences or creates a sheet item.
+// Exactly one of sheet/page is required; page is one-based. copies is aligned
+// with candidate_parts, defaults to one each, expanded total <=100000.
+struct RequestPreparationOptions {
+    std::optional<Geom::Rect> sheet;
+    std::optional<unsigned> page;
+    std::vector<std::uint32_t> copies;
+    bool reject_conservative = true;
+    Options solver_options;
+};
+[[nodiscard]] PreparationResult prepareRequestNesting(SPDocument &document,
+    std::span<SPItem *const> candidate_parts, RequestPreparationOptions const &request,
+    double flatten_tolerance = 0.05, std::span<SPItem *const> obstacles = {});
 
 // --- R1: preparation in three phases (consolidated work order 8.7) --------------
 // prepareDocumentNesting() is assemble(capture(...), prepareCapturedGeometry(...))
@@ -336,6 +379,8 @@ struct CapturedGeometry
     };
 
     std::string error;
+    bool conservative_refused = false;
+    bool no_usable_parts = false;
     std::vector<Point> container_outline;
     std::vector<std::vector<Point>> container_holes;
     std::uint64_t container_geometry_fingerprint = 0;
@@ -364,8 +409,18 @@ using PreparationProgress = std::function<void(std::size_t, std::size_t)>;
 [[nodiscard]] PreparedDocumentNesting solvingSnapshot(SPDocument *document, CapturedInput const &input,
                                                       CapturedGeometry const &geometry);
 
+[[nodiscard]] bool preparedNestingFresh(PreparedDocumentNesting const &);
+
 /** Run the native solver without reading or mutating the SVG document. */
 [[nodiscard]] SolveResult solvePreparedNesting(PreparedDocumentNesting const &snapshot, Options const &options = {},
+                                               Job::ProgressCallback const &progress = {},
+                                               std::stop_token cancellation = {});
+
+enum class EngineSelection { Automatic, NativeOnly };
+/** Explicit native-only execution bypasses Sparrow and its watchdog entirely.
+ * Nonzero work_limit requires NativeOnly, worker_count=1, time_limit_ms=0. */
+[[nodiscard]] SolveResult solvePreparedNesting(PreparedDocumentNesting const &snapshot, Options const &options,
+                                               EngineSelection engine, std::uint64_t work_limit,
                                                Job::ProgressCallback const &progress = {},
                                                std::stop_token cancellation = {});
 
@@ -376,7 +431,8 @@ using PreparationProgress = std::function<void(std::size_t, std::size_t)>;
  */
 [[nodiscard]] ApplyResult applyNestingPlacements(PreparedDocumentNesting const &snapshot,
                                                  std::span<Placement const> placements,
-                                                 LeftoverPlacement const &leftovers = {});
+                                                 LeftoverPlacement const &leftovers = {},
+                                                 std::shared_ptr<void> const &owner_lease = {});
 
 } // namespace Inkscape::Nesting
 

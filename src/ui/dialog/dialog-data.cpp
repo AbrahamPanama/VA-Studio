@@ -7,6 +7,7 @@
 
 #include "ui/dialog/dialog-data.h"
 #include "ui/explode-bitmap-feature.h"
+#include "ui/spellcheck-feature.h"
 #include "ui/icon-names.h"  // INKSCAPE_ICON macro
 
 /*
@@ -78,7 +79,14 @@ static std::span<const DialogData> all_dialog_data() {
 #endif
         // clang-format on
     };
-    return dialog_data_list;
+    // Spell checking is hidden (ui/spellcheck-feature.h): no menu, factory or restore entry.
+    static const auto shown = [] {
+        auto list = dialog_data_list;
+        if constexpr (!Inkscape::UI::spellcheckUiEnabled)
+            std::erase_if(list, [](auto const &entry) { return entry.key == "Spellcheck"; });
+        return list;
+    }();
+    return shown;
 }
 
 std::span<const DialogData> get_dialog_data_list() {

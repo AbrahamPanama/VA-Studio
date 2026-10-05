@@ -1,0 +1,5396 @@
+{
+  "description": "Realistic 120-card sheet: two result pages, groups, embedded logo, two text/font occurrences and clean close.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.document",
+        "params": {}
+      },
+      "command": "query.document",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "title": "VA Cards 120-card print sheet",
+          "revision": 0,
+          "dirty": false,
+          "size": {
+            "width": {
+              "px": 600,
+              "preferred": {
+                "value": 158.75,
+                "unit": "mm"
+              }
+            },
+            "height": {
+              "px": 800,
+              "preferred": {
+                "value": 211.66666666666666,
+                "unit": "mm"
+              }
+            }
+          },
+          "object_counts": {
+            "rect": 120,
+            "g": 7,
+            "image": 1,
+            "text": 2
+          }
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.pages",
+        "params": {}
+      },
+      "command": "query.pages",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "print-page",
+              "label": "Cards 1-120",
+              "order": 0,
+              "rect": {
+                "kind": "geometric",
+                "x": {
+                  "px": 0,
+                  "preferred": {
+                    "value": 0.0,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 0,
+                  "preferred": {
+                    "value": 0.0,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 600,
+                  "preferred": {
+                    "value": 158.75,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 800,
+                  "preferred": {
+                    "value": 211.66666666666666,
+                    "unit": "mm"
+                  }
+                }
+              }
+            }
+          ],
+          "total": 1,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r3",
+        "command": "query.objects",
+        "params": {
+          "type": "rect"
+        }
+      },
+      "command": "query.objects",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "card000",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 70,
+                  "preferred": {
+                    "value": 18.520833333333332,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 1",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card001",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 70,
+                  "preferred": {
+                    "value": 18.520833333333332,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 2",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card002",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 70,
+                  "preferred": {
+                    "value": 18.520833333333332,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 3",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card003",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 70,
+                  "preferred": {
+                    "value": 18.520833333333332,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 4",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card004",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 70,
+                  "preferred": {
+                    "value": 18.520833333333332,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 5",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card005",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 92,
+                  "preferred": {
+                    "value": 24.34166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 6",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card006",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 92,
+                  "preferred": {
+                    "value": 24.34166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 7",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card007",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 92,
+                  "preferred": {
+                    "value": 24.34166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 8",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card008",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 92,
+                  "preferred": {
+                    "value": 24.34166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 9",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card009",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 92,
+                  "preferred": {
+                    "value": 24.34166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 10",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card010",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 114,
+                  "preferred": {
+                    "value": 30.1625,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 11",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card011",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 114,
+                  "preferred": {
+                    "value": 30.1625,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 12",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card012",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 114,
+                  "preferred": {
+                    "value": 30.1625,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 13",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card013",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 114,
+                  "preferred": {
+                    "value": 30.1625,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 14",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card014",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 114,
+                  "preferred": {
+                    "value": 30.1625,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 15",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card015",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 136,
+                  "preferred": {
+                    "value": 35.983333333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 16",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card016",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 136,
+                  "preferred": {
+                    "value": 35.983333333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 17",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card017",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 136,
+                  "preferred": {
+                    "value": 35.983333333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 18",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card018",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 136,
+                  "preferred": {
+                    "value": 35.983333333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 19",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card019",
+              "parent_id": "band0",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 136,
+                  "preferred": {
+                    "value": 35.983333333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 20",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card020",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 170,
+                  "preferred": {
+                    "value": 44.979166666666664,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 21",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card021",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 170,
+                  "preferred": {
+                    "value": 44.979166666666664,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 22",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card022",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 170,
+                  "preferred": {
+                    "value": 44.979166666666664,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 23",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card023",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 170,
+                  "preferred": {
+                    "value": 44.979166666666664,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 24",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card024",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 170,
+                  "preferred": {
+                    "value": 44.979166666666664,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 25",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card025",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 192,
+                  "preferred": {
+                    "value": 50.8,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 26",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card026",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 192,
+                  "preferred": {
+                    "value": 50.8,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 27",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card027",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 192,
+                  "preferred": {
+                    "value": 50.8,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 28",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card028",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 192,
+                  "preferred": {
+                    "value": 50.8,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 29",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card029",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 192,
+                  "preferred": {
+                    "value": 50.8,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 30",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card030",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 214,
+                  "preferred": {
+                    "value": 56.62083333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 31",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card031",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 214,
+                  "preferred": {
+                    "value": 56.62083333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 32",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card032",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 214,
+                  "preferred": {
+                    "value": 56.62083333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 33",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card033",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 214,
+                  "preferred": {
+                    "value": 56.62083333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 34",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card034",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 214,
+                  "preferred": {
+                    "value": 56.62083333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 35",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card035",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 36",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card036",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 37",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card037",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 38",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card038",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 39",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card039",
+              "parent_id": "band1",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 40",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card040",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 270,
+                  "preferred": {
+                    "value": 71.4375,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 41",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card041",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 270,
+                  "preferred": {
+                    "value": 71.4375,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 42",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card042",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 270,
+                  "preferred": {
+                    "value": 71.4375,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 43",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card043",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 270,
+                  "preferred": {
+                    "value": 71.4375,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 44",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card044",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 270,
+                  "preferred": {
+                    "value": 71.4375,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 45",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card045",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 292,
+                  "preferred": {
+                    "value": 77.25833333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 46",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card046",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 292,
+                  "preferred": {
+                    "value": 77.25833333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 47",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card047",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 292,
+                  "preferred": {
+                    "value": 77.25833333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 48",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card048",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 292,
+                  "preferred": {
+                    "value": 77.25833333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 49",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card049",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 292,
+                  "preferred": {
+                    "value": 77.25833333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 50",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card050",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 314,
+                  "preferred": {
+                    "value": 83.07916666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 51",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card051",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 314,
+                  "preferred": {
+                    "value": 83.07916666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 52",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card052",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 314,
+                  "preferred": {
+                    "value": 83.07916666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 53",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card053",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 314,
+                  "preferred": {
+                    "value": 83.07916666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 54",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card054",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 314,
+                  "preferred": {
+                    "value": 83.07916666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 55",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card055",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 336,
+                  "preferred": {
+                    "value": 88.9,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 56",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card056",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 336,
+                  "preferred": {
+                    "value": 88.9,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 57",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card057",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 336,
+                  "preferred": {
+                    "value": 88.9,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 58",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card058",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 336,
+                  "preferred": {
+                    "value": 88.9,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 59",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card059",
+              "parent_id": "band2",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 336,
+                  "preferred": {
+                    "value": 88.9,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 60",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card060",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 370,
+                  "preferred": {
+                    "value": 97.89583333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 61",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card061",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 370,
+                  "preferred": {
+                    "value": 97.89583333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 62",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card062",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 370,
+                  "preferred": {
+                    "value": 97.89583333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 63",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card063",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 370,
+                  "preferred": {
+                    "value": 97.89583333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 64",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card064",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 370,
+                  "preferred": {
+                    "value": 97.89583333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 65",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card065",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 392,
+                  "preferred": {
+                    "value": 103.71666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 66",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card066",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 392,
+                  "preferred": {
+                    "value": 103.71666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 67",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card067",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 392,
+                  "preferred": {
+                    "value": 103.71666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 68",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card068",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 392,
+                  "preferred": {
+                    "value": 103.71666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 69",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card069",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 392,
+                  "preferred": {
+                    "value": 103.71666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 70",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card070",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 414,
+                  "preferred": {
+                    "value": 109.53750000000001,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 71",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card071",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 414,
+                  "preferred": {
+                    "value": 109.53750000000001,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 72",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card072",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 414,
+                  "preferred": {
+                    "value": 109.53750000000001,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 73",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card073",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 414,
+                  "preferred": {
+                    "value": 109.53750000000001,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 74",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card074",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 414,
+                  "preferred": {
+                    "value": 109.53750000000001,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 75",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card075",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 436,
+                  "preferred": {
+                    "value": 115.35833333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 76",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card076",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 436,
+                  "preferred": {
+                    "value": 115.35833333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 77",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card077",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 436,
+                  "preferred": {
+                    "value": 115.35833333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 78",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card078",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 436,
+                  "preferred": {
+                    "value": 115.35833333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 79",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card079",
+              "parent_id": "band3",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 436,
+                  "preferred": {
+                    "value": 115.35833333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 80",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card080",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 470,
+                  "preferred": {
+                    "value": 124.35416666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 81",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card081",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 470,
+                  "preferred": {
+                    "value": 124.35416666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 82",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card082",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 470,
+                  "preferred": {
+                    "value": 124.35416666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 83",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card083",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 470,
+                  "preferred": {
+                    "value": 124.35416666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 84",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card084",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 470,
+                  "preferred": {
+                    "value": 124.35416666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 85",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card085",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 492,
+                  "preferred": {
+                    "value": 130.175,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 86",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card086",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 492,
+                  "preferred": {
+                    "value": 130.175,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 87",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card087",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 492,
+                  "preferred": {
+                    "value": 130.175,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 88",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card088",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 492,
+                  "preferred": {
+                    "value": 130.175,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 89",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card089",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 492,
+                  "preferred": {
+                    "value": 130.175,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 90",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card090",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 514,
+                  "preferred": {
+                    "value": 135.99583333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 91",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card091",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 514,
+                  "preferred": {
+                    "value": 135.99583333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 92",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card092",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 514,
+                  "preferred": {
+                    "value": 135.99583333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 93",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card093",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 514,
+                  "preferred": {
+                    "value": 135.99583333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 94",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card094",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 514,
+                  "preferred": {
+                    "value": 135.99583333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 95",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card095",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 536,
+                  "preferred": {
+                    "value": 141.81666666666666,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 96",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card096",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 536,
+                  "preferred": {
+                    "value": 141.81666666666666,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 97",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card097",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 536,
+                  "preferred": {
+                    "value": 141.81666666666666,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 98",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card098",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 536,
+                  "preferred": {
+                    "value": 141.81666666666666,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 99",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card099",
+              "parent_id": "band4",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 536,
+                  "preferred": {
+                    "value": 141.81666666666666,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 100",
+              "visible": true,
+              "locked": false
+            }
+          ],
+          "total": 120,
+          "limit": 100,
+          "next_cursor": "d1:0:c6a98223370fae3e900c94ed6c7fcc8fd593b7219644c19cddd30be3c53d8594:100",
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r4",
+        "command": "query.objects",
+        "params": {
+          "type": "rect",
+          "cursor": "d1:0:c6a98223370fae3e900c94ed6c7fcc8fd593b7219644c19cddd30be3c53d8594:100"
+        }
+      },
+      "command": "query.objects",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "card100",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 570,
+                  "preferred": {
+                    "value": 150.8125,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 101",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card101",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 570,
+                  "preferred": {
+                    "value": 150.8125,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 102",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card102",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 570,
+                  "preferred": {
+                    "value": 150.8125,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 103",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card103",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 570,
+                  "preferred": {
+                    "value": 150.8125,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 104",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card104",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 570,
+                  "preferred": {
+                    "value": 150.8125,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 105",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card105",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 592,
+                  "preferred": {
+                    "value": 156.63333333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 106",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card106",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 592,
+                  "preferred": {
+                    "value": 156.63333333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 107",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card107",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 592,
+                  "preferred": {
+                    "value": 156.63333333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 108",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card108",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 592,
+                  "preferred": {
+                    "value": 156.63333333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 109",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card109",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 592,
+                  "preferred": {
+                    "value": 156.63333333333333,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 110",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card110",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 614,
+                  "preferred": {
+                    "value": 162.45416666666668,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 111",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card111",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 614,
+                  "preferred": {
+                    "value": 162.45416666666668,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 112",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card112",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 614,
+                  "preferred": {
+                    "value": 162.45416666666668,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 113",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card113",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 614,
+                  "preferred": {
+                    "value": 162.45416666666668,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 114",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card114",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 614,
+                  "preferred": {
+                    "value": 162.45416666666668,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 115",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card115",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 636,
+                  "preferred": {
+                    "value": 168.275,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 116",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card116",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 128,
+                  "preferred": {
+                    "value": 33.86666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 636,
+                  "preferred": {
+                    "value": 168.275,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 117",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card117",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 236,
+                  "preferred": {
+                    "value": 62.44166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 636,
+                  "preferred": {
+                    "value": 168.275,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 118",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card118",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 344,
+                  "preferred": {
+                    "value": 91.01666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 636,
+                  "preferred": {
+                    "value": 168.275,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 119",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "card119",
+              "parent_id": "band5",
+              "layer_id": "cards",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 452,
+                  "preferred": {
+                    "value": 119.59166666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 636,
+                  "preferred": {
+                    "value": 168.275,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 90,
+                  "preferred": {
+                    "value": 23.8125,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Card 120",
+              "visible": true,
+              "locked": false
+            }
+          ],
+          "total": 120,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r5",
+        "command": "query.images",
+        "params": {}
+      },
+      "command": "query.images",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "logo",
+              "source_kind": "embedded",
+              "href": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAYCAYAAACbU/80AAAAK0lEQVR4nO3OIQEAAAgDMDrRiU6khRg3E/Ornr2kEhAQEBAQEBAQEBBIBx5hyZNb1iuQawAAAABJRU5ErkJggg==",
+              "link_grant": "embedded",
+              "pixel_size": {
+                "width": 32,
+                "height": 24
+              },
+              "density": {
+                "x": 96,
+                "y": 96,
+                "unit": "dpi"
+              },
+              "mime": "image/png",
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {}
+            }
+          ],
+          "total": 1,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r6",
+        "command": "query.fonts",
+        "params": {}
+      },
+      "command": "query.fonts",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "family": "sans-serif",
+              "style": "normal",
+              "weight": "400",
+              "stretch": "normal",
+              "object_id": "headline",
+              "available": true,
+              "missing": false
+            },
+            {
+              "family": "VA_CLI_MissingFont_9f5e",
+              "style": "normal",
+              "weight": "400",
+              "stretch": "normal",
+              "object_id": "footer",
+              "available": false,
+              "missing": true
+            }
+          ],
+          "total": 2,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r7",
+        "command": "query.selection",
+        "params": {}
+      },
+      "command": "query.selection",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [],
+          "total": 0,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success",
+        "no-op"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/print-sheet.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

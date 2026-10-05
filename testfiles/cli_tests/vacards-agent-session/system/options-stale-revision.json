@@ -1,0 +1,61 @@
+{
+  "description": "options-stale-revision",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "system.options",
+        "params": {
+          "preferred-unit": "in"
+        },
+        "if_revision": 9007199254740991
+      },
+      "command": "system.options",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "refusal"
+      ],
+      "expect_error": "stale-revision"
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "after",
+        "command": "system.options",
+        "params": {}
+      },
+      "command": "system.options",
+      "expect": {
+        "data": {
+          "preferred-unit": "mm"
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ]
+}

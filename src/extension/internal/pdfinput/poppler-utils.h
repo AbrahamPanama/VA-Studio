@@ -82,6 +82,9 @@ private:
 typedef std::shared_ptr<std::map<FontPtr, FontData>> FontList;
 
 FontList getPdfFonts(std::shared_ptr<PDFDoc> pdf_doc);
+// Request-local scan: resources shared across pages contribute to every page's
+// font membership. The legacy document-wide scan above remains unchanged.
+FontList getPdfFonts(std::shared_ptr<PDFDoc> pdf_doc, std::vector<int> const &pages);
 std::string getNameWithoutSubsetTag(std::string name);
 std::string getDictString(Dict *dict, const char *key);
 std::string getString(const std::string &value);

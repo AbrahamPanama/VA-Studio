@@ -28,12 +28,12 @@ enum class ColorModel { Unknown, Gray, GrayAlpha, Palette, RGB, RGBA, CMYK };
 struct HeaderLimits {
     std::uint32_t maxAxis = 16384;
     std::uint64_t maxPixels = 100'000'000;
-    std::uint64_t scratchBytes = MiB;              // reserved through the Budget while inspecting
+    std::uint64_t scratchBytes = MiB;              // baseline scratch / non-profile metadata allowance
     std::uint64_t maxProfileBytes = 4 * MiB;       // ICC / colour profile
     std::uint64_t maxEncodedBytes = 256 * MiB;     // decoded size of a data URI payload
     std::uint64_t maxUriBytes = 384 * MiB;         // whole href
     bool requireStill = true;                      // refuse animated / multi-frame data
-    // The view holds only the LEADING bytes of the file (<= scratch). Parsing stops at the first
+    // The view holds only the LEADING bytes of the file. Parsing stops at the first
     // PNG IDAT / JPEG SOS / WebP image or ANMF chunk / GIF image descriptor; end-of-file checks
     // (IEND, EOI, RIFF end, GIF trailer, GIF frame count, IDAT CRC) become the decoder's job.
     bool prefixOnly = false;
@@ -72,9 +72,13 @@ struct UriInfo {
 // embedded and are refused by embedded-only intake).
 Result<UriInfo> inspectUri(std::string_view href, HeaderLimits const &, Stop = {}) noexcept;
 
-// Plan 13.2 step 1 for embedded data: validates the URI, decodes at most scratchBytes of base64 into
-// a budgeted buffer (Stage::header) and inspects it. When the payload exceeds the scratch window
-// the inspection is prefix-only (see HeaderLimits::prefixOnly); smaller payloads get the full checks.
+// Validates the URI and walks chunk/segment headers without retaining skipped payloads.
+// Decodes a budgeted prefix through the first image-data header, at least
+// min(scratchBytes, decodedBytes). PNG/JPEG metadata keeps the profile+scratch scan limit;
+// all formats keep the hard maxEncodedBytes bound. Smaller payloads get the full checks;
+// larger payloads use prefixOnly (see above). The baseline window uses Stage::header;
+// larger encoded metadata prefixes use Stage::input in the same ledger. Image-data
+// payloads beyond the baseline window are skipped rather than allocated.
 // Documented decode-side requirements: IDAT/zlib CRC, inflated ICC size, bytes after IEND/EOI
 // (zero padding after JPEG EOI is tolerated, other trailers are refused), GIF frame count.
 Result<RasterHeader> inspectHref(std::string_view href, HeaderLimits const &, Budget &, Stop = {}) noexcept;

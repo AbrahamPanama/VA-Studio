@@ -160,7 +160,7 @@
 					<string>application/vnd.corel-draw-compressed</string>
 				</array>
 				<key>CFBundleTypeName</key>
-				<string>Corel Draw Compressed Document</string>
+				<string>CorelDRAW Compressed Document</string>
 				<key>CFBundleTypeOSTypes</key>
 				<array>
 					<string>CCX </string>
@@ -182,7 +182,7 @@
 					<string>application/vnd.corel-draw-template</string>
 				</array>
 				<key>CFBundleTypeName</key>
-				<string>Corel Draw Template</string>
+				<string>CorelDRAW Template</string>
 				<key>CFBundleTypeOSTypes</key>
 				<array>
 					<string>CDT </string>
@@ -204,7 +204,7 @@
 					<string>application/vnd.corel-draw</string>
 				</array>
 				<key>CFBundleTypeName</key>
-				<string>Corel Draw Compressed Document</string>
+				<string>CorelDRAW Compressed Document</string>
 				<key>CFBundleTypeOSTypes</key>
 				<array>
 					<string>CDR </string>

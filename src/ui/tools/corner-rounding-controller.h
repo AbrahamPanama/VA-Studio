@@ -50,16 +50,19 @@ private:
 //     document interaction is active, then performs the identical XML changes
 //     and records exactly one Undo step (or DocumentUndo::cancel on a failure
 //     after the first mutation).
-enum class CornerCommitProtocol { Interaction, CommandLine };
+// CallerOwnedAtomic: caller holds an active atomic transaction, and owns all
+// settlement/rollback, including failures after mutation_started. No done/cancel.
+enum class CornerCommitProtocol { Interaction, CommandLine, CallerOwnedAtomic };
 
 struct CornerApplyResult {
     CornerRoundingController::Outcome outcome = CornerRoundingController::Outcome::Rejected;
     std::string reason;
     bool mutation_started = false;
-    bool refused_by_document = false; ///< CommandLine admission refused (busy, closing, no Undo)
+    bool refused_by_document = false; ///< Admission refused (busy, closing, or missing caller interaction)
     LivePathEffectObject *effect = nullptr;
     std::size_t count = 0;
     bool approximate = false;
+    std::string converted_from; ///< polygon/polyline only, published after commit
 };
 
 // The read-only part of apply_corner_plan: the plan and every refusal/no-change
@@ -79,10 +82,15 @@ CornerPlanCheck check_corner_plan(bool has_effect, LivePathEffect::CornerEdit::S
 // interaction active, Undo recording off), or nothing when it can.
 std::optional<std::string> command_line_corner_refusal(SPDocument &document);
 
+// Native SVG vertex shapes alone need conversion to evaluate a Corners LPE.
+// Empty means no native-type change. Also used by read-only CLI reporting.
+std::string corner_conversion_from(SPShape const &target);
+
 // The shared corner commit: plan, persist and record one corner edit on
 // @a target. @a effect is the target's existing private Corners effect (or null
 // for a fresh one); the result carries the possibly-newly-created effect so the
-// Node-tool controller can store it. @a fresh is the validated effect-input
+// Node-tool controller can store it. Under CallerOwnedAtomic, returned pointers
+// and conversion receipts are provisional until the caller commits. @a fresh is the validated effect-input
 // snapshot. @a still_current is polled before the mutation and before publish;
 // it must be false once the interaction is superseded. @a before_mutation runs
 // exactly once, immediately before the first document mutation and only when the
@@ -94,6 +102,7 @@ CornerApplyResult apply_corner_plan(SPShape &target, LivePathEffectObject *effec
                                     LivePathEffect::CornerEdit::Request const &request,
                                     CornerCommitProtocol protocol,
                                     std::function<bool()> const &still_current,
-                                    std::function<void()> const &before_mutation = {});
+                                    std::function<void()> const &before_mutation = {},
+                                    std::function<void(SPShape &)> const &target_replaced = {});
 }
 #endif

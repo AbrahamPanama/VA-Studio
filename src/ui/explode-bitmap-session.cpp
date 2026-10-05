@@ -131,6 +131,12 @@ SessionRecipe query(LogicalImageIdentity id) {
     result.faintFloor = s.faintFloor; result.threshold = s.threshold; result.softness = s.softness; result.bypassAlpha = s.bypass;
     return result;
 }
+SessionRecipe requestRecipe(LogicalImageIdentity id, SessionRecipe requested) {
+    auto current = query(id);
+    requested.bypassAlpha = current.bypassAlpha && current.threshold == requested.threshold &&
+        current.softness == requested.softness && current.faintFloor == requested.faintFloor && current.refine == requested.refine;
+    return requested;
+}
 void remember(LogicalImageIdentity id, Recipe recipe, bool refine) {
     checkThread();
     if (auto r = record(id)) {
@@ -178,6 +184,15 @@ OperationIdentity prepareBaked(LogicalImageIdentity source, std::vector<LogicalI
         }
         OperationIdentity op; op.prepared = std::move(prepared); return op;
     } catch (std::bad_alloc const &) { return {}; }
+}
+OperationIdentity prepareBaked(LogicalImageIdentity source, std::vector<LogicalImageIdentity> const &results,
+    SessionRecipe const &recipe, AllocationFault *fault) {
+    auto op = prepareBaked(source, results, fault);
+    if (op) for (auto &change : op.prepared->bakes.front().changes) {
+        if (std::any_of(results.begin(), results.end(), [&](auto id) { return record(id) == change.record; }))
+            change.after = {recipe.threshold, recipe.softness, recipe.faintFloor, true, recipe.refine};
+    }
+    return op;
 }
 OperationIdentity prepareSessionTransfer(LogicalImageIdentity source, LogicalImageIdentity copy) {
     checkThread();

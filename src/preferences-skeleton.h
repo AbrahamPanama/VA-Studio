@@ -552,7 +552,7 @@ static char const preferences_skeleton[] =
 // calligraphy presets.
 // Note: actual translation is done in CalligraphyToolbar::build_presets_list(), we just
 // mark the strings as translatable here (see GitLab issue 128):
-Glib::ustring calligraphy_name_array[] = {
+inline Glib::ustring calligraphy_name_array[] = {
     _("Dip pen"),
     _("Marker"),
     _("Brush"),

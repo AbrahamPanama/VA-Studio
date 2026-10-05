@@ -1,0 +1,174 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "workflow:move-undo-redo",
+      "command": "geometry.move",
+      "cell": "success",
+      "description": "Independent P9 geometry.move:success:undo-redo",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.move",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "dx": {
+                "value": 2,
+                "unit": "px"
+              },
+              "dy": {
+                "value": 3,
+                "unit": "px"
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success",
+              "applied-affine": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ],
+              "bounds-before": [
+                0,
+                0,
+                10,
+                10
+              ],
+              "bounds-after": [
+                2,
+                3,
+                12,
+                13
+              ]
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "undo_guard",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "undo",
+            "command": "history.undo",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "undo_guard.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "redo_guard",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "redo",
+            "command": "history.redo",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "redo_guard.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "changed",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        }
+      ],
+      "expect_exit": 0
+    }
+  ]
+}

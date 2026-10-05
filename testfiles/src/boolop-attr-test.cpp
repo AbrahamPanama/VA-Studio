@@ -18,6 +18,11 @@
 #include "object/sp-rect.h"
 #include "object/sp-ellipse.h"
 #include "xml/repr.h"
+#include "desktop.h"
+#include "event-log.h"
+#include "inkscape-application.h"
+#include "message-stack.h"
+#include "ui/widget/gtk-registry.h"
 
 #include "doc-per-case-test.h"
 #include "document-undo.h"
@@ -25,6 +30,130 @@
 #include "object/sp-item.h"
 
 using namespace Inkscape;
+
+static InkscapeApplication *boolop_test_app()
+{
+    static auto *app = [] {
+        g_setenv("INKSCAPE_APP_ID_TAG", "booloprefusaltest", TRUE);
+        auto *result = new InkscapeApplication(); // Process-lifetime GTK fixture.
+        if (result->gtk_app()) UI::Widget::register_all();
+        return result;
+    }();
+    return app;
+}
+
+// BUG-027: native menu booleans refuse incompatible roots atomically and
+// explain the refusal through the real desktop message stack.
+class BoolopUnsupportedRootTest : public DocPerCaseTest,
+    public testing::WithParamInterface<std::tuple<int, int, bool>> {};
+
+TEST_P(BoolopUnsupportedRootTest, RefusalMessagesOnceWithoutDocumentOrUndoChange)
+{
+    auto *app = boolop_test_app();
+    ASSERT_TRUE(app->gtk_app()) << "GTK is required to verify the desktop message";
+    auto [operation, selection_kind, reverse_selection] = GetParam();
+    auto doc = SPDocument::createNewDocFromMem(R"(<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'>
+        <g id='g1'><rect width='20' height='20'/></g>
+        <g id='g2'><path d='M10,10 H30 V30 H10 Z'/></g>
+        <rect id='shape' width='40' height='40'/>
+        <image id='image' width='20' height='20'/></svg>)");
+    ASSERT_TRUE(doc);
+    doc->ensureUpToDate();
+    auto desktop = std::make_unique<SPDesktop>(doc->getNamedView());
+    ObjectSet selection(desktop.get());
+    std::vector<SPObject *> roots{doc->getObjectById(selection_kind == 0 ? "g1" : "shape"),
+                                 doc->getObjectById(selection_kind == 2 ? "image" : "g2")};
+    if (reverse_selection) std::reverse(roots.begin(), roots.end());
+    selection.setList(roots);
+    DocumentUndo::done(doc.get(), Util::Internal::ContextString{"Boolean refusal fixture"}, "");
+    DocumentUndo::clearUndo(doc.get());
+    DocumentUndo::clearRedo(doc.get());
+    auto const before = sp_repr_save_buf(doc->getReprDoc());
+    unsigned messages = 0;
+    auto connection = desktop->messageStack()->connectChanged([&](MessageType type, char const *message) {
+        ++messages;
+        EXPECT_EQ(type, ERROR_MESSAGE);
+        EXPECT_STREQ(message, "Booleans need paths or shapes: ungroup first, or use Boolean Assist, which treats a group as one shape");
+    });
+    switch (operation) {
+        case 0: selection.pathUnion(); break;
+        case 1: selection.pathDiff(); break;
+        case 2: selection.pathIntersect(); break;
+        case 3: selection.pathSymDiff(); break;
+        case 4: selection.pathCut(); break;
+        case 5: selection.pathSlice(); break;
+    }
+    connection.disconnect();
+    EXPECT_EQ(messages, 1u);
+    EXPECT_STREQ(desktop->messageStack()->currentMessage(),
+        "Booleans need paths or shapes: ungroup first, or use Boolean Assist, which treats a group as one shape");
+    doc->ensureUpToDate();
+    EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()), before);
+    EXPECT_EQ(selection.items_vector().size(), roots.size());
+    for (auto root : roots) EXPECT_TRUE(selection.includes(root));
+    EXPECT_FALSE(DocumentUndo::undo(doc.get()));
+}
+
+INSTANTIATE_TEST_SUITE_P(NativeMenu, BoolopUnsupportedRootTest,
+    testing::Combine(testing::Range(0, 6), testing::Range(0, 3), testing::Bool()));
+
+TEST(BoolopUnsupportedRoot, MultipleDifferenceRefusesGroupWithoutThrowOrMutation)
+{
+    auto *app = boolop_test_app();
+    ASSERT_TRUE(app->gtk_app()) << "GTK is required to verify the desktop message";
+
+    auto doc = SPDocument::createNewDocFromMem(R"(<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'>
+        <path id='path1' d='M0,0 H20 V20 H0 Z'/>
+        <path id='path2' d='M30,30 H50 V50 H30 Z'/>
+        <g id='group'><path d='M60,60 H80 V80 H60 Z'/></g></svg>)");
+    ASSERT_TRUE(doc);
+    doc->ensureUpToDate();
+    auto desktop = std::make_unique<SPDesktop>(doc->getNamedView());
+    ObjectSet set(desktop.get());
+    set.setList(std::vector<SPObject *>{doc->getObjectById("path1"), doc->getObjectById("path2"),
+                                        doc->getObjectById("group")});
+
+    DocumentUndo::done(doc.get(), Util::Internal::ContextString{"Boolean refusal fixture"}, "");
+    DocumentUndo::clearUndo(doc.get());
+    DocumentUndo::clearRedo(doc.get());
+    auto const before = sp_repr_save_buf(doc->getReprDoc()).raw();
+    auto event_count = [&] {
+        auto const store = doc->get_event_log()->getEventListStore();
+        auto const &columns = EventLog::getColumns();
+        std::uint64_t count = 0;
+        for (auto row = store->children().begin(); row != store->children().end(); ++row) {
+            if ((*row)[columns.event]) ++count;
+            for (auto child = row->children().begin(); child != row->children().end(); ++child) {
+                if ((*child)[columns.event]) ++count;
+            }
+        }
+        return count;
+    };
+    auto const undo_count = event_count();
+    constexpr char const *message = "Booleans need paths or shapes: ungroup first, or use Boolean Assist, which treats a group as one shape";
+    unsigned message_count = 0;
+    auto connection = desktop->messageStack()->connectChanged([&](MessageType type, char const *text) {
+        ++message_count;
+        EXPECT_EQ(type, ERROR_MESSAGE);
+        EXPECT_STREQ(text, message);
+    });
+
+    EXPECT_NO_THROW(set.pathDiffMany(false, false, false));
+    EXPECT_EQ(message_count, 1u);
+    EXPECT_EQ(desktop->messageStack()->currentMessageType(), ERROR_MESSAGE);
+    EXPECT_STREQ(desktop->messageStack()->currentMessage(), message);
+    doc->ensureUpToDate();
+    EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()).raw(), before);
+    EXPECT_EQ(event_count(), undo_count);
+
+    EXPECT_NO_THROW(set.pathDiffMany(false, false, true));
+    EXPECT_EQ(message_count, 1u);
+    doc->ensureUpToDate();
+    EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()).raw(), before);
+    EXPECT_EQ(event_count(), undo_count);
+    connection.disconnect();
+}
+
 using namespace std::literals;
 
 class BoolopAttrTest : public DocPerCaseTest

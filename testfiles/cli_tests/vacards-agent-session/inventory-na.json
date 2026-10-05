@@ -1,0 +1,99 @@
+{
+  "schema": "va-studio.cli-inventory-na/1",
+  "scope": "M1",
+  "na": {
+    "system.describe": {
+      "refusal": "Static product metadata has no execution precondition; malformed input is covered separately."
+    },
+    "system.result-file": {
+      "success": "Legacy-only sink switching is explicitly forbidden by P2 in agent sessions; core/c02-result-file.json covers legacy success.",
+      "no-op": "Agent sessions reject all sink switches.",
+      "dry-run": "P2 forbids sink switching in a session, including dry-run."
+    },
+    "session.status": {
+      "refusal": "Status is available without a document or active request; invalid transport/params are separate cases."
+    },
+    "session.cancel": {
+      "refusal": "M1 has no cooperative long operation. Cancelling a nonexistent request is a tested no-op, not an execution refusal."
+    },
+    "session.release": {
+      "refusal": "M1 has no tokens; unknown IDs are reported not found without mutation. Token ownership/capacity arrives in later slices."
+    },
+    "session.close": {
+      "no-op": "Successful close terminates its transport; there is no reusable already-closed session.",
+      "refusal": "Dirty close refusal requires an editable dirty document in M2; M1 inspection is immutable and never dirty."
+    }
+  },
+  "legacy_covered": {
+    "geometry.boolean": {
+      "reason": "Reviewed named legacy cases retain the existing action grammar and oracles; this is legacy coverage, not typed-session qualification.",
+      "cases": [
+        "vacards-agent/geometry/g01-union.json",
+        "vacards-agent/geometry/g07-bad-op.json",
+        "vacards-agent/geometry/g15-union-group-nested.json",
+        "vacards-agent/geometry/g16-undo-group-union.json"
+      ]
+    },
+    "geometry.corners": {
+      "reason": "Reviewed named legacy cases retain the existing action grammar and oracles; this is legacy coverage, not typed-session qualification.",
+      "cases": [
+        "vacards-agent/geometry/c01-corners-rect.json",
+        "vacards-agent/geometry/c02-corners-dry-run.json",
+        "vacards-agent/geometry/c05-corners-zero-radius.json",
+        "vacards-agent/geometry/c07-corners-undo.json",
+        "vacards-agent/geometry/c14-corners-group.json"
+      ]
+    },
+    "geometry.offset": {
+      "reason": "Reviewed named legacy cases retain the existing action grammar and oracles; this is legacy coverage, not typed-session qualification.",
+      "cases": [
+        "vacards-agent/geometry/o01-offset-square.json",
+        "vacards-agent/geometry/o04-offset-dry-run.json",
+        "vacards-agent/geometry/o06-offset-zero-distance.json",
+        "vacards-agent/geometry/o07-offset-undo.json",
+        "vacards-agent/geometry/o08-offset-group.json"
+      ]
+    },
+    "geometry.resize": {
+      "reason": "Reviewed named legacy cases retain the existing action grammar and oracles; this is legacy coverage, not typed-session qualification.",
+      "cases": [
+        "vacards-agent/geometry/r01-resize-width.json",
+        "vacards-agent/geometry/r05-resize-missing-size.json",
+        "vacards-agent/geometry/r07-resize-same-size.json",
+        "vacards-agent/geometry/r09-resize-group-and-child.json"
+      ]
+    },
+    "bitmap.histogram": {
+      "reason": "Reviewed named legacy cases retain the existing action grammar and oracles; this is legacy coverage, not typed-session qualification.",
+      "cases": [
+        "vacards-agent/bitmap/b06-histogram.json",
+        "vacards-agent/bitmap/b09-histogram-two.json",
+        "vacards-agent/bitmap/b10-histogram-missing.json",
+        "vacards-agent/bitmap/b11-histogram-range.json"
+      ]
+    },
+    "bitmap.tone-query": {
+      "reason": "Reviewed named legacy cases retain the existing action grammar and oracles; this is legacy coverage, not typed-session qualification.",
+      "cases": [
+        "vacards-agent/bitmap/b01-query-two.json",
+        "vacards-agent/bitmap/b02-query-exclusions.json",
+        "vacards-agent/bitmap/b05-query-read-only.json",
+        "vacards-agent/bitmap/b13-query-clone-covered.json"
+      ]
+    },
+    "history.undo": {
+      "reason": "Reviewed named legacy cases retain the existing action grammar and oracles; this is legacy coverage, not typed-session qualification.",
+      "cases": [
+        "vacards-agent/geometry/u01-undo.json",
+        "vacards-agent/core/c15-undo-nothing.json",
+        "vacards-agent/core/c35-align-bool-undo-restores-position-and-keeps-effect.json"
+      ]
+    },
+    "history.redo": {
+      "reason": "Reviewed named legacy cases retain the existing action grammar and oracles; this is legacy coverage, not typed-session qualification.",
+      "cases": [
+        "vacards-agent/core/c36-align-bool-undo-redo.json"
+      ]
+    }
+  }
+}

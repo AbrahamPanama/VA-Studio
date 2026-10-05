@@ -1,0 +1,138 @@
+{
+  "description": "Invalid visibility, lock and bound enum spellings refuse; no enum is silently defaulted.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.objects",
+        "params": {
+          "visibility": "maybe"
+        }
+      },
+      "command": "query.objects",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "not-a-choice",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.objects",
+        "params": {
+          "lock": "maybe"
+        }
+      },
+      "command": "query.objects",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "not-a-choice",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r3",
+        "command": "query.objects",
+        "params": {
+          "bounds": "desktop"
+        }
+      },
+      "command": "query.objects",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "not-a-choice",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/inspection.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

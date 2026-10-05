@@ -1,0 +1,88 @@
+{
+  "description": "options-invalid",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "system.options",
+        "params": {
+          "preferred-unit": "metres"
+        }
+      },
+      "command": "system.options",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "not-a-choice",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "system.options",
+        "params": {
+          "halt-on-error": "false"
+        }
+      },
+      "command": "system.options",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "expect_error": "wrong-type",
+      "expect_accepted": false,
+      "cells": [
+        "invalid"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r3",
+        "command": "system.options",
+        "params": {}
+      },
+      "command": "system.options",
+      "expect": {
+        "data": {
+          "preferred-unit": "mm",
+          "halt-on-error": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ]
+}

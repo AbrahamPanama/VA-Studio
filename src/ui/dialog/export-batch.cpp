@@ -567,6 +567,7 @@ void BatchExport::watchExportFormats()
     _format_connections.clear();
     for (auto &child : UI::children(export_list)) {
         if (auto list = dynamic_cast<ExtensionList *>(&child)) {
+            attach_tiff_profile_picker(*list);
             _format_connections.emplace_back(list->signal_changed().connect([this] { queueRefresh(); }));
         }
     }

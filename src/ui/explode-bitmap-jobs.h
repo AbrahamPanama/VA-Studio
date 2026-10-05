@@ -9,6 +9,33 @@
 #include "async/channel.h"
 
 namespace Inkscape::Bitmap {
+// Owner-local typed failure receipt. Never infer a reason from diagnostic text.
+enum class CliBitmapStage { Resolve, Analyze, Contour, Encode, Publish };
+enum class CliBitmapReason {
+    None, UnsupportedTarget, MemoryAdmissionFailed, AnalysisFailed, ContourFailed,
+    EncodingFailed, PublicationFailed, DocumentBusy, StaleCapture, InternalError, Canceled, MissingSource, EngineLimit
+};
+struct CliBitmapFailure {
+    CliBitmapStage stage;
+    CliBitmapReason reason;
+    bool operator==(CliBitmapFailure const &) const = default;
+};
+inline std::optional<CliBitmapFailure> bitmapFailure(Outcome const &o, CliBitmapStage stage,
+                                                    CliBitmapReason reason) noexcept {
+    if (o.ok()) return {};
+    return CliBitmapFailure{stage, o.status == Status::canceled ? CliBitmapReason::Canceled :
+        o.insufficientMemory ? CliBitmapReason::MemoryAdmissionFailed : reason};
+}
+struct CliBitmapOutcome : Outcome {
+    std::optional<CliBitmapFailure> failure;
+    bool rolledBack = false;
+    CliBitmapOutcome(Outcome o = {}, CliBitmapStage stage = CliBitmapStage::Publish,
+                     CliBitmapReason reason = CliBitmapReason::InternalError)
+        : Outcome(o), failure(bitmapFailure(o, stage, reason)) {}
+    CliBitmapOutcome(Status status, char const *message,
+                     CliBitmapReason reason = CliBitmapReason::InternalError)
+        : CliBitmapOutcome(Outcome{status, message}, CliBitmapStage::Publish, reason) {}
+};
 using Ticket = std::uint64_t;
 using JobClock = std::chrono::steady_clock;
 using JobNow = JobClock::time_point (*)(); // injection cannot capture live UI
@@ -54,7 +81,13 @@ private:
     std::optional<JobClock::time_point> _last;
 };
 struct JobInput;
-using JobResult = Result<JobBytes>;
+struct JobResult {
+    Outcome outcome;
+    JobBytes value;
+    std::uint64_t consumed = 0;
+    std::optional<CliBitmapFailure> failure;
+    bool ok() const noexcept { return outcome.ok(); }
+};
 // Function pointer, not std::function: no captured document, XML, GTK or live pointer.
 // Only qualified cooperative functions: check Stop <=10 ms/1 MP/64 KiB, stop <=100 ms,
 // phase <=30 s. Pass the same JobWork through phases; never reset its visit allowance.
@@ -64,6 +97,7 @@ struct JobInput {
     JobBytes storage;
     std::uint64_t pixels = 0, tag = 0;
     JobFunction work = nullptr;
+    CliBitmapStage stage = CliBitmapStage::Analyze; // Explicit work stage survives launch/cancel/exception delivery.
 };
 void closeBitmapJobDelivery() noexcept; // application destruction, before worker detach
 class BitmapJobs {

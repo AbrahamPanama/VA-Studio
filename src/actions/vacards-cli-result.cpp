@@ -12,6 +12,7 @@
 
 #define BOOST_JSON_NO_LIB
 #include "vacards-cli-result.h"
+#include "vacards-cli-dispatch.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -180,6 +181,9 @@ std::string to_json_line(Record const &record, unsigned seq)
         object["data"] = record.data;
     }
 
+    for (auto const &field : record.typed_extensions) {
+        if (field.key() != "seq") object[field.key()] = field.value();
+    }
     return boost::json::serialize(object);
 }
 
@@ -345,6 +349,7 @@ void reset_for_testing()
         fclose(s.file);
     }
     s = State{};
+    action_session_context() = DispatchContext{};
     // the registry is intentionally kept
 }
 

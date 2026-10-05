@@ -23,6 +23,19 @@ pub const STATUS_INTERNAL_ERROR: i32 = 7;
 
 pub const API_VERSION: u32 = 3;
 
+pub const STOP_COMPLETED: i32 = 0;
+pub const STOP_WORK_LIMIT: i32 = 1;
+pub const STOP_CANCELLED: i32 = 2;
+pub const STOP_TIME_LIMIT: i32 = 3;
+
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[repr(C)]
+pub struct VacNestingTerminal {
+    pub stop_reason: i32,
+    pub reserved: u32,
+    pub completed_work: u64,
+}
+
 pub const STATE_INVALID: i32 = -1;
 pub const STATE_CONFIGURING: i32 = 0;
 pub const STATE_RUNNING: i32 = 1;
@@ -313,6 +326,9 @@ pub(crate) struct RunControl<'a> {
     best_placed_count: Cell<u32>,
     best_placements: RefCell<Vec<VacNestingPlacement>>,
     deadline_suspended: Cell<bool>,
+    work_limit: u64,
+    completed_work: Cell<u64>,
+    limit_reason: Cell<i32>,
 }
 
 /// The only state a scoped solver lane may inherit from the callback-owning
@@ -355,6 +371,9 @@ impl<'a> SharedRunClock<'a> {
             best_placed_count: Cell::new(0),
             best_placements: RefCell::new(Vec::new()),
             deadline_suspended: Cell::new(false),
+            work_limit: 0,
+            completed_work: Cell::new(0),
+            limit_reason: Cell::new(STOP_COMPLETED),
         }
     }
 }
@@ -475,10 +494,24 @@ impl RunControl<'_> {
         !self.is_cancelled()
     }
 
+    // Called at each increment of the existing solver iteration counter,
+    // including increments between heartbeat publications. Preparation is free.
+    pub(crate) fn record_work(&self, iteration: u64) {
+        self.completed_work.set(iteration);
+    }
+
     pub(crate) fn time_limit_reached(&self, time_limit_ms: u64) -> bool {
-        !self.deadline_suspended.get()
-            && time_limit_ms != 0
-            && self.started.elapsed() >= Duration::from_millis(time_limit_ms)
+        // A work boundary is never suspended by the first-layout time exception.
+        if self.work_limit != 0 && self.completed_work.get() >= self.work_limit {
+            self.limit_reason.set(STOP_WORK_LIMIT);
+            return true;
+        }
+        if !self.deadline_suspended.get() && time_limit_ms != 0
+            && self.started.elapsed() >= Duration::from_millis(time_limit_ms) {
+            self.limit_reason.set(STOP_TIME_LIMIT);
+            return true;
+        }
+        false
     }
 
     /// Runs `operation` with the wall-clock limit ignored. Cancellation and
@@ -541,6 +574,9 @@ impl<'a> RunControl<'a> {
             best_placed_count: Cell::new(0),
             best_placements: RefCell::new(Vec::new()),
             deadline_suspended: Cell::new(false),
+            work_limit: 0,
+            completed_work: Cell::new(0),
+            limit_reason: Cell::new(STOP_COMPLETED),
         }
     }
 
@@ -631,6 +667,8 @@ pub(crate) fn validate_solver_results(
 }
 
 struct JobData {
+    work_limit: u64,
+    terminal: Option<VacNestingTerminal>,
     options: VacNestingOptions,
     state: i32,
     container: Option<Polygon>,
@@ -656,6 +694,8 @@ impl VacNestingJob {
             cancelled: AtomicBool::new(false),
             lifecycle: LifecycleGate::default(),
             data: Mutex::new(JobData {
+                work_limit: 0,
+                terminal: None,
                 options,
                 state: STATE_CONFIGURING,
                 container: None,
@@ -674,6 +714,23 @@ impl VacNestingJob {
         self.data
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    pub(crate) fn set_work_limit(&self, limit: u64) -> i32 {
+        let mut data = self.lock();
+        if data.state != STATE_CONFIGURING { return STATUS_INVALID_STATE; }
+        // Fixed work has a single native lane. Reject ambiguous clock/lane
+        // combinations instead of silently altering options supplied by callers.
+        if limit != 0 && (data.options.worker_count != 1 || data.options.time_limit_ms != 0) {
+            return set_error(&mut data, STATUS_INVALID_ARGUMENT,
+                "fixed work requires worker_count=1 and time_limit_ms=0");
+        }
+        data.work_limit = limit;
+        STATUS_OK
+    }
+
+    pub(crate) fn terminal(&self) -> Result<VacNestingTerminal, i32> {
+        self.lock().terminal.ok_or(STATUS_INVALID_STATE)
     }
 
     pub(crate) fn set_container(&self, polygon: Polygon) -> i32 {
@@ -900,6 +957,7 @@ impl VacNestingJob {
         let mut data = self.lock();
         data.results.clear();
         data.state = STATE_CANCELLED;
+        data.terminal = Some(VacNestingTerminal { stop_reason: STOP_CANCELLED, ..Default::default() });
         data.error = c_string("nesting job was cancelled");
         lifecycle.terminal = true;
         lifecycle.terminal_status = STATUS_CANCELLED;
@@ -959,6 +1017,9 @@ impl VacNestingJob {
             best_placed_count: Cell::new(0),
             best_placements: RefCell::new(Vec::new()),
             deadline_suspended: Cell::new(false),
+            work_limit: 0,
+            completed_work: Cell::new(0),
+            limit_reason: Cell::new(STOP_COMPLETED),
         }
     }
 
@@ -1039,6 +1100,9 @@ impl VacNestingJob {
             best_placed_count: Cell::new(0),
             best_placements: RefCell::new(Vec::new()),
             deadline_suspended: Cell::new(false),
+            work_limit: self.lock().work_limit,
+            completed_work: Cell::new(0),
+            limit_reason: Cell::new(STOP_COMPLETED),
         };
         control.report(VacNestingProgress {
             stage: PROGRESS_VALIDATING,
@@ -1136,6 +1200,14 @@ impl VacNestingJob {
                 set_error(&mut data, STATUS_INTERNAL_ERROR, &message)
             }
         };
+        if matches!(data.state, STATE_COMPLETED | STATE_CANCELLED) {
+            data.terminal = Some(VacNestingTerminal {
+                stop_reason: if data.state == STATE_CANCELLED { STOP_CANCELLED }
+                             else { control.limit_reason.get() },
+                reserved: 0,
+                completed_work: control.completed_work.get(),
+            });
+        }
         lifecycle.run_active = false;
         lifecycle.terminal = true;
         lifecycle.terminal_status = status;
@@ -1879,5 +1951,70 @@ mod tests {
         );
         assert_eq!(job.state(), STATE_FAILED);
         assert_eq!(job.result_count(), 0);
+    }
+}
+
+#[cfg(test)]
+mod fixed_work_tests {
+    use super::*;
+    fn job(limit: u64) -> VacNestingJob {
+        let job = VacNestingJob::new(VacNestingOptions {
+            random_seed: 0xfeed_beef_1234_5678, time_limit_ms: 0, worker_count: 1,
+            quality: QUALITY_DRAFT, rotation_mode: ROTATION_NONE, ..Default::default()
+        });
+        let square = |size| Polygon(vec![VacNestingPoint{x:0.0,y:0.0}, VacNestingPoint{x:size,y:0.0},
+            VacNestingPoint{x:size,y:size}, VacNestingPoint{x:0.0,y:size}]);
+        assert_eq!(job.set_container(square(100.0)), STATUS_OK);
+        assert_eq!(job.add_part(1, square(10.0)), STATUS_OK);
+        assert_eq!(job.add_part(2, square(12.0)), STATUS_OK);
+        assert_eq!(job.set_work_limit(limit), STATUS_OK);
+        job
+    }
+    #[test]
+    fn fixed_work_repeatable_exact_limit_between_heartbeats() {
+        for limit in [1, 17, 511, 1027] {
+            let a = job(limit); let b = job(limit);
+            assert_eq!(a.terminal(), Err(STATUS_INVALID_STATE));
+            assert_eq!(a.run(None, std::ptr::null_mut()), STATUS_OK);
+            assert_eq!(b.run(None, std::ptr::null_mut()), STATUS_OK);
+            assert_eq!(a.terminal(), b.terminal());
+            assert_eq!(a.terminal().unwrap(), VacNestingTerminal {
+                stop_reason: STOP_WORK_LIMIT, reserved: 0, completed_work: limit });
+            for i in 0..a.result_count() { assert_eq!(a.result_at(i), b.result_at(i)); }
+            assert_eq!(a.set_work_limit(0), STATUS_INVALID_STATE);
+        }
+    }
+    #[test]
+    fn natural_finite_solver_completion_before_limit() {
+        let job = job(100_000);
+        assert_eq!(job.run_with_solver(&crate::solver::SinglePassJaguaSolver, None, std::ptr::null_mut()), STATUS_OK);
+        let terminal = job.terminal().unwrap();
+        assert_eq!(terminal.stop_reason, STOP_COMPLETED);
+        assert!(terminal.completed_work > 0 && terminal.completed_work < 100_000);
+    }
+    #[test]
+    fn fixed_work_cancel_during_search_and_before_run() {
+        unsafe extern "C" fn cancel(data: *mut c_void, progress: *const VacNestingProgress) {
+            if unsafe { (*progress).iteration } > 0 { unsafe { (&*(data as *const VacNestingJob)).cancel(); } }
+        }
+        let job = job(100_000);
+        let start = Instant::now();
+        assert_eq!(job.run(Some(cancel), &job as *const _ as *mut c_void), STATUS_CANCELLED);
+        assert!(start.elapsed() < Duration::from_secs(2));
+        let terminal = job.terminal().unwrap();
+        assert_eq!(terminal.stop_reason, STOP_CANCELLED);
+        assert!(terminal.completed_work > 0 && terminal.completed_work < 100_000);
+        assert_eq!(job.result_count(), 0);
+        let before = self::job(17); before.cancel();
+        assert_eq!(before.terminal().unwrap().stop_reason, STOP_CANCELLED);
+        assert_eq!(before.terminal().unwrap().completed_work, 0);
+    }
+    #[test]
+    fn work_limit_rejects_clock_or_multiple_workers_and_zero_preserves_options() {
+        let legacy = VacNestingJob::new(VacNestingOptions::default());
+        assert_eq!(legacy.set_work_limit(1), STATUS_INVALID_ARGUMENT);
+        assert_eq!(legacy.set_work_limit(0), STATUS_OK);
+        let multiple = VacNestingJob::new(VacNestingOptions { time_limit_ms: 0, worker_count: 2, ..Default::default() });
+        assert_eq!(multiple.set_work_limit(1), STATUS_INVALID_ARGUMENT);
     }
 }

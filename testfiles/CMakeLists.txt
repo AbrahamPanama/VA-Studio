@@ -169,7 +169,22 @@ set(TEST_SOURCES
     bitmap-contour-offset-test
     bitmap-contour-fit-test
     explode-bitmap-contour-stage-test
+    vacards-cli-files-test
+    vacards-cli-m2-integration-test
+    vacards-cli-selection-test
+    vacards-cli-geometry-test
+    vacards-cli-bitmap-test
+    vacards-cli-clip-test
+    vacards-cli-nest-test
+    vacards-cli-tokens-test
+    vacards-cli-m3-integration-test
+    vacards-cli-parser-audit-test
+    vacards-cli-mcp-test
+    vacards-cli-legacy-reachability-test
     vacards-cli-registry-test
+    vacards-cli-session-test
+    vacards-cli-query-test
+    export-color-profiles-test
     explode-bitmap-composer-test
     explode-bitmap-candidate-test
     explode-bitmap-view-test
@@ -182,6 +197,12 @@ set(TEST_SOURCES
     explode-bitmap-register-test
     explode-bitmap-cli-test
     explode-calibration-test
+    boolean-operand-service-test
+    clip-document-service-test
+    objects-panel-bulk-test
+    path-union-scaling-test
+    stroke-to-path-clip-test
+    break-apart-scaling-test
     stroke-width-statusbar-test
     stroke-width-row-test
     stroke-legacy-routes-test
@@ -658,6 +679,18 @@ set_tests_properties(windows-rendering-test PROPERTIES TIMEOUT 30 RUN_SERIAL TRU
 add_unit_test(tiff-export-test TEST_SOURCE "tiff-export-test.cpp"
                                 SOURCES "io/tiff-export.cpp"
                                 EXTRA_LIBS PkgConfig::INKSCAPE_DEP PNG::PNG TIFF::TIFF)
+# Apple Clang 17's ASan runtime deadlocks before main on the build Mac (its
+# initialization re-enters malloc).
+# Keep this M2-required standalone test runnable there; Windows has no ASan.
+if(APPLE AND TESTS_WITH_ASAN)
+    foreach(property COMPILE_OPTIONS LINK_OPTIONS)
+        get_target_property(options tiff-export-test ${property})
+        if(options)
+            list(REMOVE_ITEM options "-fsanitize=address")
+            set_target_properties(tiff-export-test PROPERTIES ${property} "${options}")
+        endif()
+    endforeach()
+endif()
 
 add_unit_test(vacards-cli-params-test TEST_SOURCE "vacards-cli-params-test.cpp"
                                       SOURCES "actions/vacards-cli-params.cpp"
@@ -848,6 +881,57 @@ foreach(group IN ITEMS core query clip geometry bitmap library text nest save)
         LABELS vacards-agent-cli
         TIMEOUT 600)
 endforeach()
+# VA Studio agent command line sessions (in development): one test per session case group in
+# cli_tests/vacards-agent-session/<group>, run against vastudio-cli; plus the fail-closed case inventory.
+foreach(group IN ITEMS system session query files)
+    add_test(NAME vacards-agent-session-${group}
+             COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/vacards-agent-cli-test.py" --transport session
+                     "$<TARGET_FILE:vastudio_cli>" "${CMAKE_CURRENT_SOURCE_DIR}/cli_tests/vacards-agent-session/${group}")
+    set_tests_properties(vacards-agent-session-${group} PROPERTIES
+        ENVIRONMENT "INKSCAPE_FONTCONFIG=${CMAKE_CURRENT_SOURCE_DIR}/rendering_tests/fonts/isolated.conf;${CMAKE_CTEST_ENV};LC_ALL=C"
+        SKIP_RETURN_CODE 77
+        LABELS vacards-agent-session
+        TIMEOUT 600)
+endforeach()
+# Agent command line M3 session case groups. Separate label until M3 acceptance, so that
+# build 30 session regressions stay green while M3 is being integrated.
+foreach(group IN ITEMS selection history geometry bitmap explode clip nest workflow)
+    add_test(NAME vacards-agent-session-${group}
+             COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/vacards-agent-cli-test.py" --transport session
+                     "$<TARGET_FILE:vastudio_cli>" "${CMAKE_CURRENT_SOURCE_DIR}/cli_tests/vacards-agent-session/${group}")
+    set_tests_properties(vacards-agent-session-${group} PROPERTIES
+        ENVIRONMENT "INKSCAPE_FONTCONFIG=${CMAKE_CURRENT_SOURCE_DIR}/rendering_tests/fonts/isolated.conf;${CMAKE_CTEST_ENV};LC_ALL=C"
+        SKIP_RETURN_CODE 77
+        LABELS vacards-m3-session
+        TIMEOUT 900)
+endforeach()
+add_test(NAME vacards-agent-cli-inventory
+         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/vacards-cli-inventory.py"
+                 "$<TARGET_FILE:vastudio_cli>" "${CMAKE_CURRENT_SOURCE_DIR}/cli_tests")
+set_tests_properties(vacards-agent-cli-inventory PROPERTIES
+    ENVIRONMENT "INKSCAPE_FONTCONFIG=${CMAKE_CURRENT_SOURCE_DIR}/rendering_tests/fonts/isolated.conf;${CMAKE_CTEST_ENV};LC_ALL=C"
+    SKIP_RETURN_CODE 77
+    LABELS vacards-agent-session
+    TIMEOUT 300)
+# The generated agent CLI documentation must match the live catalog byte for byte
+# (vacards-cli-docs-generate.py regenerates it; this test never rewrites it).
+add_test(NAME vacards-cli-docs
+         COMMAND "${Python3_EXECUTABLE}" -B "${CMAKE_CURRENT_SOURCE_DIR}/vacards-cli-docs-test.py"
+                 --binary "$<TARGET_FILE:vastudio_cli>")
+set_tests_properties(vacards-cli-docs PROPERTIES
+    ENVIRONMENT "INKSCAPE_FONTCONFIG=${CMAKE_CURRENT_SOURCE_DIR}/rendering_tests/fonts/isolated.conf;${CMAKE_CTEST_ENV};LC_ALL=C"
+    LABELS vacards-agent-docs
+    RUN_SERIAL TRUE
+    TIMEOUT 300)
+# End-to-end MCP over stdio against the real vastudio-cli --mcp-stdio.
+add_test(NAME vacards-agent-mcp-stdio
+         COMMAND "${Python3_EXECUTABLE}" -B "${CMAKE_CURRENT_SOURCE_DIR}/vacards-mcp-stdio-test.py"
+                 "$<TARGET_FILE:vastudio_cli>")
+set_tests_properties(vacards-agent-mcp-stdio PROPERTIES
+    ENVIRONMENT "INKSCAPE_FONTCONFIG=${CMAKE_CURRENT_SOURCE_DIR}/rendering_tests/fonts/isolated.conf;${CMAKE_CTEST_ENV};LC_ALL=C"
+    LABELS vacards-agent-mcp
+    RUN_SERIAL TRUE
+    TIMEOUT 600)
 add_test(NAME vacards-rust-target-test
          COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/vacards-rust-target-test.py")
 foreach(contract IN ITEMS shared-metadata hash-evidence test-results)
@@ -1271,3 +1355,16 @@ set_tests_properties(test_artwork-library-host-quit PROPERTIES RUN_SERIAL TRUE T
 set_property(TEST test_artwork-library-host-quit APPEND PROPERTY ENVIRONMENT
     "INKSCAPE_TEST_GUI=1" "G_DEBUG=fatal-criticals"
     "INKSCAPE_FONTCONFIG=${CMAKE_CURRENT_SOURCE_DIR}/rendering_tests/fonts/isolated.conf")
+
+# S0 unavailable drafts: intentionally red, separate from shipped M1/M2 gates.
+# Logical Win32 transaction domains use test_document-file-transaction.
+set_tests_properties(test_vacards-cli-selection PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
+set_tests_properties(test_vacards-cli-geometry PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
+set_tests_properties(test_vacards-cli-bitmap PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
+set_tests_properties(test_vacards-cli-clip PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
+set_tests_properties(test_vacards-cli-nest PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
+set_tests_properties(test_vacards-cli-tokens PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
+set_tests_properties(test_vacards-cli-m3-integration PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
+set_tests_properties(test_vacards-cli-parser-audit PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
+set_tests_properties(test_vacards-cli-mcp PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
+set_tests_properties(test_vacards-cli-legacy-reachability PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 120 RUN_SERIAL TRUE)

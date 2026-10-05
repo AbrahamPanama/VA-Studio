@@ -1,0 +1,30 @@
+{
+  "schema": "p9-m2-contract/1",
+  "authority": "M2-PLAN.md Command contract; PNG custom ICC update 83cf66ae1",
+  "commands": {
+    "file.new": {"effects": "session-state", "target_policy": "S", "params": ["width", "height", "discard"], "required": ["width", "height"], "success_data": ["width", "height", "units", "dirty", "document_id", "revision", "session_revision"], "dry_run_grade": "computed"},
+    "file.open": {"effects": "session-state", "target_policy": "S", "params": ["path", "format", "pages", "resource-policy", "font-policy", "discard"], "required": ["path", "resource-policy", "font-policy"], "success_data": ["dirty", "document_id", "revision", "session_revision", "source_version", "intake"], "dry_run_grade": "computed"},
+    "file.close": {"effects": "session-state", "target_policy": "S", "params": ["discard", "reconcile"], "required": [], "success_data": ["closed", "discarded", "session_revision"], "dry_run_grade": "preflight"},
+    "file.import": {"effects": "document-edit", "target_policy": "G", "params": ["path", "format", "pages", "resource-policy", "font-policy", "position"], "required": ["path", "resource-policy", "font-policy", "position"], "success_data": ["inserted_ids", "root_affines", "exclusions", "intake"], "dry_run_grade": "computed"},
+    "file.save": {"effects": "file-publication", "target_policy": "I", "params": ["path", "overwrite", "expected-version", "embedding-policy"], "required": ["path", "embedding-policy"], "success_data": ["bytes", "sha256", "destination_version", "saved_revision", "dirty", "publication"], "dry_run_grade": "preflight"},
+    "file.export": {"effects": "file-publication", "target_policy": "I", "params": ["path", "format", "page", "ids", "area", "drawing", "dpi", "background", "profile", "text-policy", "overwrite", "expected-version"], "required": ["path", "format"], "success_data": ["bytes", "sha256", "destination_version", "output_width", "output_height", "publication"], "dry_run_grade": "preflight"}
+  },
+  "input_formats": ["auto", "svg", "svgz", "cdr", "pdf", "png", "jpeg", "tiff"],
+  "export_formats": ["svg", "png", "pdf", "tiff"],
+  "profiles": ["default", "srgb", "file"],
+  "resources": ["embed", "reject-external"],
+  "fonts": ["reject", "substitute"],
+  "text": ["preserve", "paths"],
+  "units": ["px", "mm", "cm", "in", "pt", "pc"],
+  "common_errors": ["no-document", "stale-document", "stale-revision", "cancelled", "internal-error"],
+  "load_errors": ["read-grant-denied", "resource-denied", "remote-resource", "invalid-file", "input-too-large", "format-unsupported", "pages-invalid", "font-policy-required", "stale-dependency"],
+  "write_errors": ["write-grant-denied", "unsafe-destination", "expected-version-required", "publication-conflict", "publication-unsupported", "publication-uncertain", "publication-failed", "writes-blocked"],
+  "error_required": ["code", "message", "hint", "retryable", "details"],
+  "publication": {
+    "Published": {"status": "changed", "state": "published", "persisted": true},
+    "Conflict": {"status": "rejected", "state": "not-published", "persisted": false},
+    "Unsupported": {"status": "rejected", "state": "not-published", "persisted": false},
+    "Uncertain": {"status": "uncertain", "state": "uncertain", "persisted": false},
+    "Failed": {"status": "failed", "state": "not-published", "persisted": false}
+  }
+}

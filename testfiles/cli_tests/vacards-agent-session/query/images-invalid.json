@@ -1,0 +1,571 @@
+{
+  "description": "Unknown keys, JSON types and exact limit boundaries refuse; a valid read recovers.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.images",
+        "params": {
+          "unknown": true
+        }
+      },
+      "command": "query.images",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "unknown-key",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.images",
+        "params": {
+          "limit": 0
+        }
+      },
+      "command": "query.images",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "out-of-range",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r3",
+        "command": "query.images",
+        "params": {
+          "limit": 1001
+        }
+      },
+      "command": "query.images",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "out-of-range",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r4",
+        "command": "query.images",
+        "params": {
+          "limit": "1"
+        }
+      },
+      "command": "query.images",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "wrong-type",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r5",
+        "command": "query.images",
+        "params": {
+          "limit": 1.5
+        }
+      },
+      "command": "query.images",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "wrong-type",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r6",
+        "command": "query.images",
+        "params": {
+          "cursor": 1
+        }
+      },
+      "command": "query.images",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "wrong-type",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r7",
+        "command": "query.images",
+        "params": {
+          "cursor": ""
+        }
+      },
+      "command": "query.images",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "out-of-range",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r8",
+        "command": "query.images",
+        "params": {
+          "limit": 1000
+        }
+      },
+      "command": "query.images",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "embedded",
+              "source_kind": "embedded",
+              "href": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAYCAYAAACbU/80AAAAK0lEQVR4nO3OIQEAAAgDMDrRiU6khRg3E/Ornr2kEhAQEBAQEBAQEBBIBx5hyZNb1iuQawAAAABJRU5ErkJggg==",
+              "link_grant": "embedded",
+              "pixel_size": {
+                "width": 32,
+                "height": 24
+              },
+              "density": {
+                "x": 96,
+                "y": 96,
+                "unit": "dpi"
+              },
+              "mime": "image/png",
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {
+                "inkscape:brightness": "12"
+              }
+            },
+            {
+              "id": "linked",
+              "source_kind": "linked",
+              "href": "linked.png",
+              "link_grant": "granted",
+              "pixel_size": {
+                "width": 32,
+                "height": 24
+              },
+              "density": {
+                "x": 96,
+                "y": 96,
+                "unit": "dpi"
+              },
+              "mime": "image/png",
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {}
+            },
+            {
+              "id": "ungranted",
+              "source_kind": "missing",
+              "href": "../outside.png",
+              "link_grant": "ungranted",
+              "pixel_size": null,
+              "density": null,
+              "mime": null,
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {}
+            },
+            {
+              "id": "remote",
+              "source_kind": "missing",
+              "href": "https://example.invalid/image.png",
+              "link_grant": "remote",
+              "pixel_size": null,
+              "density": null,
+              "mime": null,
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {}
+            },
+            {
+              "id": "missing",
+              "source_kind": "missing",
+              "href": "missing.png",
+              "link_grant": "missing",
+              "pixel_size": null,
+              "density": null,
+              "mime": null,
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {}
+            }
+          ],
+          "total": 5,
+          "limit": 1000,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success",
+        "invalid"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r9",
+        "command": "query.images",
+        "params": {}
+      },
+      "command": "query.images",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "embedded",
+              "source_kind": "embedded",
+              "href": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAYCAYAAACbU/80AAAAK0lEQVR4nO3OIQEAAAgDMDrRiU6khRg3E/Ornr2kEhAQEBAQEBAQEBBIBx5hyZNb1iuQawAAAABJRU5ErkJggg==",
+              "link_grant": "embedded",
+              "pixel_size": {
+                "width": 32,
+                "height": 24
+              },
+              "density": {
+                "x": 96,
+                "y": 96,
+                "unit": "dpi"
+              },
+              "mime": "image/png",
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {
+                "inkscape:brightness": "12"
+              }
+            },
+            {
+              "id": "linked",
+              "source_kind": "linked",
+              "href": "linked.png",
+              "link_grant": "granted",
+              "pixel_size": {
+                "width": 32,
+                "height": 24
+              },
+              "density": {
+                "x": 96,
+                "y": 96,
+                "unit": "dpi"
+              },
+              "mime": "image/png",
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {}
+            },
+            {
+              "id": "ungranted",
+              "source_kind": "missing",
+              "href": "../outside.png",
+              "link_grant": "ungranted",
+              "pixel_size": null,
+              "density": null,
+              "mime": null,
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {}
+            },
+            {
+              "id": "remote",
+              "source_kind": "missing",
+              "href": "https://example.invalid/image.png",
+              "link_grant": "remote",
+              "pixel_size": null,
+              "density": null,
+              "mime": null,
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {}
+            },
+            {
+              "id": "missing",
+              "source_kind": "missing",
+              "href": "missing.png",
+              "link_grant": "missing",
+              "pixel_size": null,
+              "density": null,
+              "mime": null,
+              "tone": {
+                "managed": false,
+                "brightness": 0,
+                "contrast": 0,
+                "intensity": 0,
+                "highlights": 0,
+                "shadows": 0,
+                "midtones": 0
+              },
+              "adjustment_attributes": {}
+            }
+          ],
+          "total": 5,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/inspection.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

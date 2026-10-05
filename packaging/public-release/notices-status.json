@@ -41,10 +41,6 @@
   ],
   "nesting_crates": 78,
   "sparrow_crates": 127,
-  "sparrow_darwin_observed": 30,
-  "sparrow_darwin_not_in_windows_lock": [
-    "crossbeam-deque 0.8.7",
-    "crossbeam-epoch 0.9.20",
-    "jagua-rs 0.8.0"
-  ]
+  "sparrow_darwin_observed": 32,
+  "sparrow_darwin_not_in_windows_lock": []
 }

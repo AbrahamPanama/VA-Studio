@@ -1,0 +1,119 @@
+{
+  "description": "P9 independent M2 new-dirty-refusal",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "new",
+        "command": "file.new",
+        "params": {
+          "width": {
+            "value": 16,
+            "unit": "px"
+          },
+          "height": {
+            "value": 8,
+            "unit": "px"
+          },
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.new",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "before",
+        "command": "query.document",
+        "params": {}
+      },
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        }
+      }
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "refuse",
+        "command": "file.new",
+        "params": {
+          "width": {
+            "value": 16,
+            "unit": "px"
+          },
+          "height": {
+            "value": 8,
+            "unit": "px"
+          },
+          "discard": false
+        },
+        "if_revision": 1,
+        "document": {
+          "$ref": "new.document_id"
+        }
+      },
+      "command": "file.new",
+      "cells": [
+        "refusal"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_error": "dirty-document"
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "after",
+        "command": "query.document",
+        "params": {}
+      },
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        }
+      },
+      "expect_exact": {
+        "data": {
+          "$ref": "before.data"
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "description": "Typed one-shot refusal session.release",
+  "transport": "one-shot",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "one-shot",
+        "command": "session.release",
+        "params": {
+          "tokens": [
+            "unknown"
+          ],
+          "unknown_key": true
+        }
+      },
+      "command": "session.release",
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "expect_error": "unknown-key",
+      "expect_accepted": false,
+      "cells": [
+        "invalid"
+      ]
+    }
+  ],
+  "expect_exit": 3
+}

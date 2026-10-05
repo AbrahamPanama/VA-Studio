@@ -1,3 +1,4 @@
+#include "actions/vacards-cli-dispatch.h"
 // SPDX-License-Identifier: GPL-2.0-or-later
 /** @file
  * VACards agent command line: result records, channel, outcome latch and spec
@@ -327,3 +328,19 @@ TEST_F(VacardsCliResultTest, DescribeAction)
   End:
 */
 // vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4 :
+
+TEST(VACardsTypedResult, PreservesExplicitNativeErrorReceipt) {
+    using namespace Inkscape::VACardsCli;
+    Record record; record.action="clip.set"; record.status=Status::Rejected;
+    record.reason="unsupported-target"; record.message="Expected native refusal";
+    record.error_details={{"reason","ClipDocumentService::Reason::MissingSource"},{"mutation_state","none"}};
+    record.error_retryable=false;
+    auto result=typed_result(record,"receipt");
+    auto const &error=result.at("error").as_object();
+    EXPECT_EQ(error.at("details").as_object().at("reason").as_string(),"ClipDocumentService::Reason::MissingSource");
+    EXPECT_EQ(error.at("details").as_object().at("mutation_state").as_string(),"none");
+    EXPECT_FALSE(error.at("retryable").as_bool());
+    EXPECT_TRUE(cli_error("document-busy","busy","retry").at("retryable").as_bool());
+    record.action="nest.analyze"; record.warnings={"conservative-recovery: one part"};
+    EXPECT_EQ(typed_result(record,"warning").at("coded_warnings").as_array()[0].as_object().at("code").as_string(),"conservative-recovery");
+}

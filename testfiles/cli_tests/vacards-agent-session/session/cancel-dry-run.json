@@ -1,0 +1,39 @@
+{
+  "description": "cancel-dry-run",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "session.cancel",
+        "params": {
+          "id": "unknown"
+        },
+        "dry_run": true
+      },
+      "command": "session.cancel",
+      "expect": {
+        "dry_run": true,
+        "data": {
+          "validation_level": "preflight"
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "dry-run"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ]
+}

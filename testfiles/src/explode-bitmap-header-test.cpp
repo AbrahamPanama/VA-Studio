@@ -751,3 +751,123 @@ TEST(ExplodeBitmapHeader, R2TruncationAtEveryOffsetRichFixtures)
         EXPECT_EQ(f.budget.reserved(), 0u) << name;
     }
 }
+
+
+TEST(ExplodeBitmapHeader, R4PermittedPngProfilesAndMaximumMetadataReachImageHeader)
+{
+    HeaderLimits lim;
+    for (auto size : {2 * MiB, 39 * MiB / 10, 4 * MiB}) {
+        SCOPED_TRACE(size);
+        Bytes b = pngHead(); chunk(b, "IHDR", ihdr(5000, 5000));
+        chunk(b, "iCCP", Bytes(size, 1));
+        // Fill metadata exactly through the existing scan bound, including chunk overhead.
+        auto scan = lim.maxProfileBytes + lim.scratchBytes;
+        chunk(b, "tEXt", Bytes(scan - b.size() - 12, 'a'));
+        chunk(b, "IDAT", Bytes(8 * MiB, 7)); chunk(b, "IEND", {});
+        Budget budget(Budget::FixedLimitForTest{}, scan + 8); // IDAT payload cannot fit
+        auto r = inspectHref("data:image/png;base64," + b64(b), lim, budget);
+        ASSERT_TRUE(r.ok()) << r.outcome.diagnostic;
+        EXPECT_EQ(r.value.width, 5000u); EXPECT_EQ(r.value.height, 5000u);
+        EXPECT_EQ(r.value.profileBytes, size); EXPECT_TRUE(r.value.hasProfile);
+        EXPECT_EQ(budget.reserved(), 0u);
+    }
+}
+
+TEST(ExplodeBitmapHeader, R4HrefPreservesProfileCrcLengthAndMetadataRefusals)
+{
+    HeaderLimits lim; Budget budget(Budget::FixedLimitForTest{}, lim.maxEncodedBytes);
+    auto run = [&](Bytes const &b) { return inspectHref("data:image/png;base64," + b64(b), lim, budget); };
+    EXPECT_REFUSED(run(png(5000, 5000, {.iccp = true, .iccBytes = 4 * MiB + 1})), Status::incompatible, "profile");
+    auto valid = png(5000, 5000, {.iccp = true, .iccBytes = 2 * MiB});
+    auto bad = valid; bad[50] ^= 1;
+    EXPECT_REFUSED(run(bad), Status::failed, "CRC");
+    bad = valid; bad.resize(33 + 8 + MiB); // truncated inside permitted iCCP payload
+    EXPECT_REFUSED(run(bad), Status::failed, "length");
+    bad = valid; // lying metadata length, with a valid-shaped data URI
+    for (int i = 0; i < 4; ++i) bad[33 + i] = std::uint8_t((3 * MiB) >> (24 - i * 8));
+    EXPECT_REFUSED(run(bad), Status::failed, "length");
+    bad = valid; auto idat = 33 + 12 + 2 * MiB;
+    for (int i = 0; i < 4; ++i) bad[idat + i] = std::uint8_t((16 * MiB) >> (24 - i * 8));
+    EXPECT_REFUSED(run(bad), Status::failed, "length");
+    Bytes bomb = pngHead(); chunk(bomb, "IHDR", ihdr(5000,5000));
+    chunk(bomb, "tEXt", Bytes(6 * MiB, 'a')); chunk(bomb, "IDAT", {1}); chunk(bomb, "IEND", {});
+    EXPECT_REFUSED(run(bomb), Status::incompatible, "scan limit");
+    EXPECT_EQ(budget.reserved(), 0u);
+}
+
+TEST(ExplodeBitmapHeader, R4HrefWalksJpegWebpAndGifMetadataBeyondScratch)
+{
+    HeaderLimits lim; Budget budget(Budget::FixedLimitForTest{}, lim.maxEncodedBytes);
+    for (auto size : {2 * MiB, 39 * MiB / 10, 4 * MiB, 4 * MiB + 1}) {
+        SCOPED_TRACE(size);
+        Bytes segments; constexpr std::uint64_t perSegment = 65519;
+        auto count = (size + perSegment - 1) / perSegment;
+        for (std::uint64_t seq = 1, left = size; seq <= count; ++seq) {
+            auto amount = std::min(left, perSegment);
+            auto segment = iccSeg(seq, count, amount);
+            segments.insert(segments.end(), segment.begin(), segment.end()); left -= amount;
+        }
+        auto j = withSegments(jpeg(5000, 5000), segments);
+        auto jr = inspectHref("data:image/jpeg;base64," + b64(j), lim, budget);
+        Bytes c; wchunk(c, "VP8X", vp8x(0x20,5000,5000));
+        wchunk(c, "ICCP", Bytes(size,1)); wchunk(c, "VP8L", vp8l(5000,5000,false));
+        auto wr = inspectHref("data:image/webp;base64," + b64(riff(c)), lim, budget);
+        if (size <= lim.maxProfileBytes) {
+            ASSERT_TRUE(jr.ok()) << jr.outcome.diagnostic; ASSERT_TRUE(wr.ok()) << wr.outcome.diagnostic;
+            EXPECT_EQ(jr.value.profileBytes, size); EXPECT_EQ(wr.value.profileBytes, size);
+        } else {
+            EXPECT_EQ(jr.outcome.status, Status::incompatible); EXPECT_EQ(wr.outcome.status, Status::incompatible);
+        }
+    }
+    auto g = gif(5000,5000); Bytes extension{0x21,0xFE};
+    for (unsigned i = 0; i < 9000; ++i) { extension.push_back(255); extension.insert(extension.end(),255,'a'); }
+    extension.push_back(0); g.insert(g.begin()+19,extension.begin(),extension.end());
+    ASSERT_TRUE(inspectHref("data:image/gif;base64," + b64(g), lim, budget).ok());
+    g.resize(2 * MiB);
+    EXPECT_FALSE(inspectHref("data:image/gif;base64," + b64(g), lim, budget).ok());
+    EXPECT_EQ(budget.reserved(), 0u);
+}
+
+TEST(ExplodeBitmapHeader, R5PngMetadataEndsAroundScratchBoundary)
+{
+    HeaderLimits lim;
+    for (auto end : {MiB - 1, MiB, MiB + 1}) {
+        SCOPED_TRACE(end);
+        Bytes b = pngHead(); chunk(b, "IHDR", ihdr(5000, 5000));
+        chunk(b, "tEXt", Bytes(end - b.size() - 12, 'a'));
+        ASSERT_EQ(b.size(), end);
+        // More permitted metadata follows the boundary before the image header.
+        chunk(b, "sRGB", {0});
+        auto imageAt = b.size();
+        chunk(b, "IDAT", Bytes(2 * MiB, 7)); chunk(b, "IEND", {});
+        Budget budget(Budget::FixedLimitForTest{}, imageAt + 8);
+        auto r = inspectHref("data:image/png;base64," + b64(b), lim, budget);
+        ASSERT_TRUE(r.ok()) << r.outcome.diagnostic;
+        EXPECT_EQ(r.value.width, 5000u); EXPECT_EQ(r.value.height, 5000u);
+        EXPECT_TRUE(r.value.srgbTagged);
+        EXPECT_EQ(budget.reserved(), 0u);
+    }
+}
+
+TEST(ExplodeBitmapHeader, R5WebpMetadataEndsAroundScratchBoundary)
+{
+    HeaderLimits lim;
+    for (auto end : {MiB - 1, MiB, MiB + 1}) {
+        SCOPED_TRACE(end);
+        Bytes c; wchunk(c, "VP8X", vp8x(0x28, 5000, 5000)); // ICCP and EXIF
+        auto payload = end - 12 - c.size() - 8; // RIFF header and ICCP chunk header
+        wchunk(c, "ICCP", Bytes(payload, 1));
+        // RIFF chunk payload can end at an odd byte; its required pad follows.
+        ASSERT_EQ(12 + c.size() - (payload & 1), end);
+        wchunk(c, "EXIF", Bytes(16, 0));
+        auto imageAt = 12 + c.size();
+        auto image = vp8l(5000, 5000, false); image.resize(2 * MiB, 7);
+        wchunk(c, "VP8L", image);
+        Budget budget(Budget::FixedLimitForTest{}, imageAt + 18);
+        auto r = inspectHref("data:image/webp;base64," + b64(riff(c)), lim, budget);
+        ASSERT_TRUE(r.ok()) << r.outcome.diagnostic;
+        EXPECT_EQ(r.value.width, 5000u); EXPECT_EQ(r.value.height, 5000u);
+        EXPECT_EQ(r.value.profileBytes, payload); EXPECT_TRUE(r.value.hasProfile);
+        EXPECT_EQ(budget.reserved(), 0u);
+    }
+}

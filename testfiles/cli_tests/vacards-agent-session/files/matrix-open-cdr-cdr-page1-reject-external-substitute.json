@@ -1,0 +1,63 @@
+{
+  "description": "P9 independent M2 matrix-open-cdr-cdr-page1-reject-external-substitute",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "open",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/sheet.cdr",
+          "format": "cdr",
+          "resource-policy": "reject-external",
+          "font-policy": "substitute",
+          "discard": false,
+          "pages": [
+            1
+          ]
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "data": {
+          "dirty": true
+        }
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/inputs/sheet.cdr",
+          "sha256": "b11cbe996a628b803254a56972e7390321b1a709e1dac0d3d8ffa59da6bd83d0",
+          "reported": true,
+          "hash_field": "data.source_version.sha256",
+          "bytes_field": "data.source_version.bytes"
+        }
+      ],
+      "expect_nonempty": [
+        "document_id",
+        "data.source_version.identity",
+        "data.intake"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

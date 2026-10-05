@@ -46,7 +46,7 @@ assert_equal 1.88.0 "$("$tool" --file "$manifest" --get nesting_rust_toolchain)"
 assert_equal "$expected_abi" "$("$tool" --file "$manifest" --get nesting_ffi_api_version)"
 assert_equal 57c45cd295f5d2ce2a11edf6e765318a51d2b41e \
     "$("$tool" --file "$manifest" --get sparrow_commit)"
-assert_equal 16d509b1390fb0a6fcbbfa9e230e9f60a78239ba5f58929571213795a76ab384 \
+assert_equal a238310dafb39ac998ccd2fa9de731ca17321fd00f3b31f66ff03589c95487a4 \
     "$("$tool" --file "$manifest" --get sparrow_darwin_arm64_sha256)"
 assert_equal "$("$tool" --file "$manifest" --get sparrow_darwin_arm64_sha256)" \
     "$(shasum -a 256 "$project_root/src/3rdparty/sparrow/bin/darwin-arm64/sparrow" | awk '{print $1}')"

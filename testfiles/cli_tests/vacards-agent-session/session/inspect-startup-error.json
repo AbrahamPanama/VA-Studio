@@ -1,0 +1,41 @@
+{
+  "description": "inspect-startup-error",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "after",
+        "command": "session.status",
+        "params": {}
+      },
+      "command": "session.status",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "publication": {
+          "persisted": false
+        },
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--inspect-file",
+    "{WORK}/missing.svg"
+  ],
+  "expect_hello": {
+    "document": null
+  },
+  "expect_hello_nonempty": [
+    "startup_error.code",
+    "startup_error.message",
+    "startup_error.hint"
+  ]
+}

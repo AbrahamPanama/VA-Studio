@@ -29,6 +29,9 @@
 
 namespace Inkscape::VACardsCli {
 
+struct ActionContext;
+struct TypeDescriptor;
+
 enum class ParamType
 {
     Boolean,  ///< true|false|1|0; a bare key means true
@@ -56,6 +59,14 @@ struct ParamSpec
     /// Choice only.
     std::span<std::string_view const> choices = {};
     std::string_view help = {};
+    TypeDescriptor const *descriptor = nullptr;
+};
+
+struct CommandLimits
+{
+    std::size_t request_bytes = 1048576;
+    std::size_t response_bytes = 8388608;
+    std::size_t id_bytes = 128;
 };
 
 /// Static description of one VACards CLI action.
@@ -65,6 +76,23 @@ struct ActionSpec
     std::string_view mode;    ///< selection-contract mode, e.g. "read-only", "collective-geometry"
     std::string_view summary; ///< one English sentence
     std::span<ParamSpec const> params = {};
+    std::string_view canonical_id = {};
+    std::span<std::string_view const> aliases = {};
+    void (*handler)(ActionContext &) = nullptr;
+    unsigned version = 1;
+    std::string_view effects = "read-only";
+    std::string_view target_policy = "Q";
+    std::string_view undo_policy = "none";
+    std::string_view dry_run_grade = "computed";
+    std::string_view cancellation_boundary = "before-handler";
+    std::span<std::string_view const> constraints = {};
+    std::span<std::string_view const> error_codes = {};
+    std::span<std::string_view const> warning_codes = {};
+    TypeDescriptor const *input = nullptr;
+    TypeDescriptor const *result = nullptr;
+    std::string_view example = {};
+    bool needs_document = true;
+    CommandLimits limits = {};
 };
 
 struct ParamValue

@@ -1,0 +1,49 @@
+{
+  "description": "repeated-key",
+  "timeout": 30,
+  "requests": [
+    {
+      "id": "",
+      "command": "system.catalog",
+      "expect_accepted": false,
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "expect_error": "repeated-key",
+      "raw": "{\"schema\":\"va-studio.cli-request/1\",\"id\":\"bad\",\"command\":\"system.catalog\",\"params\":{},\"params\":{}}",
+      "cells": [
+        "invalid"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "after",
+        "command": "session.status",
+        "params": {}
+      },
+      "command": "session.status",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "publication": {
+          "persisted": false
+        },
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0
+}

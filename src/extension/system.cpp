@@ -17,6 +17,9 @@
  * Released under GNU GPL v2+, read the file 'COPYING' for more information.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "system.h"
 
 #include <cerrno>
@@ -967,3 +970,155 @@ store_save_path_in_prefs (Glib::ustring path, FileSaveMethod method) {
   End:
 */
 // vim: filetype=cpp:expandtab:shiftwidth=4:tabstop=8:softtabstop=4 :
+
+#ifdef WITH_LIBCDR
+#include <libcdr/libcdr.h>
+#include <librevenge/librevenge.h>
+#include <librevenge-stream/librevenge-stream.h>
+#endif
+namespace Inkscape::Extension {
+#ifdef WITH_LIBCDR
+namespace {
+// RVNG has a private ostringstream, not a streaming output interface. Charge
+// callbacks before forwarding and check real completed output after every page.
+// This bounds admitted generator work, not libcdr's earlier parser allocations.
+// Never throw for budget refusal: libcdr also emits callbacks from destructors.
+// Once exceeded, every callback is a no-op and parse can clean up normally.
+class BudgetedCdrGenerator final : public librevenge::RVNGSVGDrawingGenerator {
+    librevenge::RVNGStringVector &output;
+    CdrConversionLimits limits;
+    std::size_t charged = 0, completed = 0, style = 0;
+    unsigned pages = 0;
+    bool charge(std::size_t amount) {
+        if (exceeded || amount > limits.bytes - charged) {
+            exceeded = true;
+            return false;
+        }
+        charged += amount;
+        return true;
+    }
+    bool properties(librevenge::RVNGPropertyList const &props, unsigned depth = 0) {
+        if (!charge(4096)) return false;
+        if (depth > 128) { exceeded=true; return false; }
+        librevenge::RVNGPropertyList::Iter it(props);
+        for (it.rewind(); it.next();) {
+            if (auto children=it.child()) {
+                for (unsigned i=0;i<children->count();++i)
+                    if (!properties((*children)[i],depth+1)) return false;
+            } else if (it()) {
+                auto value=it()->getStr();
+                if (value.size() > limits.bytes / 8) { exceeded=true; return false; }
+                if (!charge(8 * value.size() + 256)) return false;
+            }
+        }
+        return true;
+    }
+public:
+    bool exceeded = false;
+    BudgetedCdrGenerator(librevenge::RVNGStringVector &out, CdrConversionLimits lim)
+        : RVNGSVGDrawingGenerator(out,"svg"), output(out), limits(lim) {}
+    void startPage(librevenge::RVNGPropertyList const &p) override {
+        if (exceeded || pages >= limits.pages) { exceeded=true; return; }
+        ++pages; if (properties(p)) RVNGSVGDrawingGenerator::startPage(p);
+    }
+    void endPage() override {
+        if (!charge(4096)) return;
+        RVNGSVGDrawingGenerator::endPage();
+        auto size=output[output.size()-1].size();
+        if (size > limits.bytes - completed) { exceeded=true; return; }
+        completed += size;
+    }
+    void setStyle(librevenge::RVNGPropertyList const &p) override {
+        auto before=charged; if (!properties(p)) return; style=charged-before;
+        RVNGSVGDrawingGenerator::setStyle(p);
+    }
+    void insertText(librevenge::RVNGString const &s) override {
+        if (s.size() > limits.bytes / 8) { exceeded=true; return; }
+        if (charge(4096 + 8*s.size())) RVNGSVGDrawingGenerator::insertText(s);
+    }
+#define CDR_PROPERTIES(method) \
+    void method(librevenge::RVNGPropertyList const &p) override { \
+        if (charge(style) && properties(p)) RVNGSVGDrawingGenerator::method(p); }
+#define CDR_EVENT(method) \
+    void method() override { if (charge(4096)) RVNGSVGDrawingGenerator::method(); }
+    CDR_PROPERTIES(startDocument)
+    CDR_PROPERTIES(setDocumentMetaData)
+    CDR_PROPERTIES(defineEmbeddedFont)
+    CDR_PROPERTIES(startMasterPage)
+    CDR_PROPERTIES(startLayer)
+    CDR_PROPERTIES(startEmbeddedGraphics)
+    CDR_PROPERTIES(openGroup)
+    CDR_PROPERTIES(drawRectangle)
+    CDR_PROPERTIES(drawEllipse)
+    CDR_PROPERTIES(drawPolyline)
+    CDR_PROPERTIES(drawPolygon)
+    CDR_PROPERTIES(drawPath)
+    CDR_PROPERTIES(drawGraphicObject)
+    CDR_PROPERTIES(drawConnector)
+    CDR_PROPERTIES(startTextObject)
+    CDR_PROPERTIES(startTableObject)
+    CDR_PROPERTIES(openTableRow)
+    CDR_PROPERTIES(openTableCell)
+    CDR_PROPERTIES(insertCoveredTableCell)
+    CDR_PROPERTIES(openOrderedListLevel)
+    CDR_PROPERTIES(openUnorderedListLevel)
+    CDR_PROPERTIES(openListElement)
+    CDR_PROPERTIES(defineParagraphStyle)
+    CDR_PROPERTIES(openParagraph)
+    CDR_PROPERTIES(defineCharacterStyle)
+    CDR_PROPERTIES(openSpan)
+    CDR_PROPERTIES(openLink)
+    CDR_PROPERTIES(insertField)
+    CDR_EVENT(endDocument)
+    CDR_EVENT(endMasterPage)
+    CDR_EVENT(endLayer)
+    CDR_EVENT(endEmbeddedGraphics)
+    CDR_EVENT(closeGroup)
+    CDR_EVENT(endTextObject)
+    CDR_EVENT(closeTableRow)
+    CDR_EVENT(closeTableCell)
+    CDR_EVENT(endTableObject)
+    CDR_EVENT(closeOrderedListLevel)
+    CDR_EVENT(closeUnorderedListLevel)
+    CDR_EVENT(closeListElement)
+    CDR_EVENT(closeParagraph)
+    CDR_EVENT(closeSpan)
+    CDR_EVENT(closeLink)
+    CDR_EVENT(insertTab)
+    CDR_EVENT(insertSpace)
+    CDR_EVENT(insertLineBreak)
+#undef CDR_PROPERTIES
+#undef CDR_EVENT
+};
+}
+#endif
+std::vector<std::string> cdr_svg_pages(std::string const &bytes, std::string &error)
+{ return cdr_svg_pages(bytes,error,{}); }
+std::vector<std::string> cdr_svg_pages(std::string const &bytes, std::string &error, CdrConversionLimits limits)
+{
+    std::vector<std::string> pages;
+#ifdef WITH_LIBCDR
+    if (bytes.empty() || bytes.size() > (64u << 20)) { error = "CDR input exceeds 64 MiB"; return pages; }
+    librevenge::RVNGStringStream input(reinterpret_cast<unsigned char const *>(bytes.data()), bytes.size());
+    if (!libcdr::CDRDocument::isSupported(&input)) { error = "Unsupported CDR content"; return pages; }
+    input.seek(0, librevenge::RVNG_SEEK_SET);
+    librevenge::RVNGStringVector output;
+    limits.bytes=std::min<std::size_t>(limits.bytes,64u << 20);
+    limits.pages=std::min(limits.pages,1000u);
+    BudgetedCdrGenerator generator(output, limits);
+    bool parsed=libcdr::CDRDocument::parse(&input, &generator);
+    if (generator.exceeded) { error="input-too-large"; return {}; }
+    if (!parsed) { error = "Native CDR conversion failed"; return pages; }
+    std::size_t total = 0;
+    for (unsigned i=0; i<output.size(); ++i) {
+        total += output[i].size();
+        if (total > limits.bytes || i >= limits.pages) { error = "input-too-large"; return {}; }
+        pages.emplace_back(output[i].cstr());
+    }
+    if (pages.empty()) error = "CDR contains no pages";
+#else
+    error = "Native CDR backend is unavailable in this build";
+#endif
+    return pages;
+}
+}

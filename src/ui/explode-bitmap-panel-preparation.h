@@ -63,10 +63,12 @@ struct ContourProduct {
 };
 enum class ContourRefusal { none, staleAnalysis };
 struct ContourOutcome : Outcome {
+    std::optional<CliBitmapFailure> failure;
     ContourRefusal refusal = ContourRefusal::none;
     ContourOutcome() = default;
     ContourOutcome(Outcome outcome, ContourRefusal refusal = ContourRefusal::none)
-        : Outcome(outcome), refusal(refusal) {}
+        : Outcome(outcome), failure(bitmapFailure(outcome, CliBitmapStage::Contour,
+              refusal == ContourRefusal::staleAnalysis ? CliBitmapReason::StaleCapture : CliBitmapReason::ContourFailed)), refusal(refusal) {}
 };
 struct ContourResult final : JobPayload {
     std::shared_ptr<ContourProduct const> product;
@@ -95,6 +97,7 @@ struct Input final : JobPayload {
     std::shared_ptr<OutlineReservation> outlineReservation;
     ContourRecipe contour;
     Observer observer;
+    bool retainAnalysis = false; // CLI analyze retains topology without running contours.
     AllocationFault *retainedGridFault = nullptr; // only the optional retained-grid copy
     AllocationFault *contourFault = nullptr; // only B2/B3 allocations
     std::shared_ptr<AlphaDisplayBacking> display; // reserved on main before dispatch; filled only by worker
@@ -128,6 +131,7 @@ struct Output final : JobPayload {
     Outcome outlineOutcome; // Optional visual aid; never gates exact count/publication.
     std::uint64_t topologyPeak = 0;
     unsigned topologyRuns = 0;
+    std::optional<CliBitmapFailure> explodeFailure, adjustmentFailure;
     Outcome explodeOutcome; // A grid/partition refusal must not discard source alpha.
     Outcome adjustmentOutcome; // Apply's whole-image encoder must not reject an admissible sparse Explode.
     unsigned count = 0, initial = 0, enclosed = 0, joined = 0, isolated = 0, smallest = 0;
@@ -136,6 +140,7 @@ struct Output final : JobPayload {
     bool opaque = false;
     bool pngStarted = false; // Records entry into either encoder, including a refused/failed encoding.
 };
+Outcome recheck(Budget &, MemoryProbe const * = nullptr);
 struct ProxySize { unsigned width = 0, height = 0; std::uint64_t bytes = 0; };
 ProxySize proxySize(unsigned width, unsigned height) noexcept;
 ResourcePlan resources(unsigned width, unsigned height, std::uint64_t encoded, std::uint64_t retained,

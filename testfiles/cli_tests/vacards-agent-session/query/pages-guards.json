@@ -1,0 +1,263 @@
+{
+  "description": "Wrong document incarnation and future native revision refuse without affecting the next read.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.pages",
+        "params": {},
+        "document": "other-document"
+      },
+      "command": "query.pages",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "refusal"
+      ],
+      "expect_error": "stale-document",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.pages",
+        "params": {},
+        "if_revision": 1
+      },
+      "command": "query.pages",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "refusal"
+      ],
+      "expect_error": "stale-revision",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r3",
+        "command": "query.pages",
+        "params": {},
+        "document": "d1",
+        "if_revision": 0
+      },
+      "command": "query.pages",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "page1",
+              "label": "Front",
+              "order": 0,
+              "rect": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 40,
+                  "preferred": {
+                    "value": 10.583333333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 200,
+                  "preferred": {
+                    "value": 52.916666666666664,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 100,
+                  "preferred": {
+                    "value": 26.458333333333332,
+                    "unit": "mm"
+                  }
+                }
+              }
+            },
+            {
+              "id": "page2",
+              "label": "Back",
+              "order": 1,
+              "rect": {
+                "kind": "geometric",
+                "x": {
+                  "px": 240,
+                  "preferred": {
+                    "value": 63.5,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 40,
+                  "preferred": {
+                    "value": 10.583333333333334,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 80,
+                  "preferred": {
+                    "value": 21.166666666666668,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 100,
+                  "preferred": {
+                    "value": 26.458333333333332,
+                    "unit": "mm"
+                  }
+                }
+              }
+            },
+            {
+              "id": "page3",
+              "label": "Extra",
+              "order": 2,
+              "rect": {
+                "kind": "geometric",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 160,
+                  "preferred": {
+                    "value": 42.333333333333336,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 60,
+                  "preferred": {
+                    "value": 15.875,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 40,
+                  "preferred": {
+                    "value": 10.583333333333334,
+                    "unit": "mm"
+                  }
+                }
+              }
+            }
+          ],
+          "total": 3,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/inspection.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

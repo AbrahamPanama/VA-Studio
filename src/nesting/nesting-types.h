@@ -33,6 +33,12 @@ enum class JobState : std::int32_t
     Failed = 4,
 };
 
+enum class StopReason : std::int32_t { Completed = 0, WorkLimit = 1, Cancelled = 2, TimeLimit = 3 };
+struct TerminalResult {
+    StopReason stop_reason = StopReason::Completed;
+    std::uint64_t completed_work = 0;
+};
+
 enum class RotationMode : std::int32_t
 {
     None = 0,

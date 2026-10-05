@@ -13,6 +13,9 @@
 #include "live_effects/parameter/array.h"
 #include "object/sp-defs.h"
 #include "object/sp-path.h"
+#include "object/sp-polygon.h"
+#include "object/sp-polyline.h"
+#include "message-stack.h"
 #include "object/weakptr.h"
 #include "selection.h"
 #include "svg/svg.h"
@@ -23,6 +26,12 @@
 
 namespace Inkscape::UI::Tools {
 namespace CE = LivePathEffect::CornerEdit;
+std::string corner_conversion_from(SPShape const &target)
+{
+    if (is<SPPolygon>(&target)) return "polygon";
+    if (is<SPPolyLine>(&target)) return "polyline";
+    return {};
+}
 namespace {
 using Attributes = std::vector<std::pair<std::string, std::string>>;
 Attributes attributes(XML::Node const *repr)
@@ -174,10 +183,24 @@ CornerRoundingController::Result CornerRoundingController::apply(Request const &
     };
     auto result = apply_corner_plan(*s->target, s->effect.get(), *fresh.snapshot, request,
                                     CornerCommitProtocol::Interaction,
-                                    [&] { return s->current() && s->desktop == SP_ACTIVE_DESKTOP; }, arm);
+                                    [&] { return s->current() && s->desktop == SP_ACTIVE_DESKTOP; }, arm,
+                                    [&](SPShape &replacement) {
+                                        if (!s->alive || !s->desktop || s->desktop->getDocument() != replacement.document)
+                                            throw std::runtime_error("invalidated");
+                                        s->target = &replacement;
+                                        s->desktop->getSelection()->set(&replacement);
+                                    });
     // Only a recorded edit changes the effect; refusal/Superseded keep the
     // weak reference as it is (the object may have gone meanwhile).
-    if (result.outcome == Outcome::Applied) s->effect = result.effect;
+    if (result.outcome == Outcome::Applied) {
+        s->effect = result.effect;
+        if (!result.converted_from.empty() && s->alive && s->desktop) {
+            s->desktop->messageStack()->flash(Inkscape::INFORMATION_MESSAGE,
+                result.converted_from == "polygon"
+                ? _("Converted polygon to path to round its corners")
+                : _("Converted polyline to path to round its corners"));
+        }
+    }
     return {result.outcome, std::move(result.reason)};
 }
 
@@ -224,7 +247,8 @@ CornerPlanCheck check_corner_plan(bool has_effect, CE::Snapshot const &fresh, CE
 CornerApplyResult apply_corner_plan(SPShape &target, LivePathEffectObject *effect, CE::Snapshot const &fresh,
                                     CE::Request const &request, CornerCommitProtocol protocol,
                                     std::function<bool()> const &still_current,
-                                    std::function<void()> const &before_mutation)
+                                    std::function<void()> const &before_mutation,
+                                    std::function<void(SPShape &)> const &target_replaced)
 {
     using Outcome = CornerRoundingController::Outcome;
     CornerApplyResult result;
@@ -241,6 +265,8 @@ CornerApplyResult apply_corner_plan(SPShape &target, LivePathEffectObject *effec
     auto const &plan = check.plan;
 
     auto document = target.document;
+    auto converted_from = corner_conversion_from(target);
+    SPShape *working = &target;
     std::optional<DocumentUndo::RollbackableInteraction> interaction;
     std::shared_ptr<void> operation;
     if (protocol == CornerCommitProtocol::Interaction) {
@@ -248,9 +274,16 @@ CornerApplyResult apply_corner_plan(SPShape &target, LivePathEffectObject *effec
         interaction = DocumentUndo::beginRollbackableInteraction(document);
         if (!interaction) return finish(Outcome::Rejected, _("Finish the current document operation before editing corners."));
         operation = DocumentUndo::holdInteractionOperation(document);
-    } else if (auto refusal = command_line_corner_refusal(*document)) {
+    } else if (protocol == CornerCommitProtocol::CommandLine) {
+        if (auto refusal = command_line_corner_refusal(*document)) {
+            result.refused_by_document = true;
+            return finish(Outcome::Rejected, std::move(*refusal));
+        }
+    }
+    if (protocol == CornerCommitProtocol::CallerOwnedAtomic &&
+        (!DocumentUndo::interactionActive(document) || DocumentUndo::interactionCloseRequested(document))) {
         result.refused_by_document = true;
-        return finish(Outcome::Rejected, std::move(*refusal));
+        return finish(Outcome::Rejected, "The caller must own an active atomic document interaction.");
     }
     if (before_mutation) before_mutation();
     result.mutation_started = true;
@@ -259,9 +292,34 @@ CornerApplyResult apply_corner_plan(SPShape &target, LivePathEffectObject *effec
     try {
         {
             XML::Document::MutationScope mutation(*document->getReprDoc());
+            if (!converted_from.empty()) {
+                if (!current()) throw std::runtime_error("invalidated");
+                // Use the admitted shape's own straight-segment input. The generic
+                // Object to Path writer normalizes style and copies only selected
+                // properties; this narrow replacement must retain every attribute
+                // and child (including title/desc), parent and sibling position.
+                auto old = working->getRepr();
+                auto parent = old->parent();
+                auto position = old->position();
+                auto repr = document->getReprDoc()->createElement("svg:path");
+                struct ReleasePath { XML::Node *n; ~ReleasePath() { GC::release(n); } } release{repr};
+                for (auto const &[name, value] : attributes(old)) repr->setAttribute(name, value);
+                for (auto child = old->firstChild(); child; child = child->next()) {
+                    auto copy = child->duplicate(document->getReprDoc());
+                    repr->appendChild(copy);
+                    GC::release(copy);
+                }
+                repr->setAttribute("d", sp_svg_write_path(fresh.path));
+                // Resurrect the same id without deleting clones/references.
+                sp_repr_unparent(old);
+                parent->addChildAtPos(repr, position);
+                working = cast<SPPath>(document->getObjectByRepr(repr));
+                if (!working) throw std::runtime_error("missing converted path");
+                if (target_replaced) target_replaced(*working);
+            }
             if (!applied_effect) {
                 // Attach an explicit SVG LPE definition, just as a saved SVG
-                // loads it. Never run resetDefaults/doOnApply or Object to Path.
+                // loads it. Never run resetDefaults/doOnApply.
                 auto repr = document->getReprDoc()->createElement("inkscape:path-effect");
                 struct Release { XML::Node *n; ~Release() { GC::release(n); } } release{repr};
                 for (auto [name, value] : {
@@ -275,9 +333,9 @@ CornerApplyResult apply_corner_plan(SPShape &target, LivePathEffectObject *effec
                 if (!current()) throw std::runtime_error("invalidated");
                 applied_effect = cast<LivePathEffectObject>(document->getObjectByRepr(repr));
                 if (!applied_effect || !repr->attribute("id")) throw std::runtime_error("missing effect");
-                auto target_repr = target.getRepr();
+                auto target_repr = working->getRepr();
                 auto reference = std::string("#") + repr->attribute("id");
-                if (is<SPPath>(&target)) {
+                if (is<SPPath>(working)) {
                     auto original = target_repr->attribute("d");
                     if (!original) throw std::runtime_error("missing input");
                     target_repr->setAttributesAtomically({
@@ -291,15 +349,18 @@ CornerApplyResult apply_corner_plan(SPShape &target, LivePathEffectObject *effec
                 lpe->nodesatellites_param.param_set_and_write_new_value(plan.satellites);
             }
             if (!current() || !applied_effect) throw std::runtime_error("invalidated");
-            sp_lpe_item_update_patheffect(&target, false, true);
+            // Previously ineffective polygon LPEs can already exist in files.
+            if (!converted_from.empty())
+                working->getRepr()->setAttribute("inkscape:original-d", sp_svg_write_path(fresh.path));
+            sp_lpe_item_update_patheffect(working, false, true);
         }
-        if (!current() || !finite(target.curve())) throw std::runtime_error("invalid output");
+        if (!current() || !finite(working->curve())) throw std::runtime_error("invalid output");
         auto lpe = dynamic_cast<LivePathEffect::LPEFilletChamfer *>(applied_effect->get_lpe());
         if (!lpe || lpe->has_exception || !CE::equal(lpe->nodesatellites_param.data(), plan.satellites))
             throw std::runtime_error("native parameters changed");
         if (interaction) {
             interaction->commit(Util::Internal::ContextString{_("Round corners")}, "fillet-chamfer");
-        } else {
+        } else if (protocol == CornerCommitProtocol::CommandLine) {
             DocumentUndo::done(document, Util::Internal::ContextString{_("Round corners")}, "fillet-chamfer");
             document->ensureUpToDate();
         }
@@ -307,6 +368,7 @@ CornerApplyResult apply_corner_plan(SPShape &target, LivePathEffectObject *effec
         // recorded, so a rolled-back creation never escapes as the result effect
         // (a destroyed object would leave the controller's weak pointer dangling).
         result.effect = applied_effect;
+        result.converted_from = std::move(converted_from);
         return finish(Outcome::Applied, {});
     } catch (...) {
         if (interaction) {
@@ -319,7 +381,7 @@ CornerApplyResult apply_corner_plan(SPShape &target, LivePathEffectObject *effec
         }
         // No interaction token: the CommandLine protocol owns the single-step
         // Undo, so a failure after the first mutation reverts it here.
-        DocumentUndo::cancel(document);
+        if (protocol == CornerCommitProtocol::CommandLine) DocumentUndo::cancel(document);
         return finish(Outcome::Rejected, _("The corner edit could not finish and was cancelled."));
     }
 }

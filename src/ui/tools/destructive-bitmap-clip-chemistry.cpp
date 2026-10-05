@@ -793,6 +793,12 @@ CommitStatus commit_selection(Inkscape::Selection &selection, Mode mode)
 CommitStatus commit_selection(Inkscape::Selection &selection, Mode mode,
                               std::stop_token cancellation)
 {
+    return commit_selection(selection, mode, cancellation, false);
+}
+
+CommitStatus commit_selection(Inkscape::Selection &selection, Mode mode,
+                              std::stop_token cancellation, bool caller_owned_settlement)
+{
     g_return_val_if_fail(on_application_main_thread(), CommitStatus::InvalidSelection);
     // Reentrancy: a document observer may synchronously dispatch this action
     // again from the publication notifications. The second entry must not touch
@@ -992,7 +998,7 @@ CommitStatus commit_selection(Inkscape::Selection &selection, Mode mode,
     // the document at its position, layer and stacking order (CLIP-1).
     selection.set(prepared.image);
     auto const inverse = mode == Mode::KeepOutside;
-    Inkscape::DocumentUndo::done(
+    if (!caller_owned_settlement) Inkscape::DocumentUndo::done(
         document,
         inverse ? RC_("Undo", "Destructive Inverse Clip Bitmap")
                 : RC_("Undo", "Destructive Clip Bitmap"),

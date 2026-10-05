@@ -57,6 +57,7 @@
 #include <wchar.h>
 
 #include <glib.h>
+#include "io/vacards-cli-resources.h"
 #include "save-path-split.h"
 
 #include "util-string/string-convert.h"
@@ -354,6 +355,7 @@ Probe probe_path(std::string const &logical, FileIdentity const &baseline, FileI
     }
     ObjectInfo info;
     std::string query_error;
+    bool const safe = VACardsCli::safe_windows_file_handle(handle);
     bool const ok = query_object(handle, info, query_error);
     CloseHandle(handle);
     if (!ok) {
@@ -361,7 +363,7 @@ Probe probe_path(std::string const &logical, FileIdentity const &baseline, FileI
         return result;
     }
     result.info = info;
-    if ((info.attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0) {
+    if (!safe) {
         // A reparse object is never ours and is never deleted.
         result.state = ProbeState::Other;
         return result;
@@ -517,7 +519,7 @@ bool remove_verified(std::wstring const &wide, FileIdentity const &expected, std
     ObjectInfo info;
     std::string query_error;
     bool const ok = query_object(handle, info, query_error);
-    bool const reparse = ok && (info.attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+    bool const reparse = ok && !VACardsCli::safe_windows_file_handle(handle);
     bool const matches = ok && !reparse && info.id.same(expected);
     if (!matches) {
         CloseHandle(handle);
@@ -857,6 +859,16 @@ ExistingFileResult replace_existing_local_file(
     std::string const &path, std::function<void(FILE *)> const &writer,
     [[maybe_unused]] ExistingFileOptions const &options)
 {
+    ExistingFileOutcome expected_failure=ExistingFileOutcome::Conflict;
+    auto matches_expected = [&] {
+        if (!options.expected_version) return true;
+        auto found = inspect_existing_file_version(path);
+        expected_failure=found.outcome==ExistingFileOutcome::Unavailable ? ExistingFileOutcome::Unavailable : ExistingFileOutcome::Conflict;
+        auto const &e = *options.expected_version;
+        return found.version && found.version->identity == e.identity &&
+            found.version->bytes == e.bytes && found.version->sha256 == e.sha256;
+    };
+    if (!matches_expected()) return {expected_failure, "expected version mismatch before staging", {}};
     // P1 — input validation.
     if (path.empty() || path.find('\0') != std::string::npos || !writer) {
         return {ExistingFileOutcome::Unsupported,
@@ -881,6 +893,13 @@ ExistingFileResult replace_existing_local_file(
         return {ExistingFileOutcome::Unsupported, error, {}};
     }
 
+    // Retain every local ancestor and deny name-surrogate traversal. Existing
+    // SMB support keeps its separate server-side admission contract.
+    std::shared_ptr<void> retained_parent;
+    if(normalized.size()>1 && normalized[1]==':') {
+        retained_parent=VACardsCli::retain_windows_path(parent_logical);
+        if(!retained_parent) return {ExistingFileOutcome::Unavailable,"Parent path is unavailable or redirected",{}};
+    }
     // P3–P5 — resolved parent, NTFS, positive locality.
     {
         ScopedHandle parent(CreateFileW(parent_wide.c_str(), FILE_READ_ATTRIBUTES,
@@ -953,7 +972,7 @@ ExistingFileResult replace_existing_local_file(
         if ((baseline.attributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
             return {ExistingFileOutcome::Unsupported, "destination is a directory", {}};
         }
-        if ((baseline.attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0) {
+        if (!VACardsCli::safe_windows_file_handle(destination.get())) {
             return {ExistingFileOutcome::Unsupported, "destination is a reparse point", {}};
         }
         if (baseline.nlinks != 1) {
@@ -1058,7 +1077,7 @@ ExistingFileResult replace_existing_local_file(
             if (!remove_verified(stage_wide, staged_id, remove_error)) {
                 err += "; an owned staging file remains at " + stage_logical;
             }
-            return {ExistingFileOutcome::Conflict, err, {}};
+            return {destination_now.state==ProbeState::Unreadable ? ExistingFileOutcome::Unavailable : ExistingFileOutcome::Conflict, err, {}};
         }
     }
 
@@ -1073,6 +1092,19 @@ ExistingFileResult replace_existing_local_file(
         return before_failure(err);
     }
 
+    if (options.stage_observer && options.stage_observer(4)) {
+        std::string cleanup; remove_verified(stage_wide,staged_id,cleanup);
+        return before_failure("Publication cancelled before replacement; " + cleanup);
+    }
+    if (!matches_expected()) {
+        std::string cleanup;
+        remove_verified(stage_wide, staged_id, cleanup);
+        return {expected_failure, "expected version mismatch before replacement; " + cleanup, {}};
+    }
+    if (options.cancelled && options.cancelled()) {
+        std::string cleanup; bool removed=remove_verified(stage_wide,staged_id,cleanup);
+        return {ExistingFileOutcome::Cancelled,"Cancelled before replacement; "+cleanup,removed ? std::string() : stage_logical};
+    }
     // Publication. ReplaceFileW merge flags are deliberately 0: no
     // WRITE_THROUGH, no IGNORE_MERGE_ERRORS. The fault seam exists in test
     // builds only.
@@ -1113,9 +1145,11 @@ ExistingFileResult replace_existing_local_file(
         if (destination_ok && stage_gone && backup_ok) {
             std::string warning;
             std::string time_error;
-            if (!reset_last_write(dest_wide, save_start, time_error)) {
+            if ((options.stage_observer && options.stage_observer(6)) || !reset_last_write(dest_wide, save_start, time_error)) {
                 warning = "; last-write time could not be reset: " + time_error;
             }
+            if (options.stage_observer && options.stage_observer(5))
+                return {ExistingFileOutcome::Published,"Recovery cleanup failed after verified publication",backup_logical};
             std::string remove_error;
             if (!remove_verified(backup_wide, baseline.id, remove_error)) {
                 std::string err = "new content was published, but old recovery copy cleanup failed at "
@@ -1126,10 +1160,10 @@ ExistingFileResult replace_existing_local_file(
                 if (!warning.empty()) {
                     err += warning;
                 }
-                return {ExistingFileOutcome::Uncertain, err, backup_logical};
+                return {ExistingFileOutcome::Published, err, backup_logical};
             }
             if (!warning.empty()) {
-                return {ExistingFileOutcome::Uncertain,
+                return {ExistingFileOutcome::Published,
                         "new content was published, but its modification time could not be repaired"
                             + warning,
                         {}};
@@ -1181,6 +1215,58 @@ ExistingFileResult replace_existing_local_file(
             windows_error("replace destination", code)
                 + "; outcome is ambiguous; inspect the retained staging file at " + stage_logical,
             verified_backup};
+}
+
+FileVersionResult inspect_existing_file_version(std::string const &path)
+{
+    auto conflict = [](char const *s) { return FileVersionResult{std::nullopt, ExistingFileOutcome::Conflict, s}; };
+    std::wstring wide; std::string error;
+    if (!utf8_to_extended(path, wide, error)) return conflict("Invalid version path");
+    std::shared_ptr<void> retained;
+    if(path.size()>1 && path[1]==':') {
+        retained=VACardsCli::retain_windows_path(path);
+        if(!retained) {
+            auto code=GetLastError();
+            return {std::nullopt,code==ERROR_FILE_NOT_FOUND || code==ERROR_PATH_NOT_FOUND ?
+                ExistingFileOutcome::Conflict : ExistingFileOutcome::Unavailable,"Version path unavailable or redirected"};
+        }
+    }
+    ScopedHandle file(CreateFileW(wide.c_str(), GENERIC_READ,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+        FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_SEQUENTIAL_SCAN, nullptr));
+    BY_HANDLE_FILE_INFORMATION a{}, b{};
+    if (!file.valid()) { auto code=GetLastError(); return {std::nullopt,
+        code==ERROR_FILE_NOT_FOUND || code==ERROR_PATH_NOT_FOUND ? ExistingFileOutcome::Conflict : ExistingFileOutcome::Unavailable,
+        "Cannot open destination version"}; }
+    if(!GetFileInformationByHandle(file.get(),&a)) return {std::nullopt,ExistingFileOutcome::Unavailable,"Cannot inspect destination version"};
+    if((a.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) || !VACardsCli::safe_windows_file_handle(file.get()))
+        return conflict("Not a regular admitted destination");
+    auto sum = g_checksum_new(G_CHECKSUM_SHA256);
+    struct Sum { GChecksum *p; ~Sum() { g_checksum_free(p); } } owner{sum};
+    unsigned char buffer[65536]; DWORD n; std::uint64_t size = 0;
+    for (;;) {
+        if (!ReadFile(file.get(), buffer, sizeof(buffer), &n, nullptr)) return {std::nullopt,ExistingFileOutcome::Unavailable,"Version read failed"};
+        if (!n) break;
+        size += n; g_checksum_update(sum, buffer, n);
+    }
+    if(!GetFileInformationByHandle(file.get(),&b)) return {std::nullopt,ExistingFileOutcome::Unavailable,"Version metadata unavailable"};
+    if (a.dwVolumeSerialNumber != b.dwVolumeSerialNumber || a.nFileIndexHigh != b.nFileIndexHigh ||
+        a.nFileIndexLow != b.nFileIndexLow || a.nFileSizeHigh != b.nFileSizeHigh || a.nFileSizeLow != b.nFileSizeLow ||
+        CompareFileTime(&a.ftLastWriteTime, &b.ftLastWriteTime) ||
+        size != ((std::uint64_t(b.nFileSizeHigh) << 32) | b.nFileSizeLow))
+        return conflict("Destination changed while hashing");
+    ScopedHandle named(CreateFileW(wide.c_str(), FILE_READ_ATTRIBUTES,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING,
+        FILE_FLAG_OPEN_REPARSE_POINT, nullptr));
+    BY_HANDLE_FILE_INFORMATION current{};
+    if(!named.valid() || !GetFileInformationByHandle(named.get(),&current))
+        return {std::nullopt,ExistingFileOutcome::Unavailable,"Version name unavailable"};
+    if (current.dwVolumeSerialNumber != b.dwVolumeSerialNumber || current.nFileIndexHigh != b.nFileIndexHigh ||
+        current.nFileIndexLow != b.nFileIndexLow || !VACardsCli::safe_windows_file_handle(named.get()))
+        return conflict("Destination name changed while hashing");
+    return {ExpectedFileVersion{std::to_string(b.dwVolumeSerialNumber) + ":" +
+        std::to_string(b.nFileIndexHigh) + ":" + std::to_string(b.nFileIndexLow),
+        g_checksum_get_string(sum), size}, ExistingFileOutcome::Published, {}};
 }
 
 } // namespace Inkscape::IO

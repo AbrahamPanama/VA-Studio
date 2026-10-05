@@ -138,6 +138,9 @@ public:
 
     void appendChild(DrawingItem *item);
     void prependChild(DrawingItem *item);
+    /// Insert an orphan child directly after `after`, one of this item's normal children, or at the front when
+    /// `after` is null. Constant time; deferred like appendChild() and prependChild().
+    void insertChildAfter(DrawingItem *item, DrawingItem *after);
     void clearChildren();
 
     bool visible() const { return _visible; }

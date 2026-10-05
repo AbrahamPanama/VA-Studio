@@ -23,11 +23,16 @@ target_sources(inkscape_base PRIVATE
   file.cpp
   file-export-cmd.cpp
   export-destination.cpp
+  export-color-profiles.cpp
   preview-css-admission.cpp
   preview-svg-resource-policy.cpp
   preview-xml-input.cpp
   recent-files.cpp
   resource.cpp
+  vacards-cli-files.cpp
+  vacards-cli-import.cpp
+  vacards-cli-intake.cpp
+  vacards-cli-resources.cpp
   resource-list.cpp
   sandbox.cpp
   split-path.cpp
@@ -63,11 +68,16 @@ target_sources(inkscape_base PRIVATE
   file.h
   file-export-cmd.h
   export-destination.h
+  export-color-profiles.h
   preview-css-admission.h
   preview-svg-resource-policy.h
   preview-xml-input.h
   recent-files.h
   resource.h
+  vacards-cli-files.h
+  vacards-cli-import.h
+  vacards-cli-intake.h
+  vacards-cli-resources.h
   sandbox.h
   split-path.h
   fix-broken-links.h

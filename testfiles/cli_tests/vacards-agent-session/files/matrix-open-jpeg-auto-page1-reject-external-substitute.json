@@ -1,0 +1,89 @@
+{
+  "description": "P9 independent M2 matrix-open-jpeg-auto-page1-reject-external-substitute",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "open",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/photo.jpg",
+          "format": "auto",
+          "resource-policy": "reject-external",
+          "font-policy": "substitute",
+          "discard": false,
+          "pages": [
+            1
+          ]
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "data": {
+          "dirty": true
+        }
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/inputs/photo.jpg",
+          "sha256": "727a7dfb76d6d7f21b7fd3a477e5e4bf24f1f3c00311c7eb3cc76194fee4455f",
+          "reported": true,
+          "hash_field": "data.source_version.sha256",
+          "bytes_field": "data.source_version.bytes"
+        }
+      ],
+      "expect_nonempty": [
+        "document_id",
+        "data.source_version.identity",
+        "data.intake"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "dimensions",
+        "command": "query.document",
+        "params": {}
+      },
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        }
+      },
+      "expect_numeric": {
+        "data.size.width.px": {
+          "value": 16,
+          "abs": 1e-06
+        },
+        "data.size.height.px": {
+          "value": 8,
+          "abs": 1e-06
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

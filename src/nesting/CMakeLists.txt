@@ -41,6 +41,9 @@ if(TARGET inkscape_base)
             COMPILE_DEFINITIONS "VACARDS_SPARROW_SHA256=\"${_sparrow_hash}\"")
     endif()
     target_sources(inkscape_base PRIVATE
+    nesting-cli-service.h
+    nesting-cli-service.cpp
+
         sparrow-adapter.cpp
         sparrow-adapter.h
         nesting-document.cpp

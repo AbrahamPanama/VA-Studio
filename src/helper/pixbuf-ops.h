@@ -14,6 +14,7 @@
  */
 
 #include <memory>
+#include <array>
 #include <optional>
 #include <vector>
 #include <cstdint>
@@ -90,6 +91,7 @@ struct RenderRequest {
     /// Opt-in: map the exact area to the full ceil-sized grid, without padding.
     /// Default callers retain uniform DPI scaling and fractional edge padding.
     bool fit_to_pixel_grid = false;
+    std::optional<std::array<unsigned, 2>> exact_size; // Request-only exact sampling, same document rectangle.
     std::vector<SPItem const *> items; ///< Empty renders everything.
     bool set_opaque = false;
     uint32_t const *checkerboard_color = nullptr;

@@ -292,6 +292,7 @@ echo "module_dir=$GDK_PIXBUF_MODULEDIR" >> "$TEST_RESULT"
             ("codesign", "--force", "--sign", "-", macos / "python3"),
             ("codesign", "--force", "--sign", "-", macos / "python3-bin"),
             ("codesign", "--force", "--sign", "-", macos / "gdk-pixbuf-query-loaders"),
+            ("codesign", "--force", "--sign", "-", macos / "vastudio-cli"),
             ("codesign", "--force", "--sign", "-", app),
         ])
 

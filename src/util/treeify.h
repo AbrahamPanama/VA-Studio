@@ -20,6 +20,11 @@ struct TreeifyResult
  */
 TreeifyResult treeify(int N, std::function<bool(int, int)> const &contains);
 
+/** Sparse equivalent: edges[i] contains distinct, valid indices other than i.
+ * Input order is immaterial; visit order and cycle fallback match the dense API.
+ */
+TreeifyResult treeify(std::vector<std::vector<int>> edges);
+
 } // namespace Inkscape::Util
 
 #endif // INKSCAPE_UTIL_TREEIFY_H

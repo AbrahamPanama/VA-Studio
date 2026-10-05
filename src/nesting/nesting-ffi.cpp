@@ -282,6 +282,18 @@ std::optional<CollisionProxies> Job::collisionProxies(double extra, Status *stat
     return result;
 }
 
+Status Job::setWorkLimit(std::uint64_t limit)
+{
+    return static_cast<Status>(vac_nesting_job_set_work_limit(_job, limit));
+}
+
+std::optional<TerminalResult> Job::terminalResult() const
+{
+    VacNestingTerminal result{};
+    if (vac_nesting_job_get_terminal(_job, &result) != VAC_NESTING_STATUS_OK) return std::nullopt;
+    return TerminalResult{static_cast<StopReason>(result.stop_reason), result.completed_work};
+}
+
 Status Job::run(ProgressCallback const &callback)
 {
     if (!_job) {

@@ -1,0 +1,77 @@
+{
+  "description": "P9 independent M2 new-unit-in",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "new",
+        "command": "file.new",
+        "params": {
+          "width": {
+            "value": 16,
+            "unit": "in"
+          },
+          "height": {
+            "value": 8,
+            "unit": "in"
+          },
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.new",
+      "cells": [
+        "success",
+        "boundary"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "query",
+        "command": "query.document",
+        "params": {}
+      },
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "data": {
+          "dirty": true
+        }
+      },
+      "expect_numeric": {
+        "data.size.width.px": {
+          "value": 1536,
+          "abs": 1e-07
+        },
+        "data.size.height.px": {
+          "value": 768,
+          "abs": 1e-07
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

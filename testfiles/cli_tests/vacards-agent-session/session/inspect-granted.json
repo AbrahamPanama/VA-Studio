@@ -1,0 +1,70 @@
+{
+  "description": "inspect-granted",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "inspect",
+        "command": "session.status",
+        "params": {}
+      },
+      "command": "session.status",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "publication": {
+          "persisted": false
+        },
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "cells": [
+        "success"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {
+          "discard": false
+        }
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true
+        },
+        "publication": {
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/geometry.svg",
+    "--grant-read",
+    "{FIXTURES}"
+  ],
+  "expect_hello_nonempty": [
+    "document"
+  ],
+  "expect_hello": {
+    "document": {
+      "dirty": false
+    }
+  }
+}

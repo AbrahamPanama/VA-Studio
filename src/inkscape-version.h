@@ -17,6 +17,7 @@
 
 namespace Inkscape {
 
+extern char const *revision_full_string; ///< full compiled Git revision
 extern char const *revision_string; ///< code revision string
 extern char const *version_string; ///< full version string
 extern char const *version_string_without_revision; ///< version string excluding revision and date

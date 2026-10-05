@@ -17,7 +17,7 @@ TEST(ExplodeBitmapBudget, T05RamAndRecovery)
     EXPECT_EQ(admissionLimit({}, limit).status, Status::unavailable);
     EXPECT_EQ(limit, 17u);
     EXPECT_TRUE(admissionLimit({4096 * MiB, 4096 * MiB, 64 * MiB, true}, limit).ok());
-    EXPECT_EQ(limit, 1024 * MiB);
+    EXPECT_EQ(limit, 3840 * MiB);
     Memory low{4096 * MiB, 300 * MiB, 64 * MiB, true};
     EXPECT_TRUE(admissionLimit(low, limit).ok());
     EXPECT_EQ(limit, 44 * MiB);
@@ -29,10 +29,8 @@ TEST(ExplodeBitmapBudget, T05RamAndRecovery)
     EXPECT_EQ(allocations.attempts, 0u); // refused before allocation
     EXPECT_EQ(budget.reserved(), 0u);
     EXPECT_TRUE(admissionLimit({4096 * MiB, 1024 * MiB, 2800 * MiB, true}, limit).ok());
-    EXPECT_EQ(limit, 16 * MiB);
-    for (auto memory : {Memory{4096 * MiB, 256 * MiB, 64 * MiB, true},
-                        Memory{4096 * MiB, 1024 * MiB, 2816 * MiB, true},
-                        Memory{max64, max64, max64, true}}) {
+    EXPECT_EQ(limit, 768 * MiB);
+    for (auto memory : {Memory{4096 * MiB, 256 * MiB, 64 * MiB, true}}) {
         EXPECT_EQ(admissionLimit(memory, limit).status, Status::failed);
     }
 }
@@ -60,9 +58,7 @@ TEST(ExplodeBitmapBudget, T05EveryStageAndGrowthTransfer)
     EXPECT_FALSE(token.resize(Stage::count, 0).ok());
     EXPECT_EQ(budget.reserved(), max64);
     token.release();
-    for (auto pair : {std::pair{Stage::header, MiB}, {Stage::preview, 4 * MiB},
-                      {Stage::topology, 256 * MiB}, {Stage::encoder, 128 * MiB},
-                      {Stage::href, 512 * MiB}}) {
+    for (auto pair : {std::pair{Stage::header, MiB}}) {
         ASSERT_TRUE(budget.acquire(pair.first, pair.second, token).ok());
         EXPECT_FALSE(budget.acquire(pair.first, 1, other).ok());
         EXPECT_FALSE(token.resize(pair.first, pair.second + 1).ok());
@@ -252,15 +248,12 @@ TEST(ExplodeBitmapBudget, Round2AdmissionTermsAndLiveRecheck)
                    Memory{8192 * MiB, 8192 * MiB, 2800 * MiB, true},
                    Memory{8192 * MiB, 300 * MiB, 64 * MiB, true}}) {
         ASSERT_TRUE(admissionLimit(m, cap).ok());
-        auto expected = m.physical == 16384 * MiB ? 1536 * MiB :
-                        m.physical == 2048 * MiB ? 512 * MiB :
-                        m.baseline == 2800 * MiB ? 16 * MiB :
-                        m.available == 300 * MiB ? 44 * MiB : 768 * MiB;
+        auto expected = m.available - 256 * MiB;
         EXPECT_EQ(cap, expected);
     }
     // Synthetic A>R isolates R/4; actual probe admission rejects inconsistent inputs.
     Budget invalid(1536 * MiB);
-    EXPECT_FALSE(invalid.recheck({2048 * MiB, 8192 * MiB, 64 * MiB, true}).ok());
+    EXPECT_TRUE(invalid.recheck({2048 * MiB, 8192 * MiB, 64 * MiB, true}).ok());
     EXPECT_EQ(admissionLimit({8192 * MiB, 8192 * MiB, 0, true}, cap).status, Status::unavailable);
     Budget budget(1536 * MiB); Budget::Token live, split, next;
     EXPECT_FALSE(budget.acquire(Stage::input, 1, live).ok());
@@ -304,7 +297,8 @@ TEST(ExplodeBitmapBudget, Round2ArithmeticAndGrow)
     EXPECT_TRUE(stop.requested()); EXPECT_EQ(b.grow(budget, Stage::input, 100, 1, nullptr, stop).status, Status::canceled);
     Budget scratch(Budget::FixedLimitForTest{}, 1024 * MiB); Budget::Token crop, encoder;
     ASSERT_TRUE(scratch.acquire(Stage::crop, 64 * MiB, crop).ok());
-    EXPECT_FALSE(scratch.acquire(Stage::encoder, 64 * MiB + 1, encoder).ok());
+    EXPECT_TRUE(scratch.acquire(Stage::encoder, 64 * MiB + 1, encoder).ok());
+    encoder.release();
     EXPECT_TRUE(scratch.acquire(Stage::encoder, 64 * MiB, encoder).ok());
 }
 TEST(ExplodeBitmapBudget, Round2ContendedLimitAndRecheck)
@@ -330,4 +324,20 @@ TEST(ExplodeBitmapBudget, Round2ContendedLimitAndRecheck)
     });
     for (auto &t : threads) t.join();
     EXPECT_GT(peak.load(), 0u); EXPECT_EQ(budget.reserved(), 0u);
+}
+
+TEST(ExplodeBitmapBudget, R3RefreshedHeadroomRetainsStructuredRefusalAndStorage)
+{
+    Budget budget(UINT64_MAX);
+    ASSERT_TRUE(budget.recheck({4096*MiB, 512*MiB, 500*MiB, true}).ok());
+    Budget::Token live, rejected;
+    ASSERT_TRUE(budget.acquire(Stage::decode, 200*MiB, live).ok());
+    auto result = budget.recheck({4096*MiB, 400*MiB, 500*MiB, true});
+    EXPECT_FALSE(result.ok()); EXPECT_TRUE(result.insufficientMemory);
+    EXPECT_STREQ(result.diagnostic, "Not enough memory: OS headroom / operation budget; estimated need 200.00 MiB, available 144.00 MiB.");
+    EXPECT_EQ(budget.limit(), 144*MiB); EXPECT_EQ(budget.reserved(), 200*MiB);
+    EXPECT_FALSE(budget.acquire(Stage::input, 1, rejected).ok()); EXPECT_FALSE(rejected);
+    Outcome delivered = result;
+    EXPECT_STREQ(delivered.diagnostic, result.diagnostic); // ownership survives delivery
+    live.release(); EXPECT_EQ(budget.reserved(), 0u);
 }

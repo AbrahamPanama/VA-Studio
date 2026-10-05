@@ -25,6 +25,7 @@
 #include "ui/dialog/dialog-container.h"
 #include "ui/dialog/dialog-data.h"
 #include "ui/explode-bitmap-feature.h"
+#include "ui/spellcheck-feature.h"
 
 // Note the "AttrDialog" is now part of the "XMLDialog" and the "Style" dialog is part of the "Selectors" dialog.
 // Also note that the "AttrDialog" does not correspond to SP_VERB_DIALOG_ATTR!!!!! (That would be the "ObjectAttributes" dialog.)
@@ -63,9 +64,6 @@ static const std::vector<std::vector<Glib::ustring>> raw_data_dialogs = {
     {"win.dialog-open('UndoHistory')",        N_("Open Undo History"),         SECTION,  N_("Undo History")                                                                           },
     {"win.dialog-open('XMLEditor')",          N_("Open XML Editor"),           SECTION,  N_("View and edit the XML tree of the document")                                             },
     {"app.preferences",                       N_("Open Preferences"),          SECTION,  N_("Edit global VA Studio preferences")                                                       },
-#if WITH_LIBSPELLING
-    {"win.dialog-open('Spellcheck')",         N_("Open Spellcheck"),           SECTION,  N_("Check spelling of text in document")                                                     },
-#endif
 #if DEBUG
     {"win.dialog-open('Prototype')",          N_("Open Prototype"),            SECTION,  N_("Prototype Dialog")                                                                       },
 #endif
@@ -156,6 +154,13 @@ dialog_toggle(InkscapeWindow *win)
 void add_actions_dialogs(InkscapeApplication *app)
 {
     app->get_action_extra_data().add_data(raw_data_dialogs);
+#if WITH_LIBSPELLING
+    if constexpr (Inkscape::UI::spellcheckUiEnabled) {
+        app->get_action_extra_data().add_data({
+            {"win.dialog-open('Spellcheck')", N_("Open Spellcheck"), SECTION, N_("Check spelling of text in document")}
+        });
+    }
+#endif
     if (Inkscape::Bitmap::explodeBitmapEnabled()) {
         app->get_action_extra_data().add_data({
             {"win.dialog-explode-bitmap", N_("Open Explode Bitmap"), SECTION,

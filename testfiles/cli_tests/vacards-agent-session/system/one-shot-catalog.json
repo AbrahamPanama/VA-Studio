@@ -1,0 +1,33 @@
+{
+  "description": "Typed one-shot system.catalog",
+  "transport": "one-shot",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "one-shot",
+        "command": "system.catalog",
+        "params": {}
+      },
+      "command": "system.catalog",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "schema": "va-studio.cli-catalog/1"
+        },
+        "publication": {
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0
+}

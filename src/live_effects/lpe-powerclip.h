@@ -8,6 +8,8 @@
  * Released under GNU GPL v2+, read the file 'COPYING' for more information.
  */
 
+#include <optional>
+
 #include "live_effects/effect.h"
 #include "live_effects/parameter/message.h"
 
@@ -21,6 +23,8 @@ public:
     void doBeforeEffect (SPLPEItem const* lpeitem) override;
     Geom::PathVector doEffect_path (Geom::PathVector const & path_in) override;
     void doOnRemove(SPLPEItem const* /*lpeitem*/) override;
+    // Request-local removal; bypasses the GUI onungroup preference.
+    void removeFrom(SPLPEItem *item);
     void doOnVisibilityToggled(SPLPEItem const* lpeitem) override;
     Glib::ustring getId();
     void add();
@@ -35,10 +39,15 @@ public:
     MessageParam message;
     bool _updating;
     bool _legacy;
+    std::optional<bool> _request_onungroup;
 };
 
 void sp_remove_powerclip(Inkscape::Selection *sel);
 void sp_inverse_powerclip(Inkscape::Selection *sel);
+
+// Document-only overloads; caller validates the supported domain and settles.
+void sp_inverse_powerclip(SPDocument *document, SPLPEItem *item);
+void sp_remove_powerclip(SPLPEItem *item);
 
 } //namespace LivePathEffect
 } //namespace Inkscape

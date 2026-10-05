@@ -19,6 +19,8 @@
 
 namespace Inkscape::Bitmap {
 
+std::string serializeContours(FittedContourSet const &, unsigned begin, unsigned end);
+
 enum class PublishStage {
     Admission, Href, Node, Script, Guard, Delete, Resources, Insert, Binding, Native,
     Selection, Bake, Readiness, Settlement, Rollback
@@ -38,6 +40,9 @@ struct ContourStyle {
 };
 struct Prepared {
     TargetSnapshot target;
+    // Immutable request recipe; required by document contexts. Legacy desktop
+    // callers may omit it and retain the session-query behavior.
+    std::optional<SessionRecipe> requestRecipe;
     DependencyToken dependencies;
     SessionJobIdentity session;
     FinalGrid const *grid = nullptr;

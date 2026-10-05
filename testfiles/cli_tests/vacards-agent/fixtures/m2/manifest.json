@@ -1,0 +1,487 @@
+{
+  "schema": "p9-m2-fixtures/1",
+  "producer": "files/support/fixtures.py",
+  "fixtures": [
+    {
+      "path": "sheet.svg",
+      "bytes": 248,
+      "sha256": "61859ec258372da15bc80e54bf2fb75c5fec636417c5c702aa400c795d691262",
+      "provenance": "P9 literal SVG, CSS 96 dpi, no fonts/resources",
+      "oracle": {
+        "size_px": [
+          16,
+          8
+        ],
+        "samples": [
+          {
+            "x": 2,
+            "y": 4,
+            "rgba": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          {
+            "x": 12,
+            "y": 4,
+            "rgba": [
+              0,
+              255,
+              0,
+              255
+            ]
+          }
+        ],
+        "ids": [
+          "red",
+          "green"
+        ]
+      }
+    },
+    {
+      "path": "fonts/FreeSans.ttf",
+      "bytes": 1566896,
+      "sha256": "8d08a6e62958227e0e55abe78662ff8fe8eb7a98cd999cc5921845edd399e59a",
+      "provenance": "Copied unchanged from existing source/testfiles/rendering_tests/fonts/FreeSans.ttf",
+      "oracle": {
+        "use": "isolated deterministic font, no user font discovery"
+      }
+    },
+    {
+      "path": "text.svg",
+      "bytes": 143,
+      "sha256": "d8f3476028556bbaff5c320376655e2116b967a8e5a7996d82bda14de183e533",
+      "provenance": "P9 literal text using pinned FreeSans fixture",
+      "oracle": {
+        "size_px": [
+          16,
+          8
+        ],
+        "text": "A",
+        "font": "FreeSans"
+      }
+    },
+    {
+      "path": "sheet.svgz",
+      "bytes": 175,
+      "sha256": "9e450eeae05320d8155e1fa86064077be45aa719c9ccab49e1178691c6305a27",
+      "provenance": "P9 gzip(sheet.svg), zero timestamp",
+      "oracle": {
+        "size_px": [
+          16,
+          8
+        ],
+        "samples": [
+          {
+            "x": 2,
+            "y": 4,
+            "rgba": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          {
+            "x": 12,
+            "y": 4,
+            "rgba": [
+              0,
+              255,
+              0,
+              255
+            ]
+          }
+        ],
+        "ids": [
+          "red",
+          "green"
+        ]
+      }
+    },
+    {
+      "path": "two-pages.pdf",
+      "bytes": 714,
+      "sha256": "d71b0295d0a4c4682ec395dd42d04568c9c382a08a55f80745361e585ef3322a",
+      "provenance": "P9 literal PDF objects/xref; two 12x6 pt pages",
+      "oracle": {
+        "size_px": [
+          16,
+          8
+        ],
+        "samples": [
+          {
+            "x": 2,
+            "y": 4,
+            "rgba": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          {
+            "x": 12,
+            "y": 4,
+            "rgba": [
+              0,
+              255,
+              0,
+              255
+            ]
+          }
+        ],
+        "ids": [
+          "red",
+          "green"
+        ],
+        "pages": 2
+      }
+    },
+    {
+      "path": "missing-font.pdf",
+      "bytes": 940,
+      "sha256": "9674ec9cf20eba2d15bdcc0f1cbeca69912885d43a12db6bd24a34bf16481c27",
+      "provenance": "P9 PDF with deliberately nonexistent unembedded Type1 font",
+      "oracle": {
+        "pages": 2,
+        "font": "P9DefinitelyMissingFont",
+        "policy": "reject or explicitly report substitution"
+      }
+    },
+    {
+      "path": "rgba.png",
+      "bytes": 81,
+      "sha256": "e5d2dfc2ed2fcebed9d3c1894cca862da10d8ec806e2126f59e4e2318f5b9765",
+      "provenance": "P9 zlib/PNG RGBA8 literal samples",
+      "oracle": {
+        "size_px": [
+          16,
+          8
+        ],
+        "samples": [
+          {
+            "x": 2,
+            "y": 4,
+            "rgba": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          {
+            "x": 12,
+            "y": 4,
+            "rgba": [
+              0,
+              255,
+              0,
+              128
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "path": "rgba.tiff",
+      "bytes": 666,
+      "sha256": "775d710847ba2dd75c57fa745ea66934031893983367f2992a629ae2e802e045",
+      "provenance": "P9 literal baseline TIFF, straight alpha",
+      "oracle": {
+        "size_px": [
+          16,
+          8
+        ],
+        "samples": [
+          {
+            "x": 2,
+            "y": 4,
+            "rgba": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          {
+            "x": 12,
+            "y": 4,
+            "rgba": [
+              0,
+              255,
+              0,
+              128
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "path": "photo.jpg",
+      "bytes": 643,
+      "sha256": "727a7dfb76d6d7f21b7fd3a477e5e4bf24f1f3c00311c7eb3cc76194fee4455f",
+      "provenance": "P9 PPM stripes -> native cjpeg -quality 100 -sample 1x1; output pinned by hash",
+      "oracle": {
+        "size_px": [
+          16,
+          8
+        ],
+        "samples": [
+          {
+            "x": 2,
+            "y": 4,
+            "rgba": [
+              255,
+              0,
+              0,
+              255
+            ]
+          },
+          {
+            "x": 12,
+            "y": 4,
+            "rgba": [
+              0,
+              255,
+              0,
+              255
+            ]
+          }
+        ],
+        "ids": [
+          "red",
+          "green"
+        ],
+        "tolerance": 3
+      }
+    },
+    {
+      "path": "sheet.cdr",
+      "bytes": 19596,
+      "sha256": "b11cbe996a628b803254a56972e7390321b1a709e1dac0d3d8ffa59da6bd83d0",
+      "provenance": "Copied unchanged from source/testfiles/cli_tests/testcases/librevenge_formats/corel_draw2.cdr",
+      "oracle": {
+        "reference": "sheet-cdr-reference.png",
+        "page_mm": [
+          210,
+          297
+        ],
+        "qualification": "active upstream import_cdr2 CLI reference, full page at 96dpi; legacy corel_draw test is disabled for a libcdr regression"
+      }
+    },
+    {
+      "path": "sheet-cdr-reference.png",
+      "bytes": 30971,
+      "sha256": "bbd8e525ea0ffb8e9a0034e89a6e8a3e89eb5b498bfcc4d3b607655eaa96370e",
+      "provenance": "Copied unchanged from source/testfiles/cli_tests/testcases/librevenge_formats/corel_draw2_expected.png",
+      "oracle": {
+        "use": "independent active upstream full-page CDR reference at 96dpi",
+        "size_px": [
+          794,
+          1123
+        ]
+      }
+    },
+    {
+      "path": "custom-rgb.icc",
+      "bytes": 15720,
+      "sha256": "5bd44dcc1b72acb744ae5d6e5d9ba7ba959eb33d069f5bb04bc994a7f167e9b8",
+      "provenance": "Copied unchanged from source/testfiles/data/colors/SwappedRedAndGreen.icc",
+      "oracle": {
+        "use": "RGB profile; expected pixel transform from independent Little CMS"
+      }
+    },
+    {
+      "path": "cmyk.icc",
+      "bytes": 187484,
+      "sha256": "8472fa1493a024b800b67dee9424835ec0c41ab79490200ae8ec4a689fd1b9a9",
+      "provenance": "Copied unchanged from source/testfiles/data/colors/default_cmyk.icc",
+      "oracle": {
+        "use": "must refuse CMYK output profile"
+      }
+    },
+    {
+      "path": "srgb.icc",
+      "bytes": 588,
+      "sha256": "e7ba6537533fa4252a2b5a7b8ed2c49125cd0a1423b530e4fffae5392dcbf182",
+      "provenance": "Native cmsCreate_sRGBProfile; normalized date and zero optional profile ID",
+      "oracle": {
+        "use": "exact immutable custom-file sRGB profile"
+      }
+    },
+    {
+      "path": "bad-header.icc",
+      "bytes": 14,
+      "sha256": "ebbce4f11380d1f1b494a710e7b20560f541b40afbc70fed6345018a8398f99b",
+      "provenance": "P9 literal invalid ICC",
+      "oracle": {
+        "error": "profile-invalid"
+      }
+    },
+    {
+      "path": "oversize.icc",
+      "bytes": 15728641,
+      "sha256": "d8fd959a3435b1edeead32037b5811bbd75ade9918d0cda7f1fbda5317c04f5c",
+      "provenance": "P9 zeros, ICC bound plus one",
+      "oracle": {
+        "error": "profile-invalid"
+      }
+    },
+    {
+      "path": "groups.svg",
+      "bytes": 575,
+      "sha256": "7a74340014b394b2376fb90103cf498b41b7e41a247e60751ed9372d1f91ecf3",
+      "provenance": "P9 literal nested affine/clone/hidden/locked/unrelated SVG",
+      "oracle": {
+        "ids": [
+          "parent",
+          "child",
+          "tile",
+          "clone",
+          "hidden",
+          "hidden-circle",
+          "locked",
+          "locked-path",
+          "unrelated"
+        ],
+        "affines": {
+          "parent": [
+            1,
+            0,
+            0,
+            1,
+            2,
+            3
+          ],
+          "child": [
+            2,
+            0,
+            0,
+            2,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "path": "linked.svg",
+      "bytes": 175,
+      "sha256": "d34cce6a6444174fd545415a977c3c2ddbd62cf323ba191b37f0b25ae34d80d2",
+      "provenance": "P9 local linked-image SVG",
+      "oracle": {
+        "resource": "rgba.png",
+        "size_px": [
+          16,
+          8
+        ]
+      }
+    },
+    {
+      "path": "embedded.svg",
+      "bytes": 297,
+      "sha256": "6efd67bd087997723e37e8e8b8d152e004fe88b549c67b083c91e03be36cf3f0",
+      "provenance": "P9 embedded variant of linked.svg",
+      "oracle": {
+        "resource": "embedded PNG",
+        "size_px": [
+          16,
+          8
+        ]
+      }
+    },
+    {
+      "path": "remote.svg",
+      "bytes": 294,
+      "sha256": "7274b3cc8c687174a50a93ded968a766749299a7b7871f3765a7b7e1a113ea7c",
+      "provenance": "P9 literal hostile/boundary input, never fetched",
+      "oracle": {
+        "use": "bounded refusal or explicitly supported empty no-op"
+      }
+    },
+    {
+      "path": "script.svg",
+      "bytes": 273,
+      "sha256": "cc5b9c4fae227ac8e6de65e86fa654a0ee4e449640371f231d38e0f8f8e9fd8a",
+      "provenance": "P9 literal hostile/boundary input, never fetched",
+      "oracle": {
+        "use": "bounded refusal or explicitly supported empty no-op"
+      }
+    },
+    {
+      "path": "entity.svg",
+      "bytes": 307,
+      "sha256": "6297cbf37acea4e473793a7df9ada848fdace594665f28d135a50a319d2f4497",
+      "provenance": "P9 literal hostile/boundary input, never fetched",
+      "oracle": {
+        "use": "bounded refusal or explicitly supported empty no-op"
+      }
+    },
+    {
+      "path": "malformed.svgz",
+      "bytes": 9,
+      "sha256": "460d8a1cfbca573ea478fd4cae7539d40d75c73f4b8b3715122eaf90f729f952",
+      "provenance": "P9 literal hostile/boundary input, never fetched",
+      "oracle": {
+        "use": "bounded refusal or explicitly supported empty no-op"
+      }
+    },
+    {
+      "path": "oversized-header.png",
+      "bytes": 45,
+      "sha256": "dc5f69d765ada0e647672342d2b9ec4dc28364f6b1b7413e6023298b6f964a7d",
+      "provenance": "P9 literal hostile/boundary input, never fetched",
+      "oracle": {
+        "use": "bounded refusal or explicitly supported empty no-op"
+      }
+    },
+    {
+      "path": "deep.svg",
+      "bytes": 7221,
+      "sha256": "b6002d51ecfe68607676c3453ba9499ad439315f037774ad1dca25ab3a9eaf5c",
+      "provenance": "P9 literal hostile/boundary input, never fetched",
+      "oracle": {
+        "use": "bounded refusal or explicitly supported empty no-op"
+      }
+    },
+    {
+      "path": "objects-limit.svg",
+      "bytes": 4000046,
+      "sha256": "f97f2659008fa75abc52033bfc8ecbfe11f7048351257f06d26adaf609ade597",
+      "provenance": "INT G10: literal SVG root plus 1000000 empty sibling groups; 1000001 source elements, independently counted",
+      "oracle": {
+        "use": "refuse engine-limit before native construction or mutation",
+        "limit_name": "objects",
+        "limit": 1000000,
+        "found": 1000001
+      }
+    },
+    {
+      "path": "empty.svg",
+      "bytes": 63,
+      "sha256": "a92954cb173804ee820df600736ed453595fe9e5205c8f3d740024f79d88dd98",
+      "provenance": "P9 literal hostile/boundary input, never fetched",
+      "oracle": {
+        "use": "bounded refusal or explicitly supported empty no-op"
+      }
+    },
+    {
+      "path": "font-list.svg",
+      "bytes": 164,
+      "sha256": "f9e0e1a217e8ba7046ee6e8044b1ac1fb166b9120805556bc065c535bf9520c3",
+      "provenance": "P9 R1 literal SVG in files/support/r1_cases.py; missing first family followed by generic serif",
+      "oracle": {
+        "size_px": [
+          16,
+          8
+        ],
+        "text": "A",
+        "first_family": "P9 Missing R1",
+        "policy": "reject or report first-family substitution"
+      }
+    }
+  ]
+}

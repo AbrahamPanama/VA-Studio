@@ -176,6 +176,25 @@ void DrawingItem::prependChild(DrawingItem *item)
     });
 }
 
+void DrawingItem::insertChildAfter(DrawingItem *item, DrawingItem *after)
+{
+    // See appendChild for explanations. Deferred functions run in order, so an `after` that was
+    // inserted or scheduled earlier is linked by the time this runs.
+    assert(item->_child_type == ChildType::ORPHAN);
+    item->_parent = this;
+    item->_child_type = ChildType::NORMAL;
+
+    defer([=, this] {
+        if (after && after->_parent == this && after->_child_type == ChildType::NORMAL && after->_child_hook.is_linked()) {
+            _children.insert(std::next(_children.iterator_to(*after)), *item);
+        } else {
+            _children.push_front(*item);
+        }
+        item->_state = STATE_ALL;
+        item->_markForUpdate(STATE_ALL, true);
+    });
+}
+
 // Clear this node's ordinary children, deleting them and their descendants without otherwise changing them in any way.
 void DrawingItem::clearChildren()
 {

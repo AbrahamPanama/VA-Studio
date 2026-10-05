@@ -451,6 +451,85 @@ TEST_F(ExplodeBitmapUndo, AtomicSettlementAllocationFailuresKeepRedoAndRollbackE
         EXPECT_NE(doc->getReprRoot()->attribute(("data-eb" + std::to_string(edits)).c_str()), nullptr);
     }
 }
+TEST_F(ExplodeBitmapUndo, AtomicCommandAdmitsOnlyOwnersControlBlock)
+{
+    edit(100);
+    auto owner = DocumentUndo::holdInteractionOperation(doc.get());
+    ASSERT_TRUE(owner);
+    EXPECT_FALSE(DocumentUndo::beginAtomicInteraction(doc.get()));
+    EXPECT_FALSE(DocumentUndo::beginAtomicCommandInteraction(doc.get(), {}));
+    auto foreign = std::make_shared<int>(0);
+    EXPECT_FALSE(DocumentUndo::beginAtomicCommandInteraction(doc.get(), foreign));
+    // Even the same address in a different control block is not the owner.
+    std::shared_ptr<void> forged(owner.get(), [](void *) {});
+    EXPECT_FALSE(DocumentUndo::beginAtomicCommandInteraction(doc.get(), forged));
+    auto copy = owner;
+    auto token = DocumentUndo::beginAtomicCommandInteraction(doc.get(), copy);
+    ASSERT_TRUE(token);
+    EXPECT_FALSE(DocumentUndo::beginAtomicCommandInteraction(doc.get(), owner));
+    doc->getReprRoot()->setAttribute("data-command", "published");
+    ASSERT_TRUE(token->commitAtomically(ContextString("Command"), "", [] { return true; }));
+    copy.reset(); owner.reset();
+    ASSERT_TRUE(DocumentUndo::undo(doc.get()));
+    EXPECT_EQ(doc->getReprRoot()->attribute("data-command"), nullptr);
+    ASSERT_TRUE(DocumentUndo::redo(doc.get()));
+    EXPECT_STREQ(doc->getReprRoot()->attribute("data-command"), "published");
+}
+
+TEST_F(ExplodeBitmapUndo, AtomicCommandRefusesNestedAndStaleLeases)
+{
+    edit(100);
+    auto owner = DocumentUndo::holdInteractionOperation(doc.get());
+    auto nested = DocumentUndo::holdInteractionOperation(doc.get());
+    EXPECT_FALSE(DocumentUndo::beginAtomicCommandInteraction(doc.get(), owner));
+    EXPECT_FALSE(DocumentUndo::beginAtomicCommandInteraction(doc.get(), nested));
+    nested.reset();
+    auto token = DocumentUndo::beginAtomicCommandInteraction(doc.get(), owner);
+    ASSERT_TRUE(token);
+    token->rollback(); token.reset();
+    // A foreign document's valid lease must also fail.
+    auto other = SPDocument::createNewDocFromMem(std::span<char const>(kSvg, std::strlen(kSvg)));
+    auto foreign = DocumentUndo::holdInteractionOperation(other.get());
+    EXPECT_FALSE(DocumentUndo::beginAtomicCommandInteraction(doc.get(), foreign));
+    owner.reset();
+    EXPECT_FALSE(DocumentUndo::beginAtomicCommandInteraction(doc.get(), owner));
+    EXPECT_TRUE(DocumentUndo::beginAtomicInteraction(doc.get()));
+}
+
+TEST_F(ExplodeBitmapUndo, AtomicCommandSettlementFaultRestoresXmlAndRedo)
+{
+    for (auto stage : {SettlementStage::EventConstruction, SettlementStage::HistoryInsertion}) {
+        edit(100); edit(200);
+        ASSERT_TRUE(DocumentUndo::undo(doc.get()));
+        auto const baseline = sp_repr_save_buf(doc->getReprDoc()).raw();
+        auto const before = snap();
+        auto const mark = DocumentUndo::undoStackMark(doc.get());
+        auto owner = DocumentUndo::holdInteractionOperation(doc.get());
+        auto token = DocumentUndo::beginAtomicCommandInteraction(doc.get(), owner);
+        ASSERT_TRUE(token);
+        doc->getReprRoot()->setAttribute("data-command-fault", "pending");
+        failingStage = stage;
+        DocumentUndo::setAtomicSettlementFaultForTesting(allocationAtStage);
+        EXPECT_THROW(token->commitAtomically(ContextString("Command"), "", [] { return true; }), std::bad_alloc);
+        DocumentUndo::setAtomicSettlementFaultForTesting(nullptr);
+        token->rollback(); token.reset(); owner.reset();
+        EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()).raw(), baseline);
+        EXPECT_TRUE(before == snap());
+        EXPECT_EQ(DocumentUndo::undoStackMark(doc.get()), mark);
+        ASSERT_TRUE(DocumentUndo::redo(doc.get()));
+        EXPECT_NE(doc->getReprRoot()->attribute(("data-eb" + std::to_string(edits)).c_str()), nullptr);
+    }
+}
+
+TEST_F(ExplodeBitmapUndo, AtomicCommandRefusesRequestedClose)
+{
+    edit(100);
+    auto owner = DocumentUndo::holdInteractionOperation(doc.get());
+    ASSERT_TRUE(DocumentUndo::deferUntilInteractionQuiescent(doc.get(), [](SPDocument &) {}, true));
+    ASSERT_TRUE(DocumentUndo::interactionCloseRequested(doc.get()));
+    EXPECT_FALSE(DocumentUndo::beginAtomicCommandInteraction(doc.get(), owner));
+}
+
 // Ordinary done() retains native notification order and EventLog saved-row tracking.
 struct RecordingHistoryObserver final : Inkscape::UndoStackObserver {
     std::vector<std::string> notifications;

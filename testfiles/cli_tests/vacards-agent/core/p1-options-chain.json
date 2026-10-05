@@ -1,0 +1,26 @@
+{
+  "description": "P1 R1 canonical action options persist across invocations.",
+  "actions": "vacards-result-file:-;system.options:preferred-unit=in;system.options",
+  "records_from": "stdout",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "system.options",
+      "status": "ok",
+      "data": {
+        "preferred-unit": "in"
+      }
+    },
+    {
+      "action": "system.options",
+      "status": "ok",
+      "data": {
+        "preferred-unit": "in"
+      }
+    }
+  ]
+}

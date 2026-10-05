@@ -2,6 +2,8 @@
 #ifndef INKSCAPE_IO_EXISTING_FILE_REPLACEMENT_H
 #define INKSCAPE_IO_EXISTING_FILE_REPLACEMENT_H
 
+#include <cstdint>
+#include <optional>
 #include <cstdio>
 #include <functional>
 #include <span>
@@ -19,7 +21,9 @@ enum class ExistingFileOutcome {
     FailedBeforePublication,
     Conflict,
     Unsupported,
-    Uncertain
+    Uncertain,
+    Cancelled,
+    Unavailable
 };
 
 struct ExistingFileResult {
@@ -30,7 +34,11 @@ struct ExistingFileResult {
     std::string recovery_path;
 };
 
+struct ExpectedFileVersion { std::string identity, sha256; std::uint64_t bytes = 0; };
+
 struct ExistingFileOptions {
+    std::optional<ExpectedFileVersion> expected_version;
+    std::function<bool()> cancelled;
     bool timing = false;
     int rename_failure_errno = 0;
     int recovery_delete_failure_errno = 0;
@@ -38,8 +46,16 @@ struct ExistingFileOptions {
     int replace_fault_kind = 0;
     // Apple buffered-save boundary observer. True injects a failure.
     // 1=create, 2=write, 3=seal, 4=pre-rename, 5=post-rename cleanup.
+    // Windows additionally uses 6=post-publication timestamp cleanup.
     std::function<bool(unsigned)> stage_observer;
 };
+
+struct FileVersionResult { std::optional<ExpectedFileVersion> version;
+    ExistingFileOutcome outcome; std::string error; };
+FileVersionResult inspect_existing_file_version(std::string const &absolute_utf8_path);
+ExistingFileResult replace_existing_local_file(std::string const &absolute_utf8_path,
+    std::function<void(FILE *)> const &writer, ExpectedFileVersion const &expected,
+    ExistingFileOptions const &options = {});
 
 // Capture one-shot legacy hooks on the initiating thread, before dispatch.
 ExistingFileOptions capture_existing_file_options(bool timing);

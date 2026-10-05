@@ -10,16 +10,17 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
 
 
-def expand_nsis(text, defines):
-    """Expand flat !ifdef/!ifndef/!else/!endif scope guards for portable checks.
+def expand_nsis(text, defines, payload_files=()):
+    """Expand installer scope and CLI payload guards for portable checks.
 
-    A deterministic stand-in for the NSIS preprocessor, sufficient because the
-    installer uses only non-nested scope conditionals.
+    A deterministic stand-in for scope and payload-presence conditionals.
+    Payload paths are explicit fixture inputs, not ambient filesystem probes.
     """
     kept, stack = [], []
     for line in text.splitlines():
@@ -30,17 +31,22 @@ def expand_nsis(text, defines):
         if word in ("ifdef", "ifndef"):
             stack.append((rest in defines) if word == "ifdef" else (rest not in defines))
             continue
+        if word == "if":
+            match = re.fullmatch(r'/FileExists "\$\{PAYLOAD\}\\(.+)"', rest)
+            assert match, f"unsupported NSIS !if: {rest}"
+            stack.append(match[1].replace("\\", "/") in payload_files)
+            continue
         if word == "else":
-            assert stack, "!else without !ifdef"
+            assert stack, "!else without conditional"
             stack[-1] = not stack[-1]
             continue
         if word == "endif":
-            assert stack, "!endif without !ifdef"
+            assert stack, "!endif without conditional"
             stack.pop()
             continue
         if all(stack):
             kept.append(line)
-    assert not stack, "unterminated !ifdef in installer"
+    assert not stack, "unterminated conditional in installer"
     return "\n".join(kept)
 
 
@@ -258,13 +264,20 @@ def packaging_preflight():
         raise AssertionError("unpinned changed GTK dependency accepted")
     tracked_bundle = source / "packaging/dependencies/gtk-4.22.4-win32-cairo-buffer/VACARDS-GTK-BUNDLE.env"
     tracked_gtk = builder["fields"](tracked_bundle)
+    assert tracked_gtk["format"] == "3"
     assert tracked_gtk["library_sha256"] == (
-        "f812c202af97524d92ee5d4e72dc9497c5e41fc19fe80410d8e304d50fa829bd")
-    assert tracked_gtk["patch_sha256"] == (
-        "d11d7c22c2e063cb04cca171436befe7f9544702a2a92a23a7463c4f79f00272")
+        "7f2371d3325eae7a5eb34ca1709b95be837be786cf07dd74c51cacdc18203024")
     assert tracked_gtk["exports_sha256"] == (
         "783e9b178e29deaf13eb9749974cf025c59381592d71b65199071a005e1ff71a")
     assert tracked_gtk["exports_count"] == "5275"
+    assert tracked_gtk["clipboard_patch_filename"] == "gtk-4.22.4-win32-clipboard-empty.patch"
+    assert tracked_gtk["clipboard_patch_sha256"] == (
+        "d4a6b4b8a88ba25a50fa8e9f1715e4f65da26be81df5adcce0171c62252ef13c")
+    assert tracked_gtk["clipboard_priority_patch_filename"] == "gtk-4.22.4-win32-clipboard-format-priority.patch"
+    assert tracked_gtk["clipboard_priority_patch_sha256"] == (
+        "48db45102f21bc0a97d10b79dd8e6ebff65e86a5acc7ac142fee6af784e88615")
+    assert tracked_gtk["patch_sha256"] == (
+        "d11d7c22c2e063cb04cca171436befe7f9544702a2a92a23a7463c4f79f00272")
     assert tracked_gtk["baseline_stock_library_sha256"] == (
         "6438b88ec657c20b8549c9fbc80ea6bafe795c477db60ee20dade69fa63a63ca")
     # Focused parser oracle: feed the actual captured objdump text straight to
@@ -301,8 +314,21 @@ def packaging_preflight():
         patch_dir.mkdir(parents=True)
         patch = patch_dir / "gtk-4.22.4-win32-cairo-buffer.patch"
         patch.write_bytes(b"synthetic gtk implementation patch\n")
+        clipboard_patch = patch_dir / "gtk-4.22.4-win32-clipboard-empty.patch"
+        clipboard_bytes = b"synthetic clipboard patch\n"
+        clipboard_patch.write_bytes(clipboard_bytes)
+        clipboard_priority_patch = patch_dir / "gtk-4.22.4-win32-clipboard-format-priority.patch"
+        clipboard_priority_bytes = b"synthetic clipboard_priority patch\n"
+        clipboard_priority_patch.write_bytes(clipboard_priority_bytes)
         bundle = root / "VACARDS-GTK-BUNDLE.env"
         run_root = root / "run"
+        (run_root / "inputs").mkdir(parents=True)
+        copied_clipboard = run_root / "inputs" / clipboard_patch.name
+        copied_clipboard.write_bytes(clipboard_bytes)
+        copied_priority = run_root / "inputs" / clipboard_priority_patch.name
+        copied_priority.write_bytes(clipboard_priority_bytes)
+        copied_patch = run_root / "inputs" / patch.name
+        copied_patch.write_bytes(patch.read_bytes())
         library = run_root / "install/bin/libgtk-4-1.dll"
         library.parent.mkdir(parents=True)
         library.write_bytes(b"synthetic patched gtk dll\n")
@@ -335,12 +361,16 @@ def packaging_preflight():
 
         def bundle_values():
             return {
-                "format": "1", "dependency": "gtk4", "gtk_version": "4.22.4",
+                "format": "3", "dependency": "gtk4", "gtk_version": "4.22.4",
                 "platform": "windows-ucrt64", "architecture": "x86_64",
                 "source_archive_sha256": "1" * 64,
                 "msys2_commit": "d07b8dabb92443fd1daed511ad7b406825964b0d",
                 "msys2_pkgbuild_sha256": "2" * 64, "p001_sha256": "3" * 64,
                 "p003_sha256": "4" * 64, "patch_filename": patch.name,
+                "clipboard_patch_filename": clipboard_patch.name,
+                "clipboard_patch_sha256": digest(clipboard_patch),
+                "clipboard_priority_patch_filename": clipboard_priority_patch.name,
+                "clipboard_priority_patch_sha256": digest(clipboard_priority_patch),
                 "patch_sha256": digest(patch), "library_relative_path": "bin/libgtk-4-1.dll",
                 "library_sha256": digest(library), "exports_count": str(len(exports)),
                 "exports_sha256": digest(exports_path),
@@ -358,17 +388,25 @@ def packaging_preflight():
                       "exports_count": str(len(exports)),
                       "inventory_sha256": digest(inventory),
                       "ucrt64_dll_manifest_sha256": digest(dependencies), "configure_only": "0"}
+            values.update(clipboard_patch_filename=clipboard_patch.name,
+                          clipboard_patch_sha256=digest(clipboard_patch))
+            values.update(clipboard_priority_patch_filename=clipboard_priority_patch.name,
+                          clipboard_priority_patch_sha256=digest(clipboard_priority_patch))
             values.update(overrides)
             (run_root / "VACARDS-GTK.env").write_text(
                 "".join(f"{k}={v}\n" for k, v in values.items()), encoding="utf-8")
 
         def write_toolchain(**overrides):
-            values = {"format": "2", "platform": "windows-ucrt64", "architecture": "x86_64",
+            values = {"format": "3", "platform": "windows-ucrt64", "architecture": "x86_64",
                       "gtk_version": "4.22.4", "gtk_tarball_sha256": "1" * 64,
                       "msys2_commit": "d07b8dabb92443fd1daed511ad7b406825964b0d",
                       "msys2_pkgbuild_sha256": "2" * 64, "p001_sha256": "3" * 64,
                       "p003_sha256": "4" * 64, "impl_patch_sha256": digest(patch),
                       "configure_only": "0"}
+            values.update(clipboard_patch_filename=clipboard_patch.name,
+                          clipboard_patch_sha256=digest(clipboard_patch))
+            values.update(clipboard_priority_patch_filename=clipboard_priority_patch.name,
+                          clipboard_priority_patch_sha256=digest(clipboard_priority_patch))
             values.update(overrides)
             (run_root / "toolchain.txt").write_text(
                 "".join(f"{k}={v}\n" for k, v in values.items()), encoding="utf-8")
@@ -396,6 +434,45 @@ def packaging_preflight():
         assert result["library_sha256"] == digest(library)
         assert result["exports_count"] == str(len(exports))
         assert result["baseline_stock_library_sha256"] == digest(baseline)
+        assert result["clipboard_patch_sha256"] == digest(clipboard_patch)
+        for target in (clipboard_patch, copied_clipboard):
+            target.unlink()
+            rejects(f"missing clipboard patch: {target}")
+            target.write_bytes(clipboard_bytes + b"changed")
+            rejects(f"changed clipboard patch: {target}")
+            target.write_bytes(clipboard_bytes)
+        for writer in (write_env, write_toolchain):
+            writer(clipboard_patch_sha256="0" * 64)
+            rejects("clipboard provenance mismatch")
+            writer(clipboard_patch_filename="")
+            rejects("missing clipboard provenance")
+            writer()
+        assert result["clipboard_priority_patch_sha256"] == digest(clipboard_priority_patch)
+        for target in (clipboard_priority_patch, copied_priority):
+            target.unlink()
+            rejects(f"missing clipboard_priority patch: {target}")
+            target.write_bytes(clipboard_priority_bytes + b"changed")
+            rejects(f"changed clipboard_priority patch: {target}")
+            target.write_bytes(clipboard_priority_bytes)
+        for writer in (write_env, write_toolchain):
+            writer(clipboard_priority_patch_sha256="0" * 64)
+            rejects("clipboard_priority provenance mismatch")
+            writer(clipboard_priority_patch_filename="")
+            rejects("missing clipboard_priority provenance")
+            writer()
+        for legacy in ("1", "2"):
+            write_bundle(format=legacy)
+            rejects(f"legacy bundle format {legacy}")
+        write_bundle()
+        write_toolchain(format="2")
+        rejects("legacy toolchain format 2")
+        write_toolchain()
+        write_bundle(clipboard_priority_patch_sha256="")
+        rejects("missing priority patch pin")
+        write_bundle(clipboard_patch_sha256="")
+        rejects("missing clipboard pin")
+        write_bundle()
+        check()
         # Valid-but-different GTK bytes must not enter as the tested library.
         library.write_bytes(b"synthetic patched gtk dll\n" + b"drift")
         rejects("changed library bytes")
@@ -407,6 +484,13 @@ def packaging_preflight():
         patch.write_bytes(b"different tracked patch\n")
         rejects("tracked patch sha")
         patch.write_bytes(b"synthetic gtk implementation patch\n")
+        for target, original in ((patch, b"synthetic gtk implementation patch\n"),
+                                 (copied_patch, b"synthetic gtk implementation patch\n")):
+            target.unlink()
+            rejects("missing Cairo patch")
+            target.write_bytes(original + b"changed")
+            rejects("changed Cairo patch")
+            target.write_bytes(original)
         # Missing run records fail closed.
         (run_root / "VACARDS-GTK.env").unlink()
         rejects("missing run manifest")
@@ -470,21 +554,38 @@ def packaging_preflight():
     # `--scope machine` selects the admin/HKLM/Program Files branch of the one
     # tracked NSI. Expanded text replaces a real makensis or installation run.
     nsi = (here / "internal-test-installer.nsi").read_text(encoding="utf-8")
-    user, machine = expand_nsis(nsi, set()), expand_nsis(nsi, {"SCOPE_MACHINE"})
+    cli_payload = {"bin/vastudio-cli.exe"}
+    user = expand_nsis(nsi, set(), cli_payload)
+    machine = expand_nsis(nsi, {"SCOPE_MACHINE"}, cli_payload)
+    assert '!error "Build 30 payload requires' not in user
+    assert '!error "Build 30 payload requires' in expand_nsis(nsi, set())
     def code(text):
         return "\n".join(line for line in text.splitlines() if not line.strip().startswith(";"))
     uc, mc = code(user), code(machine)
     for text in (nsi, user, machine):
-        assert "RMDir /r" not in code(text), "recursive install-root deletion must not appear"
+        recursive = [line.strip() for line in code(text).splitlines() if "RMDir /r" in line]
+        # Existing thumbnail-cache cleanup is separate from the install root.
+        # No other recursive deletion may enter either installer scope.
+        assert all(line == 'RMDir /r "$LOCALAPPDATA\\VAStudio\\SvgThumbnails"' for line in recursive)
+        assert len(recursive) <= 1
+        if text == machine:
+            assert not recursive
         assert "INSTALL_ROOT" not in code(text), "fixed install root must not appear"
     assert "RequestExecutionLevel user" in uc and "RequestExecutionLevel admin" not in uc
-    assert "HKCU" in uc and "HKLM" not in uc and "SetRegView 64" not in uc
+    assert "!define REG_ROOT HKCU" in uc and "!define REG_ROOT HKLM" not in uc
+    assert "SetRegView 64" not in uc.split("Function .onInit", 1)[1].split("FunctionEnd", 1)[0]
+    # CLI and Explorer discovery use the 64-bit view in both install scopes;
+    # the per-user uninstall registration still returns to the default view.
+    assert 'SetRegView 64\n  WriteRegStr ${REG_ROOT} "${CLI_KEY}" "Executable"' in uc
+    assert 'SetRegView default\n  FileOpen $0 "$INSTDIR\\cli-location.json"' in uc
     assert 'InstallDir "$LOCALAPPDATA\\Programs\\VACards Test\\${TEST_VERSION}"' in uc
     assert '"$SMPROGRAMS\\VACards Test\\${PRODUCT} ${DISPLAY_VERSION} ${TEST_VERSION}.lnk"' in uc
     assert '"$DESKTOP' not in uc
     assert "RequestExecutionLevel admin" in mc and "RequestExecutionLevel user" not in mc
     assert "SetRegView 64" in mc and "SetShellVarContext all" in mc
-    assert "HKLM" in mc and "HKCU" not in mc
+    # Machine thumbnail registration also saves/restores a per-user override.
+    # The install/uninstall identity itself must select the machine root.
+    assert "!define REG_ROOT HKLM" in mc and "!define REG_ROOT HKCU" not in mc
     assert 'InstallDir "$PROGRAMFILES64\\${PRODUCT} ${DISPLAY_VERSION}"' in mc
     assert '"$PROGRAMFILES64\\"' in mc
     assert '"$DESKTOP\\${PRODUCT} ${DISPLAY_VERSION}.lnk"' in mc

@@ -1,0 +1,133 @@
+{
+  "description": "No explicit pages: viewport fallback is one 96 by 192 px rectangle.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.pages",
+        "params": {}
+      },
+      "command": "query.pages",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "empty-root",
+              "label": "",
+              "order": 0,
+              "rect": {
+                "kind": "geometric",
+                "x": {
+                  "px": 0,
+                  "preferred": {
+                    "value": 0.0,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 0,
+                  "preferred": {
+                    "value": 0.0,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 96,
+                  "preferred": {
+                    "value": 25.4,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 192,
+                  "preferred": {
+                    "value": 50.8,
+                    "unit": "mm"
+                  }
+                }
+              }
+            }
+          ],
+          "total": 1,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/empty.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

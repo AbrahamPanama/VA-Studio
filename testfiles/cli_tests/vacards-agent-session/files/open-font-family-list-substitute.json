@@ -1,0 +1,50 @@
+{
+  "description": "P9 independent M2 open-font-family-list-substitute",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "open",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/font-list.svg",
+          "format": "svg",
+          "resource-policy": "embed",
+          "font-policy": "substitute",
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "expect_exact": {
+        "data.intake.fonts.0.family": "P9 Missing R1",
+        "data.intake.fonts.0.substituted": true
+      },
+      "expect_nonempty": [
+        "warnings"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

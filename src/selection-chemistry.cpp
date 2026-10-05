@@ -25,6 +25,8 @@
 #include "ui/explode-bitmap-publication.h"
 #include "selection-chemistry.h"
 #include "bitmap-copy-outcome.h"
+#include "object/clip-document-service.h"
+#include "live_effects/lpe-powerclip.h"
 
 #include <algorithm>
 #include <cmath>
@@ -90,6 +92,7 @@
 #include "object/sp-tspan.h"
 #include "object/sp-use.h"
 #include "util/scope_exit.h"
+#include "util/operation-targets.h"
 #include "page-manager.h"
 #include "path-chemistry.h"
 #include "selection.h"
@@ -917,12 +920,27 @@ static void ungroup_impl(ObjectSet *set)
         }
     }
 
-    std::vector<SPItem *> children;
+    // Ungroup in document order. The std::set above is ordered by address, so iterating it made the
+    // selection order and the IDs of generated clip copies depend on heap layout.
+    std::vector<SPGroup *> ordered(groups.begin(), groups.end());
+    std::sort(ordered.begin(), ordered.end(), sp_object_compare_position_bool);
 
-    for (auto *group : groups) {
-        sp_item_group_ungroup(group, children);
+    std::vector<std::vector<SPItem *>> segments;
+    segments.reserve(ordered.size());
+    std::size_t count = 0;
+    for (auto *group : ordered) {
+        segments.emplace_back();
+        sp_item_group_ungroup(group, segments.back());
+        count += segments.back().size();
     }
 
+    // Each helper result is reversed already. Earlier calls used to prepend
+    // their results, so flatten once in reverse group-call order.
+    std::vector<SPItem *> children;
+    children.reserve(count);
+    for (auto it = segments.rbegin(); it != segments.rend(); ++it) {
+        children.insert(children.end(), it->begin(), it->end());
+    }
     set->addList(children);
 }
 
@@ -1366,6 +1384,12 @@ void ObjectSet::stackDown(bool skip_undo) {
 
 void ObjectSet::cut()
 {
+    // Nothing selected: say so (no clipboard is needed for that), as before BUG-021.
+    if (isEmpty()) {
+        deleteItems();
+        return;
+    }
+    if (!Inkscape::UI::ClipboardManager::get()->ensureClipboard(desktop())) return;
     if (Bitmap::publicationBoundaryPending(document())) {
         if (desktop()) Bitmap::deferPublicationBoundary(*desktop(),[](SPDesktop &d) { d.getSelection()->cut(); });
         return;
@@ -1376,6 +1400,9 @@ void ObjectSet::cut()
     // A headless selection (command line, no desktop) has no tool.
     if (auto tool = _desktop ? _desktop->getTool() : nullptr) {
         if (auto text_tool = dynamic_cast<TextTool*>(tool)) {
+            if (!text_tool->textItem() || text_tool->text_sel_start == text_tool->text_sel_end) {
+                return;
+            }
             if (text_tool->deleteSelection()) {
                 DocumentUndo::done(desktop()->getDocument(), RC_("Undo", "Cut text"), INKSCAPE_ICON("draw-text"));
                 return;
@@ -3906,6 +3933,196 @@ void ObjectSet::chameleonFill()
     DocumentUndo::done(doc, RC_("Undo", "Chameleon Fill"), "");
 }
 
+// Shared mutation after callers have chosen roles and GUI-only grouping policy.
+static void apply_mask_document(SPDocument *doc, bool apply_clip_path,
+                                std::vector<std::pair<XML::Node *, Geom::Affine>> const &mask_items,
+                                std::vector<SPItem *> const &apply_to_items,
+                                std::vector<SPItem *> const &items_to_delete,
+                                std::vector<SPItem *> &items_to_select,
+                                int grouping, bool request_local)
+{
+    auto xml_doc = doc->getReprDoc();
+    char const *attributeName = apply_clip_path ? "clip-path" : "mask";
+    for (auto item : apply_to_items | std::views::reverse) {
+        std::vector<Inkscape::XML::Node*> mask_items_dup;
+        std::map<Inkscape::XML::Node*, Geom::Affine> dup_transf;
+        for (auto const &mask_item : mask_items) {
+            Inkscape::XML::Node *dup = mask_item.first->duplicate(xml_doc);
+            mask_items_dup.push_back(dup);
+            dup_transf[dup] = mask_item.second;
+        }
+
+        Inkscape::XML::Node *current = item->getRepr();
+        // Node to apply mask to
+        Inkscape::XML::Node *apply_mask_to = current;
+
+        if (grouping == PREFS_MASKOBJECT_GROUPING_SEPARATE) {
+            // enclose current node in group, and apply crop/mask on that
+            Inkscape::XML::Node *group = xml_doc->createElement("svg:g");
+            // make a note we should ungroup this when unsetting mask
+            group->setAttribute("inkscape:groupmode", "maskhelper");
+
+            Inkscape::XML::Node *spnew = current->duplicate(xml_doc);
+            current->parent()->addChild(group, current);
+            sp_repr_unparent(current);
+            group->appendChild(spnew);
+
+            // Apply clip/mask to group instead
+            apply_mask_to = group;
+            item = cast<SPItem>(doc->getObjectByRepr(group));
+
+            items_to_select.push_back(item);
+            Inkscape::GC::release(spnew);
+            Inkscape::GC::release(group);
+        }
+
+        char const *mask_id = nullptr;
+        if (apply_clip_path) {
+            mask_id = SPClipPath::create(mask_items_dup, doc);
+        } else {
+            mask_id = SPMask::create(mask_items_dup, doc);
+        }
+
+        // inverted object transform should be applied to a mask object,
+        // as mask is calculated in user space (after applying transform)
+        for (auto const &it : mask_items_dup) {
+            auto clip_item = cast<SPItem>(doc->getObjectByRepr(it));
+            if (request_local) {
+                // Preserve the geometry and serialize placement directly, bypassing
+                // transform preferences and their optional geometry/style baking.
+                clip_item->setAttributeOrRemoveIfEmpty("transform", sp_svg_transform_write(
+                    dup_transf[it] * item->i2doc_affine().inverse()));
+            } else {
+                clip_item->doWriteTransform(dup_transf[it]);
+                clip_item->doWriteTransform(clip_item->transform * item->i2doc_affine().inverse());
+            }
+        }
+
+        apply_mask_to->setAttribute(attributeName, Glib::ustring("url(#") + mask_id + ')');
+    }
+
+    for (auto item : items_to_delete) {
+        if (request_local) {
+            // The duplicate keeps its native effects. Deleting via deleteObject
+            // would remove cutter LPEs through GUI preference-dependent hooks.
+            sp_repr_unparent(item->getRepr());
+        } else {
+            item->deleteObject(false);
+        }
+        items_to_select.erase(std::remove(items_to_select.begin(), items_to_select.end(), item), items_to_select.end());
+    }
+}
+
+static std::vector<SPItem *> release_mask_document(SPDocument *doc, bool apply_clip_path,
+                                                  bool delete_helper_group, bool remove_original,
+                                                  bool ungroup_masked, std::vector<SPItem *> const &items_vec,
+                                                  bool request_local)
+{
+    auto xml_doc = doc->getReprDoc();
+    gchar const *attributeName = apply_clip_path ? "clip-path" : "mask";
+    std::map<SPObject*,SPItem*> referenced_objects;
+
+    std::vector<SPGroup *> items_to_ungroup;
+    auto items_to_select = items_vec;
+
+    // SPObject* refers to a group containing the clipped path or mask itself,
+    // whereas SPItem* refers to the item being clipped or masked
+    for (auto i : items_vec) {
+        if (remove_original) {
+            // remember referenced mask/clippath, so orphaned masks can be moved back to document
+            SPItem *item = i;
+            SPObject *obj_ref = nullptr;
+
+            if (apply_clip_path) {
+                obj_ref = item->getClipObject();
+            } else {
+                obj_ref = item->getMaskObject();
+            }
+
+            // collect distinct mask object (and associate with item to apply transform)
+            if (obj_ref) {
+                referenced_objects[obj_ref] = item;
+            }
+        }
+
+        i->setAttribute(attributeName, "none");
+
+        auto group = cast<SPGroup>(i);
+        if (ungroup_masked && group && delete_helper_group) {
+            // if we had previously enclosed masked object in group,
+            // add it to list so we can ungroup it later
+
+            // ungroup only groups we created when setting clip/mask
+            if (group->layerMode() == SPGroup::MASK_HELPER) {
+                items_to_ungroup.push_back(group);
+            }
+        }
+    }
+
+    // restore mask objects into a document
+    for (auto & referenced_object : referenced_objects) {
+        SPObject *obj = referenced_object.first; // Group containing the clipped paths or masks
+        std::vector<Inkscape::XML::Node *> items_to_move;
+        for (auto& child: obj->children) {
+            // Collect all clipped paths and masks within a single group
+            Inkscape::XML::Node *copy = child.getRepr()->duplicate(xml_doc);
+            if (copy->attribute("inkscape:original-d") && copy->attribute("inkscape:path-effect")) {
+                copy->setAttribute("d", copy->attribute("inkscape:original-d"));
+            } else if (copy->attribute("inkscape:original-d")) {
+                copy->setAttribute("d", copy->attribute("inkscape:original-d"));
+                copy->removeAttribute("inkscape:original-d");
+            } else if (!copy->attribute("inkscape:path-effect") && !is<SPPath>(&child)) {
+                copy->removeAttribute("d");
+                copy->removeAttribute("inkscape:original-d");
+            }
+            items_to_move.push_back(copy);
+        }
+
+        if (!obj->isReferenced()) {
+            // delete from defs if no other object references this mask
+            obj->deleteObject(false);
+        }
+
+        // remember parent and position of the item to which the clippath/mask was applied
+        Inkscape::XML::Node *parent = (referenced_object.second)->getRepr()->parent();
+        Inkscape::XML::Node *ref_repr = referenced_object.second->getRepr();
+
+        // Iterate through all clipped paths / masks
+        for (auto const repr : items_to_move | std::views::reverse) {
+            // insert into parent, restore pos
+            parent->addChild(repr, ref_repr);
+
+            auto mask_item = cast<SPItem>(doc->getObjectByRepr(repr));
+            if (!mask_item) {
+                continue;
+            }
+            items_to_select.push_back(mask_item);
+
+            // transform mask, so it is moved the same spot where mask was applied
+            auto const placement = mask_item->transform * referenced_object.second->transform;
+            if (request_local) {
+                mask_item->setAttributeOrRemoveIfEmpty("transform", sp_svg_transform_write(placement));
+            } else {
+                mask_item->doWriteTransform(placement);
+            }
+        }
+    }
+
+    // ungroup marked groups added when setting mask
+    for (auto group : items_to_ungroup | std::views::reverse) {
+        if (group) {
+            items_to_select.erase(std::remove(items_to_select.begin(), items_to_select.end(), group), items_to_select.end());
+            std::vector<SPItem*> children;
+            sp_item_group_ungroup(group, children);
+            items_to_select.insert(items_to_select.end(),children.rbegin(),children.rend());
+        } else {
+            g_assert_not_reached();
+        }
+    }
+
+    return items_to_select;
+}
+
 /**
  * Creates a mask or clipPath from selection.
  * Two different modes:
@@ -3921,7 +4138,7 @@ void ObjectSet::chameleonFill()
         return;
 
     SPDocument *doc = document();
-    Inkscape::XML::Document *xml_doc = doc->getReprDoc();
+    auto xml_doc = doc->getReprDoc();
 
     // check if something is selected
     bool is_empty = isEmpty();
@@ -4014,62 +4231,8 @@ void ObjectSet::chameleonFill()
         items_to_select.clear();
     }
 
-    char const *attributeName = apply_clip_path ? "clip-path" : "mask";
-    for (auto item : apply_to_items | std::views::reverse) {
-        std::vector<Inkscape::XML::Node*> mask_items_dup;
-        std::map<Inkscape::XML::Node*, Geom::Affine> dup_transf;
-        for (auto const &mask_item : mask_items) {
-            Inkscape::XML::Node *dup = mask_item.first->duplicate(xml_doc);
-            mask_items_dup.push_back(dup);
-            dup_transf[dup] = mask_item.second;
-        }
-
-        Inkscape::XML::Node *current = item->getRepr();
-        // Node to apply mask to
-        Inkscape::XML::Node *apply_mask_to = current;
-
-        if (grouping == PREFS_MASKOBJECT_GROUPING_SEPARATE) {
-            // enclose current node in group, and apply crop/mask on that
-            Inkscape::XML::Node *group = xml_doc->createElement("svg:g");
-            // make a note we should ungroup this when unsetting mask
-            group->setAttribute("inkscape:groupmode", "maskhelper");
-
-            Inkscape::XML::Node *spnew = current->duplicate(xml_doc);
-            current->parent()->addChild(group, current);
-            sp_repr_unparent(current);
-            group->appendChild(spnew);
-
-            // Apply clip/mask to group instead
-            apply_mask_to = group;
-            item = cast<SPItem>(doc->getObjectByRepr(group));
-
-            items_to_select.push_back(item);
-            Inkscape::GC::release(spnew);
-            Inkscape::GC::release(group);
-        }
-
-        char const *mask_id = nullptr;
-        if (apply_clip_path) {
-            mask_id = SPClipPath::create(mask_items_dup, doc);
-        } else {
-            mask_id = SPMask::create(mask_items_dup, doc);
-        }
-
-        // inverted object transform should be applied to a mask object,
-        // as mask is calculated in user space (after applying transform)
-        for (auto const &it : mask_items_dup) {
-            auto clip_item = cast<SPItem>(doc->getObjectByRepr(it));
-            clip_item->doWriteTransform(dup_transf[it]);
-            clip_item->doWriteTransform(clip_item->transform * item->i2doc_affine().inverse());
-        }
-
-        apply_mask_to->setAttribute(attributeName, Glib::ustring("url(#") + mask_id + ')');
-    }
-
-    for (auto item : items_to_delete) {
-        item->deleteObject(false);
-        items_to_select.erase(std::remove(items_to_select.begin(), items_to_select.end(), item), items_to_select.end());
-    }
+    apply_mask_document(doc, apply_clip_path, mask_items, apply_to_items,
+                        items_to_delete, items_to_select, grouping, false);
 
     addList(items_to_select);
 }
@@ -4079,7 +4242,6 @@ void ObjectSet::unsetMask(const bool apply_clip_path,
                           const bool remove_original)
 {
     SPDocument *doc = document();
-    Inkscape::XML::Document *xml_doc = doc->getReprDoc();
 
     // check if something is selected
     if (isEmpty()) {
@@ -4092,108 +4254,187 @@ void ObjectSet::unsetMask(const bool apply_clip_path,
     bool ungroup_masked = prefs->getBool("/options/maskobject/ungrouping", true);
     doc->ensureUpToDate();
 
-    gchar const *attributeName = apply_clip_path ? "clip-path" : "mask";
-    std::map<SPObject*,SPItem*> referenced_objects;
-
     auto items_vec = items_vector();
     clear();
-
-    std::vector<SPGroup *> items_to_ungroup;
-    auto items_to_select = items_vec;
-
-    // SPObject* refers to a group containing the clipped path or mask itself,
-    // whereas SPItem* refers to the item being clipped or masked
-    for (auto i : items_vec) {
-        if (remove_original) {
-            // remember referenced mask/clippath, so orphaned masks can be moved back to document
-            SPItem *item = i;
-            SPObject *obj_ref = nullptr;
-
-            if (apply_clip_path) {
-                obj_ref = item->getClipObject();
-            } else {
-                obj_ref = item->getMaskObject();
-            }
-
-            // collect distinct mask object (and associate with item to apply transform)
-            if (obj_ref) {
-                referenced_objects[obj_ref] = item;
-            }
-        }
-
-        i->setAttribute(attributeName, "none");
-
-        auto group = cast<SPGroup>(i);
-        if (ungroup_masked && group && delete_helper_group) {
-            // if we had previously enclosed masked object in group,
-            // add it to list so we can ungroup it later
-
-            // ungroup only groups we created when setting clip/mask
-            if (group->layerMode() == SPGroup::MASK_HELPER) {
-                items_to_ungroup.push_back(group);
-            }
-        }
-    }
-
-    // restore mask objects into a document
-    for (auto & referenced_object : referenced_objects) {
-        SPObject *obj = referenced_object.first; // Group containing the clipped paths or masks
-        std::vector<Inkscape::XML::Node *> items_to_move;
-        for (auto& child: obj->children) {
-            // Collect all clipped paths and masks within a single group
-            Inkscape::XML::Node *copy = child.getRepr()->duplicate(xml_doc);
-            if (copy->attribute("inkscape:original-d") && copy->attribute("inkscape:path-effect")) {
-                copy->setAttribute("d", copy->attribute("inkscape:original-d"));
-            } else if (copy->attribute("inkscape:original-d")) {
-                copy->setAttribute("d", copy->attribute("inkscape:original-d"));
-                copy->removeAttribute("inkscape:original-d");
-            } else if (!copy->attribute("inkscape:path-effect") && !is<SPPath>(&child)) {
-                copy->removeAttribute("d");
-                copy->removeAttribute("inkscape:original-d");
-            }
-            items_to_move.push_back(copy);
-        }
-
-        if (!obj->isReferenced()) {
-            // delete from defs if no other object references this mask
-            obj->deleteObject(false);
-        }
-
-        // remember parent and position of the item to which the clippath/mask was applied
-        Inkscape::XML::Node *parent = (referenced_object.second)->getRepr()->parent();
-        Inkscape::XML::Node *ref_repr = referenced_object.second->getRepr();
-
-        // Iterate through all clipped paths / masks
-        for (auto const repr : items_to_move | std::views::reverse) {
-            // insert into parent, restore pos
-            parent->addChild(repr, ref_repr);
-
-            auto mask_item = cast<SPItem>(document()->getObjectByRepr(repr));
-            if (!mask_item) {
-                continue;
-            }
-            items_to_select.push_back(mask_item);
-
-            // transform mask, so it is moved the same spot where mask was applied
-            mask_item->doWriteTransform(mask_item->transform * referenced_object.second->transform);
-        }
-    }
-
-    // ungroup marked groups added when setting mask
-    for (auto group : items_to_ungroup | std::views::reverse) {
-        if (group) {
-            items_to_select.erase(std::remove(items_to_select.begin(), items_to_select.end(), group), items_to_select.end());
-            std::vector<SPItem*> children;
-            sp_item_group_ungroup(group, children);
-            items_to_select.insert(items_to_select.end(),children.rbegin(),children.rend());
-        } else {
-            g_assert_not_reached();
-        }
-    }
+    auto items_to_select = release_mask_document(doc, apply_clip_path, delete_helper_group,
+                                                remove_original, ungroup_masked, items_vec, false);
 
     // rebuild selection
     addList(items_to_select);
 }
+
+namespace Inkscape::ClipDocumentService {
+namespace {
+std::string clip_id(SPItem const *item) { return item && item->getId() ? item->getId() : ""; }
+Reason live_clip_item(SPDocument *doc, SPItem *item)
+{
+    if (!item || item->document != doc || clip_id(item).empty() ||
+        doc->getObjectById(item->getId()) != item || !item->parent || is<SPRoot>(item)) {
+        return Reason::InvalidItem;
+    }
+    bool in_document = false;
+    for (auto ancestor = static_cast<SPObject *>(item); ancestor; ancestor = ancestor->parent) {
+        if (is<SPDefs>(ancestor) || is<SPClipPath>(ancestor) || is<SPMask>(ancestor)) return Reason::InvalidItem;
+        if (auto root = cast<SPRoot>(ancestor)) in_document = root == doc->getRoot();
+        if (auto i = cast<SPItem>(ancestor); i && (i->isHidden() || i->isLocked())) return Reason::ProtectedItem;
+    }
+    return in_document ? Reason::None : Reason::InvalidItem;
+}
+bool clip_ancestor(SPItem *a, SPItem *b)
+{
+    for (auto parent = b->parent; parent; parent = parent->parent) if (parent == a) return true;
+    return false;
+}
+bool finite_clip_affine(Geom::Affine const &affine)
+{
+    for (unsigned i = 0; i < 6; ++i) if (!std::isfinite(affine[i])) return false;
+    return true;
+}
+// Native PowerClip collects curves from shapes and recursively from groups;
+// clones are explicitly refused by the native inverse entry point. Refuse
+// non-geometric children too, instead of silently producing a partial inverse.
+bool inverse_clip_geometry(SPItem *item)
+{
+    if (is<SPUse>(item)) return false;
+    if (auto group = cast<SPGroup>(item)) {
+        auto children = group->item_list();
+        return !children.empty() && std::ranges::all_of(children, inverse_clip_geometry);
+    }
+    auto shape = cast<SPShape>(item);
+    return shape && shape->curve() && !shape->curve()->empty();
+}
+Result clip_refusal(Reason reason) { return {.status = Status::Refused, .reason = reason}; }
+}
+
+Result prepareSetClip(SPDocument *doc, SPItem *target, SPItem *cutter, SetOptions options)
+{
+    if (!doc) return clip_refusal(Reason::InvalidDocument);
+    for (auto item : {target, cutter}) {
+        auto reason = live_clip_item(doc, item);
+        if (reason != Reason::None) return clip_refusal(reason);
+    }
+    if (target == cutter || clip_ancestor(target,cutter) || clip_ancestor(cutter,target)) {
+        return clip_refusal(Reason::OverlappingRoles);
+    }
+    for (auto root : {target, cutter}) {
+        auto other = root == target ? cutter : target;
+        std::vector<XML::Node *> pending{root->getRepr()};
+        while (!pending.empty()) {
+            auto node = pending.back(); pending.pop_back();
+            auto source = cast<SPItem>(doc->getObjectByRepr(node));
+            std::set<SPItem *> visited;
+            while (auto use = cast<SPUse>(source)) {
+                if (!visited.insert(source).second) return clip_refusal(Reason::MissingSource);
+                source = use->get_original();
+                if (!source || source->document != doc) return clip_refusal(Reason::MissingSource);
+                if (source == other || clip_ancestor(other,source) || clip_ancestor(source,other)) {
+                    return clip_refusal(Reason::CloneWithSource);
+                }
+            }
+            for (auto child = node->firstChild(); child; child = child->next()) pending.push_back(child);
+        }
+    }
+    ObjectSet pair(doc);
+    pair.add(target); pair.add(cutter);
+    if (object_set_contains_both_clone_and_original(&pair)) return clip_refusal(Reason::CloneWithSource);
+    if (!options.keep_cutter) {
+        // Do not orphan external references, or let clone-orphan preferences
+        // decide what happens to artwork outside this role pair.
+        std::vector<XML::Node *> pending{cutter->getRepr()};
+        while (!pending.empty()) {
+            auto node = pending.back(); pending.pop_back();
+            auto object = doc->getObjectByRepr(node);
+            if (object && object->isReferenced()) return clip_refusal(Reason::ReferencedCutter);
+            for (auto child = node->firstChild(); child; child = child->next()) pending.push_back(child);
+        }
+    }
+    auto const placement = target->i2doc_affine();
+    if (placement.isSingular() || !finite_clip_affine(placement) || !finite_clip_affine(cutter->i2doc_affine())) {
+        return clip_refusal(Reason::SingularTransform);
+    }
+    auto lpe = cast<SPLPEItem>(target);
+    if (lpe && lpe->hasPathEffectOfType(LivePathEffect::POWERCLIP)) return clip_refusal(Reason::ExistingPowerClip);
+    if (options.inverse) {
+        if (!lpe || !lpe->pathEffectsEnabled() || !target->documentVisualBounds()) {
+            return clip_refusal(Reason::UnsupportedInverseTarget);
+        }
+        if (!inverse_clip_geometry(cutter)) return clip_refusal(Reason::UnsupportedInverseCutter);
+    }
+    Result result{.status = Status::Prepared};
+    result.affected_ids.push_back(clip_id(target));
+    if (!options.keep_cutter) result.affected_ids.push_back(clip_id(cutter));
+    return result;
+}
+
+Result setClip(SPDocument *doc, SPItem *target, SPItem *cutter, SetOptions options)
+{
+    auto result = prepareSetClip(doc,target,cutter,options);
+    if (result.status != Status::Prepared) return result;
+    doc->ensureUpToDate();
+    auto duplicate = cutter->getRepr()->duplicate(doc->getReprDoc());
+    std::vector<std::pair<XML::Node *, Geom::Affine>> mask_items{{duplicate,cutter->i2doc_affine()}};
+    std::vector<SPItem *> selected{target};
+    std::vector<SPItem *> consumed;
+    if (!options.keep_cutter) consumed.push_back(cutter);
+    apply_mask_document(doc,true,mask_items,{target},consumed,selected,PREFS_MASKOBJECT_GROUPING_NONE,true);
+    GC::release(duplicate);
+    if (options.inverse) LivePathEffect::sp_inverse_powerclip(doc,cast<SPLPEItem>(target));
+    result.status = Status::Applied;
+    return result;
+}
+
+Result prepareReleaseClip(SPDocument *doc, std::vector<SPItem *> const &roots, ReleaseOptions options)
+{
+    if (!doc) return clip_refusal(Reason::InvalidDocument);
+    if (options.ungroup_helpers) return clip_refusal(Reason::UnsupportedHelperUngroup);
+    Result result{.status = Status::Unchanged};
+    std::vector<SPItem *> eligible;
+    std::set<SPItem *> seen;
+    for (auto item : roots) {
+        if (!seen.insert(item).second) { result.covered_ids.push_back(clip_id(item)); continue; }
+        auto reason = live_clip_item(doc,item);
+        if (reason == Reason::None && !item->getClipObject()) reason = Reason::NotClipped;
+        if (reason != Reason::None) result.excluded.push_back({clip_id(item),reason});
+        else eligible.push_back(item);
+    }
+    auto resolved = Util::resolve_composite_targets(
+        eligible, [](auto) { return Util::TargetAvailability::Eligible; },
+        [](auto item) { return cast<SPItem>(item->parent); },
+        // Release acts on own clip relations, not clone-inherited sources.
+        [](auto) -> SPItem * { return nullptr; });
+    std::set<SPItem *> independent(resolved.items.begin(),resolved.items.end());
+    for (auto item : eligible) {
+        if (independent.count(item)) result.affected_ids.push_back(clip_id(item));
+        else result.covered_ids.push_back(clip_id(item));
+    }
+    if (!result.affected_ids.empty()) result.status = Status::Prepared;
+    else if (!result.excluded.empty()) { result.status = Status::Refused; result.reason = result.excluded.front().reason; }
+    return result;
+}
+
+Result releaseClip(SPDocument *doc, std::vector<SPItem *> const &roots, ReleaseOptions options)
+{
+    auto result = prepareReleaseClip(doc,roots,options);
+    if (result.status != Status::Prepared) return result;
+    doc->ensureUpToDate();
+    std::vector<SPItem *> items;
+    for (auto const &id : result.affected_ids) {
+        auto item = cast<SPItem>(doc->getObjectById(id));
+        if (auto lpe = cast<SPLPEItem>(item)) LivePathEffect::sp_remove_powerclip(lpe);
+        items.push_back(item);
+    }
+    auto selected = release_mask_document(doc,true,false,options.keep_cutter,false,items,true);
+    for (auto item : selected) {
+        auto id = clip_id(item);
+        if (std::ranges::find(result.affected_ids,id) == result.affected_ids.end()) {
+            result.restored_cutter_ids.push_back(id);
+            result.affected_ids.push_back(id);
+        }
+    }
+    result.status = Status::Applied;
+    return result;
+}
+} // namespace Inkscape::ClipDocumentService
 
 /**
  * \param with_margins margins defined in the xml under <sodipodi:namedview>

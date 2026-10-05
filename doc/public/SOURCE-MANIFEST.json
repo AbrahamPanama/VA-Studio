@@ -1,19 +1,19 @@
 {
   "schema": "va-studio-public-source-manifest/1",
   "about": "Inputs of this public source tree. The modules were flattened from their pinned commits; the libcdr fork is in third_party/libcdr-vacards.",
-  "source_commit": "d2c62cdbb9ca4c08dbc946d43161c5952c923868",
+  "source_commit": "802928ad2953192046287d3d4eca2fdc973ada43",
   "inkscape_baseline": "d2b9be1c53",
   "modules": [
     {
       "path": "po",
-      "commit": "a4b32e22401fb35a6b51e310d12af465187bbb52",
+      "commit": "e279e549efbb56de2728fd9ee5a3315aafc72ef1",
       "origin": "VA Studio fork commit (exists only in the VA Studio development history; its complete source is this directory)",
       "fork_of": "https://gitlab.com/inkscape/translations",
       "upstream_base": "4a4241de4b7fa4f71160b628487369a42320e9ff"
     },
     {
       "path": "share/extensions",
-      "commit": "569514b42d8fbc890bf61adbdf16ffee9fdc632e",
+      "commit": "e586152c75f73b972a05dcff52ae28365fbe51cb",
       "origin": "VA Studio fork commit (exists only in the VA Studio development history; its complete source is this directory)",
       "fork_of": "https://gitlab.com/inkscape/extensions",
       "upstream_base": "87ece23a2fac1a8174d93e35354b84e9465f57e1"
@@ -97,8 +97,8 @@
     "fork_of": "https://git.libreoffice.org/libcdr (mirror: https://github.com/LibreOffice/libcdr)",
     "upstream_base": "none (snapshot import of the libcdr 0.1.10 release)"
   },
-  "exclude_manifest_sha256": "882ac424933b9db292e51332bc4feb175f4b37cd9e2356c40ca8807f1c4bb56f",
-  "substitutions_sha256": "4c3fe7e1204637ec06411b1648f023a1e7f24f0bef0334717e3f95ab117aa4aa",
-  "excluded_file_count": 201,
+  "exclude_manifest_sha256": "3abde1e5da7050f4024b627c4c0376673664189830a9144684dd95e717933f04",
+  "substitutions_sha256": "6929986e868a58c918912880face66df426335f6dfdb90928d78e9dac88f0bef",
+  "excluded_file_count": 232,
   "rules_source": "commit"
 }

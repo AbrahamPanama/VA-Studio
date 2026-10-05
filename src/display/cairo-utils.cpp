@@ -38,6 +38,7 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <zlib.h>
+#include <tiffio.h>
 #include <glibmm/fileutils.h>
 
 #include "cairo-templates.h"
@@ -211,12 +212,14 @@ Pixbuf *Pixbuf::cropTo(const Geom::IntRect &area) const
 // No widely included header changes. Diagnostics use static storage even on OOM.
 static thread_local char const *open_diagnostic = "";
 static thread_local bool open_refused = false;
+static thread_local Bitmap::Outcome open_admission_outcome;
+static thread_local bool open_admission_refused = false;
 char const *image_open_diagnostic() { return open_diagnostic; }
 bool image_open_refused() { return open_refused; }
-void image_open_reset() { open_diagnostic = ""; open_refused = false; }
+void image_open_reset() { open_diagnostic = ""; open_refused = false; open_admission_refused = false; }
 static bool refuse_open(char const *why)
 {
-    open_diagnostic = why;
+    if (!open_admission_refused) open_diagnostic = why;
     open_refused = true;
     return false;
 }
@@ -224,13 +227,29 @@ static bool refuse_open(char const *why)
 std::uint64_t image_open_memory_budget(Bitmap::Memory const &m)
 {
     // No upward guess when the native probe is unavailable.
-    return m.measured ? m.available : 256 * Bitmap::MiB;
+    std::uint64_t limit = 0;
+    auto outcome = Bitmap::admissionLimit(m, limit);
+    if (outcome.ok()) return limit;
+    open_admission_outcome = outcome; // owns the diagnostic after this call returns
+    open_admission_refused = true;
+    refuse_open(open_admission_outcome.diagnostic);
+    open_diagnostic = open_admission_outcome.diagnostic;
+    return 0;
+}
+std::uint64_t image_open_memory_budget(Bitmap::Result<Bitmap::Memory> const &sample)
+{
+    if (sample.ok()) return image_open_memory_budget(sample.value);
+    open_admission_outcome = sample.outcome;
+    open_admission_refused = true;
+    open_refused = true;
+    open_diagnostic = open_admission_outcome.diagnostic;
+    return 0;
 }
 static constexpr std::uint64_t open_buffer_ceiling = std::uint64_t{4} * 1024 * Bitmap::MiB;
 static constexpr std::uint64_t open_scratch = 16 * Bitmap::MiB;
 static std::uint64_t open_budget()
 {
-    return image_open_memory_budget(Bitmap::sampleMemory().value);
+    return image_open_memory_budget(Bitmap::sampleMemory());
 }
 static bool encoded_fits(std::uint64_t n, std::uint64_t budget)
 {
@@ -394,10 +413,193 @@ static bool xpm_fits(guchar const *data, std::size_t len, std::uint64_t budget)
     return true;
 }
 
+// BUG-024: TIFFReadRGBAImage premultiplies even UNASSALPHA samples. Decode
+// ordinary unsigned RGB/gray/palette strips or tiles ourselves instead. This
+// route never consumes GdkPixbuf TIFF pixels, so a future loader fix cannot
+// double-unassociate them. Exotic sample formats/photometrics retain the loader.
+static GdkPixbuf *decode_tiff_samples(guchar const *data, std::size_t len, std::uint64_t budget, bool &refused)
+{
+    struct Input { guchar const *data; std::size_t size, pos = 0; } input{data, len};
+    auto read = +[](thandle_t h, void *dst, tmsize_t size) -> tmsize_t {
+        auto &in = *static_cast<Input *>(h);
+        if (size < 0) return -1;
+        auto n = std::min<std::size_t>(size, in.size - in.pos);
+        std::memcpy(dst, in.data + in.pos, n); in.pos += n;
+        return n;
+    };
+    auto seek = +[](thandle_t h, toff_t offset, int whence) -> toff_t {
+        auto &in = *static_cast<Input *>(h);
+        // libtiff represents negative relative seeks in unsigned toff_t.
+        auto base = whence == SEEK_SET ? 0 : whence == SEEK_CUR ? in.pos : in.size;
+        if (whence != SEEK_SET && whence != SEEK_CUR && whence != SEEK_END) return toff_t(-1);
+        auto delta = static_cast<std::int64_t>(offset);
+        if (delta < 0) {
+            auto magnitude = std::uint64_t(-(delta + 1)) + 1;
+            if (magnitude > base) return toff_t(-1);
+            in.pos = base - magnitude;
+        } else {
+            if (std::uint64_t(delta) > in.size - base) return toff_t(-1);
+            in.pos = base + delta;
+        }
+        return in.pos;
+    };
+    auto tif = TIFFClientOpen("VA TIFF input", "rm", &input, read,
+        +[](thandle_t, void *, tmsize_t) -> tmsize_t { return -1; }, seek,
+        +[](thandle_t) { return 0; },
+        +[](thandle_t h) -> toff_t { return static_cast<Input *>(h)->size; },
+        +[](thandle_t, void **, toff_t *) { return 0; },
+        +[](thandle_t, void *, toff_t) {});
+    if (!tif) return nullptr; // legacy codec owns malformed-header diagnostics
+    auto close = scope_exit([&] { TIFFClose(tif); });
+    std::uint32_t w = 0, h = 0;
+    std::uint16_t bits = 1, samples = 1, photo = 0, planar = 1, kind = 1, orientation = 1;
+    std::uint16_t extras = 0, *extra_types = nullptr;
+    if (!TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w) || !TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h)) return nullptr;
+    if (!image_open_dimensions_fit(w, h, len, budget)) { refused = true; return nullptr; }
+    TIFFGetFieldDefaulted(tif, TIFFTAG_BITSPERSAMPLE, &bits);
+    TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLESPERPIXEL, &samples);
+    TIFFGetFieldDefaulted(tif, TIFFTAG_PLANARCONFIG, &planar);
+    TIFFGetFieldDefaulted(tif, TIFFTAG_SAMPLEFORMAT, &kind);
+    TIFFGetFieldDefaulted(tif, TIFFTAG_ORIENTATION, &orientation);
+    if (!TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photo)) return nullptr;
+    TIFFGetField(tif, TIFFTAG_EXTRASAMPLES, &extras, &extra_types);
+    bool rgb = photo == PHOTOMETRIC_RGB;
+    bool gray = photo == PHOTOMETRIC_MINISBLACK || photo == PHOTOMETRIC_MINISWHITE;
+    bool palette = photo == PHOTOMETRIC_PALETTE;
+    unsigned colors = rgb ? 3 : 1;
+    bool alpha = extras == 1 && extra_types &&
+        (extra_types[0] == EXTRASAMPLE_ASSOCALPHA || extra_types[0] == EXTRASAMPLE_UNASSALPHA);
+    if ((!rgb && !gray && !palette) || kind != SAMPLEFORMAT_UINT ||
+        (planar != PLANARCONFIG_CONTIG && planar != PLANARCONFIG_SEPARATE) ||
+        orientation < 1 || orientation > 8 ||
+        samples != colors + unsigned(alpha) || extras != unsigned(alpha) ||
+        (palette ? (alpha || (bits != 1 && bits != 2 && bits != 4 && bits != 8 && bits != 16))
+                 : (bits != 8 && bits != 16))) return nullptr;
+    std::uint16_t *red = nullptr, *green = nullptr, *blue = nullptr;
+    if (palette && !TIFFGetField(tif, TIFFTAG_COLORMAP, &red, &green, &blue)) return nullptr;
+    bool associated = alpha && extra_types[0] == EXTRASAMPLE_ASSOCALPHA;
+    bool tiled = TIFFIsTiled(tif);
+    std::uint32_t bw = w, bh = 0;
+    if (tiled) {
+        if (!TIFFGetField(tif, TIFFTAG_TILEWIDTH, &bw) || !TIFFGetField(tif, TIFFTAG_TILELENGTH, &bh)) return nullptr;
+    } else {
+        TIFFGetFieldDefaulted(tif, TIFFTAG_ROWSPERSTRIP, &bh);
+        bh = std::min(bh, h);
+    }
+    auto block = tiled ? TIFFTileSize64(tif) : TIFFStripSize64(tif);
+    auto row = tiled ? TIFFTileRowSize64(tif) : TIFFScanlineSize64(tif);
+    auto planes = planar == PLANARCONFIG_SEPARATE ? samples : 1;
+    std::uint64_t storage, scratch, pixels, encoded, peak, row_bits, expected_row;
+    std::uint32_t profile_size = 0; void *profile = nullptr;
+    TIFFGetField(tif, TIFFTAG_ICCPROFILE, &profile_size, &profile);
+    // Reserve the codec block as well as our plane buffers, orientation overlap,
+    // encoded bytes and ICC copies. Reject huge padded tiles before allocating.
+    if (!bw || !bh || !block || !row ||
+        !Bitmap::checkedMul(bw, planar == PLANARCONFIG_SEPARATE ? 1 : samples, row_bits) ||
+        !Bitmap::checkedMul(row_bits, bits, row_bits) ||
+        !Bitmap::checkedCeilDiv(row_bits, 8, expected_row) || row != expected_row ||
+        !Bitmap::checkedMul(row, bh, storage) || block < storage ||
+        !Bitmap::checkedMul(block, planes, storage) || storage > SIZE_MAX || block > PTRDIFF_MAX ||
+        !Bitmap::checkedMul(storage, 2, scratch) ||
+        !Bitmap::checkedMul(w, h, pixels) || !Bitmap::checkedMul(pixels, 12, pixels) ||
+        !Bitmap::checkedMul(len, 2, encoded) || !Bitmap::checkedAdd(pixels, encoded, peak) ||
+        !Bitmap::checkedAdd(peak, scratch, peak) || !Bitmap::checkedAdd(peak, open_scratch, peak) ||
+        !Bitmap::checkedAdd(peak, std::uint64_t(profile_size) * 4, peak) || peak > budget) {
+        refused = true;
+        refuse_open("TIFF block/metadata storage exceeds the available-memory limit");
+        return nullptr;
+    }
+    auto buffer = static_cast<guchar *>(g_try_malloc(storage));
+    auto pixels_out = static_cast<guchar *>(g_try_malloc(std::size_t(w) * h * 4));
+    if (!buffer || !pixels_out) {
+        g_free(buffer); g_free(pixels_out);
+        refused = true;
+        refuse_open("not enough memory for TIFF pixels"); return nullptr;
+    }
+    auto free_buffer = scope_exit([&] { g_free(buffer); });
+    auto free_pixels = scope_exit([&] { g_free(pixels_out); });
+    auto maximum = bits == 16 ? 65535u : 255u;
+    auto to_byte = [](std::uint32_t value, std::uint32_t max) -> guchar {
+        return (std::uint64_t(value) * 255 + max / 2) / max;
+    };
+    for (std::uint32_t y = 0; y < h;) {
+        auto rows = std::min(bh, h - y);
+        for (std::uint32_t x = 0; x < w;) {
+            auto cols = std::min(bw, w - x);
+            for (unsigned plane = 0; plane < planes; ++plane) {
+                auto dst = buffer + plane * block;
+                auto got = tiled ? TIFFReadEncodedTile(tif, TIFFComputeTile(tif, x, y, 0, plane), dst, block)
+                                 : TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, y, plane), dst, block);
+                if (got < 0 || std::uint64_t(got) < row * rows) return nullptr;
+            }
+            for (std::uint32_t yy = 0; yy < rows; ++yy) for (std::uint32_t xx = 0; xx < cols; ++xx) {
+                auto sample = [&](unsigned channel) -> std::uint32_t {
+                    auto p = buffer + (planes > 1 ? channel * block : 0) + yy * row;
+                    auto index = std::size_t(xx) * (planes > 1 ? 1 : samples) + (planes > 1 ? 0 : channel);
+                    if (bits == 16) { std::uint16_t value; std::memcpy(&value, p + index * 2, 2); return value; }
+                    if (bits == 8) return p[index];
+                    return (p[index * bits / 8] >> (8 - bits - index * bits % 8)) & ((1u << bits) - 1);
+                };
+                auto out = pixels_out + (std::size_t(y + yy) * w + x + xx) * 4;
+                auto a = alpha ? sample(colors) : maximum;
+                for (unsigned c = 0; c < 3; ++c) {
+                    auto value = sample(rgb ? c : 0);
+                    if (palette) { out[c] = to_byte((c == 0 ? red : c == 1 ? green : blue)[value], 65535); continue; }
+                    // Unassociate at source precision, before 16 -> 8 reduction.
+                    // Straight alpha=0 retains hidden RGB; associated alpha=0
+                    // has no recoverable color, and is canonically black.
+                    if (associated) value = a ? std::min<std::uint64_t>(maximum, (std::uint64_t(value) * maximum + a / 2) / a) : 0;
+                    if (photo == PHOTOMETRIC_MINISWHITE && (!associated || a)) value = maximum - value;
+                    out[c] = to_byte(value, maximum);
+                }
+                out[3] = to_byte(a, maximum);
+            }
+            x += cols;
+        }
+        y += rows;
+    }
+    auto pixbuf = gdk_pixbuf_new_from_data(pixels_out, GDK_COLORSPACE_RGB, true, 8, w, h, w * 4,
+        +[](guchar *p, gpointer) { g_free(p); }, nullptr);
+    if (!pixbuf) return nullptr;
+    pixels_out = nullptr;
+    auto option = [&](char const *name, unsigned value) {
+        auto text = std::to_string(value); gdk_pixbuf_set_option(pixbuf, name, text.c_str());
+    };
+    // Raw samples have not been flipped by libtiff; the existing shared caller
+    // applies the complete TIFF orientation exactly once, including axis swaps.
+    if (orientation != ORIENTATION_TOPLEFT) option("orientation", orientation);
+    option("bits-per-sample", bits);
+    std::uint16_t compression = 1, unit = 0;
+    TIFFGetFieldDefaulted(tif, TIFFTAG_COMPRESSION, &compression); option("compression", compression);
+    if (profile && profile_size) {
+        auto encoded_profile = g_base64_encode(static_cast<guchar const *>(profile), profile_size);
+        gdk_pixbuf_set_option(pixbuf, "icc-profile", encoded_profile); g_free(encoded_profile);
+    }
+    if (TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &unit) && (unit == RESUNIT_INCH || unit == RESUNIT_CENTIMETER)) {
+        float xd = 0, yd = 0;
+        TIFFGetField(tif, TIFFTAG_XRESOLUTION, &xd); TIFFGetField(tif, TIFFTAG_YRESOLUTION, &yd);
+        auto dpi = [&](char const *name, double value) {
+            value = std::round(value * (unit == RESUNIT_CENTIMETER ? 2.54 : 1));
+            if (std::isfinite(value) && value >= 0 && value <= INT_MAX) option(name, value);
+        };
+        dpi("x-dpi", xd); dpi("y-dpi", yd);
+    }
+    if (!TIFFLastDirectory(tif)) gdk_pixbuf_set_option(pixbuf, "multipage", "yes");
+    return pixbuf;
+}
+
 static GdkPixbuf *decode_open(guchar const *data, std::size_t len, std::uint64_t budget, std::string &format)
 {
     if (!encoded_fits(len, budget) || !header_fits(data, len, len, budget) || !gif_frames_fit(data, len, budget) ||
         !xpm_fits(data, len, budget)) return nullptr;
+    if (len >= 4 && (!std::memcmp(data, "II\052\000", 4) || !std::memcmp(data, "MM\000\052", 4) ||
+                     !std::memcmp(data, "II\053\000", 4) || !std::memcmp(data, "MM\000\053", 4))) {
+        bool refused = false;
+        if (auto pixbuf = decode_tiff_samples(data, len, budget, refused)) { format = "tiff"; return pixbuf; }
+        if (refused) return nullptr;
+        // Unsupported/exotic or damaged TIFFs retain the legacy codec's
+        // validation, compression errors and partial-image semantics.
+    }
     Bitmap::HeaderLimits limits;
     limits.prefixOnly = false; limits.requireStill = false;
     limits.maxAxis = UINT32_MAX; limits.maxPixels = UINT64_MAX;
@@ -729,7 +931,29 @@ Pixbuf *Pixbuf::create_from_buffer(gchar *&&data, gsize len, double svgdpi, std:
             buf = decode_open(reinterpret_cast<guchar *>(data), len, budget, format);
             if (buf) {
                 has_ori = Pixbuf::get_embedded_orientation(buf) != Geom::identity();
-                buf = Pixbuf::apply_embedded_orientation(buf);
+                if (format == "tiff") {
+                    // GdkPixbuf's orientation copy drops options. Preserve TIFF
+                    // color/resolution metadata across the sample transform.
+                    auto original = buf;
+                    buf = gdk_pixbuf_apply_embedded_orientation(original);
+                    if (buf) {
+                        copy_supported_pixbuf_metadata(original, buf);
+                        auto const *option = gdk_pixbuf_get_option(original, "orientation");
+                        auto orientation = option ? g_ascii_strtoll(option, nullptr, 10) : 1;
+                        if (orientation >= 5 && orientation <= 8) {
+                            // Density follows the oriented pixel axes; ICC is unchanged.
+                            gdk_pixbuf_remove_option(buf, "x-dpi");
+                            gdk_pixbuf_remove_option(buf, "y-dpi");
+                            if (auto const *dpi = gdk_pixbuf_get_option(original, "y-dpi"))
+                                gdk_pixbuf_set_option(buf, "x-dpi", dpi);
+                            if (auto const *dpi = gdk_pixbuf_get_option(original, "x-dpi"))
+                                gdk_pixbuf_set_option(buf, "y-dpi", dpi);
+                        }
+                    }
+                    g_object_unref(original);
+                } else {
+                    buf = Pixbuf::apply_embedded_orientation(buf);
+                }
                 if (buf && !gdk_pixbuf_get_has_alpha(buf)) {
                     auto alpha = gdk_pixbuf_add_alpha(buf, FALSE, 0, 0, 0);
                     g_object_unref(buf); buf = alpha;

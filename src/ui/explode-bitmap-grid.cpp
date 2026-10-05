@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include <glib/gi18n.h>
 #include "ui/explode-bitmap-grid.h"
 #include <algorithm>
 #include <bit>
@@ -263,7 +264,8 @@ Result<FinalGrid> prepareGrid(TargetSnapshot const &s, DecodedRaster const &sour
     if (!(o = timer.check(stop)).ok()) return fail(o);
     Result<FinalGrid> result; result.outcome = {Status::changed, "Final grid prepared."}; result.value = std::move(grid);
     result.consumed = work.visits(); return result;
-} catch (...) { return fail({Status::failed, "Grid preparation allocation/renderer failed."}); }
+} catch (std::bad_alloc const &) { return fail(memoryFailure(N_("canonical grid allocation"), source.pixels.size() * 2, 0)); }
+catch (...) { return fail({Status::failed, "Grid preparation allocation/renderer failed."}); }
 Result<FinalGrid> prepareGrid(CandidateGridInput const &input, Recipe recipe, Budget &budget, Stop stop) noexcept
 {
     if (!input.identity) return fail({Status::unavailable,"Missing candidate grid identity."});

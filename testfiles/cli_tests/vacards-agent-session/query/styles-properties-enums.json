@@ -1,0 +1,218 @@
+{
+  "description": "All ten advertised style properties are explicitly requested and independently expected, plus default projection equivalence.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.styles",
+        "params": {
+          "ids": [
+            "text"
+          ],
+          "properties": [
+            "fill",
+            "stroke",
+            "stroke-width",
+            "opacity",
+            "paint-order",
+            "font-family",
+            "font-style",
+            "font-weight",
+            "font-stretch",
+            "font-size"
+          ]
+        }
+      },
+      "command": "query.styles",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "text",
+              "properties": {
+                "fill": "#000000ff",
+                "stroke": "none",
+                "stroke-width": {
+                  "px": 2,
+                  "preferred": {
+                    "value": 0.5291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "opacity": 1,
+                "paint-order": "normal",
+                "font-family": "VA_CLI_MissingFont_9f5e",
+                "font-style": "italic",
+                "font-weight": "700",
+                "font-stretch": "normal",
+                "font-size": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              }
+            }
+          ],
+          "total": 1,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.styles",
+        "params": {
+          "ids": [
+            "text"
+          ]
+        }
+      },
+      "command": "query.styles",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "text",
+              "properties": {
+                "fill": "#000000ff",
+                "stroke": "none",
+                "stroke-width": {
+                  "px": 2,
+                  "preferred": {
+                    "value": 0.5291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "opacity": 1,
+                "paint-order": "normal",
+                "font-family": "VA_CLI_MissingFont_9f5e",
+                "font-style": "italic",
+                "font-weight": "700",
+                "font-stretch": "normal",
+                "font-size": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                }
+              }
+            }
+          ],
+          "total": 1,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success",
+        "no-op"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/inspection.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

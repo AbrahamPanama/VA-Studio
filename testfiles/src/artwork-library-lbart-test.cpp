@@ -193,9 +193,10 @@ TEST(LbartArchiveTest, TruncatedCompressedStreamsFailAfterDirectoryAdmission)
 }
 
 // Explicit standalone/private lane only. The ordinary critical target contains
-// no mandatory test that silently skips because customer data is unavailable.
+// no mandatory test that silently skips because the owner-created sample file
+// is unavailable.
 #ifdef VACARDS_PRIVATE_LBART_TEST
-TEST(LbartArchivePrivateTest, ExactCustomerSampleExtractsAllIndexedRecords)
+TEST(LbartArchivePrivateTest, ExactOwnerSampleExtractsAllIndexedRecords)
 {
     auto path = std::getenv("VACARDS_PRIVATE_LBART_SAMPLE");
     if (!path) GTEST_SKIP() << "Private sample is not part of the public fixture corpus";

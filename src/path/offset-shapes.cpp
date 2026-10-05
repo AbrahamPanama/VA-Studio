@@ -508,11 +508,17 @@ CommitResult commit(SPDocument *document, Preparation const &preparation, Build 
         // document as having an active interaction, so the public interactionActive() is the safe
         // superset: a live rollback point owns the history and a single CLI Undo step could not be
         // recorded honestly (done() would be merged into it or silently ignored).
-        if (DocumentUndo::interactionActive(document)) {
+        if (protocol == CommitProtocol::CommandLine && DocumentUndo::interactionActive(document)) {
             CommitResult r;
             r.error = "the document history is protected";
             return r;
         }
+    }
+
+    if (protocol == CommitProtocol::CallerOwnedAtomic && !DocumentUndo::interactionActive(document)) {
+        CommitResult r;
+        r.error = "the caller must own an atomic document interaction";
+        return r;
     }
 
     // Arm the caller's guard exactly once, right before the first document mutation. A refusal
@@ -537,7 +543,7 @@ CommitResult commit(SPDocument *document, Preparation const &preparation, Build 
         if (!item) {
             if (interaction) {
                 interaction->rollback();
-            } else {
+            } else if (protocol == CommitProtocol::CommandLine) {
                 DocumentUndo::cancel(document);
             }
             CommitResult r;
@@ -581,7 +587,7 @@ CommitResult commit(SPDocument *document, Preparation const &preparation, Build 
 
     if (interaction) {
         interaction->commit(description, INKSCAPE_ICON("path-offset-dynamic"));
-    } else {
+    } else if (protocol == CommitProtocol::CommandLine) {
         DocumentUndo::done(document, description, INKSCAPE_ICON("path-offset-dynamic"));
     }
     document->ensureUpToDate();

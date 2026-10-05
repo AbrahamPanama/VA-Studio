@@ -15,6 +15,7 @@ public:
 
     static void init();
     static std::string output_profile_path();
+    static std::string const &last_profile_name();
 };
 
 } // namespace Inkscape::Extension::Internal

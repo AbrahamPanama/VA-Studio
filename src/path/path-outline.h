@@ -16,6 +16,12 @@
 #ifndef SEEN_PATH_OUTLINE_H
 #define SEEN_PATH_OUTLINE_H
 
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+class SPDocument;
 class SPDesktop;
 class SPItem;
 
@@ -38,6 +44,18 @@ bool item_find_paths(const SPItem *item, Geom::PathVector& fill, Geom::PathVecto
  * Find an outline that represents an item.
  */
 Geom::PathVector* item_to_outline (SPItem const *item, bool exclude_markers = false);
+
+// One action-local plan and mapping index. No document-persistent cache.
+struct StrokeToPathConversion {
+    std::unordered_map<std::string, std::string> resources;
+    std::unordered_set<std::string> excluded;
+    std::vector<std::string> exclusions;
+    bool failed = false;
+    bool unlink_clones = false;
+};
+bool item_to_paths_preflight(SPItem *, bool legacy, StrokeToPathConversion &);
+bool item_to_paths_unlink(SPItem *, StrokeToPathConversion &);
+Inkscape::XML::Node *item_to_paths_apply(SPItem *, bool legacy, StrokeToPathConversion &);
 
 /**
  * Replace item by path objects (a.k.a. stroke to path).

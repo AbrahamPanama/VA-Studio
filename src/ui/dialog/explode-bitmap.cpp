@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iomanip>
 #include <locale>
+#include <limits>
 #include <sstream>
 #include "inkscape-window.h"
 #include "ui/widget/canvas.h"
@@ -115,6 +116,8 @@ Glib::ustring sizeText(std::uint64_t bytes)
 }
 Glib::ustring failureText(Outcome const &outcome)
 {
+    // Shared memory failures already carry a gettext-formatted limit/need/available message.
+    if (outcome.insufficientMemory) return Glib::ustring(outcome.diagnostic);
     auto diagnosticText = Glib::ustring(outcome.diagnostic).lowercase().raw();
     std::string_view diagnostic(diagnosticText);
     if (diagnostic.find("memory") != diagnostic.npos || diagnostic.find("allocation") != diagnostic.npos ||
@@ -518,6 +521,7 @@ void ExplodeBitmapPanel::requestContours() try
     auto input = std::make_shared<ContourInput>(); input->analysis = out->analysis;
     input->expectedIdentity = analysisIdentity(out->grid, _prepared.target); input->contour = _contourRecipe; input->observer = _options.observer;
     job.storage.payload = std::move(input); job.pixels = std::uint64_t(out->grid.width)*out->grid.height;
+    job.stage = CliBitmapStage::Contour;
     job.work = _options.contourWork ? _options.contourWork : calculateContours;
     if (!_contourJob) _contourBaseState = _state;
     _activation->retry(); _contourJob = true; _consumed = 0;
@@ -843,8 +847,10 @@ void ExplodeBitmapPanel::progress(JobProgress p)
     setStatus(Glib::ustring::compose(p.phase != JobPhase::preparation ? _("Tracing contours… %1%% · Esc cancels") : state == State::Counting
         ? _("Analyzing image… %1%% · Esc cancels") : _("Preparing pieces… %1%% · Esc cancels"), int(fraction * 100)));
 }
-void ExplodeBitmapPanel::request() try
+void ExplodeBitmapPanel::request()
 {
+    std::uint64_t allocationNeed = sizeof(Input) + 64;
+    try {
     if (!_session || !sameSelection() || !eligible()) return;
     auto releaseUncapturedSession = scope_exit([this] {
         // A preparation refusal is not evidence that the image changed. Without
@@ -883,8 +889,8 @@ void ExplodeBitmapPanel::request() try
     }
     auto memory = _options.memory ? sampleMemory(*_options.memory) : sampleMemory();
     if (!memory.ok()) { outcome(memory.outcome, Intent::Explode); return; }
-    if (!_budget || !_budget->reserved()) _budget = std::make_shared<Budget>(1536 * MiB);
-    auto checked = _budget->recheck(memory.value); if (!checked.ok()) { outcome(checked, Intent::Explode); return; }
+    if (!_budget || !_budget->reserved()) _budget = std::make_shared<Budget>(std::numeric_limits<std::uint64_t>::max());
+    auto checked = _budget->recheckMeasured(memory.value); if (!checked.ok()) { outcome(checked, Intent::Explode); return; }
     _prepared.target = target.value; _prepared.activation = _activation;
     _prepared.dependencies = capture(target.value); _prepared.limits = measuredLimits(_options.evidence);
     if (!_prepared.dependencies) {
@@ -898,6 +904,7 @@ void ExplodeBitmapPanel::request() try
     if (identity != _identity) resetComparison();
     _identity = identity;
     _prepared.session = sessionJobIdentity(_identity, target.value);
+    _prepared.requestRecipe = _recipe;
     if (image->pixbuf && (image->pixbuf->width() > int(MaxExplodeSourceAxis) || image->pixbuf->height() > int(MaxExplodeSourceAxis))) {
         auto bounds = getSelection()->documentBounds(SPItem::VISUAL_BBOX);
         int dpi = bounds ? maxResizeDpi(*bounds) : 0;
@@ -936,6 +943,7 @@ void ExplodeBitmapPanel::request() try
     std::uint64_t envelope = sizeof(Input) + 64 + uri.value.payloadLength + target.value.contexts.size() * sizeof(TargetContext);
     for (auto const &c : target.value.contexts) envelope += c.id.size() + 1;
     envelope += (target.value.selection.size() + target.value.roots.size()) * sizeof(std::uintptr_t);
+    allocationNeed = envelope;
     checked = _budget->acquire(Stage::input, envelope, job.storage.reservation); if (!checked.ok()) { outcome(checked, Intent::Explode); return; }
     auto input = std::make_shared<Input>(); input->target = std::move(target.value); input->recipe = _recipe; input->contour = requestedContour; input->observer = _options.observer;
     // Reserve optional geometry against the admitted whole-job peak before
@@ -958,12 +966,17 @@ void ExplodeBitmapPanel::request() try
         auto coverage = captureGridCoverage(*image, input->target, *_budget); if (!coverage.ok()) { outcome(coverage.outcome, Intent::Explode); return; }
         input->coverage = std::move(coverage.value);
     }
+    if (_options.inputFault && _options.inputFault->fail()) throw std::bad_alloc();
     job.storage.bytes.assign(href + uri.value.payloadOffset, href + uri.value.payloadOffset + uri.value.payloadLength);
     job.storage.payload = std::move(input); job.pixels = pixels; job.work = _options.work ? _options.work : calculate;
     if (!_activation->check(_prepared.dependencies, DependencyCheck::Dispatch).ok()) { refresh(); return; }
     _ticket = _deliveryTicket = _jobs.request(std::move(job)); _overlay.beginGeneration(*getDesktop(), ++_viewGeneration); display(State::Counting);
+    } catch (std::bad_alloc const &) {
+        auto free = _budget && _budget->limit() > _budget->reserved()
+            ? _budget->limit() - _budget->reserved() : 0;
+        outcome(Bitmap::memoryFailure(N_("main-thread allocator / image input"), allocationNeed, free), Intent::Explode);
+    } catch (...) { display(State::Failed, _(failure)); }
 }
-catch (...) { display(State::Failed, _(memoryFailure)); }
 void ExplodeBitmapPanel::receive(Ticket ticket, JobResult result) try
 {
     if (!active() || !_session || _dispatchGeneration != _sessionGeneration || ticket != _deliveryTicket || !getDesktop()) return;

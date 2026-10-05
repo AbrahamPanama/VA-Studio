@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <optional>
 #include <string>
 #include <unordered_set>
@@ -44,11 +45,14 @@
 #include "object/sp-shape.h"
 #include "object/sp-text.h"
 #include "path/path-boolop.h"
+#include "path-chemistry.h"
 #include "path/path-util.h"
 #include "selection.h"
 #include "style.h"
+#include "svg/svg.h"
 #include "ui/icon-names.h"
 #include "ui/popup-menu.h"
+#include "xml/document.h"
 #include "xml/node.h"
 
 namespace Inkscape::UI::Toolbar {
@@ -437,6 +441,185 @@ SPItem *apply_boolean_assist(Inkscape::ObjectSet &set, BooleanAssistOp op,
     if (!result || !is<SPPath>(result) || !boolean_result_is_new(result, anchored_operands.nodes())) {
         return nullptr;
     }
+    return result;
+}
+
+BooleanOperandResult apply_boolean_assist(SPDocument *document, std::vector<SPItem *> const &ordered_roots,
+                                         BooleanOperandOp op, BooleanEmptyPolicy empty_policy)
+{
+    BooleanOperandResult result;
+    auto const refuse = [&](BooleanOperandReason reason, std::string detail, SPItem *item = nullptr) {
+        result.reason = reason;
+        result.detail = std::move(detail);
+        if (item && item->getId()) {
+            result.offending_id = item->getId();
+        }
+        return result;
+    };
+    if (!document) {
+        return refuse(BooleanOperandReason::MissingDocument, "A document is required.");
+    }
+    if ((op != BooleanOperandOp::Union && op != BooleanOperandOp::Difference &&
+         op != BooleanOperandOp::Intersection && op != BooleanOperandOp::Exclusion &&
+         op != BooleanOperandOp::Division) ||
+        (empty_policy != BooleanEmptyPolicy::Refuse && empty_policy != BooleanEmptyPolicy::Allow)) {
+        return refuse(BooleanOperandReason::InvalidOperation, "Unknown operation or empty-result policy.");
+    }
+    if ((op == BooleanOperandOp::Division && ordered_roots.size() != 2) ||
+        ordered_roots.size() < (op == BooleanOperandOp::Union ? 1u : 2u)) {
+        return refuse(BooleanOperandReason::InvalidCount,
+                      op == BooleanOperandOp::Division ? "Division requires exactly two operands: subject, cutter."
+                                                      : "Too few operands for the requested operation.");
+    }
+
+    // Validate the complete request before extracting geometry or writing. Never normalize away a
+    // duplicate/covered root: doing so could silently change which explicit operand is the subject.
+    for (std::size_t i = 0; i < ordered_roots.size(); ++i) {
+        auto *root = ordered_roots[i];
+        if (!root || root->document != document || !root->parent || !root->getId() ||
+            document->getObjectById(root->getId()) != root || root == document->getRoot()) {
+            return refuse(BooleanOperandReason::InvalidOperand, "Operand must be a live, identified document item.", root);
+        }
+        for (std::size_t j = 0; j < i; ++j) {
+            auto *other = ordered_roots[j];
+            if (root == other || root->isAncestorOf(other) || other->isAncestorOf(root)) {
+                return refuse(BooleanOperandReason::OverlappingOperands, "Operands must be distinct independent roots.", root);
+            }
+        }
+        if (!root->isVisibleAndUnlocked()) {
+            return refuse(BooleanOperandReason::Unavailable, "Operand is hidden or locked.", root);
+        }
+    }
+
+    std::vector<Geom::PathVector> operands;
+    std::vector<std::vector<SPItem *>> operand_leaves;
+    for (std::size_t i = 0; i < ordered_roots.size(); ++i) {
+        auto *root = ordered_roots[i];
+        std::vector<SPItem *> leaves;
+        SPItem *offending = nullptr;
+        std::string reason;
+        if (!boolean_assist_leaves(root, [](SPItem *item) { return item->isVisibleAndUnlocked(); },
+                                   leaves, &offending, &reason)) {
+            auto typed = BooleanOperandReason::NotAShape;
+            if (reason == "group-effect") typed = BooleanOperandReason::GroupEffect;
+            else if (reason == "empty-geometry") typed = BooleanOperandReason::EmptyGeometry;
+            else if (reason == "empty-group") typed = BooleanOperandReason::EmptyGroup;
+            else if (reason == "unavailable") typed = BooleanOperandReason::Unavailable;
+            return refuse(typed, reason, offending ? offending : root);
+        }
+        Geom::PathVector combined;
+        bool first = true;
+        for (auto *leaf : leaves) {
+            auto const affine = leaf->i2doc_affine();
+            if (!std::isfinite(affine[0]) || !std::isfinite(affine[1]) || !std::isfinite(affine[2]) ||
+                !std::isfinite(affine[3]) || !std::isfinite(affine[4]) || !std::isfinite(affine[5]) ||
+                affine.isSingular()) {
+                return refuse(BooleanOperandReason::UnsafeTransform, "Operand transform is not finite and invertible.", leaf);
+            }
+            auto path = *boolean_operand_path(leaf) * affine;
+            auto const rule = leaf->style->fill_rule.computed == SP_WIND_RULE_EVENODD ? fill_oddEven : fill_nonZero;
+            // A single division cutter retains its open lines. Group operands are always one unioned
+            // silhouette, including a group used as cutter, exactly as Boolean Assist eligibility defines.
+            if (!(op == BooleanOperandOp::Division && i == 1 && !is<SPGroup>(root))) {
+                flatten(path, rule);
+            }
+            combined = first ? std::move(path)
+                             : sp_pathvector_boolop(combined, path, bool_op_union, fill_nonZero, fill_nonZero);
+            first = false;
+        }
+        operands.push_back(std::move(combined));
+        operand_leaves.push_back(std::move(leaves));
+    }
+
+    std::vector<Geom::PathVector> outputs;
+    if (op == BooleanOperandOp::Division) {
+        outputs = pathvector_cut(operands[0], operands[1], true);
+    } else {
+        auto path = operands[0];
+        for (std::size_t i = 1; i < operands.size(); ++i) {
+            switch (op) {
+                case BooleanOperandOp::Difference:
+                    // Native bool_op_diff computes second minus first.
+                    path = sp_pathvector_boolop(operands[i], path, bool_op_diff, fill_nonZero, fill_nonZero);
+                    break;
+                case BooleanOperandOp::Union:
+                    path = sp_pathvector_boolop(path, operands[i], bool_op_union, fill_nonZero, fill_nonZero);
+                    break;
+                case BooleanOperandOp::Intersection:
+                    path = sp_pathvector_boolop(path, operands[i], bool_op_inters, fill_nonZero, fill_nonZero);
+                    break;
+                case BooleanOperandOp::Exclusion:
+                    path = sp_pathvector_boolop(path, operands[i], bool_op_symdiff, fill_nonZero, fill_nonZero);
+                    break;
+                case BooleanOperandOp::Division:
+                    break;
+            }
+        }
+        outputs.push_back(std::move(path));
+    }
+    outputs.erase(std::remove_if(outputs.begin(), outputs.end(), [](auto const &pathv) {
+        return std::none_of(pathv.begin(), pathv.end(), [](auto const &path) { return !path.empty(); });
+    }), outputs.end());
+    if (outputs.empty() && empty_policy == BooleanEmptyPolicy::Refuse) {
+        return refuse(BooleanOperandReason::EmptyResult, "The operation would consume all operands without output.");
+    }
+
+    // Prepare replacement nodes while the originals still exist. Native property copying and native
+    // path serialization are shared with ObjectSet; there is no geometry or preference engine here.
+    auto *subject = ordered_roots.front();
+    auto const affine = subject->i2doc_affine();
+    if (!std::isfinite(affine[0]) || !std::isfinite(affine[1]) || !std::isfinite(affine[2]) ||
+        !std::isfinite(affine[3]) || !std::isfinite(affine[4]) || !std::isfinite(affine[5]) ||
+        affine.isSingular()) {
+        return refuse(BooleanOperandReason::UnsafeTransform, "Subject transform is not finite and invertible.", subject);
+    }
+    auto *source = subject->getRepr();
+    auto const subject_is_layer = is<SPGroup>(subject) && cast<SPGroup>(subject)->layerMode() != SPGroup::GROUP;
+    auto *parent = subject_is_layer ? source : source->parent();
+    std::vector<Inkscape::XML::Node *> nodes;
+    OperandNodeAnchor anchors;
+    for (auto const &path : outputs) {
+        auto *node = document->getReprDoc()->createElement("svg:path");
+        Inkscape::copy_object_properties(node, source);
+        node->setAttribute("d", sp_svg_write_path(path * affine.inverse()).c_str());
+        node->setAttribute("transform", subject_is_layer ? nullptr : source->attribute("transform"));
+        nodes.push_back(node);
+        anchors.anchor(node);
+        Inkscape::GC::release(node);
+    }
+    // Only the last division piece inherits the subject ID. Every other piece gets a native new ID.
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+        if (!subject_is_layer && i + 1 == nodes.size()) break;
+        nodes[i]->removeAttribute("id");
+    }
+    for (auto *root : ordered_roots) {
+        result.consumed_ids.emplace_back(root->getId());
+    }
+    auto const consume = [&](SPItem *root, bool notify) {
+        if (auto *group = cast<SPGroup>(root); group && group->layerMode() != SPGroup::GROUP) {
+            // Layer containers and pre-existing empty groups are document structure. Reuse the
+            // native selected-subtree cleanup policy after consuming exactly the prepared leaves.
+            std::unordered_set<SPObject *> candidates;
+            collect_group_candidates(group, candidates);
+            auto const index = std::find(ordered_roots.begin(), ordered_roots.end(), root) - ordered_roots.begin();
+            for (auto *leaf : operand_leaves[index]) leaf->deleteObject();
+            remove_emptied_groups(group, candidates, nullptr);
+        } else {
+            root->deleteObject(notify);
+        }
+    };
+    for (auto *root : ordered_roots) {
+        if (root != subject) consume(root, true);
+    }
+    // Read the subject position after removing cutters that may precede it, so unrelated siblings
+    // keep their relative position even when the subject was stacked above a cutter.
+    auto const position = subject_is_layer ? 0 : source->position();
+    consume(subject, outputs.empty());
+    for (auto *node : nodes) {
+        parent->addChildAtPos(node, position);
+        result.output_ids.emplace_back(document->getObjectByRepr(node)->getId());
+    }
+    result.status = BooleanOperandStatus::Applied;
     return result;
 }
 

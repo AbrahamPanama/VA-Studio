@@ -1,0 +1,69 @@
+{
+  "description": "Polyline dry run reports a planned conversion without mutation; commit rounds the two interior vertices in a same-id path. Curve and endpoint geometry are asserted by the controller unit suite. The exported path must also contain SVG arc commands.",
+  "input": "{FIXTURES}/corners.svg",
+  "actions": "vacards-result-file:{RESULT};select-by-id:openpoly;export-filename:{WORK}/before.svg;export-do;vacards-corners:radius=2mm,dry-run;export-filename:{WORK}/dry.svg;export-do;vacards-corners:radius=2mm;export-filename:{WORK}/out.svg;export-do",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "vacards-corners",
+      "status": "ok",
+      "dry_run": true,
+      "undo": "none",
+      "data": {
+        "status": "would-change",
+        "converted": [
+          {
+            "id": "openpoly",
+            "from": "polyline",
+            "to": "path"
+          }
+        ]
+      }
+    },
+    {
+      "action": "vacards-corners",
+      "status": "changed",
+      "modified": [
+        "openpoly"
+      ],
+      "undo": "one-step",
+      "metrics": {
+        "count": 2,
+        "approximate": false
+      },
+      "data": {
+        "converted": [
+          {
+            "id": "openpoly",
+            "from": "polyline",
+            "to": "path"
+          }
+        ]
+      }
+    }
+  ],
+  "expect_same_files": [
+    [
+      "before.svg",
+      "dry.svg"
+    ]
+  ],
+  "expect_files": {
+    "out.svg": {
+      "exists": true,
+      "contains": [
+        "id=\"openpoly\"",
+        "<path",
+        "effect=\"fillet_chamfer\"",
+        " A "
+      ],
+      "not_contains": [
+        "<polyline"
+      ]
+    }
+  }
+}

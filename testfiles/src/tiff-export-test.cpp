@@ -498,11 +498,12 @@ TEST_F(TiffExportTest, FailureLeavesExistingDestinationUntouched)
     EXPECT_EQ(read_file(tiff_path), before);
 }
 
-TEST_F(TiffExportTest, RejectsRgbProfilesThatAreNotPrinterOutputProfiles)
+TEST_F(TiffExportTest, RejectsRgbInputProfiles)
 {
     auto const display_profile_path = directory.file("display.icc");
     auto display_profile = cmsCreate_sRGBProfile();
     ASSERT_NE(display_profile, nullptr);
+    cmsSetDeviceClass(display_profile, cmsSigInputClass);
     ASSERT_TRUE(cmsSaveProfileToFile(display_profile, display_profile_path.c_str()));
     cmsCloseProfile(display_profile);
 
@@ -510,7 +511,7 @@ TEST_F(TiffExportTest, RejectsRgbProfilesThatAreNotPrinterOutputProfiles)
     ASSERT_TRUE(write_png(png_path, input, 1, 1, 300.0, 300.0));
     std::string error;
     EXPECT_FALSE(Inkscape::IO::export_png_to_color_managed_tiff(png_path, tiff_path, display_profile_path, error));
-    EXPECT_NE(error.find("printer/output profile"), std::string::npos);
+    EXPECT_NE(error.find("RGB display or output"), std::string::npos);
     EXPECT_FALSE(g_file_test(tiff_path.c_str(), G_FILE_TEST_EXISTS));
 }
 

@@ -25,6 +25,7 @@ using MemorySample = Memory;
 /// Raw numbers from one probe source. Zero or inconsistent values mean the sample is refused.
 struct RawMemory {
     std::uint64_t physical = 0, available = 0, footprint = 0;
+    char const *refusal = nullptr;
 };
 /// Injectable source. Returns false when any native call fails. Must not throw.
 class MemoryProbe {
@@ -41,19 +42,15 @@ struct VmStats {
     int pressureLevel = 0; ///< kern.memorystatus_vm_pressure_level: 1 normal, 2 warn, 4 critical
     std::uint64_t speculativePages = 0; ///< already inside free_count and (in xnu) external
 };
-/// A = free + min(inactive, external - speculative). This is an UPPER BOUND on reclaimable memory, not an
-/// exact figure: external counts file-backed pages on every queue (active ones too), so it only limits
-/// how much inactive memory may count; dirty anonymous inactive pages (compress/swap) are excluded when
-/// external is small. Speculative pages are already in free_count and are not counted twice. Pressure
-/// above normal halves A; critical or unknown pressure refuses. False means refused.
+/// macOS headroom is physical RAM minus process footprint; warn is allowed, critical refuses.
 bool fromVmStats(VmStats const &, RawMemory &) noexcept;
-/// Raw Windows counters (pure input for fromMemoryStatus). A = min(phys, pagefile[, virtual if 32-bit]).
+/// Raw Windows counters (pure input for fromMemoryStatus). A = commit headroom (bounded by address space on 32-bit).
 struct WinStatus {
     std::uint64_t totalPhys = 0, availPhys = 0, availPageFile = 0, availVirtual = 0, privateUsage = 0;
     bool is32Bit = false;
 };
 bool fromMemoryStatus(WinStatus const &, RawMemory &) noexcept;
-/// Validate a probe: any failure or inconsistency (A > R, E > R, zero) gives measured=false and
+/// Validate a probe: any failure or inconsistency (missing physical RAM, headroom or footprint) gives measured=false and
 /// Status::unavailable. Never guesses.
 Result<MemorySample> sampleMemory(MemoryProbe const &) noexcept;
 Result<MemorySample> sampleMemory() noexcept;

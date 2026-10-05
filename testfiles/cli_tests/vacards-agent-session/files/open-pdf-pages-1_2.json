@@ -1,0 +1,95 @@
+{
+  "description": "P9 independent M2 open-pdf-pages-1_2",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "pages",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/two-pages.pdf",
+          "format": "pdf",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false,
+          "pages": [
+            1,
+            2
+          ]
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "pages-query",
+        "command": "query.pages",
+        "params": {}
+      },
+      "expect": {
+        "status": "ok",
+        "data": {
+          "total": 2
+        }
+      },
+      "expect_numeric": {
+        "data.items.0.rect.width.px": {
+          "value": 16,
+          "abs": 1e-06
+        },
+        "data.items.0.rect.height.px": {
+          "value": 8,
+          "abs": 1e-06
+        }
+      }
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "pages-query-repeat-2",
+        "command": "query.pages",
+        "params": {}
+      },
+      "expect": {
+        "status": "ok",
+        "data": {
+          "total": 2
+        }
+      },
+      "expect_numeric": {
+        "data.items.0.rect.width.px": {
+          "value": 16,
+          "abs": 1e-06
+        },
+        "data.items.0.rect.height.px": {
+          "value": 8,
+          "abs": 1e-06
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

@@ -1,0 +1,435 @@
+{
+  "description": "Unknown/duplicate IDs and malformed ID arrays refuse; IDs never silently choose an implicit first object.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.geometry",
+        "params": {
+          "ids": [
+            "does-not-exist"
+          ]
+        }
+      },
+      "command": "query.geometry",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "refusal"
+      ],
+      "expect_error": "unknown-id",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.geometry",
+        "params": {
+          "ids": [
+            "rect",
+            "rect"
+          ]
+        }
+      },
+      "command": "query.geometry",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid",
+        "refusal"
+      ],
+      "expect_error": "duplicate-id",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r3",
+        "command": "query.geometry",
+        "params": {
+          "ids": "rect"
+        }
+      },
+      "command": "query.geometry",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "wrong-type",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r4",
+        "command": "query.geometry",
+        "params": {
+          "ids": []
+        }
+      },
+      "command": "query.geometry",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "out-of-range",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r5",
+        "command": "query.geometry",
+        "params": {
+          "ids": [
+            ""
+          ]
+        }
+      },
+      "command": "query.geometry",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "out-of-range",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r6",
+        "command": "query.geometry",
+        "params": {
+          "ids": [
+            3
+          ]
+        }
+      },
+      "command": "query.geometry",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "wrong-type",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r7",
+        "command": "query.geometry",
+        "params": {
+          "ids": [
+            "path",
+            "rect"
+          ]
+        }
+      },
+      "command": "query.geometry",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "path",
+              "shape_kind": "path",
+              "transform": [
+                4,
+                0,
+                0,
+                6,
+                20,
+                20
+              ],
+              "geometric_bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 24,
+                  "preferred": {
+                    "value": 6.35,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 32,
+                  "preferred": {
+                    "value": 8.466666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 12,
+                  "preferred": {
+                    "value": 3.175,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 24,
+                  "preferred": {
+                    "value": 6.35,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "visual_bounds": {
+                "kind": "visual",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 26,
+                  "preferred": {
+                    "value": 6.879166666666666,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 36,
+                  "preferred": {
+                    "value": 9.525,
+                    "unit": "mm"
+                  }
+                }
+              }
+            },
+            {
+              "id": "rect",
+              "shape_kind": "rect",
+              "transform": [
+                4,
+                0,
+                0,
+                6,
+                20,
+                20
+              ],
+              "path_data": null,
+              "geometric_bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 24,
+                  "preferred": {
+                    "value": 6.35,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 32,
+                  "preferred": {
+                    "value": 8.466666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 12,
+                  "preferred": {
+                    "value": 3.175,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 24,
+                  "preferred": {
+                    "value": 6.35,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "visual_bounds": {
+                "kind": "visual",
+                "x": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 26,
+                  "preferred": {
+                    "value": 6.879166666666666,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 20,
+                  "preferred": {
+                    "value": 5.291666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 36,
+                  "preferred": {
+                    "value": 9.525,
+                    "unit": "mm"
+                  }
+                }
+              }
+            }
+          ],
+          "total": 2,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/inspection.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

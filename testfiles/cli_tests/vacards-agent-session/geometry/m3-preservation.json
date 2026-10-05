@@ -1,0 +1,1645 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "geometry.move:preservation",
+      "command": "geometry.move",
+      "cell": "preservation",
+      "description": "Independent P9 geometry.move:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.move",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "dx": {
+                "value": 2,
+                "unit": "px"
+              },
+              "dy": {
+                "value": 3,
+                "unit": "px"
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.resize:preservation",
+      "command": "geometry.resize",
+      "cell": "preservation",
+      "description": "Independent P9 geometry.resize:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.resize",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "width": {
+                "value": 20,
+                "unit": "px"
+              },
+              "height": {
+                "value": 30,
+                "unit": "px"
+              },
+              "bbox": "geometric",
+              "anchor": "nw"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.rotate:preservation",
+      "command": "geometry.rotate",
+      "cell": "preservation",
+      "description": "Independent P9 geometry.rotate:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.rotate",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "angle": 90,
+              "pivot": {
+                "x": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "y": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.skew:preservation",
+      "command": "geometry.skew",
+      "cell": "preservation",
+      "description": "Independent P9 geometry.skew:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.skew",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "axis": "x",
+              "angle": 45,
+              "pivot": {
+                "x": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "y": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.flip:preservation",
+      "command": "geometry.flip",
+      "cell": "preservation",
+      "description": "Independent P9 geometry.flip:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.flip",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "axis": "horizontal",
+              "pivot": {
+                "x": {
+                  "value": 0,
+                  "unit": "px"
+                },
+                "y": {
+                  "value": 0,
+                  "unit": "px"
+                }
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.matrix:preservation",
+      "command": "geometry.matrix",
+      "cell": "preservation",
+      "description": "Independent P9 geometry.matrix:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.matrix",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "matrix": [
+                1,
+                0,
+                0,
+                1,
+                2,
+                3
+              ]
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.boolean:preservation",
+      "command": "geometry.boolean",
+      "cell": "preservation",
+      "description": "Independent P9 geometry.boolean:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.boolean",
+            "params": {
+              "ids": [
+                "shape1",
+                "shape2"
+              ],
+              "op": "difference",
+              "empty-result": "reject"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.offset:preservation",
+      "command": "geometry.offset",
+      "cell": "preservation",
+      "description": "Independent P9 geometry.offset:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.offset",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "distance": {
+                "value": 2,
+                "unit": "px"
+              },
+              "corner": "miter"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "geometry.corners:preservation",
+      "command": "geometry.corners",
+      "cell": "preservation",
+      "description": "Independent P9 geometry.corners:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/geometry.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "geometry.corners",
+            "params": {
+              "ids": [
+                "child1"
+              ],
+              "radius": {
+                "value": 1,
+                "unit": "px"
+              },
+              "scope": "all",
+              "mode": "round"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "description": "P9 independent M2 export-icc-changed-bytes",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "open",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/sheet.svg",
+          "format": "svg",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/inputs/sheet.svg",
+          "sha256": "61859ec258372da15bc80e54bf2fb75c5fec636417c5c702aa400c795d691262",
+          "reported": true,
+          "hash_field": "data.source_version.sha256",
+          "bytes_field": "data.source_version.bytes"
+        }
+      ],
+      "expect_nonempty": [
+        "document_id",
+        "data.source_version.identity",
+        "data.intake"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "export",
+        "command": "file.export",
+        "params": {
+          "path": "{WORK}/output.png",
+          "format": "png",
+          "dpi": 96,
+          "background": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "text-policy": "preserve",
+          "overwrite": false,
+          "profile": {
+            "id": "file",
+            "path": "{WORK}/custom.icc",
+            "sha256": "5bd44dcc1b72acb744ae5d6e5d9ba7ba959eb33d069f5bb04bc994a7f167e9b8"
+          },
+          "drawing": true
+        },
+        "if_revision": 0,
+        "document": {
+          "$ref": "open.document_id"
+        }
+      },
+      "command": "file.export",
+      "cells": [
+        "refusal"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "file_oracles": [
+        {
+          "path": "{WORK}/output.png",
+          "absent": true
+        },
+        {
+          "path": "{WORK}/custom.icc",
+          "sha256": "2f05d4b689d270cafb02285f35f44866f7dc8a2d368a3f9d1124373eeab31fb1"
+        }
+      ],
+      "expect_error": "stale-dependency",
+      "before": [
+        {
+          "op": "write",
+          "path": "{WORK}/custom.icc",
+          "text": "bad"
+        }
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ],
+  "setup": [
+    {
+      "op": "copy",
+      "source": "{WORK}/inputs/custom-rgb.icc",
+      "path": "{WORK}/custom.icc"
+    }
+  ]
+}

@@ -43,6 +43,8 @@ public:
 
     // run() is synchronous and single-use. cancel() may be called from a
     // progress callback or another thread; destruction must wait for run().
+    [[nodiscard]] Status setWorkLimit(std::uint64_t limit);
+    [[nodiscard]] std::optional<TerminalResult> terminalResult() const;
     [[nodiscard]] Status run(ProgressCallback const &callback = {});
     [[nodiscard]] Status validate(std::span<Placement const> placements);
     /// `status` (optional) tells a stop (Cancelled: cancel or the job's time

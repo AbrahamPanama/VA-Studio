@@ -1,0 +1,457 @@
+{
+  "description": "Hand-computed continuation hash: limit can change, malformed offsets refuse, stale bindings refuse, restart recovers.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.styles",
+        "params": {
+          "ids": [
+            "rect",
+            "path"
+          ],
+          "properties": [
+            "fill",
+            "stroke-width"
+          ],
+          "limit": 1
+        }
+      },
+      "command": "query.styles",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "rect",
+              "properties": {
+                "fill": "#123456",
+                "stroke-width": {
+                  "px": 4,
+                  "preferred": {
+                    "value": 1.0583333333333333,
+                    "unit": "mm"
+                  }
+                }
+              }
+            }
+          ],
+          "total": 2,
+          "limit": 1,
+          "next_cursor": "d1:0:f40a472378ba4f884d38baa64a0473c168026e27aa15f7c5913ab8ca66b94ea6:1",
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success",
+        "invalid"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.styles",
+        "params": {
+          "ids": [
+            "rect",
+            "path"
+          ],
+          "properties": [
+            "fill",
+            "stroke-width"
+          ],
+          "limit": 1000,
+          "cursor": "d1:0:f40a472378ba4f884d38baa64a0473c168026e27aa15f7c5913ab8ca66b94ea6:1"
+        }
+      },
+      "command": "query.styles",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "path",
+              "properties": {
+                "fill": "#123456",
+                "stroke-width": {
+                  "px": 4,
+                  "preferred": {
+                    "value": 1.0583333333333333,
+                    "unit": "mm"
+                  }
+                }
+              }
+            }
+          ],
+          "total": 2,
+          "limit": 1000,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r3",
+        "command": "query.styles",
+        "params": {
+          "ids": [
+            "rect",
+            "path"
+          ],
+          "properties": [
+            "fill",
+            "stroke-width"
+          ],
+          "cursor": "d1:0:f40a472378ba4f884d38baa64a0473c168026e27aa15f7c5913ab8ca66b94ea6:x"
+        }
+      },
+      "command": "query.styles",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "invalid-cursor",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r4",
+        "command": "query.styles",
+        "params": {
+          "ids": [
+            "rect",
+            "path"
+          ],
+          "properties": [
+            "fill",
+            "stroke-width"
+          ],
+          "cursor": "d1:0:f40a472378ba4f884d38baa64a0473c168026e27aa15f7c5913ab8ca66b94ea6:0"
+        }
+      },
+      "command": "query.styles",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "invalid-cursor",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r5",
+        "command": "query.styles",
+        "params": {
+          "ids": [
+            "rect",
+            "path"
+          ],
+          "properties": [
+            "fill",
+            "stroke-width"
+          ],
+          "cursor": "d1:0:f40a472378ba4f884d38baa64a0473c168026e27aa15f7c5913ab8ca66b94ea6:2"
+        }
+      },
+      "command": "query.styles",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "invalid-cursor",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r6",
+        "command": "query.styles",
+        "params": {
+          "ids": [
+            "rect",
+            "path"
+          ],
+          "properties": [
+            "fill",
+            "stroke-width"
+          ],
+          "cursor": "d1:0:f40a472378ba4f884d38baa64a0473c168026e27aa15f7c5913ab8ca66b94ea6:-1"
+        }
+      },
+      "command": "query.styles",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "invalid-cursor",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r7",
+        "command": "query.styles",
+        "params": {
+          "ids": [
+            "rect",
+            "path"
+          ],
+          "properties": [
+            "fill",
+            "stroke-width"
+          ],
+          "cursor": "foreign:0:garbage:1"
+        }
+      },
+      "command": "query.styles",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "refusal"
+      ],
+      "expect_error": "stale-cursor",
+      "expect_accepted": true
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r8",
+        "command": "query.styles",
+        "params": {
+          "ids": [
+            "rect",
+            "path"
+          ],
+          "properties": [
+            "fill",
+            "stroke-width"
+          ]
+        }
+      },
+      "command": "query.styles",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "rect",
+              "properties": {
+                "fill": "#123456",
+                "stroke-width": {
+                  "px": 4,
+                  "preferred": {
+                    "value": 1.0583333333333333,
+                    "unit": "mm"
+                  }
+                }
+              }
+            },
+            {
+              "id": "path",
+              "properties": {
+                "fill": "#123456",
+                "stroke-width": {
+                  "px": 4,
+                  "preferred": {
+                    "value": 1.0583333333333333,
+                    "unit": "mm"
+                  }
+                }
+              }
+            }
+          ],
+          "total": 2,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/inspection.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

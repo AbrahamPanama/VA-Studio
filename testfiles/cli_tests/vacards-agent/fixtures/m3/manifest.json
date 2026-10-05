@@ -1,0 +1,45 @@
+{
+  "schema": "p9-m3-fixtures/1",
+  "fixtures": [
+    {
+      "path": "clip.svg",
+      "sha256": "ae9bfe2f6f2c9e96c48ad87d79c8df1784e994a348b6b05e1538d02c2accb91d"
+    },
+    {
+      "path": "expected.json",
+      "sha256": "03099b4c5e587f5e78386389e02a53ed5d6aacf811bee3562392fd5ad28b0795"
+    },
+    {
+      "path": "explode.svg",
+      "sha256": "ae9bfe2f6f2c9e96c48ad87d79c8df1784e994a348b6b05e1538d02c2accb91d"
+    },
+    {
+      "path": "geometry.svg",
+      "sha256": "ae9bfe2f6f2c9e96c48ad87d79c8df1784e994a348b6b05e1538d02c2accb91d"
+    },
+    {
+      "path": "nest.svg",
+      "sha256": "ae9bfe2f6f2c9e96c48ad87d79c8df1784e994a348b6b05e1538d02c2accb91d"
+    },
+    {
+      "path": "rgba.png",
+      "sha256": "c48d58ed53ff97a3e887187a7f930440a03cac3ab91c49a610df1bec448e6df9"
+    },
+    {
+      "path": "rotated-original.svg",
+      "sha256": "27da13598990bc5303cca1afcf1a3edffa9b33083e42d629e67b3f7f332f0bf6"
+    },
+    {
+      "path": "selection.svg",
+      "sha256": "ae9bfe2f6f2c9e96c48ad87d79c8df1784e994a348b6b05e1538d02c2accb91d"
+    },
+    {
+      "path": "sheet.svg",
+      "sha256": "ae9bfe2f6f2c9e96c48ad87d79c8df1784e994a348b6b05e1538d02c2accb91d"
+    },
+    {
+      "path": "tone.svg",
+      "sha256": "ae9bfe2f6f2c9e96c48ad87d79c8df1784e994a348b6b05e1538d02c2accb91d"
+    }
+  ]
+}

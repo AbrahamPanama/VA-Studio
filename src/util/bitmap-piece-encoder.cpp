@@ -7,6 +7,7 @@
  * Released under GNU GPL v2+, read the file 'COPYING' for more information.
  */
 
+#include <glib/gi18n.h>
 #include "util/bitmap-piece-encoder.h"
 
 #include <algorithm>
@@ -395,13 +396,13 @@ Result<EncodedPieces> encode(FinalGrid const &grid, Partition const &part, Budge
     PlainBuffer crop;
     if (!(o = crop.allocate(budget, Stage::crop, maxCrop, 4, opt.fault, stop)).ok()) return bad(o);
     out._pieces = opt.fault && opt.fault->fail() ? nullptr : static_cast<EncodedPiece *>(std::calloc(part.pieceCount, sizeof(EncodedPiece)));
-    if (!out._pieces) return bad(fail("Piece index allocation failed."));
+    if (!out._pieces) return bad(memoryFailure(N_("piece index allocator"), indexBytes, 0));
     auto *rgba = reinterpret_cast<std::uint8_t *>(crop.data());
     auto const *src = reinterpret_cast<std::uint8_t const *>(grid.pixels.data());
     bool grey = space == Space::grey;
     std::uint8_t *rowBuf = grey && !(opt.fault && opt.fault->fail()) ? static_cast<std::uint8_t *>(std::malloc(2 * std::size_t(maxW))) : nullptr;
     struct Free { std::uint8_t *p; ~Free() { std::free(p); } } freeRow{rowBuf};
-    if (grey && !rowBuf) return bad(fail("Piece row allocation failed."));
+    if (grey && !rowBuf) return bad(memoryFailure(N_("encoder row allocator"), 2 * std::uint64_t(maxW), 0));
 
     std::uint64_t Q = 0, H = 0, liveQ = 0;
     for (std::uint32_t i = 0; i < part.pieceCount; ++i) {
@@ -436,7 +437,7 @@ Result<EncodedPieces> encode(FinalGrid const &grid, Partition const &part, Budge
 
         std::uint64_t wq = worstPngBytes(cw, ch, profBytes);
         auto *buf = opt.fault && opt.fault->fail() ? nullptr : static_cast<std::uint8_t *>(std::malloc(std::size_t(wq)));
-        if (!buf) return bad(fail("Piece PNG allocation failed."));
+        if (!buf) return bad(memoryFailure(N_("PNG output allocator"), wq, 0));
         PngJob job;
         job.rows = rgba; job.width = cw; job.height = ch; job.grey = grey;
         job.profile = reinterpret_cast<std::uint8_t const *>(grid.profile.data()); job.profileBytes = profBytes;
@@ -446,7 +447,7 @@ Result<EncodedPieces> encode(FinalGrid const &grid, Partition const &part, Budge
             std::free(buf);
             if (job.interrupted) return bad(poll.outcome);
             if (job.mismatch) return bad(refuse("A grey colour profile cannot describe coloured pixels."));
-            if (job.memFail) return bad(fail("Piece PNG encoder allocation failed."));
+            if (job.memFail) return bad(memoryFailure(N_("PNG encoder allocator"), scratch, 0));
             return bad(fail(job.overflow ? "Piece PNG exceeded its bound." : "Piece PNG encoding failed."));
         }
         auto *shrunk = opt.fault && opt.fault->fail() ? nullptr : static_cast<std::uint8_t *>(std::realloc(buf, std::size_t(job.used)));
@@ -495,10 +496,10 @@ Result<EncodedPieces> encodeWholeGrid(FinalGrid const &grid, Budget &budget, Sto
         !(o = budget.acquire(Stage::href, href, out.hrefReservation)).ok() ||
         !(o = budget.acquire(Stage::encoder, scratchAll, scratchToken)).ok()) return bad(o);
     out._pieces = opt.fault && opt.fault->fail() ? nullptr : static_cast<EncodedPiece *>(std::calloc(1, sizeof(EncodedPiece)));
-    if (!out._pieces) return bad(fail("Image index allocation failed."));
+    if (!out._pieces) return bad(memoryFailure(N_("image index allocator"), sizeof(EncodedPiece), 0));
     out._count = 1; auto &piece = out._pieces[0];
     piece.data = opt.fault && opt.fault->fail() ? nullptr : static_cast<std::uint8_t *>(std::malloc(worst));
-    if (!piece.data) return bad(fail("Image PNG allocation failed."));
+    if (!piece.data) return bad(memoryFailure(N_("PNG output allocator"), worst, 0));
     PlainBuffer row;
     if (space == Space::grey && !(o = row.allocate(budget, Stage::encoder, grid.width, 2, opt.fault, stop)).ok()) return bad(o);
     if (!poll.enter(EncodePhase::encode)) return bad(poll.outcome);
@@ -509,6 +510,7 @@ Result<EncodedPieces> encodeWholeGrid(FinalGrid const &grid, Budget &budget, Sto
     job.ppmX = ppmX; job.ppmY = ppmY; job.out = piece.data; job.cap = worst;
     job.poll = &poll; job.fault = opt.fault; job.limit = scratch;
     if (!writePng(job)) return bad(job.interrupted ? poll.outcome :
+        job.memFail ? memoryFailure(N_("PNG encoder allocator"), scratch, 0) :
         job.mismatch ? refuse("A grey colour profile cannot describe coloured pixels.") : fail("Image PNG encoding failed."));
     if (!poll.flush()) return bad(poll.outcome);
     auto shrunk = opt.fault && opt.fault->fail() ? nullptr : static_cast<std::uint8_t *>(std::realloc(piece.data, job.used));

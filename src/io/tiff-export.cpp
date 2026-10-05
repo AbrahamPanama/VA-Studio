@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "tiff-export.h"
+#include "io/export-color-profiles.h"
 
 #include <algorithm>
 #include <array>
@@ -562,30 +563,15 @@ bool export_png_to_color_managed_tiff(std::string const &png_path, std::string c
     if (!read_file(output_profile, profile_data, error)) {
         return false;
     }
-    if (profile_data.empty() || profile_data.size() > std::numeric_limits<std::uint32_t>::max()) {
-        error = "ICC output profile is empty or too large";
-        return false;
-    }
+    return export_png_to_color_managed_tiff(png_path, tiff_path, profile_data, error, info, options);
+}
 
-    CmsProfileGuard destination(
-        cmsOpenProfileFromMem(profile_data.data(), static_cast<cmsUInt32Number>(profile_data.size())));
-    if (!destination.handle) {
-        error = "The configured TIFF output profile is not a valid ICC profile";
-        return false;
-    }
-    if (cmsGetColorSpace(destination.handle) != cmsSigRgbData) {
-        error = "The configured TIFF output profile is not an RGB profile";
-        return false;
-    }
-    if (cmsGetDeviceClass(destination.handle) != cmsSigOutputClass) {
-        error = "The configured TIFF output profile is not an RGB printer/output profile";
-        return false;
-    }
-    if (!cmsIsIntentSupported(destination.handle, INTENT_RELATIVE_COLORIMETRIC, LCMS_USED_AS_OUTPUT)) {
-        error = "The configured TIFF output profile does not support relative-colorimetric output";
-        return false;
-    }
-
+bool export_png_to_color_managed_tiff(std::string const &png_path, std::string const &tiff_path,
+    std::vector<unsigned char> const &profile_data, std::string &error, TiffExportInfo *info,
+    TiffExportOptions const &options)
+{
+    auto transform = export_color_transform(profile_data, error);
+    if (!transform) return false;
     std::vector<unsigned char> pixels;
     std::uint32_t width = 0;
     std::uint32_t height = 0;
@@ -606,20 +592,6 @@ bool export_png_to_color_managed_tiff(std::string const &png_path, std::string c
             error = "Not enough memory to clean the image edges for printing";
             return false;
         }
-    }
-
-    CmsProfileGuard source(cmsCreate_sRGBProfile());
-    if (!source.handle) {
-        error = "Could not create the sRGB source profile";
-        return false;
-    }
-
-    constexpr cmsUInt32Number flags = cmsFLAGS_BLACKPOINTCOMPENSATION | cmsFLAGS_COPY_ALPHA;
-    CmsTransformGuard transform(cmsCreateTransform(source.handle, TYPE_RGBA_8, destination.handle, TYPE_RGBA_8,
-                                                   INTENT_RELATIVE_COLORIMETRIC, flags));
-    if (!transform.handle) {
-        error = "Could not create the sRGB-to-output ICC transform";
-        return false;
     }
 
     TemporaryFile temporary;
@@ -651,7 +623,7 @@ bool export_png_to_color_managed_tiff(std::string const &png_path, std::string c
 
         for (std::uint32_t row = 0; row < height; ++row) {
             auto const *input = pixels.data() + static_cast<std::size_t>(row) * row_size;
-            cmsDoTransform(transform.handle, input, converted.data(), width);
+            cmsDoTransform(transform.get(), input, converted.data(), width);
             if (options.prevent_white_clipping) {
                 for (std::size_t px = 0; px < row_size; px += 4) {
                     auto *rgba = converted.data() + px;

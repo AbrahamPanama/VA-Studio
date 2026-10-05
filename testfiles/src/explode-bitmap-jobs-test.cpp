@@ -94,6 +94,7 @@ TEST_F(JobsTest, T07RootCatchAllAndMainDelivery)
             EXPECT_EQ(std::this_thread::get_id(), main);
             EXPECT_EQ(ticket, jobs.latest());
             EXPECT_EQ(result.outcome.status, Status::failed);
+            if (fault == 1) EXPECT_NE(std::string(result.outcome.diagnostic).find("Not enough memory"), std::string::npos);
             ++delivered;
         }, {}, now, false);
         jobs.request(input(fault));

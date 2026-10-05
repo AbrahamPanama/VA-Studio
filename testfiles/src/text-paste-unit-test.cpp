@@ -40,6 +40,12 @@
 #include <vector>
 
 #include "document.h"
+#include "document-undo.h"
+#include "selection-chemistry.h"
+#include "object/object-set.h"
+#include "object/sp-object.h"
+#include "ui/clipboard.h"
+#include "xml/repr.h"
 #include "ui/clipboard-lease.h"
 #include "ui/tools/tool-base.h"
 #include <sigc++/scoped_connection.h>
@@ -1029,4 +1035,87 @@ TEST(TextPasteUnit, LatinKeyvalWithoutDisplayPreservesEventAndClearsConsumedModi
     unsigned consumed = 0xffffffff;
     EXPECT_EQ(Inkscape::UI::Tools::get_latin_keyval_impl(GDK_KEY_a, 0, GDK_CONTROL_MASK, 0, &consumed), GDK_KEY_a);
     EXPECT_EQ(consumed, 0u);
+}
+
+
+// BUG-021: exercise the native clipboard manager and the real Cut action,
+// without creating a GTK application/window. The seam also overrides a cached
+// clipboard, so the same refusal is deterministic in a display-capable process.
+TEST(TextPasteUnit, NoClipboardCopyCutPastePreserveDocumentSelectionAndHistory)
+{
+    ASSERT_EQ(gdk_display_get_default(), nullptr);
+    struct ResetClipboardSeam {
+        ~ResetClipboardSeam() { Inkscape::UI::ClipboardManager::setClipboardUnavailableForTesting(false); }
+    } reset;
+    std::string_view const svg =
+        "<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'>"
+        "<g id='group'><rect id='child' width='1' height='1'/></g>"
+        "<rect id='other' width='2' height='2'/></svg>";
+
+    // Both a naturally absent display and injected clipboard unavailability;
+    // empty and multiple selections (including a group); all three actions.
+    for (bool const forced : {false, true}) {
+        Inkscape::UI::ClipboardManager::setClipboardUnavailableForTesting(forced);
+        for (bool const selected : {false, true}) {
+            for (auto const action : {"copy", "cut", "paste"}) {
+                SCOPED_TRACE(::testing::Message() << action << ", selected=" << selected << ", forced=" << forced);
+                auto doc = SPDocument::createNewDocFromMem(svg);
+                ASSERT_TRUE(doc);
+                auto *group = doc->getObjectById("group");
+                auto *other = doc->getObjectById("other");
+                ASSERT_TRUE(group);
+                ASSERT_TRUE(other);
+                Inkscape::ObjectSet selection(doc.get());
+                if (selected) {
+                    selection.add(group);
+                    selection.add(other);
+                }
+
+                // Leave one existing Undo and one Redo entry. Refusal must not
+                // add a transaction, consume Undo, or clear Redo.
+                Inkscape::DocumentUndo::setUndoSensitive(doc.get(), true);
+                group->getRepr()->setAttribute("data-checkpoint", "one");
+                Inkscape::DocumentUndo::done(doc.get(), Inkscape::Util::Internal::ContextString("checkpoint one"), "");
+                group->getRepr()->setAttribute("data-checkpoint", "two");
+                Inkscape::DocumentUndo::done(doc.get(), Inkscape::Util::Internal::ContextString("checkpoint two"), "");
+                ASSERT_TRUE(Inkscape::DocumentUndo::undo(doc.get()));
+                auto const before = sp_repr_save_buf(doc->getReprDoc());
+                auto const mark = Inkscape::DocumentUndo::undoStackMark(doc.get());
+                auto const modified = doc->isModifiedSinceSave();
+                auto const virgin = doc->getVirgin();
+                auto const serial = doc->serial();
+
+                ::testing::internal::CaptureStderr();
+                if (std::string_view(action) == "copy") selection.copy();
+                else if (std::string_view(action) == "cut") selection.cut();
+                else sp_selection_paste(nullptr, false, false);
+                auto const message = ::testing::internal::GetCapturedStderr();
+                if (std::string_view(action) == "cut" && !selected) {
+                    // An empty Cut reports "Nothing was deleted" before any clipboard access.
+                    EXPECT_NE(message.find("Nothing"), std::string::npos);
+                } else {
+                    EXPECT_NE(message.find("[clipboard-unavailable] Clipboard unavailable (no display)"), std::string::npos);
+                }
+                EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()), before);
+                EXPECT_EQ(selection.size(), selected ? 2 : 0);
+                EXPECT_EQ(selection.includes(group), selected);
+                EXPECT_EQ(selection.includes(other), selected);
+                EXPECT_EQ(doc->getObjectById("group"), group);
+                EXPECT_EQ(doc->getObjectById("other"), other);
+                EXPECT_EQ(Inkscape::DocumentUndo::undoStackMark(doc.get()), mark);
+                EXPECT_EQ(doc->isModifiedSinceSave(), modified);
+                EXPECT_EQ(doc->getVirgin(), virgin);
+                EXPECT_EQ(doc->serial(), serial);
+
+                ASSERT_TRUE(Inkscape::DocumentUndo::redo(doc.get()));
+                EXPECT_STREQ(group->getRepr()->attribute("data-checkpoint"), "two");
+                EXPECT_FALSE(Inkscape::DocumentUndo::redo(doc.get()));
+                ASSERT_TRUE(Inkscape::DocumentUndo::undo(doc.get()));
+                EXPECT_STREQ(group->getRepr()->attribute("data-checkpoint"), "one");
+                ASSERT_TRUE(Inkscape::DocumentUndo::undo(doc.get()));
+                EXPECT_EQ(group->getRepr()->attribute("data-checkpoint"), nullptr);
+                EXPECT_FALSE(Inkscape::DocumentUndo::undo(doc.get()));
+            }
+        }
+    }
 }

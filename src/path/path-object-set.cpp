@@ -13,10 +13,14 @@
  */
 
 #include <glibmm/i18n.h>
+#include <glibmm/markup.h>
+#include <2geom/rect.h>
+#include <cmath>
 
 #include <algorithm>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "desktop.h"
@@ -35,8 +39,67 @@
 #include "path/path-outline.h"
 #include "path/path-simplify.h"
 #include "ui/icon-names.h"
+#include "util/operation-targets.h"
 #include "xml/repr-sorting.h"
 #include "style.h"
+
+namespace Inkscape::detail {
+// Internal to this implementation; declared by the focused test to exercise
+// the actual bounded enumerator, including its fallback and touching boxes.
+using UnionCandidate = std::pair<unsigned, unsigned>;
+bool union_candidates_bounded(std::vector<Geom::Rect> const &bounds,
+                              std::vector<UnionCandidate> &candidates,
+                              std::size_t budget_bytes)
+{
+    // Reserve a single fixed allocation: neither vector growth nor remapping
+    // may temporarily hold a second full pair list. Bounds/events are O(N).
+    std::vector<UnionCandidate>().swap(candidates);
+    auto const limit = budget_bytes / sizeof(UnionCandidate);
+    auto const n = bounds.size();
+    // Divide first and cap before multiplying, also on 32-bit size_t.
+    auto const a = n % 2 == 0 ? n / 2 : n;
+    auto const b = n < 2 ? 0 : (n % 2 == 0 ? n - 1 : (n - 1) / 2);
+    auto const max_pairs = b && a > limit / b ? limit : a * b;
+    candidates.reserve(std::min(limit, max_pairs));
+    struct Event { double x; unsigned index; bool closing; };
+    std::vector<Event> events;
+    events.reserve(2 * n);
+    for (unsigned i = 0; i < n; ++i) {
+        events.push_back({bounds[i].left(), i, false});
+        events.push_back({bounds[i].right(), i, true});
+    }
+    std::sort(events.begin(), events.end(), [](auto const &a, auto const &b) {
+        // Opening before closing includes touching and zero-width boxes.
+        if (a.x != b.x) return a.x < b.x;
+        if (a.closing != b.closing) return a.closing < b.closing;
+        return a.index < b.index;
+    });
+    std::vector<unsigned> active;
+    active.reserve(n);
+    for (auto const &event : events) {
+        auto const i = event.index;
+        if (event.closing) {
+            active.erase(std::find(active.begin(), active.end(), i));
+        } else {
+            for (auto j : active) {
+                if (bounds[i][Geom::Y].intersects(bounds[j][Geom::Y])) {
+                    if (candidates.size() == limit) {
+                        // Discard the entire partial index BEFORE the old
+                        // on-demand exhaustive pass starts; never omit a pair.
+                        std::vector<UnionCandidate>().swap(candidates);
+                        return false;
+                    }
+                    candidates.emplace_back(std::max(i, j), std::min(i, j));
+                }
+            }
+            active.push_back(i);
+        }
+    }
+    // Original exhaustive (i,j) ordering preserves intersection-cut semantics.
+    std::sort(candidates.begin(), candidates.end());
+    return true;
+}
+} // namespace Inkscape::detail
 
 using Inkscape::ObjectSet;
 
@@ -83,6 +146,20 @@ void Inkscape::ObjectSet::pathDiffMany(bool keep_top, bool skip_undo, bool silen
             }
         }
         return;
+    }
+
+    for (auto item : items) {
+        if (!is<SPShape>(item) && !is<SPText>(item) && !is<SPFlowtext>(item)) {
+            if (!silent) {
+                auto const message = _("Booleans need paths or shapes: ungroup first, or use Boolean Assist, which treats a group as one shape");
+                if (desktop()) {
+                    desktop()->messageStack()->flash(ERROR_MESSAGE, message);
+                } else {
+                    g_printerr("%s\n", message);
+                }
+            }
+            return;
+        }
     }
 
     // Define the operation by document stacking order, independent of the
@@ -139,6 +216,11 @@ void Inkscape::ObjectSet::_pathBoolOp(BooleanOp bop, char const *icon_name,
                                      bool skip_undo, bool silent, bool reverse_difference)
 {
     try {
+        for (auto item : items()) {
+            if (!is<SPShape>(item) && !is<SPText>(item) && !is<SPFlowtext>(item)) {
+                throw _("Booleans need paths or shapes: ungroup first, or use Boolean Assist, which treats a group as one shape");
+            }
+        }
         ObjectSet::_pathBoolOp(bop, reverse_difference);
         if (!skip_undo) {
             DocumentUndo::done(document(), description, icon_name);
@@ -356,11 +438,89 @@ void Inkscape::ObjectSet::_pathBoolOp(BooleanOp bop, bool reverse_difference)
     }
 
     // Compute the intersections and self-intersections, and use this information when converting to livarot paths.
-    for (int i = 0; i < operands.size(); i++) {
-        for (int j = 0; j < i; j++) {
-            distribute_intersection_times(operands[i].cuts, operands[j].cuts, operands[i].pathv.intersect(operands[j].pathv));
+    // Union's curves already live in document space. Cache conservative control-hull
+    // bounds once, then sweep boxes (including touching edges) before intersecting
+    // curves. Other operations retain their original preprocessing path.
+    // 8 MiB is an allocation budget, not a geometry/accuracy threshold.
+    // Dense selections retain the original exhaustive on-demand preprocessing.
+    constexpr std::size_t candidate_budget = 8 * 1024 * 1024;
+    // Below this size the single merge tree is fast and keeps the legacy contour order.
+    // The below-threshold order is pinned by BoolopAttrTest.Union (testfiles/src/boolop-attr-test.cpp:184).
+    constexpr std::size_t union_component_min_operands = 256;
+    std::vector<detail::UnionCandidate> union_candidates;
+    bool indexed_union = bop == bool_op_union;
+    if (indexed_union) {
+        std::vector<Geom::Rect> bounds;
+        bounds.reserve(operands.size());
+        for (auto const &operand : operands) {
+            auto const box = operand.pathv.boundsFast();
+            if (!box || !std::isfinite(box->left()) || !std::isfinite(box->right()) ||
+                !std::isfinite(box->top()) || !std::isfinite(box->bottom())) {
+                // Preserve the old behavior for geometry without usable bounds.
+                indexed_union = false;
+                break;
+            }
+            bounds.push_back(*box);
+        }
+        if (indexed_union) {
+            indexed_union = detail::union_candidates_bounded(bounds, union_candidates, candidate_budget);
         }
     }
+    auto candidate = union_candidates.cbegin();
+    for (int i = 0; i < operands.size(); i++) {
+        auto intersect = [&](int j) {
+            distribute_intersection_times(operands[i].cuts, operands[j].cuts,
+                                          operands[i].pathv.intersect(operands[j].pathv));
+        };
+        if (indexed_union) {
+            while (candidate != union_candidates.cend() && candidate->first == static_cast<unsigned>(i)) {
+                intersect(candidate->second);
+                ++candidate;
+            }
+        } else {
+            for (int j = 0; j < i; j++) intersect(j);
+        }
+    }
+
+    std::vector<unsigned> component_of(operands.size());
+    std::size_t component_count = 1;
+    if (bop == bool_op_union && indexed_union && operands.size() >= union_component_min_operands) {
+        std::vector<unsigned> parent(operands.size());
+        std::vector<unsigned> size(operands.size(), 1);
+        for (unsigned i = 0; i < parent.size(); ++i) parent[i] = i;
+        auto find_root = [&](unsigned i) {
+            unsigned root = i;
+            while (parent[root] != root) root = parent[root];
+            while (parent[i] != i) {
+                auto next = parent[i];
+                parent[i] = root;
+                i = next;
+            }
+            return root;
+        };
+        for (auto const &[i, j] : union_candidates) {
+            auto a = find_root(i);
+            auto b = find_root(j);
+            if (a != b) {
+                if (size[a] < size[b]) std::swap(a, b);
+                parent[b] = a;
+                size[a] += size[b];
+            }
+        }
+        constexpr auto no_component = static_cast<unsigned>(-1);
+        std::vector<unsigned> component_for_root(operands.size(), no_component);
+        component_count = 0;
+        for (unsigned i = 0; i < operands.size(); ++i) {
+            auto root = find_root(i);
+            if (component_for_root[root] == no_component) {
+                component_for_root[root] = component_count++;
+            }
+            component_of[i] = component_for_root[root];
+        }
+    }
+
+    // No candidate storage survives into path normalization or Shape reduction.
+    std::vector<detail::UnionCandidate>().swap(union_candidates);
 
     for (auto &operand : operands) {
         distribute_intersection_times(operand.cuts, operand.cuts, operand.pathv.intersectSelf());
@@ -391,7 +551,81 @@ void Inkscape::ObjectSet::_pathBoolOp(BooleanOp bop, bool reverse_difference)
     Path::cut_position  *toCut=nullptr;
     int                  nbToCut=0;
 
-    if (bop == bool_op_inters || bop == bool_op_union || bop == bool_op_diff || bop == bool_op_symdiff) {
+    auto get_path_arr = [&] {
+        std::vector<Path *> result;
+        result.reserve(operands.size());
+        for (auto &operand : operands) result.emplace_back(operand.path.get());
+        return result;
+    };
+    bool union_res_ready = false;
+    auto reduce_union = [&](std::vector<std::unique_ptr<Shape>> level) -> std::unique_ptr<Shape> {
+        while (level.size() > 1) {
+            std::vector<std::unique_ptr<Shape>> next;
+            next.reserve((level.size() + 1) / 2);
+            for (std::size_t i = 0; i < level.size(); i += 2) {
+                if (i + 1 == level.size() || level[i + 1]->numberOfEdges() == 0) {
+                    next.push_back(std::move(level[i]));
+                } else if (level[i]->numberOfEdges() == 0) {
+                    next.push_back(std::move(level[i + 1]));
+                } else {
+                    auto merged = std::make_unique<Shape>();
+                    merged->Booleen(level[i + 1].get(), level[i].get(), bool_op_union);
+                    next.push_back(std::move(merged));
+                }
+                // Moves leave null slots; reset also destroys the consumed
+                // nonempty pair and any empty partner immediately, not at the
+                // end of the level while all of next is already resident.
+                level[i].reset();
+                if (i + 1 < level.size()) level[i + 1].reset();
+            }
+            level = std::move(next);
+        }
+        return level.empty() ? std::make_unique<Shape>() : std::move(level.front());
+    };
+
+    if (bop == bool_op_union) {
+        // Normalize each leaf exactly once using its own winding rule. The index
+        // passed to Fill remains the global backdata path ID at every tree level;
+        // operands (and their original Paths) outlive the final ConvertToForme.
+        if (component_count == 1) {
+            std::vector<std::unique_ptr<Shape>> leaves;
+            leaves.reserve(operands.size());
+            for (int i = 0; i < operands.size(); ++i) {
+                operands[i].path->Fill(theShape, i);
+                auto leaf = std::make_unique<Shape>();
+                leaf->ConvertToShape(theShape, operands[i].fill_rule);
+                leaves.push_back(std::move(leaf));
+            }
+            delete theShape;
+            theShape = reduce_union(std::move(leaves)).release();
+        } else {
+            Geom::PathVector combined;
+            std::vector<std::vector<unsigned>> members(component_count);
+            for (unsigned i = 0; i < operands.size(); ++i) members[component_of[i]].push_back(i);
+            auto const path_arr = get_path_arr();
+            for (unsigned component = 0; component < component_count; ++component) {
+                std::vector<std::unique_ptr<Shape>> leaves;
+                for (auto i : members[component]) {
+                    operands[i].path->Fill(theShape, i);
+                    auto leaf = std::make_unique<Shape>();
+                    leaf->ConvertToShape(theShape, operands[i].fill_rule);
+                    leaves.push_back(std::move(leaf));
+                }
+                auto reduced = reduce_union(std::move(leaves));
+                if (reduced->numberOfEdges() > 0) {
+                    Path component_path;
+                    reduced->ConvertToForme(&component_path, operands.size(), path_arr.data());
+                    auto paths = component_path.MakePathVector();
+                    combined.insert(combined.end(), paths.begin(), paths.end());
+                }
+            }
+            res->LoadPathVector(combined);
+            union_res_ready = true;
+        }
+        // No document objects participate in this reduction. The existing anchor
+        // selection, one final replacement, and caller's Undo settlement below
+        // are independent of the merge tree.
+    } else if (bop == bool_op_inters || bop == bool_op_diff || bop == bool_op_symdiff) {
         // true boolean op
         // get the polygons of each path, with the winding rule specified, and apply the operation iteratively
 
@@ -535,15 +769,6 @@ void Inkscape::ObjectSet::_pathBoolOp(BooleanOp bop, bool reverse_difference)
         }
     }
 
-    auto get_path_arr = [&] {
-        std::vector<Path *> result;
-        result.reserve(operands.size());
-        for (auto &operand : operands) {
-            result.emplace_back(operand.path.get());
-        }
-        return result;
-    };
-
     int*    nesting=nullptr;
     int*    conts=nullptr;
     int     nbNest=0;
@@ -559,7 +784,7 @@ void Inkscape::ObjectSet::_pathBoolOp(BooleanOp bop, bool reverse_difference)
         // this function uses the point_data to get the winding number of each path (ie: is a hole or not)
         // for later reconstruction in objects, you also need to extract which path is parent of holes (nesting info)
         theShape->ConvertToFormeNested(res, operands.size(), get_path_arr().data(), nbNest, nesting, conts, true);
-    } else {
+    } else if (!union_res_ready) {
         theShape->ConvertToForme(res, operands.size(), get_path_arr().data());
     }
 
@@ -715,42 +940,86 @@ bool ObjectSet::strokesToPaths(bool legacy, bool skip_undo)
         return false;
     }
 
-    bool did = false;
-
+    auto doc = document();
+    if (!doc || isEmpty()) return false;
     auto prefs = Inkscape::Preferences::get();
-    if (prefs->getBool("/options/pathoperationsunlink/value", true)) {
-        did = unlinkRecursive(true);
+    StrokeToPathConversion conversion;
+    conversion.unlink_clones = prefs->getBool("/options/pathoperationsunlink/value", true);
+    auto selected = items_vector();
+    std::vector<std::string> original_ids;
+    for (auto item : selected) {
+        // Restoration must be possible without assigning IDs during preflight.
+        if (!item->getId()) return false;
+        original_ids.emplace_back(item->getId());
     }
-
-    // Need to turn on stroke scaling to ensure stroke is scaled when transformed!
-    bool scale_stroke = prefs->getBool("/options/transform/stroke", true);
-    prefs->setBool("/options/transform/stroke", true);
-
-    for (auto item : items_vector()) {
-        // Do not remove the object from the selection here
-        // as we want to keep it selected if the whole operation fails
-        Inkscape::XML::Node *new_node = item_to_paths(item, legacy);
-        if (new_node) {
-            SPObject* new_item = document()->getObjectByRepr(new_node);
-
-            add(new_item); // Add to selection.
-            did = true;
+    auto roots = Util::resolve_composite_targets(selected,
+        [](SPItem *) { return Util::TargetAvailability::Eligible; },
+        [](SPItem *item) { return cast<SPItem>(item->parent); },
+        [](SPItem *) -> SPItem * { return nullptr; }); // Instances are independent of their source.
+    std::vector<std::string> eligible;
+    for (auto item : roots.items) {
+        if (item_to_paths_preflight(item, legacy, conversion)) eligible.emplace_back(item->getId());
+    }
+    auto report_exclusions = [&] {
+        if (desktop() && !conversion.exclusions.empty()) {
+            Glib::ustring message = _("Stroke to Path exclusions:");
+            for (auto const &reason : conversion.exclusions) {
+                message += "\n" + Glib::Markup::escape_text(reason);
+            }
+            desktop()->messageStack()->flash(Inkscape::WARNING_MESSAGE, message.c_str());
         }
+    };
+    report_exclusions();
+    if (eligible.empty()) return false;
+    auto fence = DocumentUndo::detachPendingChanges(doc);
+    if (!fence) {
+        if (desktop()) desktop()->messageStack()->flash(Inkscape::ERROR_MESSAGE,
+            _("Stroke to Path cannot acquire a rollback fence."));
+        return false;
     }
-
-    // Reset
+    bool did = false;
+    bool const scale_stroke = prefs->getBool("/options/transform/stroke", true);
+    prefs->setBool("/options/transform/stroke", true);
+    try {
+        for (auto const &id : eligible) {
+            auto item = cast<SPItem>(doc->getObjectById(id));
+            if (!item) { conversion.failed = true; break; }
+            did = item_to_paths_unlink(item, conversion) || did;
+            if (conversion.failed) break;
+        }
+        for (auto const &id : eligible) {
+            if (conversion.failed) break;
+            auto item = cast<SPItem>(doc->getObjectById(id));
+            if (!item) { conversion.failed = true; break; }
+            if (item_to_paths_apply(item, legacy, conversion)) did = true;
+        }
+    } catch (...) {
+        conversion.failed = true;
+    }
     prefs->setBool("/options/transform/stroke", scale_stroke);
-
-    if (desktop() && !did) {
+    if (conversion.failed || !did) {
+        DocumentUndo::rollbackToDetachedChanges(doc, *fence);
+    } else {
+        DocumentUndo::reattachPendingChanges(doc, *fence);
+    }
+    // Replacements and rollback release objects. Resolve every original ID,
+    // preserving the caller's ordering (including covered descendants).
+    std::vector<SPItem *> restored;
+    for (auto const &id : original_ids) {
+        if (auto item = cast<SPItem>(doc->getObjectById(id))) restored.push_back(item);
+    }
+    setList(restored);
+    if (conversion.failed) {
+        if (desktop()) desktop()->messageStack()->flash(Inkscape::ERROR_MESSAGE,
+            _("Stroke to Path failed; the selection was restored."));
+        return false;
+    }
+    if (desktop() && !did && conversion.exclusions.empty()) {
         desktop()->messageStack()->flash(Inkscape::ERROR_MESSAGE, _("<b>No stroked paths</b> in the selection."));
     }
-
     if (did && !skip_undo) {
-        Inkscape::DocumentUndo::done(document(), RC_("Undo", "Convert stroke to path"), "");
-    } else if (!did && !skip_undo) {
-        Inkscape::DocumentUndo::cancel(document());
+        DocumentUndo::done(doc, RC_("Undo", "Convert stroke to path"), "");
     }
-
     return did;
 }
 

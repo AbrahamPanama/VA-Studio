@@ -13,6 +13,7 @@
  * Released under GNU GPL v2+, read the file 'COPYING' for more information.
  */
 
+#include "transform-policy-scope.h"
 #include "sp-item.h"
 
 #include <algorithm>
@@ -1675,6 +1676,14 @@ bool SPItem::unoptimized() {
     return false;
 }
 
+namespace Inkscape {
+namespace { thread_local TransformPolicy const *transform_policy = nullptr; }
+ScopedTransformPolicy::ScopedTransformPolicy(TransformPolicy policy)
+    : _policy(policy), _previous(transform_policy) { transform_policy = &_policy; }
+ScopedTransformPolicy::~ScopedTransformPolicy() { transform_policy = _previous; }
+TransformPolicy const *ScopedTransformPolicy::active() noexcept { return transform_policy; }
+}
+
 void SPItem::doWriteTransform(Geom::Affine const &transform, Geom::Affine const *adv, bool compensate)
 {
     // Transform delta between the transform currently in the repr and the new transform.
@@ -1686,12 +1695,13 @@ void SPItem::doWriteTransform(Geom::Affine const &transform, Geom::Affine const 
     auto advertized_transform = adv != nullptr ? *adv : relative_transform;
 
     Inkscape::Preferences *prefs = Inkscape::Preferences::get();
+    auto const *policy = Inkscape::ScopedTransformPolicy::active();
     if (compensate) {
         // recursively compensating for stroke scaling will not always work, because it can be scaled to zero or infinite
         // from which we cannot ever recover by applying an inverse scale; therefore we temporarily block any changes
         // to the strokewidth in such a case instead, and unblock these after the transformation
         // (as reported in https://bugs.launchpad.net/inkscape/+bug/825840/comments/4)
-        if (!prefs->getBool("/options/transform/stroke", true)) {
+        if (!(policy ? policy->stroke : prefs->getBool("/options/transform/stroke", true))) {
             double const expansion = 1. / relative_transform.descrim();
             if (expansion < 1e-9 || expansion > 1e9) {
                 freeze_stroke_width_recursive(true);
@@ -1707,21 +1717,21 @@ void SPItem::doWriteTransform(Geom::Affine const &transform, Geom::Affine const 
         }
 
         // recursively compensate rx/ry of a rect if requested
-        if (!prefs->getBool("/options/transform/rectcorners", true)) {
+        if (!(policy ? policy->rectcorners : prefs->getBool("/options/transform/rectcorners", true))) {
             sp_item_adjust_rects_recursive(this, relative_transform);
         }
 
         // recursively compensate pattern fill if it's not to be transformed
-        if (!prefs->getBool("/options/transform/pattern", true)) {
+        if (!(policy ? policy->pattern : prefs->getBool("/options/transform/pattern", true))) {
             adjust_paint_recursive(relative_transform.inverse(), Geom::identity(), PATTERN);
         }
-        if (!prefs->getBool("/options/transform/hatch", true)) {
+        if (!(policy ? policy->hatch : prefs->getBool("/options/transform/hatch", true))) {
             adjust_paint_recursive(relative_transform.inverse(), Geom::identity(), HATCH);
         }
 
         /// \todo FIXME: add the same else branch as for gradients below, to convert patterns to userSpaceOnUse as well
         /// recursively compensate gradient fill if it's not to be transformed
-        if (!prefs->getBool("/options/transform/gradient", true)) {
+        if (!(policy ? policy->gradient : prefs->getBool("/options/transform/gradient", true))) {
             adjust_paint_recursive(relative_transform.inverse(), Geom::identity(), GRADIENT);
         } else {
             // this converts the gradient/pattern fill/stroke, if any, to userSpaceOnUse; we need to do
@@ -1731,7 +1741,7 @@ void SPItem::doWriteTransform(Geom::Affine const &transform, Geom::Affine const 
 
     } // endif(compensate)
 
-    gint preserve = prefs->getBool("/options/preservetransform/value", false);
+    gint preserve = (policy ? policy->preserve : prefs->getBool("/options/preservetransform/value", false));
     Geom::Affine transform_attr (transform);
 
     // CPPIFY: check this code.
@@ -1757,7 +1767,7 @@ void SPItem::doWriteTransform(Geom::Affine const &transform, Geom::Affine const 
     if (freeze_stroke_width) {
         freeze_stroke_width_recursive(false);
         if (compensate) {
-            if (!prefs->getBool("/options/transform/stroke", true)) {
+            if (!(policy ? policy->stroke : prefs->getBool("/options/transform/stroke", true))) {
                 // Recursively compensate for stroke scaling, depending on user preference
                 // (As to why we need to do this, see the comment a few lines above near the freeze_stroke_width_recursive(true) call)
                 double const expansion = 1. / relative_transform.descrim();

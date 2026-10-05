@@ -36,7 +36,10 @@ enum class Corner { Round, Bevel, Miter };
  *   DocumentUndo::cancel on a failure after the mutation started). Like every
  *   Inkscape action, pending logged changes are folded into that Undo step.
  */
-enum class CommitProtocol { Interaction, CommandLine };
+// CallerOwnedAtomic: the CommandLine caller has already acquired its atomic transaction.
+// It owns all settlement and rollback, including exceptions and partial mutation failures.
+// The service never calls done/cancel for this protocol.
+enum class CommitProtocol { Interaction, CommandLine, CallerOwnedAtomic };
 
 struct Options
 {

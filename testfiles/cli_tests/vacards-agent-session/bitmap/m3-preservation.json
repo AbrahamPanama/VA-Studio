@@ -1,0 +1,720 @@
+{
+  "schema": "p9-m3-cases/1",
+  "cases": [
+    {
+      "id": "bitmap.tone-query:preservation",
+      "command": "bitmap.tone-query",
+      "cell": "preservation",
+      "description": "Independent P9 bitmap.tone-query:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.tone-query",
+            "params": {
+              "ids": [
+                "image1"
+              ],
+              "mode": "compatible-members"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.histogram:preservation",
+      "command": "bitmap.histogram",
+      "cell": "preservation",
+      "description": "Independent P9 bitmap.histogram:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.histogram",
+            "params": {
+              "ids": [
+                "image1"
+              ],
+              "channel": "luminance",
+              "bins": 256,
+              "remap": "none"
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.tone-set:preservation",
+      "command": "bitmap.tone-set",
+      "cell": "preservation",
+      "description": "Independent P9 bitmap.tone-set:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.tone-set",
+            "params": {
+              "ids": [
+                "image1"
+              ],
+              "patch": {
+                "brightness": 10
+              }
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "bitmap.copy:preservation",
+      "command": "bitmap.copy",
+      "cell": "preservation",
+      "description": "Independent P9 bitmap.copy:preservation",
+      "startup_args": [
+        "--grant-read",
+        "{FIXTURES}/m3"
+      ],
+      "timeout": 30,
+      "requests": [
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "open",
+            "command": "file.open",
+            "if_revision": 0,
+            "params": {
+              "path": "{FIXTURES}/m3/tone.svg",
+              "format": "svg",
+              "resource-policy": "embed",
+              "font-policy": "reject",
+              "discard": false
+            }
+          },
+          "expect": {
+            "status": "changed"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "before",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_before",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_before",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "subject",
+            "command": "bitmap.copy",
+            "params": {
+              "ids": [
+                "shape1"
+              ],
+              "size": {
+                "width": 10,
+                "height": 10
+              },
+              "bbox": "geometric",
+              "background": [
+                0,
+                0,
+                0,
+                0
+              ],
+              "replace": false
+            },
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "before.revision_after"
+            },
+            "dry_run": true
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "computed-dry-run"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ]
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "after",
+            "command": "session.status",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "revision_after": {
+              "$ref": "before.revision_after"
+            },
+            "data.session_revision": {
+              "$ref": "before.data.session_revision"
+            },
+            "data.retention": {
+              "$ref": "before.data.retention"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "history_after",
+            "command": "history.query",
+            "params": {},
+            "document": {
+              "$ref": "open.document_id"
+            },
+            "if_revision": {
+              "$ref": "after.revision_after"
+            }
+          },
+          "m3": true,
+          "expect": {
+            "status": "ok",
+            "data": {
+              "variant": "success"
+            }
+          },
+          "expect_absent": [
+            "error"
+          ],
+          "expect_exact": {
+            "data": {
+              "$ref": "history_before.data"
+            }
+          }
+        },
+        {
+          "request": {
+            "schema": "va-studio.cli-request/1",
+            "id": "selection_after",
+            "command": "query.selection",
+            "params": {}
+          },
+          "expect": {
+            "status": "ok"
+          },
+          "expect_exact": {
+            "data": {
+              "$ref": "selection_before.data"
+            }
+          }
+        }
+      ],
+      "expect_exit": 0
+    }
+  ]
+}

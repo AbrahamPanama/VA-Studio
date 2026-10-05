@@ -1,0 +1,31 @@
+{
+  "description": "P1 canonical system.catalog exposes generated schemas and hash.",
+  "actions": "vacards-result-file:-;system.catalog",
+  "records_from": "stdout",
+  "expect_exit": 0,
+  "expect_records": [
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
+    {
+      "action": "system.catalog",
+      "status": "ok",
+      "data": {
+        "schema": "va-studio.cli-catalog/1"
+      },
+      "undo_effect": "none",
+      "publication": {
+        "state": "not-published",
+        "persisted": false
+      }
+    }
+  ],
+  "expect_records_text_contains": [
+    "\"request_schema\":",
+    "\"result_schema\":",
+    "\"hash\":",
+    "\"id\":\"geometry.boolean\"",
+    "\"normalized_params\":"
+  ]
+}

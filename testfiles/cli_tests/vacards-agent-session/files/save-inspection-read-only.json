@@ -1,0 +1,42 @@
+{
+  "description": "P9 independent M2 save-inspection-read-only",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "save",
+        "command": "file.save",
+        "params": {
+          "path": "{WORK}/saved.svg",
+          "overwrite": false,
+          "embedding-policy": "embed"
+        },
+        "if_revision": 0,
+        "document": "d1"
+      },
+      "command": "file.save",
+      "cells": [
+        "refusal"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_error": "document-read-only"
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--inspect-file",
+    "{WORK}/inputs/sheet.svg",
+    "--grant-read",
+    "{WORK}/inputs",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

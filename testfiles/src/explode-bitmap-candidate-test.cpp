@@ -6,6 +6,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include "message-stack.h"
 #include "ui/icon-names.h"
+#include "ui/explode-bitmap-jobs.h"
 #include <memory>
 #include <stdexcept>
 #include "bitmap-copy-outcome.h"
@@ -425,3 +426,49 @@ TEST_F(CandidateTest,SafeFractionalBoundaryMetadataAndPublication) {
     }
 }
 } // namespace
+
+TEST_F(CandidateTest, B30WorkerAllocationFailurePreservesDocument) {
+    open(rect("a"), {"a"});
+    auto before = xml(); auto selection = desktop->getSelection()->items_vector();
+    recordBitmapMainThread();
+    bool delivered = false; Outcome outcome;
+    BitmapJobs jobs([&](Ticket, JobResult result) {
+        outcome = result.outcome; delivered = true;
+    }, {}, JobClock::now, false);
+    JobInput input; input.pixels = 25000000;
+    input.work = +[](JobInput const &, Stop, JobWork &, JobReporter &) -> JobResult {
+        throw std::bad_alloc();
+    };
+    jobs.request(std::move(input));
+    auto deadline = JobClock::now() + std::chrono::seconds(5);
+    auto context = Glib::MainContext::get_default();
+    while (!delivered && JobClock::now() < deadline) {
+        context->iteration(false); jobs.poll(); std::this_thread::yield();
+    }
+    EXPECT_TRUE(delivered); EXPECT_EQ(outcome.status, Status::failed);
+    EXPECT_NE(std::string(outcome.diagnostic).find("Not enough memory"), std::string::npos);
+    EXPECT_EQ(xml(), before); EXPECT_EQ(desktop->getSelection()->items_vector(), selection);
+    EXPECT_FALSE(doc->isModifiedSinceSave());
+    jobs.close(); drainReaper(); EXPECT_TRUE(waitForBitmapReaper(std::chrono::seconds(2)));
+}
+
+TEST_F(CandidateTest, B30NativeCopyUsesSharedHeadroomAndRecovery) {
+    struct Probe : MemoryProbe {
+        std::uint64_t available = 200 * MiB;
+        bool read(RawMemory &m) const noexcept override {
+            m = {16 * 1024 * MiB, available, 2560 * MiB}; return true;
+        }
+    } probe;
+    open(rect("a"), {"a"}); auto before = xml();
+    auto selected = desktop->getSelection()->items_vector();
+    Budget unused(0); // Matches the native command, which has no live ledger.
+    auto low = prepareBitmapCopy(*desktop->getSelection(), {}, PlacementPolicy::NativeCopy, unused, {&probe});
+    EXPECT_FALSE(low.ok()); EXPECT_FALSE(low.candidate.pixels());
+    EXPECT_NE(std::string(low.outcome.diagnostic).find("recovery reserve"), std::string::npos);
+    EXPECT_EQ(xml(), before); EXPECT_EQ(desktop->getSelection()->items_vector(), selected);
+    EXPECT_FALSE(doc->isModifiedSinceSave());
+    probe.available = 8 * 1024 * MiB;
+    auto roomy = prepareBitmapCopy(*desktop->getSelection(), {}, PlacementPolicy::NativeCopy, unused, {&probe});
+    ASSERT_TRUE(roomy.ok()) << roomy.outcome.diagnostic;
+    EXPECT_EQ(xml(), before); EXPECT_FALSE(doc->isModifiedSinceSave());
+}

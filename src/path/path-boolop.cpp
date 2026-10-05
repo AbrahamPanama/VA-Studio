@@ -130,6 +130,12 @@ void flatten(Geom::PathVector &pathv, FillRule fill_rule)
 
 std::vector<Geom::PathVector> pathvector_cut(Geom::PathVector const &pathv, Geom::PathVector const &lines)
 {
+    return pathvector_cut(pathv, lines, false);
+}
+
+std::vector<Geom::PathVector> pathvector_cut(Geom::PathVector const &pathv, Geom::PathVector const &lines,
+                                           bool discard_zero_surface)
+{
     std::vector<Geom::PathVectorTime> timesa, timesb;
     distribute_intersection_times(timesa, timesa, pathv.intersectSelf());
     distribute_intersection_times(timesb, timesb, lines.intersectSelf());
@@ -152,7 +158,7 @@ std::vector<Geom::PathVector> pathvector_cut(Geom::PathVector const &pathv, Geom
     shape.ConvertToFormeNested(&path, 2, std::begin({ &patha, &pathb }), num_nesting, nesting, conts, true);
 
     int num_paths;
-    auto paths = path.SubPathsWithNesting(num_paths, false, num_nesting, nesting, conts);
+    auto paths = path.SubPathsWithNesting(num_paths, discard_zero_surface, num_nesting, nesting, conts);
 
     std::vector<Geom::PathVector> result;
     result.reserve(num_paths);

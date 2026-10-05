@@ -52,6 +52,7 @@
 #include "object/sp-text.h"
 #include "object/sp-tspan.h"
 #include "preferences.h"
+#include "preferences-skeleton.h"
 #include "selection.h"
 #include "style.h"
 #include "text-editing.h"
@@ -1485,6 +1486,157 @@ TEST_F(TextPasteTest, CopyPublishesRichAndPlainAtomicallyWithoutMutatingDocument
     EXPECT_EQ(*plain, sp_te_get_string_multiline(source, iteratorAt(source, 0), iteratorAt(source, length)));
 }
 
+TEST_F(TextPasteTest, CaretCopyPreservesClipboardAndDocument)
+{
+    setPlainClipboard("BUG-018 existing clipboard");
+    ASSERT_TRUE(placeTextCursor(text("src"), 2));
+    checkpoint();
+    auto const before = xml();
+    auto const changes = g_clipboard_change_events;
+
+    UI::ClipboardManager::get()->copy(desktop->getSelection());
+    pumpFor(150);
+
+    EXPECT_EQ(readClipboardBytes("text/plain"), std::optional<std::string>("BUG-018 existing clipboard"));
+    EXPECT_EQ(g_clipboard_change_events, changes) << "empty Copy must not republish any clipboard content";
+    EXPECT_EQ(xml(), before);
+    EXPECT_EQ(desktop->getSelection()->singleItem(), text("src"));
+    EXPECT_STREQ(desktop->messageStack()->currentMessage(), _("Nothing was copied."));
+    EXPECT_FALSE(DocumentUndo::undo(document));
+}
+
+TEST_F(TextPasteTest, CaretCutPreservesClipboardDocumentSelectionAndRedo)
+{
+    setPlainClipboard("BUG-018 existing clipboard");
+    ASSERT_TRUE(placeTextCursor(text("src"), 2));
+    checkpoint();
+    auto const before = xml();
+    // A real redo entry must survive this no-op, not just an empty Undo stack.
+    item("rect")->getRepr()->setAttribute("data-bug018-history", "retained");
+    DocumentUndo::done(document, Util::Internal::ContextString("History sentinel"), "draw-text");
+    auto const after_sentinel = xml();
+    ASSERT_TRUE(DocumentUndo::undo(document));
+    document->ensureUpToDate();
+    ASSERT_EQ(xml(), before);
+    auto const changes = g_clipboard_change_events;
+    auto const caret = textTool()->text_sel_start;
+
+    desktop->getSelection()->cut();
+    pumpFor(150);
+
+    EXPECT_EQ(readClipboardBytes("text/plain"), std::optional<std::string>("BUG-018 existing clipboard"));
+    EXPECT_EQ(g_clipboard_change_events, changes);
+    EXPECT_EQ(xml(), before);
+    EXPECT_EQ(desktop->getSelection()->singleItem(), text("src"));
+    EXPECT_EQ(textTool()->text_sel_start, caret);
+    EXPECT_EQ(textTool()->text_sel_end, caret);
+    EXPECT_STREQ(desktop->messageStack()->currentMessage(), _("Nothing was copied."));
+    EXPECT_FALSE(DocumentUndo::undo(document)) << "empty Cut must add no Undo entry";
+    ASSERT_TRUE(DocumentUndo::redo(document)) << "empty Cut must preserve Redo";
+    document->ensureUpToDate();
+    EXPECT_EQ(xml(), after_sentinel);
+    ASSERT_TRUE(DocumentUndo::undo(document));
+    document->ensureUpToDate();
+    EXPECT_EQ(xml(), before);
+    EXPECT_FALSE(DocumentUndo::undo(document));
+}
+
+TEST_F(TextPasteTest, CaretCopyAndCutPreserveInternalSvgClipboard)
+{
+    desktop->setTool("/tools/select");
+    desktop->getSelection()->set(item("rect"));
+    publishClipboardAndNote([&] { UI::ClipboardManager::get()->copy(desktop->getSelection()); });
+    auto const svg = readClipboardBytes("image/x-inkscape-svg");
+    auto const plain = readClipboardBytes("text/plain");
+    ASSERT_TRUE(svg && !svg->empty());
+    ASSERT_TRUE(plain && !plain->empty());
+    auto const formats = clipboardMimeTypes();
+    ASSERT_TRUE(placeTextCursor(text("src"), 2));
+    checkpoint();
+    auto const before = xml();
+    auto const changes = g_clipboard_change_events;
+
+    for (bool cut : {false, true}) {
+        if (cut) desktop->getSelection()->cut();
+        else UI::ClipboardManager::get()->copy(desktop->getSelection());
+        pumpFor(150);
+        EXPECT_EQ(g_clipboard_change_events, changes);
+        EXPECT_EQ(clipboardMimeTypes(), formats);
+        EXPECT_STREQ(desktop->messageStack()->currentMessage(), _("Nothing was copied."));
+        // The lazy SVG provider reads the internal document: clearing it would
+        // make these reads lose the previously copied rectangle.
+        EXPECT_EQ(readClipboardBytes("image/x-inkscape-svg"), svg);
+        EXPECT_EQ(readClipboardBytes("text/plain"), plain);
+        EXPECT_EQ(xml(), before);
+        EXPECT_EQ(desktop->getSelection()->singleItem(), text("src"));
+        EXPECT_FALSE(DocumentUndo::undo(document));
+    }
+}
+
+TEST_F(TextPasteTest, CaretCopyRetainsStyleForPasteStyle)
+{
+    PrefRestore desktop_style("/desktop/style");
+    PrefRestore rectangle_style("/tools/shapes/rect/style");
+    setPlainClipboard("BUG-018 existing clipboard");
+    // An empty text's cursor resolves to the styled text owner. The legacy
+    // capture copies authored properties, not every inherited run property.
+    auto *node = document->getReprDoc()->createElement("svg:text");
+    node->setAttribute("id", "bug018-cursor-style");
+    node->setAttribute("style", "font-size:24px;fill:#cc0000");
+    document->getReprRoot()->appendChild(node);
+    GC::release(node);
+    document->ensureUpToDate();
+    auto *source = text("bug018-cursor-style");
+    ASSERT_TRUE(placeTextCursor(source, 0));
+    auto const *style = sp_te_style_at_position(source, textTool()->text_sel_end);
+    ASSERT_TRUE(style && style->fill.isColor());
+    auto const fill = style->fill.getColor().toRGBA();
+    UI::ClipboardManager::get()->copy(desktop->getSelection());
+    desktop->setTool("/tools/select");
+    auto *target = item("rect2");
+    desktop->getSelection()->set(target);
+    ASSERT_TRUE(UI::ClipboardManager::get()->pasteStyle(desktop->getSelection()));
+    document->ensureUpToDate();
+    EXPECT_EQ(target->style->fill.getColor().toRGBA(), fill);
+    EXPECT_EQ(readClipboardBytes("text/plain"), std::optional<std::string>("BUG-018 existing clipboard"));
+}
+
+TEST_F(TextPasteTest, SelectedTextCutPublishesRichAndPlainAndDeletesInOneUndo)
+{
+    auto *source = text("src");
+    unsigned const start = logicalIndexOf(source, "Beta");
+    ASSERT_NE(start, std::numeric_limits<unsigned>::max());
+    for (bool backwards : {false, true}) {
+        ASSERT_TRUE(placeTextCursor(source, start));
+        textTool()->text_sel_start = iteratorAt(source, backwards ? start + 4 : start);
+        textTool()->text_sel_end = iteratorAt(source, backwards ? start : start + 4);
+        checkpoint();
+        auto const before = xml();
+        auto const before_text = multilineText(source);
+        publishClipboardAndNote([&] { desktop->getSelection()->cut(); });
+        document->ensureUpToDate();
+        auto const after = xml();
+        EXPECT_NE(after, before);
+        EXPECT_EQ(multilineText(source).size(), before_text.size() - 4);
+        EXPECT_FALSE(containsSubstring(multilineText(source), "Beta"));
+        EXPECT_EQ(readClipboardBytes("text/plain"), std::optional<std::string>("Beta"));
+        auto const payload = readClipboardBytes(kNativeMime);
+        ASSERT_TRUE(payload && !payload->empty());
+        auto const fragment = TP::parse(*payload);
+        ASSERT_TRUE(fragment);
+        EXPECT_EQ(fragment->plain, "Beta");
+        ASSERT_TRUE(DocumentUndo::undo(document));
+        document->ensureUpToDate();
+        EXPECT_EQ(xml(), before);
+        EXPECT_FALSE(DocumentUndo::undo(document));
+        ASSERT_TRUE(DocumentUndo::redo(document));
+        document->ensureUpToDate();
+        EXPECT_EQ(xml(), after);
+        ASSERT_TRUE(DocumentUndo::undo(document));
+        document->ensureUpToDate();
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Automatic paste outside an existing text object
 // ---------------------------------------------------------------------------
@@ -2331,6 +2483,33 @@ TEST_F(TextPasteTest, SaveReopenKeepsPastedRunFormat)
 // Whole text OBJECT copy/paste (Selector) must keep using the SVG object path:
 // the native text fragment MIME must not be published, and the pasted object
 // must keep its copied geometry (R1).
+TEST_F(TextPasteTest, EmptyTextObjectCopyPublishesNonemptySvgMarkup)
+{
+    auto *node = document->getReprDoc()->createElement("svg:text");
+    node->setAttribute("id", "bug018-empty-text");
+    document->getReprRoot()->appendChild(node);
+    GC::release(node);
+    document->ensureUpToDate();
+    auto *empty = text("bug018-empty-text");
+    ASSERT_TRUE(empty);
+    ASSERT_TRUE(multilineText(empty).empty());
+    desktop->setTool("/tools/select");
+    desktop->getSelection()->set(empty);
+    checkpoint();
+    auto const before = xml();
+    publishClipboardAndNote([&] { UI::ClipboardManager::get()->copy(desktop->getSelection()); });
+
+    auto const plain = readClipboardBytes("text/plain");
+    ASSERT_TRUE(plain);
+    EXPECT_FALSE(plain->empty());
+    EXPECT_TRUE(containsSubstring(*plain, "<svg"));
+    EXPECT_TRUE(containsSubstring(*plain, "bug018-empty-text"));
+    EXPECT_TRUE(clipboardHasMime("image/x-inkscape-svg"));
+    EXPECT_FALSE(clipboardHasMime(kNativeMime));
+    EXPECT_EQ(xml(), before);
+    EXPECT_FALSE(DocumentUndo::undo(document));
+}
+
 TEST_F(TextPasteTest, WholeTextObjectCopyPasteStaysOnSvgObjectPath)
 {
     auto *source = text("src");
@@ -2663,22 +2842,21 @@ TEST_F(TextPasteTest, StalledNativeClipboardAbortsWholePasteWithoutMutationOrUnd
 
 TEST_F(TextPasteTest, PreferencesDefaultsMatchTheSkeletonForNativeAndExternalFamilies)
 {
-    PrefRestore mode("/options/textpaste/mode");
-    PrefRestore ask("/options/textpaste/ask");
-    PrefRestore external_mode("/options/textpaste/external-mode");
-    PrefRestore external_ask("/options/textpaste/external-ask");
-    removePrefIfSet("/options/textpaste/mode");
-    removePrefIfSet("/options/textpaste/ask");
-    removePrefIfSet("/options/textpaste/external-mode");
-    removePrefIfSet("/options/textpaste/external-ask");
-    // A sentinel fallback makes this discriminating: passing the expected value
-    // as the fallback would assert nothing. The skeleton must define the keys
-    // (src/preferences-skeleton.h:273), so the sentinel must never come back.
-    EXPECT_EQ(Preferences::get()->getInt("/options/textpaste/mode", -12345), 0);
-    EXPECT_FALSE(Preferences::get()->getBool("/options/textpaste/ask", true));
-    // External defaults are independent: Automatic (0) and asking enabled.
-    EXPECT_EQ(Preferences::get()->getInt("/options/textpaste/external-mode", -12345), 0);
-    EXPECT_TRUE(Preferences::get()->getBool("/options/textpaste/external-ask", false));
+    // Preferences::remove() deletes from the merged live document; it does not
+    // expose skeleton defaults. Read the same skeleton as _loadDefaults() in an
+    // isolated document, without deleting defaults or trusting getter fallbacks.
+    std::unique_ptr<XML::Document, void (*)(XML::Document *)> defaults(
+        sp_repr_read_mem(preferences_skeleton, PREFERENCES_SKELETON_SIZE, nullptr),
+        [](XML::Document *doc) { GC::release(doc); });
+    ASSERT_TRUE(defaults);
+    auto *options = sp_repr_lookup_child(defaults->root(), "id", "options");
+    ASSERT_TRUE(options);
+    auto *textpaste = sp_repr_lookup_child(options, "id", "textpaste");
+    ASSERT_TRUE(textpaste);
+    EXPECT_STREQ(textpaste->attribute("mode"), "0");
+    EXPECT_STREQ(textpaste->attribute("ask"), "false");
+    EXPECT_STREQ(textpaste->attribute("external-mode"), "0");
+    EXPECT_STREQ(textpaste->attribute("external-ask"), "true");
 }
 
 TEST_F(TextPasteTest, NormalPasteHonoursModePreferenceAndInvalidPrefFallsBackToAutomatic)

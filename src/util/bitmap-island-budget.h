@@ -26,8 +26,25 @@ enum class Status { changed, unchanged, incompatible, unavailable, canceled, fai
 struct Outcome {
     Status status = Status::unchanged;
     char const *diagnostic = "";
+    constexpr Outcome() noexcept = default;
+    constexpr Outcome(Status s, char const *d) noexcept : status(s) {
+        std::size_t i = 0;
+        for (; i + 1 < message.size() && d[i]; ++i) message[i] = d[i];
+        message[i] = 0; diagnostic = message.data();
+    }
+    constexpr Outcome(Outcome const &o) noexcept : status(o.status), diagnostic(o.diagnostic), message(o.message), insufficientMemory(o.insufficientMemory) {
+        if (o.diagnostic == o.message.data()) diagnostic = message.data();
+    }
+    constexpr Outcome &operator=(Outcome const &o) noexcept {
+        if (this != &o) { status = o.status; message = o.message; insufficientMemory = o.insufficientMemory;
+            diagnostic = o.diagnostic == o.message.data() ? message.data() : o.diagnostic; }
+        return *this;
+    }
+    std::array<char, 384> message{}; // owned diagnostic survives worker delivery without allocating
+    bool insufficientMemory = false;
     bool ok() const noexcept { return status == Status::changed || status == Status::unchanged; }
 };
+Outcome memoryFailure(char const *limit, std::uint64_t need, std::uint64_t available) noexcept;
 template <typename T> struct Result {
     Outcome outcome;
     T value{}; // Refused parsed metadata is diagnostic only; owned storage stays empty.
@@ -105,6 +122,9 @@ public:
     // Call with fresh conservative measurements before every stage/publication.
     // Failure blocks new reservations but retains existing storage in the ledger.
     Outcome recheck(Memory const &) noexcept;
+    // Native probes measure total process footprint. Restore its increase since
+    // operation start, bounded by live job reservations, before anchoring headroom.
+    Outcome recheckMeasured(Memory) noexcept;
     std::uint64_t reserved() const noexcept;
     std::uint64_t reserved(Stage) const noexcept;
     std::uint64_t limit() const noexcept;
@@ -117,6 +137,7 @@ private:
     void lock() const noexcept;
     void unlock() const noexcept;
     Outcome replace(Token &, Stage, std::uint64_t) noexcept;
+    Outcome recheckLocked(Memory const &) noexcept;
     void release(Token &) noexcept;
 #if defined(__APPLE__)
     mutable os_unfair_lock _lock = OS_UNFAIR_LOCK_INIT;

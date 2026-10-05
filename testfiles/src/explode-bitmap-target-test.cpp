@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <gtest/gtest.h>
 #include <algorithm>
+#include <lcms2.h>
+#include <zlib.h>
 #include <memory>
 #include <thread>
 #include "bitmap-adjustment-chemistry.h"
 #include "desktop.h"
 #include "document.h"
+#include "display/cairo-utils.h"
 #include "document-undo.h"
 #include "inkscape.h"
 #include "inkscape-application.h"
@@ -353,3 +356,56 @@ TEST_F(ExplodeBitmapTargetTest, T16ExactWhitespaceIdLists) {
     }
 }
 } // namespace
+
+namespace {
+std::string r4ProfilePng(std::size_t profileSize) {
+    std::vector<unsigned char> raw(profileSize - 1024);
+    std::uint32_t random = 0x12345678;
+    for (auto &byte : raw) { random ^= random << 13; random ^= random >> 17; random ^= random << 5; byte = random; }
+    auto profile = cmsCreate_sRGBProfile();
+    EXPECT_TRUE(cmsWriteRawTag(profile, static_cast<cmsTagSignature>(0x74347374), raw.data(), raw.size()));
+    cmsUInt32Number size = 0; EXPECT_TRUE(cmsSaveProfileToMem(profile,nullptr,&size));
+    std::vector<unsigned char> icc(size); EXPECT_TRUE(cmsSaveProfileToMem(profile,icc.data(),&size)); cmsCloseProfile(profile);
+    uLongf compressedSize = compressBound(icc.size()); std::vector<unsigned char> compressed(compressedSize);
+    EXPECT_EQ(compress2(compressed.data(),&compressedSize,icc.data(),icc.size(),Z_BEST_SPEED), Z_OK);
+    compressed.resize(compressedSize);
+    EXPECT_GT(compressed.size(), MiB); EXPECT_LE(compressed.size()+4, 4*MiB);
+    std::vector<unsigned char> bytes{137,80,78,71,13,10,26,10};
+    auto integer = [](auto &out, std::uint32_t v) { for (int shift=24;shift>=0;shift-=8) out.push_back(v>>shift); };
+    auto chunk = [&](char const *name, auto const &data) {
+        integer(bytes,data.size()); auto from=bytes.size(); bytes.insert(bytes.end(),name,name+4);
+        bytes.insert(bytes.end(),data.begin(),data.end()); integer(bytes,crc32(0,bytes.data()+from,bytes.size()-from));
+    };
+    std::vector<unsigned char> ihdr; integer(ihdr,5000); integer(ihdr,5000); ihdr.insert(ihdr.end(),{8,6,0,0,0}); chunk("IHDR",ihdr);
+    std::vector<unsigned char> iccp{'r','4',0,0}; iccp.insert(iccp.end(),compressed.begin(),compressed.end()); chunk("iCCP",iccp);
+    // One opaque component inside a transparent border, with bounded row storage.
+    std::vector<unsigned char> row(5000*4+1,0), border(row.size(),0);
+    for (unsigned x=1;x<4999;++x) row[1+x*4+3]=255;
+    z_stream stream{}; EXPECT_EQ(deflateInit(&stream,Z_BEST_SPEED), Z_OK);
+    std::vector<unsigned char> idat; unsigned char buffer[65536];
+    for (unsigned y=0;y<5000;++y) {
+        stream.next_in=(y==0 || y==4999) ? border.data() : row.data(); stream.avail_in=row.size();
+        do {
+            stream.next_out=buffer; stream.avail_out=sizeof(buffer);
+            EXPECT_EQ(deflate(&stream,Z_NO_FLUSH), Z_OK); idat.insert(idat.end(),buffer,buffer+sizeof(buffer)-stream.avail_out);
+        } while (stream.avail_in);
+    }
+    int result;
+    do { stream.next_out=buffer; stream.avail_out=sizeof(buffer); result=deflate(&stream,Z_FINISH);
+         idat.insert(idat.end(),buffer,buffer+sizeof(buffer)-stream.avail_out); } while (result==Z_OK);
+    EXPECT_EQ(result,Z_STREAM_END); deflateEnd(&stream); chunk("IDAT",idat); chunk("IEND",std::vector<unsigned char>{});
+    auto encoded=g_base64_encode(bytes.data(),bytes.size()); std::string uri=std::string("data:image/png;base64,")+encoded; g_free(encoded); return uri;
+}
+}
+
+TEST_F(ExplodeBitmapTargetTest, R4PermittedLargeProfilesResolveReadOnly) {
+    for (auto size : {2*MiB,39*MiB/10}) {
+        SCOPED_TRACE(size); auto uri=r4ProfilePng(size);
+        open("<image id='im' width='10' height='10' href='"+uri+"'/>"); select("im");
+        auto before=sp_repr_save_buf(document->getReprDoc()).raw(); auto r=query();
+        ASSERT_TRUE(r.ok()) << r.outcome.diagnostic; EXPECT_EQ(r.value.supportability,Supportability::Supported);
+        auto bitmap=cast<SPImage>(item("im")); ASSERT_TRUE(bitmap); EXPECT_FALSE(bitmap->missing);
+        EXPECT_EQ(bitmap->pixbuf->width(),5000); EXPECT_EQ(bitmap->pixbuf->height(),5000);
+        EXPECT_EQ(sp_repr_save_buf(document->getReprDoc()).raw(),before); EXPECT_FALSE(document->isModifiedSinceSave());
+    }
+}

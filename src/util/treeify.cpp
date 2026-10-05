@@ -2,26 +2,39 @@
 #include "treeify.h"
 
 #include <cassert>
+#include <algorithm>
 
 namespace Inkscape::Util {
 
 TreeifyResult treeify(int N, std::function<bool(int, int)> const &contains)
 {
+    std::vector<std::vector<int>> edges(N);
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            if (j != i && contains(i, j)) edges[i].emplace_back(j);
+        }
+    }
+    return treeify(std::move(edges));
+}
+
+TreeifyResult treeify(std::vector<std::vector<int>> edges)
+{
     // Todo: (C++23) Refactor away to a recursive lambda.
     class Treeifier
     {
     public:
-        Treeifier(int N, std::function<bool(int, int)> const &contains)
-            : N{N}
-            , contains{contains}
+        Treeifier(std::vector<std::vector<int>> edges)
+            : N{static_cast<int>(edges.size())}
             , data(N)
         {
             for (int i = 0; i < N; i++) {
-                for (int j = 0; j < N; j++) {
-                    if (j != i && contains(i, j)) {
-                        data[j].num_containers++;
-                        data[i].contained.emplace_back(j);
-                    }
+                data[i].contained = std::move(edges[i]);
+                // Preserve the ascending visit order of the all-pairs API,
+                // independently of spatial candidate enumeration order.
+                std::sort(data[i].contained.begin(), data[i].contained.end());
+                for (auto j : data[i].contained) {
+                    assert(j >= 0 && j < N && j != i);
+                    data[j].num_containers++;
                 }
             }
 
@@ -47,7 +60,6 @@ TreeifyResult treeify(int N, std::function<bool(int, int)> const &contains)
     private:
         // Input
         int N{};
-        std::function<bool(int, int)> const &contains;
 
         // State
         struct Data
@@ -79,7 +91,7 @@ TreeifyResult treeify(int N, std::function<bool(int, int)> const &contains)
         }
     };
 
-    return Treeifier(N, contains).moveResult();
+    return Treeifier(std::move(edges)).moveResult();
 }
 
 } // namespace Inkscape::Util

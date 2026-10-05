@@ -158,9 +158,10 @@ def sign_internal_app_entry(app):
 
     CFBundleExecutable is the native ``inkscape-bin``. ``Contents/MacOS/inkscape``
     and ``Contents/MacOS/python3`` stay as nested shell scripts, and
-    ``Contents/MacOS/python3-bin`` and ``Contents/MacOS/gdk-pixbuf-query-loaders``
+    ``Contents/MacOS/python3-bin``, ``Contents/MacOS/gdk-pixbuf-query-loaders``
+    and ``Contents/MacOS/vastudio-cli``
     are nested native executables whose ``ldid`` signatures are not accepted by
-    ``codesign --verify --deep --strict``, so all four must be signed explicitly
+    ``codesign --verify --deep --strict``, so all five must be signed explicitly
     before the outer bundle is sealed (``vacards-sparrow`` keeps its pinned
     signature; ``inkscape-bin`` is sealed with the bundle). Signing the outer bundle
     without ``--deep`` then preserves the already ``ldid``-signed libraries and
@@ -173,6 +174,7 @@ def sign_internal_app_entry(app):
     run("codesign", "--force", "--sign", "-", macos / "python3")
     run("codesign", "--force", "--sign", "-", macos / "python3-bin")
     run("codesign", "--force", "--sign", "-", macos / "gdk-pixbuf-query-loaders")
+    run("codesign", "--force", "--sign", "-", macos / "vastudio-cli")
     run("codesign", "--force", "--sign", "-", app)
 
 
@@ -450,6 +452,16 @@ def main():
     with (app / "Contents/Info.plist").open("wb") as stream:
         plistlib.dump(plist, stream)
     images = {str((args.build / "bin/inkscape").resolve()): (args.build / "bin/inkscape", macos / "inkscape-bin")}
+    cli = args.build / "bin/vastudio-cli"
+    pp.require(cli.is_file(), "build vastudio_cli before packaging Build 30")
+    cli_identity = json.loads(output(cli, "--version", "--json", env=runtime))
+    # The CLI's `build` is the release string (internal note cli/session), not the build number.
+    pp.require(cli_identity.get("build") == version["product_version"]
+               and cli_identity.get("source_sha") == sha,
+               "CLI identity differs from the package source")
+    images[str(cli.resolve())] = (cli, macos / "vastudio-cli")
+    (app / "Contents/Resources/cli-location.json").write_text(json.dumps({
+        "executable": "Contents/MacOS/vastudio-cli", "identity": cli_identity}, indent=2) + "\n")
     observed = {str(Path(path).resolve()) for path in pp.runtime_paths(args.build / "bin/inkscape", cairo, gtk, libcdr, librevenge)}
     records = {}
     for record in data["libraries"]:

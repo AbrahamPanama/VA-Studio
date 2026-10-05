@@ -11,6 +11,9 @@
 
 #include <iomanip>
 #include <random>
+#include <cmath>
+#include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include <2geom/path-sink.h>
 #include <2geom/sbasis-to-bezier.h> // cubicbezierpath_from_sbasis
 #include <2geom/path-intersection.h>
@@ -1215,7 +1218,7 @@ namespace {
 /**
  * Given a pathvector @a pathv and fill rule @a fill_rule, compute pathv_fully_contains(pathv[i], pathv[j], fill_rule)
  * for all possible i != j. This class must be used with the Geom::Sweeper API to actually compute results. The results
- * are then available by calling contains(i, j);
+ * are returned as sparse adjacency lists by moveContainment().
  */
 class PathContainmentSweeper
 {
@@ -1226,8 +1229,30 @@ public:
         : _pathv{pathv}
         , _fill_rule{fill_rule}
         , _precision{precision}
-        , _contains(_pathv.size() * _pathv.size(), false) // allocate space for two-dimensional array
-    {}
+        , _contains(_pathv.size())
+        , _active_positions(_pathv.size())
+    {
+        _bounds.reserve(_pathv.size());
+        _rectangles.reserve(_pathv.size());
+        _boxes.reserve(_pathv.size());
+        for (auto const &path : _pathv) {
+            _bounds.emplace_back(path.boundsExact());
+            // The rectangle predicate deliberately precedes the general bounds
+            // predicate in pathv_fully_contains; keep its tolerance and empty
+            // bounds behavior, including almost-axis-aligned rectangles.
+            _rectangles.emplace_back(check_simple_rect(Geom::PathVector{path}, _precision));
+            auto broad = _bounds.back();
+            broad.unionWith(_rectangles.back());
+            if (broad && std::isfinite(broad->left()) && std::isfinite(broad->right()) &&
+                         std::isfinite(broad->top()) && std::isfinite(broad->bottom())) {
+                _boxes.emplace_back(Box{Point{broad->left(), broad->top()},
+                                        Point{broad->right(), broad->bottom()}});
+            } else {
+                // Empty/non-finite bounds retain the original X-sweep fallback.
+                _boxes.emplace_back();
+            }
+        }
+    }
 
     Geom::PathVector const &items() const { return _pathv; }
 
@@ -1239,22 +1264,45 @@ public:
 
     void addActiveItem(ItemIterator incoming)
     {
-        for (auto const &path : _active) {
+        auto const i = std::distance(_pathv.begin(), incoming);
+        auto check = [&](ItemIterator path) {
             _checkPair(path, incoming);
             _checkPair(incoming, path);
+        };
+        if (_boxes[i]) {
+            // Keep the original X sweep (including endpoint ties). Among its
+            // active paths, only overlapping 2D boxes can contain one another.
+            for (auto it = _spatial.qbegin(boost::geometry::index::intersects(*_boxes[i]));
+                 it != _spatial.qend(); ++it) {
+                check(_pathv.begin() + it->second);
+            }
+            for (auto path : _unindexed) check(path);
+            _spatial.insert(SpatialItem{*_boxes[i], i});
+        } else {
+            for (auto path : _active) check(path);
+            _unindexed.push_back(incoming);
         }
+        _active_positions[i] = _active.size();
         _active.push_back(incoming);
     }
 
     void removeActiveItem(ItemIterator to_remove)
     {
-        auto const it = std::find(_active.begin(), _active.end(), to_remove);
-        std::swap(*it, _active.back());
+        auto const i = std::distance(_pathv.begin(), to_remove);
+        if (_boxes[i]) {
+            _spatial.remove(SpatialItem{*_boxes[i], i});
+        } else {
+            auto it = std::find(_unindexed.begin(), _unindexed.end(), to_remove);
+            *it = _unindexed.back();
+            _unindexed.pop_back();
+        }
+        auto const pos = _active_positions[i];
+        _active[pos] = _active.back();
+        _active_positions[std::distance(_pathv.begin(), _active.back())] = pos;
         _active.pop_back();
     }
 
-    //// Return the value of pathv_fully_contains(pathv[i], pathv[j], fill_rule).
-    bool contains(int i, int j) const { return _contains[index(i, j)]; }
+    std::vector<std::vector<int>> moveContainment() { return std::move(_contains); }
 
 private:
     Geom::PathVector const &_pathv;
@@ -1262,16 +1310,36 @@ private:
     double const _precision;
 
     std::vector<ItemIterator> _active;
-    std::vector<bool> _contains;
-
-    int index(int i, int j) const { return i * _pathv.size() + j; }
+    using Point = boost::geometry::model::d2::point_xy<double>;
+    using Box = boost::geometry::model::box<Point>;
+    using SpatialItem = std::pair<Box, int>;
+    boost::geometry::index::rtree<SpatialItem, boost::geometry::index::quadratic<16>> _spatial;
+    std::vector<std::optional<Box>> _boxes;
+    std::vector<ItemIterator> _unindexed;
+    std::vector<std::vector<int>> _contains;
+    std::vector<std::size_t> _active_positions;
+    std::vector<Geom::OptRect> _bounds;
+    std::vector<Geom::OptRect> _rectangles;
 
     void _checkPair(ItemIterator a, ItemIterator b)
     {
-        if (pathv_fully_contains(*a, *b, _fill_rule)) {
-            auto const ia = std::distance(_pathv.begin(), a);
-            auto const ib = std::distance(_pathv.begin(), b);
-            _contains[index(ia, ib)] = true;
+        auto const ia = std::distance(_pathv.begin(), a);
+        auto const ib = std::distance(_pathv.begin(), b);
+        if (_rectangles[ia]) {
+            if (_rectangles[ia]->contains(_bounds[ib])) _contains[ia].push_back(ib);
+            return;
+        }
+        // Most candidates fail this test. Do not copy paths or recompute exact
+        // Bezier extrema for each pair (BUG-029).
+        if (!_bounds[ia].contains(_bounds[ib])) {
+            return;
+        }
+        Geom::PathVector const av{*a}, bv{*b};
+        if (!av.intersect(bv, _precision).empty()) {
+            return;
+        }
+        if (is_point_inside(_fill_rule, av.winding(b->initialPoint()))) {
+            _contains[ia].push_back(ib);
         }
     }
 };
@@ -1351,9 +1419,7 @@ std::vector<Geom::PathVector> split_non_intersecting_paths(Geom::PathVector &&pa
     auto path_containment = PathContainmentSweeper{paths, fill_nonZero};
     Geom::Sweeper{path_containment}.process();
 
-    auto const tree = Util::treeify(paths.size(), [&] (int i, int j) {
-        return path_containment.contains(i, j);
-    });
+    auto const tree = Util::treeify(path_containment.moveContainment());
 
     return PathContainmentTraverser(paths, tree, fill_rule).moveResult();
 }

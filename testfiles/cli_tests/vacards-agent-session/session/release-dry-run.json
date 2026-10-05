@@ -1,0 +1,69 @@
+{
+  "description": "release-dry-run",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "session.release",
+        "params": {
+          "tokens": [
+            "unknown"
+          ]
+        },
+        "dry_run": true
+      },
+      "command": "session.release",
+      "expect": {
+        "dry_run": true,
+        "data": {
+          "validation_level": "preflight"
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "dry-run"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "after",
+        "command": "session.status",
+        "params": {}
+      },
+      "command": "session.status",
+      "expect": {
+        "data": {
+          "retention": {
+            "tokens": [],
+            "roots": 0,
+            "bytes": 0
+          }
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ]
+}

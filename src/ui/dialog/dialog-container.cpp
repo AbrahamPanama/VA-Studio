@@ -13,6 +13,7 @@
 #include "dialog-container.h"
 #include "ui/dialog/explode-bitmap.h"
 #include "ui/explode-bitmap-feature.h"
+#include "ui/spellcheck-feature.h"
 
 #include "enums.h"
 #include "inkscape.h"
@@ -199,7 +200,7 @@ std::unique_ptr<DialogBase> DialogContainer::dialog_factory(Glib::ustring const 
     else if (dialog_type == "UndoHistory")        return std::make_unique<UndoHistory>();
     else if (dialog_type == "XMLEditor")          return std::make_unique<XmlTree>();
 #if WITH_LIBSPELLING
-    else if (dialog_type == "Spellcheck")         return std::make_unique<SpellCheck>();
+    else if (dialog_type == "Spellcheck" && UI::spellcheckUiEnabled) return std::make_unique<SpellCheck>();
 #endif
 #ifdef DEBUG
     else if (dialog_type == "Prototype")          return std::make_unique<Prototype>();
@@ -488,6 +489,7 @@ DialogContainer::RestoreResult DialogContainer::recreate_dialogs_from_state(Inks
                 // notebook, so this silent restore never re-adds the retained host.
                 for (auto it = dialogs.begin(); it != dialogs.end(); ) {
                     if ((*it == "ExplodeBitmap" && !Bitmap::explodeBitmapEnabled()) ||
+                        (*it == "Spellcheck" && !UI::spellcheckUiEnabled) ||
                         active_container->reuse_owned_preferences(*it, false)) {
                         ++owned_skipped;
                         it = dialogs.erase(it);
@@ -916,6 +918,7 @@ void DialogContainer::load_container_state(Glib::KeyFile *keyfile, bool include_
                     surviving.reserve(dialogs.size());
                     for (auto const &type : dialogs) {
                         if ((type == "ExplodeBitmap" && !Bitmap::explodeBitmapEnabled()) ||
+                            (type == "Spellcheck" && !UI::spellcheckUiEnabled) ||
                             owner->reuse_owned_preferences(type, false)) {
                             ++owned_skipped;
                             notebook_owned_filtered = true;

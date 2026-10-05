@@ -1,0 +1,245 @@
+{
+  "description": "Read-only envelope dry_run returns the same independently calculated query, then ordinary read verifies preservation.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.document",
+        "params": {},
+        "dry_run": true
+      },
+      "command": "query.document",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "revision": 0,
+          "dirty": false,
+          "title": "Inspection sheet",
+          "units": {
+            "preferred": "mm",
+            "viewbox_to_css_px": [
+              2,
+              0,
+              0,
+              2,
+              -20,
+              -40
+            ],
+            "root_user_unit": {
+              "name": "user",
+              "x": {
+                "px": 2,
+                "preferred": {
+                  "value": 0.5291666666666667,
+                  "unit": "mm"
+                }
+              },
+              "y": {
+                "px": 2,
+                "preferred": {
+                  "value": 0.5291666666666667,
+                  "unit": "mm"
+                }
+              }
+            }
+          },
+          "size": {
+            "width": {
+              "px": 200,
+              "preferred": {
+                "value": 52.916666666666664,
+                "unit": "mm"
+              }
+            },
+            "height": {
+              "px": 100,
+              "preferred": {
+                "value": 26.458333333333332,
+                "unit": "mm"
+              }
+            }
+          },
+          "object_counts": {
+            "svg": 1,
+            "rect": 4,
+            "image": 5,
+            "g": 5,
+            "path": 1,
+            "use": 1,
+            "circle": 1,
+            "text": 1
+          }
+        }
+      },
+      "cells": [
+        "dry-run",
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": true,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.document",
+        "params": {}
+      },
+      "command": "query.document",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "revision": 0,
+          "dirty": false,
+          "title": "Inspection sheet",
+          "units": {
+            "preferred": "mm",
+            "viewbox_to_css_px": [
+              2,
+              0,
+              0,
+              2,
+              -20,
+              -40
+            ],
+            "root_user_unit": {
+              "name": "user",
+              "x": {
+                "px": 2,
+                "preferred": {
+                  "value": 0.5291666666666667,
+                  "unit": "mm"
+                }
+              },
+              "y": {
+                "px": 2,
+                "preferred": {
+                  "value": 0.5291666666666667,
+                  "unit": "mm"
+                }
+              }
+            }
+          },
+          "size": {
+            "width": {
+              "px": 200,
+              "preferred": {
+                "value": 52.916666666666664,
+                "unit": "mm"
+              }
+            },
+            "height": {
+              "px": 100,
+              "preferred": {
+                "value": 26.458333333333332,
+                "unit": "mm"
+              }
+            }
+          },
+          "object_counts": {
+            "svg": 1,
+            "rect": 4,
+            "image": 5,
+            "g": 5,
+            "path": 1,
+            "use": 1,
+            "circle": 1,
+            "text": 1
+          }
+        }
+      },
+      "cells": [
+        "no-op"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/inspection.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

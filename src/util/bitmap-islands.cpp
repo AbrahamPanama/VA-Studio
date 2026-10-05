@@ -114,7 +114,7 @@ Result<Regions> label(RgbaView view, AlphaLut const &lut, Budget &budget, JobWor
     };
     auto valid = view.validate();
     if (!valid.ok()) return fail(valid);
-    if (options.runs > 16000000 || options.islands > 2000000 || options.topologyBytes > 256 * MiB)
+    if (options.runs > 16000000 || options.islands > 2000000)
         return fail({Status::incompatible, "Label ceilings may only be lowered"});
     if (!poll.flush()) return fail(poll.outcome);
     auto foreground = [&](std::uint32_t x, std::uint32_t y) {

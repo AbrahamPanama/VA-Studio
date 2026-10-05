@@ -1,0 +1,62 @@
+{
+  "description": "options-unit-px",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "system.options",
+        "params": {
+          "preferred-unit": "px"
+        }
+      },
+      "command": "system.options",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "preferred-unit": "px"
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "success"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "system.options",
+        "params": {}
+      },
+      "command": "system.options",
+      "expect": {
+        "data": {
+          "preferred-unit": "px"
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "cells": [
+        "no-op"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ]
+}

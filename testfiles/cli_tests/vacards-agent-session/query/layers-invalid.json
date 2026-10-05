@@ -1,0 +1,413 @@
+{
+  "description": "Unknown keys, JSON types and exact limit boundaries refuse; a valid read recovers.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.layers",
+        "params": {
+          "unknown": true
+        }
+      },
+      "command": "query.layers",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "unknown-key",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.layers",
+        "params": {
+          "limit": 0
+        }
+      },
+      "command": "query.layers",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "out-of-range",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r3",
+        "command": "query.layers",
+        "params": {
+          "limit": 1001
+        }
+      },
+      "command": "query.layers",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "out-of-range",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r4",
+        "command": "query.layers",
+        "params": {
+          "limit": "1"
+        }
+      },
+      "command": "query.layers",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "wrong-type",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r5",
+        "command": "query.layers",
+        "params": {
+          "limit": 1.5
+        }
+      },
+      "command": "query.layers",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "wrong-type",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r6",
+        "command": "query.layers",
+        "params": {
+          "cursor": 1
+        }
+      },
+      "command": "query.layers",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "wrong-type",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r7",
+        "command": "query.layers",
+        "params": {
+          "cursor": ""
+        }
+      },
+      "command": "query.layers",
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "cells": [
+        "invalid"
+      ],
+      "expect_error": "out-of-range",
+      "expect_accepted": false
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r8",
+        "command": "query.layers",
+        "params": {
+          "limit": 1000
+        }
+      },
+      "command": "query.layers",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "sheet",
+              "label": "Sheet",
+              "parent_id": null,
+              "depth": 0,
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "childLayer",
+              "label": "Child",
+              "parent_id": "sheet",
+              "depth": 1,
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "hiddenLayer",
+              "label": "Hidden",
+              "parent_id": null,
+              "depth": 0,
+              "visible": false,
+              "locked": false
+            },
+            {
+              "id": "lockedLayer",
+              "label": "Locked",
+              "parent_id": null,
+              "depth": 0,
+              "visible": true,
+              "locked": true
+            }
+          ],
+          "total": 4,
+          "limit": 1000,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success",
+        "invalid"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r9",
+        "command": "query.layers",
+        "params": {}
+      },
+      "command": "query.layers",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "sheet",
+              "label": "Sheet",
+              "parent_id": null,
+              "depth": 0,
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "childLayer",
+              "label": "Child",
+              "parent_id": "sheet",
+              "depth": 1,
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "hiddenLayer",
+              "label": "Hidden",
+              "parent_id": null,
+              "depth": 0,
+              "visible": false,
+              "locked": false
+            },
+            {
+              "id": "lockedLayer",
+              "label": "Locked",
+              "parent_id": null,
+              "depth": 0,
+              "visible": true,
+              "locked": true
+            }
+          ],
+          "total": 4,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/inspection.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

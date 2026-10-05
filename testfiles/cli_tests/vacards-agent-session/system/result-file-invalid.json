@@ -1,0 +1,33 @@
+{
+  "description": "Sink input type is validated before admission",
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "bad-sink",
+        "command": "system.result-file",
+        "params": {
+          "target": 42
+        }
+      },
+      "command": "system.result-file",
+      "cells": [
+        "invalid"
+      ],
+      "expect_accepted": false,
+      "expect": {
+        "status": "rejected",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      },
+      "expect_error": "wrong-type"
+    }
+  ],
+  "expect_exit": 0,
+  "timeout": 30
+}

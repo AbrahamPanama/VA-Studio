@@ -1,0 +1,40 @@
+{
+  "description": "P9 independent M2 one-shot-close-success",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "shot",
+        "command": "file.close",
+        "params": {
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.close",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "unchanged",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}/inputs",
+    "--grant-write",
+    "{WORK}"
+  ],
+  "transport": "one-shot"
+}

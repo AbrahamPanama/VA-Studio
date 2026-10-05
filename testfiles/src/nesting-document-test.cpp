@@ -2,6 +2,8 @@
 
 #include "nesting/nesting-document.h"
 #include "nesting/nesting-settings.h"
+#include "nesting/nesting-cli-service.h"
+#include "nesting/sparrow-adapter.h"
 #include "nesting/tests/nesting-test-geometry.h"
 
 #include <algorithm>
@@ -3212,4 +3214,274 @@ TEST_F(NestingDocumentTest, ZzTwoPhasePreparationMatchesGolden)
     ASSERT_FALSE(expected.empty()) << "golden file is empty: " << in;
     EXPECT_TRUE(actual == expected) << "two-phase preparation differs from the golden file; diff " << in << " "
                                     << in << ".actual";
+}
+
+TEST_F(NestingDocumentTest, NativeFixedWorkIsRepeatableWithoutDocumentMutation)
+{
+    auto document = make_document(R"svg(<rect id="container" width="100" height="100"/>
+        <rect id="part" x="120" width="10" height="12"/>)svg");
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts{item(*document, "part")};
+    auto prepared = prepareDocumentNesting(item(*document, "container"), parts);
+    ASSERT_TRUE(prepared) << prepared.error;
+    auto before = sp_repr_save_buf(document->getReprDoc()).raw();
+    VACardsCli::NestWorkOptions work;
+    work.seed = 0xfedcba9876543210ULL;
+    work.iterations = 1027;
+    auto a = VACardsCli::solve_nest_native(*prepared.snapshot, draft_options(), work);
+    auto b = VACardsCli::solve_nest_native(*prepared.snapshot, draft_options(), work);
+    ASSERT_TRUE(a) << a.error;
+    ASSERT_TRUE(b) << b.error;
+    ASSERT_TRUE(a.terminal);
+    ASSERT_TRUE(b.terminal);
+    EXPECT_EQ(a.terminal->stop_reason, StopReason::WorkLimit);
+    EXPECT_EQ(a.terminal->completed_work, 1027u);
+    EXPECT_EQ(a.metrics.iterations, 1027u);
+    EXPECT_EQ(a.terminal->completed_work, b.terminal->completed_work);
+    EXPECT_TRUE(a.deterministic);
+    EXPECT_EQ(a.backend, "native");
+    ASSERT_EQ(a.placements.size(), b.placements.size());
+    for (std::size_t i = 0; i < a.placements.size(); ++i) {
+        EXPECT_EQ(a.placements[i].part_id, b.placements[i].part_id);
+        EXPECT_EQ(a.placements[i].placed, b.placements[i].placed);
+        EXPECT_EQ(a.placements[i].translation_x, b.placements[i].translation_x);
+        EXPECT_EQ(a.placements[i].translation_y, b.placements[i].translation_y);
+        EXPECT_EQ(a.placements[i].rotation_degrees, b.placements[i].rotation_degrees);
+    }
+    EXPECT_EQ(before, sp_repr_save_buf(document->getReprDoc()).raw());
+    std::stop_source cancelled; cancelled.request_stop();
+    auto stopped = VACardsCli::solve_nest_native(*prepared.snapshot, draft_options(), work, {}, cancelled.get_token());
+    ASSERT_TRUE(stopped.terminal);
+    EXPECT_EQ(stopped.terminal->stop_reason, StopReason::Cancelled);
+    EXPECT_EQ(stopped.terminal->completed_work, 0u);
+    work.timeout_ms = 3000;
+    EXPECT_EQ(VACardsCli::solve_nest_native(*prepared.snapshot, draft_options(), work).status, Status::InvalidArgument);
+    work.timeout_ms.reset(); work.workers = 2;
+    EXPECT_EQ(VACardsCli::solve_nest_native(*prepared.snapshot, draft_options(), work).status, Status::InvalidArgument);
+    work.workers = 1; work.iterations = 0;
+    EXPECT_EQ(VACardsCli::solve_nest_native(*prepared.snapshot, draft_options(), work).status, Status::InvalidArgument);
+}
+
+TEST_F(NestingDocumentTest, NativeOnlyBypassesSparrowEligibleRoute)
+{
+    auto document = make_document(R"svg(<rect id="container" width="100" height="100"/>
+        <rect id="part" x="120" width="10" height="12"/>)svg");
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts{item(*document, "part")};
+    auto prepared = prepareDocumentNesting(item(*document, "container"), parts);
+    ASSERT_TRUE(prepared);
+    auto options = draft_options(); options.time_limit_ms = 3000; options.worker_count = 1;
+    ASSERT_TRUE(sparrowEligible(*prepared.snapshot, options));
+    std::stop_source cancel;
+    auto result = solvePreparedNesting(*prepared.snapshot, options, EngineSelection::NativeOnly, 0,
+        [&](auto const &) { cancel.request_stop(); }, cancel.get_token());
+    EXPECT_EQ(result.status, Status::Cancelled);
+    EXPECT_EQ(result.backend, "native");
+    ASSERT_TRUE(result.terminal);
+    EXPECT_EQ(result.terminal->stop_reason, StopReason::Cancelled);
+    EXPECT_FALSE(result.deterministic);
+    EXPECT_EQ(solvePreparedNesting(*prepared.snapshot, options, EngineSelection::NativeOnly, 17).status,
+              Status::InvalidArgument);
+    options.time_limit_ms = 0;
+    EXPECT_EQ(solvePreparedNesting(*prepared.snapshot, options, EngineSelection::Automatic, 17).status,
+              Status::InvalidArgument);
+}
+
+TEST_F(NestingDocumentTest, RequestSheetCopiesPublishOnlyPlacedAndUndoTogether)
+{
+    auto document = make_document(R"svg(<g id="part"><rect width="10" height="12" fill="red"/>
+        <path d="M0,0 H10 V12 H0 Z" fill="none"/></g>)svg");
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts{item(*document, "part")};
+    RequestPreparationOptions request;
+    request.sheet = rect(0, 0, 100, 100);
+    request.copies = {3};
+    request.solver_options.rotation_mode = RotationMode::None;
+    auto before = sp_repr_save_buf(document->getReprDoc()).raw();
+    auto prepared = prepareRequestNesting(*document, parts, request);
+    ASSERT_TRUE(prepared) << prepared.error;
+    ASSERT_EQ(prepared.snapshot->parts.size(), 3u);
+    EXPECT_EQ(prepared.snapshot->parts[2].copy, 2u);
+    EXPECT_EQ(before, sp_repr_save_buf(document->getReprDoc()).raw());
+    std::vector<Placement> placements{{.part_id=1, .translation_x=20, .translation_y=20, .placed=true},
+        {.part_id=2, .translation_x=40, .translation_y=20, .placed=true}, {.part_id=3, .placed=false}};
+    auto applied = applyNestingPlacements(*prepared.snapshot, placements);
+    ASSERT_TRUE(applied.changed()) << applied.error;
+    EXPECT_EQ(applied.placed_count, 2u);
+    EXPECT_EQ(applied.unplaced_count, 1u);
+    expect_rect_near(*item(*document, "part")->documentGeometricBounds(), rect(20, 20, 30, 32));
+    unsigned groups = 0;
+    for (auto &child : item(*document, "part")->parent->children) if (is<SPGroup>(&child)) ++groups;
+    EXPECT_EQ(groups, 2u);
+    auto after = sp_repr_save_buf(document->getReprDoc()).raw();
+    ASSERT_TRUE(DocumentUndo::undo(document.get()));
+    EXPECT_EQ(before, sp_repr_save_buf(document->getReprDoc()).raw());
+    ASSERT_TRUE(DocumentUndo::redo(document.get()));
+    EXPECT_EQ(after, sp_repr_save_buf(document->getReprDoc()).raw());
+    auto reopened = SPDocument::createNewDocFromMem(std::span<char const>(after.data(), after.size()));
+    ASSERT_TRUE(reopened);
+    reopened->ensureUpToDate();
+    expect_rect_near(*item(*reopened, "part")->documentGeometricBounds(), rect(20, 20, 30, 32));
+    ASSERT_EQ(applied.created_copies.size(), 1u);
+    auto *duplicate = item(*reopened, applied.created_copies.front().second.c_str());
+    ASSERT_TRUE(duplicate);
+    expect_rect_near(*duplicate->documentGeometricBounds(), rect(40, 20, 50, 32));
+}
+
+TEST_F(NestingDocumentTest, RequestApplyRejectsOverlapGapAndSheetEscapeWithoutWrites)
+{
+    auto document = make_document(R"svg(<rect id="part" width="10" height="12"/>)svg");
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts{item(*document, "part")};
+    RequestPreparationOptions request;
+    request.sheet = rect(0, 0, 100, 100);
+    request.copies = {2};
+    request.solver_options.part_spacing = 5;
+    auto prepared = prepareRequestNesting(*document, parts, request);
+    ASSERT_TRUE(prepared) << prepared.error;
+    auto before = sp_repr_save_buf(document->getReprDoc()).raw();
+    for (double x : {10., 22., 95.}) {
+        std::vector<Placement> placements{{.part_id=1, .translation_x=10, .translation_y=20, .placed=true},
+            {.part_id=2, .translation_x=x, .translation_y=20, .placed=true}};
+        EXPECT_EQ(applyNestingPlacements(*prepared.snapshot, placements).status, ApplyStatus::InvalidResult);
+        EXPECT_EQ(before, sp_repr_save_buf(document->getReprDoc()).raw());
+    }
+}
+
+TEST_F(NestingDocumentTest, RequestPageSizeChangeInvalidatesPlanAndAbsentPageRefuses)
+{
+    auto document = make_document(R"svg(<rect id="part" width="10" height="12"/>)svg");
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts{item(*document, "part")};
+    RequestPreparationOptions request; request.page = 1;
+    auto prepared = prepareRequestNesting(*document, parts, request);
+    ASSERT_TRUE(prepared) << prepared.error;
+    expect_rect_near(point_bounds(prepared.snapshot->container_outline), rect(0, 0, 300, 240));
+    document->getReprRoot()->setAttribute("width", "400");
+    document->ensureUpToDate();
+    auto before = sp_repr_save_buf(document->getReprDoc()).raw();
+    std::vector<Placement> placements{{.part_id=1, .translation_x=20, .translation_y=20, .placed=true}};
+    auto stale = applyNestingPlacements(*prepared.snapshot, placements);
+    EXPECT_EQ(stale.status, ApplyStatus::StaleSnapshot) << stale.error;
+    EXPECT_EQ(before, sp_repr_save_buf(document->getReprDoc()).raw());
+    request.page = 2;
+    EXPECT_FALSE(prepareRequestNesting(*document, parts, request));
+}
+
+TEST_F(NestingDocumentTest, RequestCopyZeroUnplacedRemainsAndPositiveCopyKeepsInternalReferences)
+{
+    auto document = make_document(R"svg(<g id="part" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape">
+        <rect id="art" width="10" height="12"/><use id="follower" xlink:href="#art" x="12"/>
+        <path id="cut" inkscape:nesting-contour="true" d="M0,0 H22 V12 H0Z" fill="none"/>
+        </g>)svg");
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts{item(*document, "part")};
+    RequestPreparationOptions request; request.sheet = rect(0, 0, 100, 100); request.copies = {2};
+    auto prepared = prepareRequestNesting(*document, parts, request);
+    ASSERT_TRUE(prepared) << prepared.error;
+    auto original_pose = item(*document, "part")->i2doc_affine();
+    std::vector<Placement> placements{{.part_id=1, .placed=false},
+        {.part_id=2, .translation_x=40, .translation_y=20, .placed=true}};
+    auto result = applyNestingPlacements(*prepared.snapshot, placements);
+    ASSERT_TRUE(result.changed()) << result.error;
+    EXPECT_TRUE(affine_near(item(*document, "part")->i2doc_affine(), original_pose));
+    SPItem *copy = nullptr;
+    for (auto &child : item(*document, "part")->parent->children)
+        if (is<SPGroup>(&child) && &child != item(*document, "part")) copy = cast<SPItem>(&child);
+    ASSERT_TRUE(copy);
+    expect_rect_near(*copy->documentGeometricBounds(), rect(40, 20, 62, 32));
+    std::string copy_art;
+    std::string copy_reference;
+    for (auto &child : copy->children) {
+        if (child.getRepr()->attribute("xlink:href")) copy_reference = child.getRepr()->attribute("xlink:href");
+        else if (std::string(child.getRepr()->name()) == "svg:rect" && child.getId()) copy_art = child.getId();
+    }
+    ASSERT_FALSE(copy_art.empty());
+    EXPECT_EQ(copy_reference, "#" + copy_art);
+    EXPECT_NE(copy_reference, "#art");
+}
+
+TEST_F(NestingDocumentTest, RequestFallbackRejectNeverAcceptsConservativeSourceOrObstacle)
+{
+    auto document = make_document(R"svg(<rect id="part" width="5" height="5"/>
+        <path id="islands" d="M20,20 h10 v10 h-10z M50,40 h10 v10 h-10z"/>)svg");
+    ASSERT_TRUE(document);
+    RequestPreparationOptions request; request.sheet = rect(0, 0, 100, 100);
+    auto before = sp_repr_save_buf(document->getReprDoc()).raw();
+    std::vector<SPItem *> islands{item(*document, "islands")};
+    EXPECT_FALSE(prepareRequestNesting(*document, islands, request));
+    std::vector<SPItem *> parts{item(*document, "part")};
+    EXPECT_FALSE(prepareRequestNesting(*document, parts, request, 0.05, islands));
+    EXPECT_EQ(before, sp_repr_save_buf(document->getReprDoc()).raw());
+    request.reject_conservative = false;
+    EXPECT_TRUE(prepareRequestNesting(*document, islands, request));
+}
+
+TEST_F(NestingDocumentTest, RequestCopiesRollbackExactlyOnAtomicHistoryFailure)
+{
+    auto document = make_document(R"svg(<rect id="part" width="10" height="12"/>)svg");
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts{item(*document, "part")};
+    RequestPreparationOptions request; request.sheet = rect(0, 0, 100, 100); request.copies = {2};
+    auto prepared = prepareRequestNesting(*document, parts, request);
+    ASSERT_TRUE(prepared) << prepared.error;
+    auto before = sp_repr_save_buf(document->getReprDoc()).raw();
+    std::vector<Placement> placements{{.part_id=1, .translation_x=20, .translation_y=20, .placed=true},
+        {.part_id=2, .translation_x=40, .translation_y=20, .placed=true}};
+    DocumentUndo::setAtomicSettlementFaultForTesting([](DocumentUndo::AtomicSettlementStage stage) {
+        return stage == DocumentUndo::AtomicSettlementStage::HistoryInsertion;
+    });
+    auto applied = applyNestingPlacements(*prepared.snapshot, placements);
+    DocumentUndo::setAtomicSettlementFaultForTesting(nullptr);
+    EXPECT_FALSE(applied.changed());
+    EXPECT_EQ(applied.error, "atomic nesting publication refused");
+    EXPECT_TRUE(applied.created_copies.empty());
+    EXPECT_EQ(before, sp_repr_save_buf(document->getReprDoc()).raw());
+    EXPECT_FALSE(DocumentUndo::undo(document.get()));
+}
+
+TEST_F(NestingDocumentTest, ExplicitContourBindingPreservesArtworkAndOneUndoRedo)
+{
+    auto document = make_document(R"svg(<g transform="translate(7,9)"><rect id="art" x="20" y="30" width="10" height="12" fill="red"/>
+        <path id="cut" d="M20,30 H30 V42 H20Z"/></g>)svg");
+    ASSERT_TRUE(document);
+    auto before = sp_repr_save_buf(document->getReprDoc()).raw();
+    auto preview = setNestingContour(*document, item(*document, "art"), item(*document, "cut"), true);
+    EXPECT_EQ(preview.status, ContourBindingStatus::Prepared);
+    EXPECT_EQ(before, sp_repr_save_buf(document->getReprDoc()).raw());
+    auto result = setNestingContour(*document, item(*document, "art"), item(*document, "cut"));
+    ASSERT_EQ(result.status, ContourBindingStatus::Applied);
+    ASSERT_EQ(result.binding_ids.size(), 1u);
+    expect_rect_near(*item(*document, "art")->documentGeometricBounds(), rect(27, 39, 37, 51));
+    EXPECT_EQ(item(*document, "art")->parent, item(*document, "cut")->parent);
+    EXPECT_STREQ(item(*document, "cut")->getRepr()->attribute("inkscape:nesting-contour"), "true");
+    auto after = sp_repr_save_buf(document->getReprDoc()).raw();
+    ASSERT_TRUE(DocumentUndo::undo(document.get()));
+    EXPECT_EQ(before, sp_repr_save_buf(document->getReprDoc()).raw());
+    ASSERT_TRUE(DocumentUndo::redo(document.get()));
+    EXPECT_EQ(after, sp_repr_save_buf(document->getReprDoc()).raw());
+    std::vector<SPItem *> roots{item(*document, result.binding_ids.front().c_str())};
+    EXPECT_EQ(releaseNestingContour(*document, roots, true).status, ContourBindingStatus::Prepared);
+    EXPECT_EQ(after, sp_repr_save_buf(document->getReprDoc()).raw());
+    EXPECT_EQ(releaseNestingContour(*document, roots).status, ContourBindingStatus::Applied);
+    EXPECT_EQ(item(*document, "art")->parent, item(*document, "cut")->parent);
+    EXPECT_FALSE(item(*document, "cut")->getRepr()->attribute("inkscape:nesting-contour"));
+    expect_rect_near(*item(*document, "art")->documentGeometricBounds(), rect(27, 39, 37, 51));
+    ASSERT_TRUE(DocumentUndo::undo(document.get()));
+    EXPECT_EQ(after, sp_repr_save_buf(document->getReprDoc()).raw());
+}
+
+TEST_F(NestingDocumentTest, ExplicitContourBindingRefusesOverlappingAndDifferentContexts)
+{
+    auto document = make_document(R"svg(<g id="group"><rect id="art" width="10" height="12"/></g>
+        <path id="cut" d="M0,0 H10 V12 H0Z"/>)svg");
+    ASSERT_TRUE(document);
+    auto before = sp_repr_save_buf(document->getReprDoc()).raw();
+    EXPECT_EQ(setNestingContour(*document, item(*document, "art"), item(*document, "art")).reason,
+              ContourBindingReason::OverlappingRoles);
+    EXPECT_EQ(setNestingContour(*document, item(*document, "group"), item(*document, "art")).reason,
+              ContourBindingReason::OverlappingRoles);
+    EXPECT_EQ(setNestingContour(*document, item(*document, "art"), item(*document, "cut")).reason,
+              ContourBindingReason::UnsafeContext);
+    EXPECT_EQ(before, sp_repr_save_buf(document->getReprDoc()).raw());
 }

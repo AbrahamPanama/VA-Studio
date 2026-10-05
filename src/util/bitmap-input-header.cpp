@@ -538,6 +538,147 @@ int b64Value(char ch) noexcept
     return ch == '+' ? 62 : ch == '/' ? 63 : -1;
 }
 
+// Forward-only base64 cursor for finding the first image-data header. Payloads are
+// traversed without retaining them; the existing parser still validates metadata
+// (including PNG CRCs) in the precisely sized, budgeted prefix below.
+struct HrefCursor {
+    std::string_view href;
+    std::size_t at;
+    Stop stop;
+    std::uint64_t decoded = 0;
+    std::uint32_t acc = 0;
+    int bits = 0;
+
+    bool read(std::uint64_t offset, std::size_t count, u8 *out) noexcept {
+        if (offset < decoded) return false;
+        while (at < href.size() && (decoded < offset || count)) {
+            if ((at & 0xFFFF) == 0 && stop.requested()) return false;
+            int v = b64Value(href[at++]);
+            if (v < 0) continue; // inspectUri already validated whitespace and padding
+            acc = (acc << 6) | std::uint32_t(v);
+            bits += 6;
+            if (bits < 8) continue;
+            bits -= 8;
+            u8 byte = u8(acc >> bits);
+            acc &= (1u << bits) - 1;
+            if (decoded++ >= offset) { *out++ = byte; --count; }
+        }
+        return count == 0 && decoded >= offset;
+    }
+};
+
+Result<std::uint64_t> hrefPrefix(std::string_view href, UriInfo const &uri,
+                                 HeaderLimits const &lim, Stop stop) noexcept
+{
+    Result<std::uint64_t> r;
+    r.value = std::min(uri.decodedBytes, lim.scratchBytes);
+    if (uri.decodedBytes <= lim.scratchBytes) return r; // keep all existing full-file checks
+    HrefCursor cursor{href, uri.payloadOffset, stop};
+    u8 bytes[16]{};
+    auto read = [&](std::uint64_t at, std::size_t count) {
+        if (has(uri.decodedBytes, at, count) && cursor.read(at, count, bytes)) return true;
+        r.outcome = stop.requested() ? Outcome{Status::canceled, "Inspection canceled."}
+                                    : broken("Image header is truncated.");
+        return false;
+    };
+    if (!read(0, std::min<std::uint64_t>(16, uri.decodedBytes))) return r;
+    auto format = sniff(bytes, std::min<std::uint64_t>(16, uri.decodedBytes));
+    // Start over after signature sniffing so even a JPEG's first marker can be read.
+    cursor = HrefCursor{href, uri.payloadOffset, stop};
+    std::uint64_t scan = 0;
+    if (!checkedAdd(lim.maxProfileBytes, lim.scratchBytes, scan)) scan = UINT64_MAX;
+    auto finish = [&](std::uint64_t end) { r.value = std::max(r.value, end); };
+    auto bounds = [&](std::uint64_t at, std::uint64_t size, std::uint64_t &end) {
+        if (checkedAdd(at, size, end) && end <= uri.decodedBytes) return true;
+        r.outcome = broken("Image chunk or segment length exceeds the data."); return false;
+    };
+    if (format == Format::PNG) {
+        for (std::uint64_t pos = 8;;) {
+            if (!read(pos, 8)) return r;
+            auto len = be32(bytes);
+            if (len > 0x7FFFFFFFu) { r.outcome = broken("PNG chunk length is invalid."); return r; }
+            bool idat = tag(bytes + 4, "IDAT");
+            std::uint64_t end = 0;
+            if (!bounds(pos, std::uint64_t(len) + 12, end)) return r;
+            if ((idat ? pos : end) > scan) {
+                r.outcome = refuse("Image header metadata exceeds the scan limit."); return r;
+            }
+            if (idat) { finish(pos + 8); return r; }
+            // The parser must see IEND too, to refuse a PNG with no IDAT.
+            if (tag(bytes + 4, "IEND")) { finish(end); return r; }
+            pos = end;
+        }
+    }
+    if (format == Format::JPEG) {
+        for (std::uint64_t pos = 2, segments = 0;;) {
+            if (++segments > 65536) { r.outcome = broken("JPEG marker run is too long."); return r; }
+            if (pos > scan) { r.outcome = refuse("Image header metadata exceeds the scan limit."); return r; }
+            unsigned fill = 0;
+            do {
+                if (!read(pos++, 1)) return r;
+                if (bytes[0] != 0xFF) break;
+                if (++fill > 256) { r.outcome = broken("JPEG marker run is too long."); return r; }
+            } while (true);
+            u8 marker = bytes[0];
+            if (!fill || !marker || marker == 0xD8 || marker == 0xD9) {
+                finish(pos); return r; // let the parser retain its marker diagnostic
+            }
+            if (marker == 0x01 || (marker >= 0xD0 && marker <= 0xD7)) continue;
+            if (!read(pos, 2)) return r;
+            auto len = be16(bytes);
+            if (len < 2) { r.outcome = broken("JPEG segment length is invalid."); return r; }
+            std::uint64_t end = 0;
+            if (!bounds(pos, len, end)) return r;
+            if (marker == 0xDA) { finish(end); return r; }
+            pos = end;
+        }
+    }
+    if (format == Format::WebP) {
+        if (!read(0, 12)) return r;
+        std::uint64_t riffEnd = std::uint64_t(le32(bytes + 4)) + 8;
+        if (riffEnd > uri.decodedBytes || riffEnd < 20 || (riffEnd & 1)) {
+            r.outcome = broken("WebP RIFF size is invalid or truncated."); return r;
+        }
+        for (std::uint64_t pos = 12; pos < riffEnd;) {
+            if (!read(pos, 8)) return r;
+            auto len = le32(bytes + 4);
+            std::uint64_t end = 0;
+            if (!bounds(pos, 8ull + len + (len & 1), end) || end > riffEnd) {
+                r.outcome = broken("WebP chunk exceeds the RIFF data."); return r;
+            }
+            if (pos > scan) { r.outcome = refuse("Image header metadata exceeds the scan limit."); return r; }
+            if (tag(bytes, "VP8 ") || tag(bytes, "VP8L") || tag(bytes, "ANMF")) {
+                finish(pos + 8 + std::min<std::uint64_t>(len, 10)); return r;
+            }
+            pos = end;
+        }
+        finish(riffEnd); return r;
+    }
+    if (format == Format::GIF) {
+        if (!read(0, 13)) return r;
+        std::uint64_t pos = 13 + ((bytes[10] & 0x80) ? (3ull << ((bytes[10] & 7) + 1)) : 0);
+        for (;;) {
+            if (!read(pos++, 1)) return r;
+            if (bytes[0] == 0x2C) {
+                std::uint64_t end = 0;
+                if (bounds(pos, 10, end)) finish(end);
+                return r;
+            }
+            if (bytes[0] != 0x21) { finish(pos); return r; }
+            if (!read(pos++, 1)) return r; // extension label
+            for (;;) {
+                if (!read(pos++, 1)) return r;
+                auto len = bytes[0];
+                if (!len) break;
+                std::uint64_t end = 0;
+                if (!bounds(pos, len, end)) return r;
+                pos = end;
+            }
+        }
+    }
+    return r; // unsupported TIFF/BMP/unknown formats keep their existing parser route
+}
+
 } // namespace
 
 Result<RasterHeader> inspect(EncodedView v, HeaderLimits const &lim, Budget &budget, Stop stop) noexcept
@@ -561,24 +702,44 @@ Result<RasterHeader> inspectHref(std::string_view href, HeaderLimits const &lim,
     Result<UriInfo> u = inspectUri(href, lim, stop);
     if (!u.ok()) { r.outcome = u.outcome; return r; }
     if (u.value.kind != UriKind::Data) { r.outcome = refuse("Only embedded images can be inspected."); return r; }
-    std::uint64_t want = std::min<std::uint64_t>(u.value.decodedBytes, lim.scratchBytes);
+    auto decodePrefix = [&](std::uint64_t want, Stage stage, PlainBuffer &buf) {
+        if (Outcome o = buf.allocate(budget, stage, want, 1, nullptr, stop); !o.ok()) return o;
+        auto *out = reinterpret_cast<u8 *>(buf.data());
+        HrefCursor cursor{href, u.value.payloadOffset, stop};
+        if (!cursor.read(0, std::size_t(want), out)) {
+            return stop.requested() ? Outcome{Status::canceled, "Inspection canceled."}
+                                    : broken("Image header is truncated.");
+        }
+        return good;
+    };
+    std::uint64_t want = std::min(u.value.decodedBytes, lim.scratchBytes);
     HeaderLimits l = lim;
-    l.prefixOnly = u.value.decodedBytes > lim.scratchBytes;
+    l.prefixOnly = u.value.decodedBytes > want;
     PlainBuffer buf;
-    if (Outcome o = buf.allocate(budget, Stage::header, want, 1, nullptr, stop); !o.ok()) { r.outcome = o; return r; }
-    auto *out = reinterpret_cast<u8 *>(buf.data());
-    std::uint64_t got = 0;
-    std::uint32_t acc = 0;
-    int bits = 0;
-    for (std::size_t i = u.value.payloadOffset; i < href.size() && got < want; ++i) {
-        if (((i - u.value.payloadOffset) & 0xFFFF) == 0 && stop.requested()) { r.outcome = {Status::canceled, "Inspection canceled."}; return r; }
-        int v = b64Value(href[i]);
-        if (v < 0) continue; // whitespace/padding were validated by inspectUri
-        acc = (acc << 6) | std::uint32_t(v);
-        bits += 6;
-        if (bits >= 8) { bits -= 8; out[got++] = u8(acc >> bits); acc &= (1u << bits) - 1; }
-    }
-    return inspectBytes({out, std::size_t(got), u.value.mime}, l, stop);
+    if (Outcome o = decodePrefix(want, Stage::header, buf); !o.ok()) { r.outcome = o; return r; }
+    r = inspectBytes({reinterpret_cast<u8 const *>(buf.data()), buf.size(), u.value.mime}, l, stop);
+    // Keep the existing early dimension/CRC/variant refusals, before looking for
+    // later metadata. A prefix ending exactly between metadata chunks can also
+    // lack image data without being truncated; let the bounded walk find it.
+    std::string_view why = r.outcome.diagnostic;
+    bool incomplete = why.find("inspection window") != std::string_view::npos ||
+                      why.find("truncated") != std::string_view::npos ||
+                      why.find("exceeds the data") != std::string_view::npos ||
+                      why == "GIF is not terminated." ||
+                      why == "PNG has no image data." || why == "WebP has no image data.";
+    if (!l.prefixOnly || (!r.ok() && !incomplete)) return r;
+    auto prefix = hrefPrefix(href, u.value, lim, stop);
+    if (!prefix.ok()) { r.outcome = prefix.outcome; return r; }
+    if (prefix.value <= want) return r;
+    // Stage::header is the small scratch stage (1 MiB). The additional encoded
+    // metadata is input storage, bounded by the parser's existing scan/profile
+    // and URI/encoded limits, and charged to this same operation ledger. Release
+    // the old window before reserving its replacement; never count it twice.
+    buf.reset();
+    want = prefix.value;
+    l.prefixOnly = u.value.decodedBytes > want;
+    if (Outcome o = decodePrefix(want, Stage::input, buf); !o.ok()) { r.outcome = o; return r; }
+    return inspectBytes({reinterpret_cast<u8 const *>(buf.data()), buf.size(), u.value.mime}, l, stop);
 }
 
 Result<UriInfo> inspectUri(std::string_view href, HeaderLimits const &lim, Stop stop) noexcept

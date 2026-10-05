@@ -37,7 +37,7 @@ private:
 enum class LabelPhase { unionFind, sorting };
 struct LabelOptions {
     std::uint32_t runs = 16000000, islands = 2000000;
-    std::uint64_t topologyBytes = 256 * MiB;
+    std::uint64_t topologyBytes = std::numeric_limits<std::uint64_t>::max();
     AllocationFault *fault = nullptr;
     // Optional allocation-free observer, called once inside each traversal phase.
     void (*observe)(LabelPhase, void *) noexcept = nullptr;

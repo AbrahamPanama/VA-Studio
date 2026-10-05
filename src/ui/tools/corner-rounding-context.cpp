@@ -6,6 +6,8 @@
 #include "helper/geom.h"
 #include "live_effects/lpe-fillet-chamfer.h"
 #include "object/sp-path.h"
+#include "object/sp-polygon.h"
+#include "object/sp-polyline.h"
 #include "ui/tool/control-point-selection.h"
 #include "ui/tool/node.h"
 #include "ui/tool/path-manipulator.h"
@@ -152,6 +154,12 @@ CornerRoundingContext capture_corner_rounding(SPShape &path, ControlPointSelecti
     }
     auto const &geometry = capture.geometry;
     auto const &satellites = capture.satellites;
+    // Native SVG vertices are all cusp identities; open endpoints are excluded
+    // by CornerEdit itself. AC-8b path-node classification does not apply.
+    if (is<SPPolygon>(&path) || is<SPPolyLine>(&path)) {
+        result.snapshot = CE::Snapshot{geometry, satellites, {}, {}};
+        return result;
+    }
     PathManipulator *manipulator = nullptr;
     for (auto point : nodes.allPoints()) {
         if (auto node = dynamic_cast<Node *>(point)) {
@@ -166,7 +174,7 @@ CornerRoundingContext capture_corner_rounding(SPShape &path, ControlPointSelecti
     }
     if (!manipulator) {
         if (!is<SPPath>(&path)) {
-            // Rectangles/polygons/stars retain their native object type. Their
+            // Other native shapes retain their object type. Their
             // shape handles are not Node selections; All or an explicit corner
             // click can target their curve without destructive conversion.
             result.snapshot = CE::Snapshot{geometry, satellites, {}, {}};

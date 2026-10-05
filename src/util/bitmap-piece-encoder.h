@@ -17,7 +17,7 @@
  *
  * Accounting: B (sum of gutter-inclusive crop areas) <= min(64 MP, 2P); a worst-case codec bound per piece is
  * reserved FIRST (crop buffer, encoder scratch, sum of worst PNG sizes, worst href size), then everything is
- * shrunk to live PNG allocation sizes and exact H = sum(22 + 4*ceil(Qi/3)) (<= 512 MiB). Encoder scratch is enforced for real by
+ * shrunk to live PNG allocation sizes and exact H = sum(22 + 4*ceil(Qi/3)) (< 2 GiB). Encoder scratch is enforced for real by
  * libpng's user allocator. Execution is serial: `encoders` only scales the scratch reservation (1 or 2).
  *
  * Copyright 2026 VA Studio authors
@@ -37,7 +37,7 @@ namespace Inkscape::Bitmap {
 
 constexpr std::uint32_t maxPieceAxis = 32767;      // Cairo limit, gutter included
 constexpr std::uint64_t maxCropPixels = 64'000'000; // B ceiling (also <= 2P)
-constexpr std::uint64_t maxHrefBytes = 512 * MiB;  // H ceiling
+constexpr std::uint64_t maxHrefBytes = 2048 * MiB - 1; // signed XML/document text-size bound, not RAM
 
 struct EncodedPiece {
     std::int32_t x = 0, y = 0;            // crop origin on the grid, gutter included (may be -1)

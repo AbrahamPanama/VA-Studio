@@ -1,0 +1,118 @@
+{
+  "description": "P9 independent M2 groups-payload-save",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "open",
+        "command": "file.open",
+        "params": {
+          "path": "{WORK}/inputs/groups.svg",
+          "format": "svg",
+          "resource-policy": "embed",
+          "font-policy": "reject",
+          "discard": false
+        },
+        "if_revision": 0
+      },
+      "command": "file.open",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/inputs/groups.svg",
+          "sha256": "7a74340014b394b2376fb90103cf498b41b7e41a247e60751ed9372d1f91ecf3",
+          "reported": true,
+          "hash_field": "data.source_version.sha256",
+          "bytes_field": "data.source_version.bytes"
+        }
+      ],
+      "expect_nonempty": [
+        "document_id",
+        "data.source_version.identity",
+        "data.intake"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "save",
+        "command": "file.save",
+        "params": {
+          "path": "{WORK}/saved.svg",
+          "embedding-policy": "embed",
+          "overwrite": false
+        },
+        "if_revision": 0,
+        "document": {
+          "$ref": "open.document_id"
+        }
+      },
+      "command": "file.save",
+      "cells": [
+        "success",
+        "save"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "published",
+          "persisted": true
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/saved.svg",
+          "format": "svg",
+          "reported": true,
+          "embedded": true,
+          "objects": {
+            "parent": {
+              "transform": "translate(2,3)"
+            },
+            "child": {
+              "transform": "scale(2)"
+            },
+            "clone": {
+              "{http://www.w3.org/1999/xlink}href": "#tile"
+            },
+            "hidden": {
+              "style": "display:none"
+            },
+            "locked": {
+              "{http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd}insensitive": "true"
+            },
+            "unrelated": {
+              "x": "30",
+              "y": "20"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

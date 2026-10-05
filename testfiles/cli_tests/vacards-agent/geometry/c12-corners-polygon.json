@@ -1,24 +1,49 @@
 {
-  "description": "Inkscape reads the plain SVG <polygon> as the native SPPolygon shape (an SPShape), so its three corners round like a rect and the polygon survives as a native element: changed, metrics.count 3.",
+  "description": "Native SVG polygon converts to the same-id path and visibly rounds; exact curve geometry is covered in the controller unit suite. The exported path must also contain SVG arc commands.",
   "input": "{FIXTURES}/corners.svg",
   "actions": "vacards-result-file:{RESULT};select-by-id:poly;vacards-corners:radius=2mm;export-filename:{WORK}/out.svg;export-do",
   "expect_exit": 0,
   "expect_records": [
-    {"action": "vacards-result-file", "status": "ok"},
+    {
+      "action": "vacards-result-file",
+      "status": "ok"
+    },
     {
       "action": "vacards-corners",
       "status": "changed",
       "mode": "single-object",
       "reason": "success",
-      "modified": ["poly"],
+      "modified": [
+        "poly"
+      ],
       "undo": "one-step",
-      "metrics": {"count": 3, "approximate": false}
+      "metrics": {
+        "count": 3,
+        "approximate": false
+      },
+      "data": {
+        "converted": [
+          {
+            "id": "poly",
+            "from": "polygon",
+            "to": "path"
+          }
+        ]
+      }
     }
   ],
   "expect_files": {
     "out.svg": {
       "exists": true,
-      "contains": ["id=\"poly\"", "effect=\"fillet_chamfer\""]
+      "contains": [
+        "id=\"poly\"",
+        "effect=\"fillet_chamfer\"",
+        "<path",
+        " A "
+      ],
+      "not_contains": [
+        "<polygon"
+      ]
     }
   }
 }

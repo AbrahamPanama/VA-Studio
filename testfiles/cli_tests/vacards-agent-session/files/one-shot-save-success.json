@@ -1,0 +1,68 @@
+{
+  "description": "P9 independent M2 one-shot-save-success",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "shot",
+        "command": "file.save",
+        "params": {
+          "path": "{WORK}/saved.svg",
+          "overwrite": false,
+          "embedding-policy": "embed"
+        },
+        "if_revision": 0,
+        "document": "d1"
+      },
+      "command": "file.save",
+      "cells": [
+        "success"
+      ],
+      "expect": {
+        "status": "changed",
+        "publication": {
+          "state": "published",
+          "persisted": true
+        },
+        "undo_effect": "none"
+      },
+      "expect_absent": [
+        "error"
+      ],
+      "file_oracles": [
+        {
+          "path": "{WORK}/saved.svg",
+          "format": "svg",
+          "size": [
+            16,
+            8
+          ],
+          "samples": [
+            {
+              "x": 2,
+              "y": 4,
+              "rgba": [
+                255,
+                0,
+                0,
+                255
+              ]
+            }
+          ],
+          "reported": true
+        }
+      ]
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}/inputs",
+    "--grant-write",
+    "{WORK}",
+    "--document",
+    "{WORK}/inputs/sheet.svg"
+  ],
+  "transport": "one-shot"
+}

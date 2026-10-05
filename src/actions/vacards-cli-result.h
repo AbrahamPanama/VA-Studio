@@ -13,6 +13,7 @@
 #ifndef SEEN_VACARDS_CLI_RESULT_H
 #define SEEN_VACARDS_CLI_RESULT_H
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -73,7 +74,19 @@ struct Record
     boost::json::object metrics;
     std::vector<std::string> warnings;
     std::optional<ParseError> error; ///< parameter error details; JSON "error": {"code","key"} when set
+    boost::json::object typed_extensions; ///< Only canonical action adapters populate this.
+    std::string preferred_unit = "mm";
+    boost::json::object normalized_params;
+    std::string document_id;
+    std::uint64_t revision_before = 0, revision_after = 0;
+    std::string undo_effect = "none";
+    std::string publication = "not-published";
     boost::json::object data;        ///< action-specific payload; JSON "data" only when non-empty
+    bool publication_persisted = false; // M2; legacy serializer deliberately ignores this.
+    // Native adapter receipt, copied to typed error.details (including reason and mutation_state).
+    // Set at the actual typed failure branch; never reconstruct from diagnostic text.
+    boost::json::object error_details;
+    std::optional<bool> error_retryable;
 };
 
 /// Serialize one record as a single JSON line (no prefix, no trailing newline) with this key order:

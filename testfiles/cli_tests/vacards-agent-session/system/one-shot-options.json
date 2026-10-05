@@ -1,0 +1,35 @@
+{
+  "description": "Typed one-shot system.options",
+  "transport": "one-shot",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "one-shot",
+        "command": "system.options",
+        "params": {
+          "preferred-unit": "in"
+        }
+      },
+      "command": "system.options",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "preferred-unit": "in"
+        },
+        "publication": {
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": []
+      },
+      "cells": [
+        "success"
+      ]
+    }
+  ],
+  "expect_exit": 0
+}

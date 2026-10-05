@@ -14,7 +14,7 @@ namespace Inkscape::Bitmap {
 // Camera and non-text tools preserve the captured bitmap session.
 bool compatibleExplodeBitmapTool(UI::Tools::ToolBase const *);
 // Read-only preflight only. Conversion always requires its own warning/confirmation.
-enum class Intent { Explode, ApplyAdjustment, ConversionCandidate };
+enum class Intent { Explode, ApplyAdjustment, ConversionCandidate, BitmapCopy };
 enum class TargetMode { SingleBitmap, CollectiveConversion };
 enum class Supportability { Supported, ConversionRequired, Refused };
 enum class Refusal {
@@ -28,6 +28,18 @@ struct TargetReason {
     std::uintptr_t identity = 0;
     std::string id;
     char const *diagnostic = "";
+    Outcome detail;
+    TargetReason(Refusal r, std::uintptr_t key, std::string name, char const *text)
+        : reason(r), identity(key), id(std::move(name)), detail(Status::failed, text) {
+        diagnostic = detail.diagnostic;
+    }
+    TargetReason(TargetReason const &o) : TargetReason(o.reason, o.identity, o.id, o.diagnostic) {}
+    TargetReason(TargetReason &&o) noexcept
+        : TargetReason(o.reason, o.identity, std::move(o.id), o.diagnostic) {}
+    TargetReason &operator=(TargetReason o) noexcept {
+        reason = o.reason; identity = o.identity; id = std::move(o.id);
+        detail = o.detail; diagnostic = detail.diagnostic; return *this;
+    }
 };
 // Values only: identities are opaque and must NEVER be dereferenced by a worker.
 struct TargetContext {
@@ -41,6 +53,8 @@ struct TargetContext {
     Filters::BitmapToneSettings tone;
 };
 struct TargetSnapshot {
+    // desktop is the opaque publication owner key: SPDesktop or document context.
+    // Workers must never dereference it.
     std::uintptr_t document = 0, desktop = 0, bitmap = 0, destinationParent = 0;
     unsigned long documentSerial = 0;
     std::uint64_t incarnation = 0, generation = 0;

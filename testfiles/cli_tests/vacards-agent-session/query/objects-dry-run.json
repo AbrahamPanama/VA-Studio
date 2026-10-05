@@ -1,0 +1,319 @@
+{
+  "description": "Read-only envelope dry_run returns the same independently calculated query, then ordinary read verifies preservation.",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r1",
+        "command": "query.objects",
+        "params": {
+          "ids": [
+            "rect",
+            "clone"
+          ]
+        },
+        "dry_run": true
+      },
+      "command": "query.objects",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "rect",
+              "parent_id": "nested",
+              "layer_id": "sheet",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 24,
+                  "preferred": {
+                    "value": 6.35,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 32,
+                  "preferred": {
+                    "value": 8.466666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 12,
+                  "preferred": {
+                    "value": 3.175,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 24,
+                  "preferred": {
+                    "value": 6.35,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Tile",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "clone",
+              "parent_id": "sheet",
+              "layer_id": "sheet",
+              "depth": 2,
+              "type": "use",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 82,
+                  "preferred": {
+                    "value": 21.695833333333333,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 24,
+                  "preferred": {
+                    "value": 6.35,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 6,
+                  "preferred": {
+                    "value": 1.5875,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 8,
+                  "preferred": {
+                    "value": 2.1166666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "",
+              "visible": true,
+              "locked": false
+            }
+          ],
+          "total": 2,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "dry-run",
+        "success"
+      ],
+      "expect_exact": {
+        "dry_run": true,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "r2",
+        "command": "query.objects",
+        "params": {
+          "ids": [
+            "rect",
+            "clone"
+          ]
+        }
+      },
+      "command": "query.objects",
+      "expect": {
+        "status": "ok",
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        },
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": [],
+        "data": {
+          "items": [
+            {
+              "id": "rect",
+              "parent_id": "nested",
+              "layer_id": "sheet",
+              "depth": 3,
+              "type": "rect",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 24,
+                  "preferred": {
+                    "value": 6.35,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 32,
+                  "preferred": {
+                    "value": 8.466666666666667,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 12,
+                  "preferred": {
+                    "value": 3.175,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 24,
+                  "preferred": {
+                    "value": 6.35,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "Tile",
+              "visible": true,
+              "locked": false
+            },
+            {
+              "id": "clone",
+              "parent_id": "sheet",
+              "layer_id": "sheet",
+              "depth": 2,
+              "type": "use",
+              "bounds": {
+                "kind": "geometric",
+                "x": {
+                  "px": 82,
+                  "preferred": {
+                    "value": 21.695833333333333,
+                    "unit": "mm"
+                  }
+                },
+                "y": {
+                  "px": 24,
+                  "preferred": {
+                    "value": 6.35,
+                    "unit": "mm"
+                  }
+                },
+                "width": {
+                  "px": 6,
+                  "preferred": {
+                    "value": 1.5875,
+                    "unit": "mm"
+                  }
+                },
+                "height": {
+                  "px": 8,
+                  "preferred": {
+                    "value": 2.1166666666666667,
+                    "unit": "mm"
+                  }
+                }
+              },
+              "label": "",
+              "visible": true,
+              "locked": false
+            }
+          ],
+          "total": 2,
+          "limit": 100,
+          "next_cursor": null,
+          "document_id": "d1",
+          "revision": 0
+        }
+      },
+      "cells": [
+        "no-op"
+      ],
+      "expect_exact": {
+        "dry_run": false,
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "revision_before": 0,
+        "revision_after": 0,
+        "selection_after": []
+      },
+      "expect_nonempty": [
+        "document_id"
+      ]
+    },
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "close",
+        "command": "session.close",
+        "params": {}
+      },
+      "command": "session.close",
+      "expect": {
+        "status": "ok",
+        "data": {
+          "closed": true,
+          "persisted": false
+        },
+        "undo_effect": "none",
+        "created": [],
+        "modified": [],
+        "deleted": [],
+        "publication": {
+          "persisted": false
+        }
+      }
+    }
+  ],
+  "expect_exit": 0,
+  "expect_stderr_not_contains": [
+    "VASTUDIO-RESULT ",
+    "Gtk-WARNING"
+  ],
+  "startup_args": [
+    "--inspect-file",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures/inspection.svg",
+    "--grant-read",
+    "{FIXTURES}/../../vacards-agent-session/query/fixtures"
+  ],
+  "expect_hello": {
+    "document": {
+      "id": "d1",
+      "revision": 0,
+      "dirty": false,
+      "read_only": true
+    }
+  },
+  "expect_hello_nonempty": [
+    "document.inspection.source_sha256"
+  ]
+}

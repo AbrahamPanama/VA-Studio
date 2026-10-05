@@ -1,0 +1,322 @@
+--- a/gdk/win32/gdkclipdrop-win32.c
++++ b/gdk/win32/gdkclipdrop-win32.c
+@@ -879,8 +879,8 @@
+   UINT fmt, fmt_to_use;
+   HANDLE hdata;
+   GdkWin32ContentFormatPair *pair;
+-  guchar *data;
+-  gsize   data_len;
++  guchar *data = NULL;
++  gsize   data_len = 0;
+   GInputStream *stream;
+ 
+   if (g_get_monotonic_time () > retr->parent.end_time)
+@@ -1968,7 +1968,7 @@
+      }
+ }
+ 
+-static void
++static gboolean
+ transmute_cf_unicodetext_to_utf8_string (const guchar    *data,
+                                          gsize            length,
+                                          guchar         **set_data,
+@@ -1977,7 +1977,10 @@
+ {
+   wchar_t *ptr, *p, *q, *endp;
+   char *result;
+-  glong wclen, u8_len;
++  glong wclen = 0, u8_len = 0;
++
++  if (data == NULL)
++    return FALSE;
+ 
+   /* Replace CR and CR+LF with LF */
+   ptr = (wchar_t *) data;
+@@ -2013,27 +2016,32 @@
+       if (set_data_destroy)
+         *set_data_destroy = (GDestroyNotify) g_free;
+     }
+-}
+-
+-static void
++  return result != NULL;
++}
++
++static gboolean
+ transmute_utf8_string_to_cf_unicodetext (const guchar    *data,
+                                          gsize            length,
+                                          guchar         **set_data,
+                                          gsize           *set_data_length,
+                                          GDestroyNotify  *set_data_destroy)
+ {
+-  glong wclen;
++  glong wclen = 0;
+   GError *err = NULL;
+-  glong size;
++  glong size = 0;
+   int i;
+   wchar_t *wcptr, *p;
+ 
++  if (data == NULL)
++    return FALSE;
++
+   wcptr = g_utf8_to_utf16 ((char *) data, length, NULL, &wclen, &err);
+-  if (err != NULL)
+-    {
+-      g_warning ("Failed to convert utf8: %s", err->message);
++  if (wcptr == NULL)
++    {
++      if (err != NULL)
++        g_warning ("Failed to convert utf8: %s", err->message);
+       g_clear_error (&err);
+-      return;
++      return FALSE;
+     }
+ 
+   wclen++; /* Terminating 0 */
+@@ -2058,6 +2066,7 @@
+     }
+ 
+   g_free (wcptr);
++  return TRUE;
+ }
+ 
+ static int
+@@ -2090,33 +2099,37 @@
+   return 0;
+ }
+ 
+-static void
++static gboolean
+ transmute_utf8_string_to_cf_text (const guchar    *data,
+                                   gsize            length,
+                                   guchar         **set_data,
+                                   gsize           *set_data_length,
+                                   GDestroyNotify  *set_data_destroy)
+ {
+-  glong rlen;
++  glong rlen = 0;
+   GError *err = NULL;
+-  gsize size;
++  gsize size = 0;
+   int i;
+   char *strptr, *p;
+   wchar_t *wcptr;
+ 
++  if (data == NULL)
++    return FALSE;
++
+   wcptr = g_utf8_to_utf16 ((char *) data, length, NULL, NULL, &err);
+-  if (err != NULL)
+-    {
+-      g_warning ("Failed to convert utf8: %s", err->message);
++  if (wcptr == NULL)
++    {
++      if (err != NULL)
++        g_warning ("Failed to convert utf8: %s", err->message);
+       g_clear_error (&err);
+-      return;
++      return FALSE;
+     }
+ 
+   if (wchar_to_str (wcptr, &strptr, CP_ACP) != 0)
+     {
+       g_warning ("Failed to convert utf-16 %S to ACP", wcptr);
+       g_free (wcptr);
+-      return;
++      return FALSE;
+     }
+ 
+   rlen = strlen (strptr);
+@@ -2144,6 +2157,7 @@
+     }
+ 
+   g_free (strptr);
++  return TRUE;
+ }
+ 
+ static int
+@@ -2176,7 +2190,7 @@
+   return 0;
+ }
+ 
+-static void
++static gboolean
+ transmute_cf_text_to_utf8_string (const guchar    *data,
+                                   gsize            length,
+                                   guchar         **set_data,
+@@ -2185,8 +2199,11 @@
+ {
+   char *ptr, *p, *q, *endp;
+   char *result;
+-  glong u8_len;
++  glong u8_len = 0;
+   wchar_t *wstr;
++
++  if (data == NULL)
++    return FALSE;
+ 
+   /* Strip out \r */
+   ptr = (char *) data;
+@@ -2209,7 +2226,7 @@
+     }
+ 
+   if (str_to_wchar (ptr, &wstr, CP_ACP) < 0)
+-    return;
++    return FALSE;
+ 
+   result = g_utf16_to_utf8 (wstr, -1, NULL, &u8_len, NULL);
+ 
+@@ -2224,6 +2241,7 @@
+     }
+ 
+   g_free (wstr);
++  return result != NULL;
+ }
+ 
+ static void
+@@ -2499,9 +2517,13 @@
+                                            gsize             *set_data_length)
+ {
+   const guchar *data;
+-  SIZE_T hdata_length;
+-  gsize length;
++  SIZE_T hdata_length = 0;
++  gsize length = 0;
+   gboolean res = FALSE;
++
++  *set_data = NULL;
++  if (set_data_length)
++    *set_data_length = 0;
+ 
+   /* FIXME: error reporting */
+ 
+@@ -2525,31 +2547,31 @@
+     {
+       /* No transmutation needed */
+       *set_data = g_memdup2 (data, length);
+-      *set_data_length = length;
++      if (set_data_length)
++        *set_data_length = length;
++      res = *set_data != NULL;
+     }
+   else if (to_contentformat == _gdk_win32_clipdrop_atom (clipdrop, GDK_WIN32_ATOM_INDEX_TEXT_PLAIN_UTF8) &&
+            from_w32format == CF_UNICODETEXT)
+     {
+-      transmute_cf_unicodetext_to_utf8_string (data, length, set_data, set_data_length, NULL);
+-      res = TRUE;
++      res = transmute_cf_unicodetext_to_utf8_string (data, length, set_data, set_data_length, NULL);
+     }
+   else if (to_contentformat == _gdk_win32_clipdrop_atom (clipdrop, GDK_WIN32_ATOM_INDEX_TEXT_PLAIN_UTF8) &&
+            from_w32format == CF_TEXT)
+     {
+-      transmute_cf_text_to_utf8_string (data, length, set_data, set_data_length, NULL);
+-      res = TRUE;
++      res = transmute_cf_text_to_utf8_string (data, length, set_data, set_data_length, NULL);
+     }
+   else if (to_contentformat == _gdk_win32_clipdrop_atom (clipdrop, GDK_WIN32_ATOM_INDEX_IMAGE_BMP) &&
+            (from_w32format == CF_DIB || from_w32format == CF_DIBV5))
+     {
+       transmute_cf_dib_to_image_bmp (data, length, set_data, set_data_length, NULL);
+-      res = TRUE;
++      res = *set_data != NULL;
+     }
+   else if (to_contentformat == _gdk_win32_clipdrop_atom (clipdrop, GDK_WIN32_ATOM_INDEX_TEXT_URI_LIST) &&
+            from_w32format == _gdk_win32_clipdrop_cf (clipdrop, GDK_WIN32_CF_INDEX_CFSTR_SHELLIDLIST))
+     {
+       transmute_cf_shell_id_list_to_text_uri_list (data, length, set_data, set_data_length, NULL);
+-      res = TRUE;
++      res = *set_data != NULL;
+     }
+   else
+     {
+@@ -2573,6 +2595,13 @@
+                                             guchar           **set_data,
+                                             gsize             *set_data_length)
+ {
++  *set_data = NULL;
++  if (set_data_length)
++    *set_data_length = 0;
++
++  if (data == NULL)
++    return FALSE;
++
+   if ((from_contentformat == _gdk_win32_clipdrop_atom (clipdrop, GDK_WIN32_ATOM_INDEX_IMAGE_PNG) &&
+        to_w32format == _gdk_win32_clipdrop_cf (clipdrop, GDK_WIN32_CF_INDEX_PNG)) ||
+       (from_contentformat == _gdk_win32_clipdrop_atom (clipdrop, GDK_WIN32_ATOM_INDEX_IMAGE_JPEG) &&
+@@ -2582,17 +2611,18 @@
+     {
+       /* No conversion needed */
+       *set_data = g_memdup2 (data, length);
+-      *set_data_length = length;
++      if (set_data_length)
++        *set_data_length = length;
+     }
+   else if (from_contentformat == _gdk_win32_clipdrop_atom (clipdrop, GDK_WIN32_ATOM_INDEX_TEXT_PLAIN_UTF8) &&
+            to_w32format == CF_UNICODETEXT)
+     {
+-      transmute_utf8_string_to_cf_unicodetext (data, length, set_data, set_data_length, NULL);
++      return transmute_utf8_string_to_cf_unicodetext (data, length, set_data, set_data_length, NULL);
+     }
+   else if (from_contentformat == _gdk_win32_clipdrop_atom (clipdrop, GDK_WIN32_ATOM_INDEX_TEXT_PLAIN_UTF8) &&
+            to_w32format == CF_TEXT)
+     {
+-      transmute_utf8_string_to_cf_text (data, length, set_data, set_data_length, NULL);
++      return transmute_utf8_string_to_cf_text (data, length, set_data, set_data_length, NULL);
+     }
+   else if (from_contentformat == _gdk_win32_clipdrop_atom (clipdrop, GDK_WIN32_ATOM_INDEX_IMAGE_BMP) &&
+            to_w32format == CF_DIB)
+@@ -2618,7 +2648,7 @@
+       return FALSE;
+     }
+ 
+-  return TRUE;
++  return *set_data != NULL;
+ }
+ 
+ int
+--- a/gdk/win32/gdkhdataoutputstream-win32.c
++++ b/gdk/win32/gdkhdataoutputstream-win32.c
+@@ -196,7 +196,9 @@
+   if (priv->pair.transmute)
+     {
+       guchar *transmuted_data = NULL;
+-      gsize   transmuted_data_length;
++      gsize   transmuted_data_length = 0;
++      const guchar *data = priv->data;
++      gsize length = priv->data_length;
+ 
+       if (priv->handle_is_buffer)
+         {
+@@ -205,11 +207,21 @@
+           return FALSE;
+         }
+ 
++      /* An unwritten text stream still represents an empty string.  The
++       * Unicode converter must emit its terminating UTF-16 NUL. */
++      if ((priv->pair.w32format == CF_UNICODETEXT || priv->pair.w32format == CF_TEXT) &&
++          priv->pair.contentformat == _gdk_win32_clipdrop_atom (priv->clipdrop, GDK_WIN32_ATOM_INDEX_TEXT_PLAIN_UTF8) &&
++          (data == NULL || length == 0))
++        {
++          data = (const guchar *) "";
++          length = 0;
++        }
++
+       if (!gdk_win32_clipdrop_transmute_contentformat (priv->clipdrop,
+                                                        priv->pair.contentformat,
+                                                        priv->pair.w32format,
+-                                                       priv->data,
+-                                                       priv->data_length,
++                                                       data,
++                                                       length,
+                                                       &transmuted_data,
+                                                       &transmuted_data_length))
+         {
+@@ -229,6 +241,7 @@
+           if (new_handle == NULL)
+             {
+               DWORD error_code = GetLastError ();
++              g_free (transmuted_data);
+               g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                            "%s%lu", _("GlobalReAlloc() failed: "), error_code);
+               return FALSE;

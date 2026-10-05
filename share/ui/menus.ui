@@ -1226,14 +1226,7 @@
           <attribute name="action">app.text-convert-to-glyphs</attribute>
         </item>
       </section>
-      <section>
-        <item>
-          <attribute name="label" translatable="yes">Check Spellin_g...</attribute>
-          <attribute name="action">win.dialog-open</attribute>
-          <attribute name="target">Spellcheck</attribute>
-          <attribute name="icon">tools-check-spelling</attribute>
-        </item>
-      </section>
+      <!-- VA Studio: "Check Spelling" is hidden while spell checking is off (src/ui/spellcheck-feature.h). -->
     </submenu>
     <submenu id="filter-menu">
       <attribute name="label" translatable="yes">Filter_s</attribute>

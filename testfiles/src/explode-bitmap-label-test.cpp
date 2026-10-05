@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <numeric>
 #include <random>
 #include <vector>
@@ -228,7 +229,8 @@ TEST(ExplodeBitmapLabel, T03CapsBudgetAndAllocationSweep)
         EXPECT_EQ(budget.reserved(), 0u);
     }
     EXPECT_EQ(LabelOptions{}.runs, 16000000u); EXPECT_EQ(LabelOptions{}.islands, 2000000u);
-    EXPECT_EQ(LabelOptions{}.topologyBytes, 256 * MiB);
+    // No fixed topology ceiling by default; the shared Budget controls admission.
+    EXPECT_EQ(LabelOptions{}.topologyBytes, std::numeric_limits<std::uint64_t>::max());
     Budget budget(Budget::FixedLimitForTest{}, 4 * MiB); Budget::Token shared;
     ASSERT_TRUE(budget.acquire(Stage::topology, 1024, shared).ok());
     LabelOptions options; options.topologyBytes = peak + 1023;

@@ -10,26 +10,28 @@
 #include "extension/system.h"
 #include "inkscape.h"
 #include "io/tiff-export.h"
+#include "io/export-color-profiles.h"
 #include "path-prefix.h"
 #include "ui/interface.h"
 
 namespace Inkscape::Extension::Internal {
 
+namespace { thread_local std::string exported_profile_name; }
+std::string const &TiffOutput::last_profile_name() { return exported_profile_name; }
+
 std::string TiffOutput::output_profile_path()
 {
-    auto const override = Glib::getenv("INKSCAPE_VACARDS_TIFF_ICC_PROFILE");
-    if (!override.empty()) {
-        return override;
-    }
-
-    // Release packaging validates this exact profile by SHA-256 before placing
-    // it in the bundle. Do not silently use a same-named system profile: that
-    // would make exported color depend on the machine doing the export.
-    return Glib::build_filename(get_inkscape_datadir(), "inkscape", "color", "icc", "TheBest.icc");
+    std::string notice;
+    return Inkscape::IO::ExportColorProfiles().selected(notice).path;
 }
 
 void TiffOutput::export_raster(Output *module, SPDocument const *, std::string const &png_file, gchar const *filename)
 {
+    auto profile = Inkscape::IO::prepare_export_color_profile();
+    if (!profile.notice.empty()) {
+        g_warning("%s", profile.notice.c_str());
+        if (Inkscape::Application::exists() && INKSCAPE.use_gui()) sp_ui_error_dialog(profile.notice.c_str());
+    }
     std::string error;
     Inkscape::IO::TiffExportOptions options;
     options.prevent_white_clipping = module && module->get_param_bool("prevent_white_clipping", false);
@@ -37,7 +39,7 @@ void TiffOutput::export_raster(Output *module, SPDocument const *, std::string c
                                   module->get_param_bool("prevent_white_clipping_transparent", false);
     options.clean_edges = !module || module->get_param_bool("clean_edges", true);
     options.hard_edges = module && module->get_param_bool("hard_edges", false);
-    if (!Inkscape::IO::export_png_to_color_managed_tiff(png_file, filename, output_profile_path(), error, nullptr,
+    if (!Inkscape::IO::export_png_to_color_managed_tiff(png_file, filename, profile.profile.bytes, error, nullptr,
                                                         options)) {
         auto const message = Glib::ustring::compose(_("TIFF export failed: %1"), error);
         g_warning("%s", message.c_str());
@@ -46,6 +48,8 @@ void TiffOutput::export_raster(Output *module, SPDocument const *, std::string c
         }
         throw Output::save_failed();
     }
+    exported_profile_name = profile.profile.name;
+    g_message("%s", Glib::ustring::compose(_("TIFF exported with output color profile: %1"), profile.profile.name).c_str());
 }
 
 void TiffOutput::init()
@@ -75,7 +79,7 @@ void TiffOutput::init()
                                                    "    <filetypename>" N_(
                                                        "TIFF (*.tiff)") "</filetypename>\n"
                                                                         "    <filetypetooltip>" N_(
-                                                                            "RGB TIFF with embedded VACards output "
+                                                                            "RGB TIFF with selected output "
                                                                             "profile") "</filetypetooltip>\n"
                                                                                        "  </output>\n"
                                                                                        "</inkscape-extension>",

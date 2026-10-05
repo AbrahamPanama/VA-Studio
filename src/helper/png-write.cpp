@@ -40,6 +40,7 @@
 #include "helper/pixbuf-ops.h"
 
 #include "io/sys.h"
+#include "io/export-color-profiles.h"
 
 #include "object/sp-defs.h"
 #include "object/sp-item.h"
@@ -69,6 +70,7 @@ struct SPEBP {
     Inkscape::Drawing *drawing; // it is assumed that all unneeded items are hidden
     unsigned (*status)(float, void *);
     void *data;
+    Inkscape::IO::PreparedExportProfile const *output_profile = nullptr;
     bool failed; ///< A stripe could not be rendered; the output is incomplete.
 
 };
@@ -247,6 +249,12 @@ sp_png_write_rgba_striped(SPDocument *doc,
         if (color_type&4)
             sig_bit.alpha = 8;
         png_set_sBIT(png_ptr, info_ptr, &sig_bit);
+    }
+
+    if (ebp->output_profile) {
+        auto const &bytes = ebp->output_profile->profile.bytes;
+        png_set_iCCP(png_ptr, info_ptr, "Output profile", PNG_COMPRESSION_TYPE_BASE,
+                     bytes.data(), bytes.size());
     }
 
     PngTextList textList;
@@ -489,6 +497,13 @@ sp_export_get_rows_impl(guchar const **rows, void **to_free, int row, int num_ro
     // it's identical to the GdkPixbuf format.
     convert_pixels_argb32_to_pixbuf(px.get(), ebp->width, num_rows, stride, ebp->background->toARGB());
 
+    if (ebp->output_profile) {
+        for (int r = 0; r < num_rows; ++r) {
+            auto pixels = px.get() + static_cast<gsize>(r) * stride;
+            cmsDoTransform(ebp->output_profile->transform.get(), pixels, pixels, ebp->width);
+        }
+    }
+
     // If a custom bit depth or color type is asked, then convert rgb to grayscale, etc.
     const guchar* new_data = pixbuf_to_png(rows, px.get(), num_rows, ebp->width, stride, color_type, bit_depth);
     if (!new_data) {
@@ -529,10 +544,11 @@ ExportResult sp_export_png_file(SPDocument *doc, gchar const *filename,
                                 Inkscape::Colors::Color const &bgcolor,
                                 unsigned int (*status) (float, void *),
                                 void *data, bool force_overwrite,
-                                const std::vector<SPItem const *> &items_only, bool interlace, int color_type, int bit_depth, int zlib, int antialiasing)
+                                const std::vector<SPItem const *> &items_only, bool interlace, int color_type, int bit_depth, int zlib, int antialiasing,
+                                Inkscape::IO::PreparedExportProfile const *output_profile, bool embed_srgb)
 {
     return sp_export_png_file(doc, filename, Geom::Rect(Geom::Point(x0,y0),Geom::Point(x1,y1)),
-                              width, height, xdpi, ydpi, bgcolor, status, data, force_overwrite, items_only, interlace, color_type, bit_depth, zlib, antialiasing);
+                              width, height, xdpi, ydpi, bgcolor, status, data, force_overwrite, items_only, interlace, color_type, bit_depth, zlib, antialiasing, output_profile, embed_srgb);
 }
 
 /**
@@ -547,13 +563,26 @@ ExportResult sp_export_png_file(SPDocument *doc, gchar const *filename,
                                 Inkscape::Colors::Color const &bgcolor,
                                 unsigned (*status)(float, void *),
                                 void *data, bool force_overwrite,
-                                const std::vector<SPItem const *> &items_only, bool interlace, int color_type, int bit_depth, int zlib, int antialiasing)
+                                const std::vector<SPItem const *> &items_only, bool interlace, int color_type, int bit_depth, int zlib, int antialiasing,
+                                Inkscape::IO::PreparedExportProfile const *output_profile, bool embed_srgb)
 {
     g_return_val_if_fail(doc != nullptr, EXPORT_ERROR);
     g_return_val_if_fail(filename != nullptr, EXPORT_ERROR);
     g_return_val_if_fail(width >= 1, EXPORT_ERROR);
     g_return_val_if_fail(height >= 1, EXPORT_ERROR);
     g_return_val_if_fail(!area.hasZeroArea(), EXPORT_ERROR);
+
+    // Validate before opening the destination. TIFF/printing/clipboard pass no
+    // profile, and built-in sRGB deliberately takes the original byte path.
+    if (output_profile && (embed_srgb || output_profile->profile.id() != "srgb")) {
+        if (!output_profile->transform ||
+            (color_type != PNG_COLOR_TYPE_RGB && color_type != PNG_COLOR_TYPE_RGB_ALPHA)) {
+            g_warning("PNG export: a custom RGB output profile requires RGB or RGBA output and a valid transform");
+            return EXPORT_ERROR;
+        }
+    } else {
+        output_profile = nullptr;
+    }
 
     if (!force_overwrite && !sp_ui_overwrite_file(Glib::filename_from_utf8(filename))) {
         // aborted overwrite
@@ -592,6 +621,7 @@ ExportResult sp_export_png_file(SPDocument *doc, gchar const *filename,
     ebp.status = status;
     ebp.data   = data;
     ebp.failed = false;
+    ebp.output_profile = output_profile;
     ebp.sheight = 64;
 
     bool write_status = false;

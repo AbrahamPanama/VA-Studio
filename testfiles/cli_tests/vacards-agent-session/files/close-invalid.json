@@ -1,0 +1,39 @@
+{
+  "description": "P9 independent M2 close-invalid",
+  "timeout": 30,
+  "requests": [
+    {
+      "request": {
+        "schema": "va-studio.cli-request/1",
+        "id": "invalid",
+        "command": "file.close",
+        "params": {
+          "discard": false,
+          "unknown-key": true
+        },
+        "if_revision": 0
+      },
+      "command": "file.close",
+      "cells": [
+        "invalid"
+      ],
+      "expect": {
+        "status": "rejected",
+        "publication": {
+          "state": "not-published",
+          "persisted": false
+        },
+        "undo_effect": "none"
+      },
+      "expect_error": "unknown-key",
+      "expect_accepted": false
+    }
+  ],
+  "expect_exit": 0,
+  "startup_args": [
+    "--grant-read",
+    "{WORK}",
+    "--grant-write",
+    "{WORK}"
+  ]
+}

@@ -111,6 +111,7 @@
 #include "actions/actions-tutorial.h"
 #include "actions/actions-window.h"
 #include "actions/actions-vacards-cli.h"
+#include "actions/vacards-cli-dispatch.h"
 #include "actions/actions-vacards-bitmap.h"
 #include "actions/actions-vacards-geometry.h"
 #include "actions/actions-vacards-library.h"
@@ -1860,6 +1861,8 @@ void InkscapeApplication::process_document(SPDocument *document, std::string out
     // Shell/actions may request immediate quit before automatic export below.
     // Keep this registered owner through the entire synchronous command scope.
     auto operation = Inkscape::DocumentUndo::holdInteractionOperation(document);
+    Inkscape::VACardsCli::ActionOperationScope operation_scope(
+        Inkscape::VACardsCli::action_session_context(), operation);
     // Are we doing one file at a time? In that case, we don't recreate new windows for each file.
     bool replace = _use_pipe || _batch_process;
 

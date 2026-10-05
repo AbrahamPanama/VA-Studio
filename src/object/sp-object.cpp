@@ -833,11 +833,16 @@ SPObject *SPObject::get_child_by_repr(Inkscape::XML::Node *repr)
     if (children.size() > 0 && children.back().getRepr() == repr) {
         result = &children.back();   // optimization for common scenario
     } else {
-        // XML removal detaches the repr before notifying its still-live native
-        // child. Use that binding instead of rescanning all remaining siblings.
-        // Keep normal/clone lookup local, and exclude native children already
-        // unlinked by a reentrant release (whose parent is not cleared yet).
-        if (!repr->parent() && document && document->getReprDoc()->mutationActive()) {
+        // A non-cloned repr has one document binding, so use it for ordinary
+        // lookup too. Keep the same parent/link checks before accepting it.
+        // Clones retain the detached-mutation fast path because their repr may
+        // bind to a different object; exclude unlinked children during release.
+        if (!cloned && document) {
+            if (auto child = document->getObjectByRepr(repr);
+                child && child->parent == this && child->_child_hook.is_linked()) {
+                return child;
+            }
+        } else if (!repr->parent() && document && document->getReprDoc()->mutationActive()) {
             if (auto child = document->getObjectByRepr(repr);
                 child && child->parent == this && child->_child_hook.is_linked()) {
                 return child;

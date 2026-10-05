@@ -3,6 +3,7 @@
 #include "inkscape-version.h"
 
 namespace Inkscape {
+    char const *revision_full_string = "${INKSCAPE_REVISION_FULL_HASH}";
     char const *revision_string = "${INKSCAPE_REVISION_HASH}";
     char const *version_string = "@INKSCAPE_VERSION@" " " "(${INKSCAPE_REVISION})";
     char const *version_string_without_revision = "@INKSCAPE_VERSION@";

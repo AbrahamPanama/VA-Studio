@@ -21,6 +21,11 @@ RequestExecutionLevel user
 !ifndef DISPLAY_VERSION
 !define DISPLAY_VERSION "1.0 beta 2"
 !endif
+!define CLI_KEY "Software\VACards\VAStudio\CLI\Build30"
+!if /FileExists "${PAYLOAD}\bin\vastudio-cli.exe"
+!else
+!error "Build 30 payload requires bin\vastudio-cli.exe (build/install vastudio_cli first)"
+!endif
 !define KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\VACards.Inkscape.InternalTest.${TEST_VERSION}"
 ; VIEW-1: VA Studio draws Explorer thumbnails of .svg files (framed on the
 ; drawing), replacing the current provider (for example PowerToys) in this scope.
@@ -171,6 +176,50 @@ machine_shortcut_conflict:
 !endif
 FunctionEnd
 
+; Returns a validated JSON object in $1, or a valid explicit unavailable object.
+; Probe/validation failure is discovery metadata failure, not installation failure.
+Function CaptureCliIdentity
+  StrCpy $1 '{$\"status$\":$\"unavailable$\"}'
+  InitPluginsDir
+  ClearErrors
+  ; nsExec merges streams: redirect the CLI's stdout to a private file and its
+  ; stderr to NUL. /D prevents cmd AutoRun hooks from injecting output.
+  nsExec::ExecToStack /TIMEOUT=10000 '$\"$SYSDIR\cmd.exe$\" /D /S /C $\"$\"$INSTDIR\bin\vastudio-cli.exe$\" --version --json >$\"$PLUGINSDIR\cli-identity.stdout$\" 2>NUL$\"'
+  Pop $0
+  Pop $2
+  StrCmp $0 "0" 0 identity_done
+  ; Windows PowerShell 5.1 parses the entire UTF-8 stdout, requires one object,
+  ; and reserializes it. Escape non-ASCII so nsExec's code page cannot corrupt
+  ; the identity, and reject output that would truncate its NSIS stack string.
+  FileOpen $0 "$PLUGINSDIR\cli-identity.ps1" w
+  IfErrors identity_done
+  FileWrite $0 'param([string]$$Path)$\r$\n'
+  FileWrite $0 '$$ErrorActionPreference = "Stop"$\r$\n'
+  FileWrite $0 'try {$\r$\n'
+  FileWrite $0 '  $$utf8 = New-Object System.Text.UTF8Encoding -ArgumentList $$false, $$true$\r$\n'
+  FileWrite $0 '  $$raw = [IO.File]::ReadAllText($$Path, $$utf8)$\r$\n'
+  FileWrite $0 '  $$obj = ConvertFrom-Json -InputObject $$raw -ErrorAction Stop$\r$\n'
+  FileWrite $0 '  if ($$obj -isnot [System.Management.Automation.PSCustomObject]) { exit 1 }$\r$\n'
+  FileWrite $0 '  $$json = ConvertTo-Json -InputObject $$obj -Depth 32 -Compress$\r$\n'
+  FileWrite $0 '  $$json = [regex]::Replace($$json, "[^\x20-\x7e]", { param($$m) "\u{0:x4}" -f [int][char]$$m.Value })$\r$\n'
+  FileWrite $0 '  if ($$json.Length -ge ${NSIS_MAX_STRLEN}) { exit 1 }$\r$\n'
+  FileWrite $0 '  [Console]::Out.Write($$json)$\r$\n'
+  FileWrite $0 '  exit 0$\r$\n'
+  FileWrite $0 '} catch { exit 1 }$\r$\n'
+  FileClose $0
+  IfErrors identity_done
+  nsExec::ExecToStack /TIMEOUT=10000 '$\"$SYSDIR\cmd.exe$\" /D /S /C $\"$\"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe$\" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $\"$PLUGINSDIR\cli-identity.ps1$\" $\"$PLUGINSDIR\cli-identity.stdout$\" 2>NUL$\"'
+  Pop $0
+  Pop $2
+  StrCmp $0 "0" 0 identity_done
+  StrCmp $2 "" identity_done
+  StrCpy $1 $2
+identity_done:
+  Delete "$PLUGINSDIR\cli-identity.stdout"
+  Delete "$PLUGINSDIR\cli-identity.ps1"
+  ClearErrors
+FunctionEnd
+
 Section "Unsigned internal test" Main
   Call CheckDestination
   Call CheckMachineShortcuts
@@ -178,6 +227,23 @@ Section "Unsigned internal test" Main
   SetOutPath "$INSTDIR"
   File /r "${PAYLOAD}\*"
   IfErrors install_failed
+  Call CaptureCliIdentity
+  SetRegView 64
+  WriteRegStr ${REG_ROOT} "${CLI_KEY}" "Executable" "$INSTDIR\bin\vastudio-cli.exe"
+  WriteRegStr ${REG_ROOT} "${CLI_KEY}" "BuildIdentity" "$1"
+  WriteRegDWORD ${REG_ROOT} "${CLI_KEY}" "Build" 30
+!ifdef SCOPE_MACHINE
+  SetRegView 64
+!else
+  SetRegView default
+!endif
+  FileOpen $0 "$INSTDIR\cli-location.json" w
+  IfErrors install_failed
+  ; Separate writes keep the location wrapper from truncating a valid identity.
+  FileWrite $0 '{$\"executable$\":$\"bin/vastudio-cli.exe$\",$\"identity$\":'
+  FileWrite $0 '$1'
+  FileWrite $0 '}$\r$\n'
+  FileClose $0
   WriteUninstaller "$INSTDIR\Uninstall-VACards-Test.exe"
   WriteINIStr "$INSTDIR\VACards-Test-Install.ini" "Install" "Identity" "VACards.Inkscape.InternalTest.${TEST_VERSION}"
 !ifdef SCOPE_MACHINE
@@ -375,6 +441,18 @@ svg_shell_found_done:
   ${EndIf}
   ; Shortcuts, identity and registry are removed only after all owned payload
   ; files are confirmed gone, so a failed uninstall never erases retryability.
+  SetRegView 64
+  ReadRegStr $0 ${REG_ROOT} "${CLI_KEY}" "Executable"
+  ${If} $0 == "$INSTDIR\bin\vastudio-cli.exe"
+    DeleteRegValue ${REG_ROOT} "${CLI_KEY}" "Executable"
+    DeleteRegValue ${REG_ROOT} "${CLI_KEY}" "BuildIdentity"
+    DeleteRegValue ${REG_ROOT} "${CLI_KEY}" "Build"
+    DeleteRegKey /ifempty ${REG_ROOT} "${CLI_KEY}"
+  ${EndIf}
+!ifndef SCOPE_MACHINE
+  SetRegView default
+!endif
+  Delete "$INSTDIR\cli-location.json"
   Delete "$INSTDIR\VACards-Test-Install.ini"
   Delete "$INSTDIR\Uninstall-VACards-Test.exe"
 !ifdef SCOPE_MACHINE

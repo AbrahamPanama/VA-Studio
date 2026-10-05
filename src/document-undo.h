@@ -99,6 +99,10 @@ public:
     // Opt-in synchronous boundary: refuses pending unrelated XML/history work,
     // blocks nested history operations, and owns settlement through deferred close.
     static std::optional<RollbackableInteraction> beginAtomicInteraction(SPDocument *document);
+    // Command admission requires the sole active operation to be this caller's
+    // lease from holdInteractionOperation; copies/aliases retain owner identity.
+    static std::optional<RollbackableInteraction> beginAtomicCommandInteraction(
+        SPDocument *document, std::shared_ptr<void> const &owner_lease);
     // Caller-local thread seam; production leaves it null. Only the atomic path
     // consults it, before real allocation / inside post-commit notification.
     enum class AtomicSettlementStage { EventConstruction, HistoryInsertion, EventLogNotification };
@@ -170,6 +174,10 @@ private:
     static bool atomicHistoryProtected(SPDocument const *document);
     // Read-only shared predicate for native document/state ownership, called by
     // RollbackableInteraction::validFor.
+    static std::optional<RollbackableInteraction> beginRollbackableInteraction(
+        SPDocument *document, std::shared_ptr<void> const *owner_lease);
+    static std::optional<RollbackableInteraction> beginAtomicInteraction(
+        SPDocument *document, std::shared_ptr<void> const *owner_lease);
     static bool interactionValidFor(UndoInteractionState const &state, SPDocument const *document);
     static std::shared_ptr<UndoInteractionLifetime> interactionLifetime(SPDocument *document);
     static void sealInteraction(SPDocument *document);

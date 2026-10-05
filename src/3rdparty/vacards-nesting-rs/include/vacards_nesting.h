@@ -178,6 +178,25 @@ VacNestingStatus vac_nesting_job_result_at(VacNestingJob const *job, size_t inde
 char const *vac_nesting_job_error(VacNestingJob const *job);
 void vac_nesting_job_free(VacNestingJob *job);
 
+/* Additive fixed-work API. Existing options layout and API version stay intact.
+ * Set only while configuring. Nonzero requires one worker and no time limit.
+ * Unit: existing solver iteration (candidate query); preparation is excluded.
+ * Zero restores legacy behavior. Cancellation always wins terminal publication. */
+typedef int32_t VacNestingStopReason;
+#define VAC_NESTING_STOP_COMPLETED ((VacNestingStopReason)0)
+#define VAC_NESTING_STOP_WORK_LIMIT ((VacNestingStopReason)1)
+#define VAC_NESTING_STOP_CANCELLED ((VacNestingStopReason)2)
+#define VAC_NESTING_STOP_TIME_LIMIT ((VacNestingStopReason)3)
+typedef struct VacNestingTerminal {
+    VacNestingStopReason stop_reason;
+    uint32_t reserved; /* zero */
+    uint64_t completed_work;
+} VacNestingTerminal;
+VacNestingStatus vac_nesting_job_set_work_limit(VacNestingJob *job, uint64_t limit);
+/* OK only after completed/cancelled; otherwise INVALID_STATE. Null arguments:
+ * INVALID_ARGUMENT. Output untouched on error. Failed jobs retain status/error. */
+VacNestingStatus vac_nesting_job_get_terminal(const VacNestingJob *job, VacNestingTerminal *terminal);
+
 #ifdef __cplusplus
 }
 #endif

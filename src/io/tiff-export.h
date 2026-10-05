@@ -73,6 +73,11 @@ bool export_png_to_color_managed_tiff(std::string const &png_path, std::string c
                                       std::string const &output_profile, std::string &error,
                                       TiffExportInfo *info = nullptr, TiffExportOptions const &options = {});
 
+/// Embed exactly these validated ICC bytes; useful for the built-in sRGB profile.
+bool export_png_to_color_managed_tiff(std::string const &png_path, std::string const &tiff_path,
+                                      std::vector<unsigned char> const &profile_data, std::string &error,
+                                      TiffExportInfo *info = nullptr, TiffExportOptions const &options = {});
+
 /**
  * Return the filename template used for the temporary file written beside
  * @p destination before the atomic replacement.

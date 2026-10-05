@@ -301,13 +301,16 @@ def gtk_inputs(run_root, source, ucrt=None, probe=None, baseline_dll=None, bundl
     for name in ("format", "dependency", "gtk_version", "platform", "architecture",
                  "source_archive_sha256", "msys2_commit", "msys2_pkgbuild_sha256",
                  "p001_sha256", "p003_sha256", "patch_filename", "patch_sha256",
+                 "clipboard_patch_filename", "clipboard_patch_sha256",
+                 "clipboard_priority_patch_filename", "clipboard_priority_patch_sha256",
                  "library_relative_path", "library_sha256", "exports_count",
                  "exports_sha256", "baseline_stock_library_sha256"):
         require(pin.get(name), f"GTK bundle manifest is missing {name}")
-    require(pin["format"] == "1" and pin["dependency"] == "gtk4", "unsupported GTK bundle manifest")
+    require(pin["format"] == "3" and pin["dependency"] == "gtk4", "unsupported GTK bundle manifest")
     require(pin["gtk_version"] == "4.22.4" and pin["platform"] == "windows-ucrt64" and
             pin["architecture"] == "x86_64", "unsupported GTK bundle target")
-    for name in ("library_sha256", "patch_sha256", "exports_sha256",
+    for name in ("library_sha256", "patch_sha256", "clipboard_patch_sha256",
+                 "clipboard_priority_patch_sha256", "exports_sha256",
                  "baseline_stock_library_sha256"):
         require(re.fullmatch(r"[0-9a-f]{64}", pin[name]), f"invalid GTK bundle {name}")
     require(re.fullmatch(r"[1-9][0-9]*", pin["exports_count"]), "invalid GTK bundle exports_count")
@@ -319,7 +322,7 @@ def gtk_inputs(run_root, source, ucrt=None, probe=None, baseline_dll=None, bundl
     for name in ("impl_patch_sha256", "libgtk_4_1_dll_sha256", "exports_sha256",
                  "exports_count", "inventory_sha256"):
         require(record.get(name), f"GTK run manifest is missing {name}")
-    require(chain.get("format") == "2" and chain.get("platform") == pin["platform"] and
+    require(chain.get("format") == "3" and chain.get("platform") == pin["platform"] and
             chain.get("architecture") == pin["architecture"], "unsupported GTK toolchain record")
     require(chain.get("gtk_version") == pin["gtk_version"],
             "GTK version differs from the tracked bundle")
@@ -335,6 +338,36 @@ def gtk_inputs(run_root, source, ucrt=None, probe=None, baseline_dll=None, bundl
                         ("impl_patch_sha256", pin["patch_sha256"])):
         require(chain[name] == value, f"GTK toolchain {name} differs from the tracked bundle")
 
+    clipboard_name = pin["clipboard_patch_filename"]
+    require(clipboard_name == "gtk-4.22.4-win32-clipboard-empty.patch",
+            "unsupported GTK clipboard patch filename")
+    clipboard_patch = source / "packaging/windows/vacards" / clipboard_name
+    require(clipboard_patch.is_file() and sha(clipboard_patch) == pin["clipboard_patch_sha256"],
+            "GTK clipboard patch differs from the tracked bundle")
+    copied_clipboard_patch = run_root / "inputs" / clipboard_name
+    require(copied_clipboard_patch.is_file() and
+            sha(copied_clipboard_patch) == pin["clipboard_patch_sha256"],
+            "GTK run clipboard patch differs from the tracked bundle")
+    for provenance in (record, chain):
+        require(provenance.get("clipboard_patch_filename") == clipboard_name and
+                provenance.get("clipboard_patch_sha256") == pin["clipboard_patch_sha256"],
+                "GTK clipboard patch differs from build provenance")
+
+    clipboard_priority_name = pin["clipboard_priority_patch_filename"]
+    require(clipboard_priority_name == "gtk-4.22.4-win32-clipboard-format-priority.patch",
+            "unsupported GTK clipboard_priority patch filename")
+    clipboard_priority_patch = source / "packaging/windows/vacards" / clipboard_priority_name
+    require(clipboard_priority_patch.is_file() and sha(clipboard_priority_patch) == pin["clipboard_priority_patch_sha256"],
+            "GTK clipboard_priority patch differs from the tracked bundle")
+    copied_clipboard_priority_patch = run_root / "inputs" / clipboard_priority_name
+    require(copied_clipboard_priority_patch.is_file() and
+            sha(copied_clipboard_priority_patch) == pin["clipboard_priority_patch_sha256"],
+            "GTK run clipboard_priority patch differs from the tracked bundle")
+    for provenance in (record, chain):
+        require(provenance.get("clipboard_priority_patch_filename") == clipboard_priority_name and
+                provenance.get("clipboard_priority_patch_sha256") == pin["clipboard_priority_patch_sha256"],
+                "GTK clipboard_priority patch differs from build provenance")
+
     relative = pin["library_relative_path"]
     require(not Path(relative).is_absolute() and ".." not in Path(relative).parts,
             "unsafe GTK library_relative_path")
@@ -349,6 +382,9 @@ def gtk_inputs(run_root, source, ucrt=None, probe=None, baseline_dll=None, bundl
     require(patch.is_file(), f"missing tracked GTK patch: {patch}")
     require(record["impl_patch_sha256"] == pin["patch_sha256"] and
             sha(patch) == pin["patch_sha256"], "GTK patch differs from the tracked bundle")
+    copied_patch = run_root / "inputs" / pin["patch_filename"]
+    require(copied_patch.is_file() and sha(copied_patch) == pin["patch_sha256"],
+            "GTK run Cairo patch differs from the tracked bundle")
     require(record["exports_sha256"] == pin["exports_sha256"] and
             record["exports_count"] == pin["exports_count"],
             "GTK export identity differs from the tracked bundle")
@@ -388,6 +424,8 @@ def gtk_inputs(run_root, source, ucrt=None, probe=None, baseline_dll=None, bundl
     return dict(gtk_version=pin["gtk_version"], platform=pin["platform"],
                 architecture=pin["architecture"], library_relative_path=relative,
                 library_sha256=pin["library_sha256"], patch_sha256=pin["patch_sha256"],
+                clipboard_patch_sha256=pin["clipboard_patch_sha256"],
+                clipboard_priority_patch_sha256=pin["clipboard_priority_patch_sha256"],
                 exports_sha256=pin["exports_sha256"], exports_count=pin["exports_count"],
                 baseline_stock_library_sha256=pin["baseline_stock_library_sha256"],
                 inventory_sha256=record["inventory_sha256"], env_sha256=sha(env_path),
@@ -585,7 +623,7 @@ def stage(args):
     run(ucrt.parent / "usr/bin/bash.exe",
         source / "packaging/windows/vacards/verify-vacards-librevenge.sh", librevenge,
         env=dict(env, MSYSTEM="UCRT64"), log=log)
-    originals = {name: sha(build / "bin" / name) for name in ("inkscape.exe", "inkscape.com")}
+    originals = {name: sha(build / "bin" / name) for name in ("inkscape.exe", "inkscape.com", "vastudio-cli.exe")}
     # This small existing target generates fonts.conf; it does not rebuild the app.
     run(ucrt / "bin/cmake.exe", "--build", build, "--parallel", "2", "--target", "fonts_conf",
         env=env, log=log)
@@ -671,7 +709,8 @@ def stage(args):
     require(sha(payload / "bin" / gtk_dll.name) == gtk_record["library_sha256"],
             "staged GTK bytes differ from the verified patched runtime dependency")
     run(payload / "bin/glib-compile-schemas.exe", "--strict", payload / "share/glib-2.0/schemas", env=env, log=log)
-    required = ["bin/python.exe", "bin/libgtk-4-1.dll", "etc/fonts/fonts.conf",
+    required = ["bin/inkscape.exe", "bin/inkscape.com", "bin/vastudio-cli.exe",
+                "bin/python.exe", "bin/libgtk-4-1.dll", "etc/fonts/fonts.conf",
                 "lib/gdk-pixbuf-2.0/2.10.0/loaders/pixbufloader_svg.dll",
                 "share/inkscape/ui/menus.ui", "share/inkscape/extensions/inkex/__init__.py",
                 "share/glib-2.0/schemas/gschemas.compiled", "share/icons/Adwaita/index.theme",
@@ -712,6 +751,8 @@ def stage(args):
                   gtk_sha256=gtk_record["library_sha256"],
                   gtk_relative_path=gtk_record["library_relative_path"],
                   gtk_patch_sha256=gtk_record["patch_sha256"],
+                  gtk_clipboard_patch_sha256=gtk_record["clipboard_patch_sha256"],
+                  gtk_clipboard_priority_patch_sha256=gtk_record["clipboard_priority_patch_sha256"],
                   gtk_exports_sha256=gtk_record["exports_sha256"],
                   gtk_exports_count=int(gtk_record["exports_count"]),
                   gtk_baseline_stock_library_sha256=gtk_record["baseline_stock_library_sha256"],

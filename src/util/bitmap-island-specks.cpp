@@ -110,7 +110,7 @@ Result<Partition> attach(Partition const &in, OrthogonalMetric const &metric,
     auto allocate = [&](PlainBuffer &b, std::uint64_t count, std::uint64_t size) {
         std::uint64_t bytes, total;
         if (!checkedMul(count, size, bytes) || !checkedAdd(budget.reserved(Stage::topology), bytes, total) ||
-            total > 256 * MiB) { poll.outcome = {Status::failed, "Topology byte cap exceeded"}; return false; }
+            total > budget.limit()) { poll.outcome = {Status::failed, "Topology byte cap exceeded"}; return false; }
         poll.outcome = b.allocate(budget, Stage::topology, count, size, nullptr, stop);
         out.topologyPeak = std::max(out.topologyPeak, total); return poll.outcome.ok();
     };

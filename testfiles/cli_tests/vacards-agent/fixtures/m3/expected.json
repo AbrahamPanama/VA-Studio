@@ -1,0 +1,32 @@
+{
+  "provenance": "Analytic source primitives and literal row-major RGBA; no production result consumed",
+  "shape1_bounds": [
+    0,
+    0,
+    10,
+    10
+  ],
+  "shape2_bounds": [
+    5,
+    0,
+    15,
+    10
+  ],
+  "boolean_areas": {
+    "union": 150,
+    "intersection": 50,
+    "difference": 50,
+    "xor": 100,
+    "division": 100
+  },
+  "islands": 3,
+  "opaque_pixels": 1200,
+  "size": [
+    120,
+    80
+  ],
+  "pixel_sha256": "da4c43687e951c39761c898dcad75315d352c3df7caf3f549c30154df40a213a",
+  "alpha_sha256": "02ba3808f41e3226e8da312d9c11b4b35baae0e88f62f0e6886e49257b5084bb",
+  "profile_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "nest_single_copy_utilization_percent": 0.25
+}

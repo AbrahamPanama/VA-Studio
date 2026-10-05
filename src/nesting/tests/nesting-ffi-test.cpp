@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "nesting-ffi.h"
+#include "vacards_nesting.h"
 #include "nesting-test-geometry.h"
 
 #include <algorithm>
@@ -2145,10 +2146,86 @@ auto compare_differential_report_files(std::string const &baseline_path, std::st
     return comparison.errors.empty();
 }
 
+auto fixed_work_contract_tests() -> bool
+{
+    using Inkscape::Nesting::StopReason;
+    bool passed = true;
+    static_assert(sizeof(VacNestingTerminal) == 16);
+    static_assert(offsetof(VacNestingTerminal, completed_work) == 8);
+    VacNestingTerminal untouched{VAC_NESTING_STOP_TIME_LIMIT, 0, 123};
+    passed &= check(vac_nesting_job_set_work_limit(nullptr, 17) == VAC_NESTING_STATUS_INVALID_ARGUMENT &&
+                    vac_nesting_job_get_terminal(nullptr, &untouched) == VAC_NESTING_STATUS_INVALID_ARGUMENT &&
+                    untouched.completed_work == 123, "null C ABI admission/output preservation failed");
+    auto raw = vac_nesting_job_new(nullptr);
+    passed &= check(raw && vac_nesting_job_get_terminal(raw, nullptr) == VAC_NESTING_STATUS_INVALID_ARGUMENT &&
+                    vac_nesting_job_get_terminal(raw, &untouched) == VAC_NESTING_STATUS_INVALID_STATE &&
+                    untouched.completed_work == 123, "nonterminal C ABI query failed");
+    vac_nesting_job_free(raw);
+
+    Options options;
+    options.worker_count = 1;
+    options.time_limit_ms = 0;
+    options.random_seed = 0xfedcba9876543210ULL;
+    options.rotation_mode = RotationMode::None;
+    options.quality = Quality::Draft;
+    std::vector<Placement> first;
+    for (int run = 0; run < 2; ++run) {
+        Job job(options);
+        passed &= check(!job.terminalResult(), "terminal query accepted configuring job");
+        passed &= check(job.setContainer(square(100)) == Status::Ok &&
+                        job.addPart(1, square(10)) == Status::Ok && job.addPart(2, square(12)) == Status::Ok,
+                        "fixed-work fixture setup failed");
+        passed &= check(job.setWorkLimit(1027) == Status::Ok, "fixed-work setter failed");
+        passed &= check(job.run() == Status::Ok, "fixed-work solve failed");
+        auto terminal = job.terminalResult();
+        passed &= check(terminal && terminal->stop_reason == StopReason::WorkLimit && terminal->completed_work == 1027,
+                        "fixed-work terminal reason/count differs");
+        auto result = job.results();
+        if (!run) first = result;
+        else {
+            passed &= check(first.size() == result.size(), "deterministic result count differs");
+            for (std::size_t i = 0; i < std::min(first.size(), result.size()); ++i)
+                passed &= check(first[i].part_id == result[i].part_id && first[i].placed == result[i].placed &&
+                    first[i].translation_x == result[i].translation_x && first[i].translation_y == result[i].translation_y &&
+                    first[i].rotation_degrees == result[i].rotation_degrees, "fixed-work placements differ");
+        }
+        Job validator(options);
+        passed &= check(validator.setContainer(square(100)) == Status::Ok &&
+            validator.addPart(1, square(10)) == Status::Ok && validator.addPart(2, square(12)) == Status::Ok &&
+            validator.validate(result) == Status::Ok, "fixed-work result violates independent geometry validation");
+        auto validated = validator.terminalResult();
+        passed &= check(validated && validated->stop_reason == StopReason::Completed && validated->completed_work == 0,
+                        "natural validation completion should not count preparation as work");
+        passed &= check(job.setWorkLimit(0) == Status::InvalidState, "terminal setter accepted");
+    }
+    Job cancelled(options);
+    passed &= check(cancelled.setContainer(square(100)) == Status::Ok && cancelled.addPart(1, square(10)) == Status::Ok &&
+                    cancelled.setWorkLimit(100000) == Status::Ok, "cancel fixture setup failed");
+    auto started = std::chrono::steady_clock::now();
+    passed &= check(cancelled.run([&](auto const &p) { if (p.iteration) cancelled.cancel(); }) == Status::Cancelled,
+                    "limited job failed cancellation");
+    auto terminal = cancelled.terminalResult();
+    passed &= check(terminal && terminal->stop_reason == StopReason::Cancelled && terminal->completed_work < 100000,
+                    "cancellation terminal query failed");
+    passed &= check(std::chrono::steady_clock::now() - started < std::chrono::seconds(2), "cancellation was not prompt");
+    Job legacy;
+    passed &= check(legacy.setWorkLimit(1) == Status::InvalidArgument && legacy.setWorkLimit(0) == Status::Ok,
+                    "work-limit option admission failed");
+    options.time_limit_ms = 1;
+    Job timed(options);
+    passed &= check(timed.setWorkLimit(0) == Status::Ok && timed.setContainer(square(100)) == Status::Ok &&
+        timed.addPart(1, square(10)) == Status::Ok && timed.run() == Status::Ok, "zero limit changed legacy run");
+    auto timed_terminal = timed.terminalResult();
+    passed &= check(timed_terminal && timed_terminal->stop_reason == StopReason::TimeLimit,
+                    "time-limit terminal result failed");
+    std::cout << "SEAM-NEST fixed-work C++ contract: " << (passed ? "PASS" : "FAIL") << '\n';
+    return passed;
+}
+
 auto run_contract_tests() -> int
 {
     try {
-        bool passed = true;
+        bool passed = fixed_work_contract_tests();
 
         passed &= check(std::string(Inkscape::Nesting::statusMessage(Status::InternalError)) == "internal solver error",
                         "status message table is out of sync");

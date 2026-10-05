@@ -30,6 +30,7 @@ public:
         Bitmap::PlatformEvidence evidence = Bitmap::macDependencyEvidence();
         Bitmap::JobNow now = Bitmap::JobClock::now;
         Bitmap::MemoryProbe const *memory = nullptr;
+        Bitmap::AllocationFault *inputFault = nullptr; // main-thread href copy only
         bool automatic = true;
         std::uint64_t outlineByteLimit = Bitmap::outlineByteLimit; // lower-only optional reservation seam
         std::uint64_t displayByteLimit = 100000000; // lower-only allocation refusal seam
