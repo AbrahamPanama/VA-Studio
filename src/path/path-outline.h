@@ -53,6 +53,12 @@ struct StrokeToPathConversion {
     bool failed = false;
     bool unlink_clones = false;
 };
+namespace Inkscape::PathOutline {
+inline bool replacement_succeeded(SPItem *original, bool original_released, SPItem *replacement)
+{
+    return replacement && (original_released || replacement != original);
+}
+} // namespace Inkscape::PathOutline
 bool item_to_paths_preflight(SPItem *, bool legacy, StrokeToPathConversion &);
 bool item_to_paths_unlink(SPItem *, StrokeToPathConversion &);
 Inkscape::XML::Node *item_to_paths_apply(SPItem *, bool legacy, StrokeToPathConversion &);

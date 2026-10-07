@@ -22,6 +22,12 @@
 #include <vector>
 #include <gtest/gtest.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <png.h>
+#include <atomic>
+#include <thread>
+#include <giomm/init.h>
+#include <glibmm/init.h>
+#include "ui/explode-bitmap-panel-preparation.h"
 #include <2geom/rect.h>
 #include <2geom/transforms.h>
 
@@ -234,6 +240,99 @@ bool affine_near(Geom::Affine const &left, Geom::Affine const &right, double tol
             return false;
     }
     return true;
+}
+
+struct BitmapMask
+{
+    unsigned width = 128, height = 128;
+    std::vector<std::uint8_t> rgba = std::vector<std::uint8_t>(width * height * 4);
+    void set(int x, int y)
+    {
+        if (x >= 0 && y >= 0 && x < static_cast<int>(width) && y < static_cast<int>(height))
+            rgba[(static_cast<std::size_t>(y) * width + x) * 4 + 3] = 255;
+    }
+};
+
+std::shared_ptr<Bitmap::PanelPreparation::Output const> explode_mask(BitmapMask const &mask)
+{
+    using namespace Bitmap;
+    using namespace Bitmap::PanelPreparation;
+    Glib::init();
+    recordBitmapMainThread();
+
+    TargetSnapshot target;
+    target.bitmap = 1;
+    target.destinationParent = 2;
+    target.generation = 3;
+    target.supportability = Supportability::Supported;
+    TargetContext own;
+    own.identity = 1;
+    own.parent = 2;
+    own.pixelToItem = {1, 0, 0, 1, 0, 0};
+    own.itemToDocument = {1, 0, 0, 1, 0, 0};
+    own.viewport = {0, 0, static_cast<double>(mask.width), static_cast<double>(mask.height)};
+    TargetContext parent;
+    parent.identity = 2;
+    parent.itemToDocument = {1, 0, 0, 1, 0, 0};
+    target.contexts = {own, parent};
+
+    png_image png{};
+    png.version = PNG_IMAGE_VERSION;
+    png.width = mask.width;
+    png.height = mask.height;
+    png.format = PNG_FORMAT_RGBA;
+    png_alloc_size_t size = 0;
+    EXPECT_TRUE(png_image_write_to_memory(&png, nullptr, &size, 0, mask.rgba.data(), 0, nullptr));
+    std::vector<std::uint8_t> bytes(size);
+    EXPECT_TRUE(png_image_write_to_memory(&png, bytes.data(), &size, 0, mask.rgba.data(), 0, nullptr));
+    auto *encoded = g_base64_encode(bytes.data(), size);
+    auto budget = std::make_shared<Budget>(Budget::FixedLimitForTest{}, 1536 * MiB);
+    auto input = std::make_shared<Input>();
+    input->contour = {true, 0, 0.5, 50};
+    input->retainAnalysis = true;
+    input->target = target;
+    input->recipe.bypassAlpha = true;
+    input->decodedBytes = size + 4;
+    JobInput inner;
+    inner.work = calculate;
+    inner.pixels = std::uint64_t(mask.width) * mask.height;
+    inner.storage.budget = budget;
+    inner.storage.bytes.assign(encoded, encoded + std::strlen(encoded));
+    g_free(encoded);
+    inner.storage.payload = input;
+    if (!budget->acquire(Stage::input, inner.storage.bytes.size() + sizeof(Input) + 256,
+                         inner.storage.reservation).ok())
+        return {};
+
+    struct Work final : JobPayload
+    {
+        JobInput inner;
+        std::shared_ptr<std::atomic<bool>> stop = std::make_shared<std::atomic<bool>>(false);
+    };
+    auto work = std::make_shared<Work>();
+    work->inner = std::move(inner);
+    auto run = +[](JobInput const &job, Stop, JobWork &meter, JobReporter &reporter) {
+        auto const &data = static_cast<Work const &>(*job.storage.payload);
+        return data.inner.work(data.inner, Stop(data.stop), meter, reporter);
+    };
+    JobInput outer;
+    outer.work = run;
+    outer.pixels = std::uint64_t(mask.width) * mask.height;
+    outer.storage.payload = work;
+    JobResult result;
+    bool done = false;
+    BitmapJobs jobs([&](Ticket, JobResult value) { result = std::move(value); done = true; }, {}, JobClock::now, false);
+    jobs.request(std::move(outer));
+    auto const start = JobClock::now();
+    while ((!done || jobs.active()) && JobClock::now() - start < std::chrono::seconds(30)) {
+        jobs.poll();
+        Glib::MainContext::get_default()->iteration(false);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    EXPECT_TRUE(done);
+    jobs.close();
+    EXPECT_TRUE(result.ok()) << result.outcome.diagnostic;
+    return std::dynamic_pointer_cast<Output const>(result.value.payload);
 }
 
 Options draft_options()
@@ -851,6 +950,221 @@ TEST_F(NestingDocumentTest, UnfilledStrokedOpenPathRetainsItsEmptyInterior)
         ASSERT_EQ(validator.addPart(part.id, part.components), Status::Ok);
     std::vector<Placement> placements{{1, -110, -10, 0, true}, {2, -145, -5, 0, true}};
     EXPECT_EQ(validator.validate(placements), Status::Ok) << validator.error();
+}
+
+TEST_F(NestingDocumentTest, UnfilledStrokedJaggedClosedContourCapture)
+{
+    constexpr int count = 400;
+    constexpr double pi = 3.14159265358979323846;
+    std::string path;
+    double source_twice_area = 0;
+    double source_perimeter = 0;
+    std::vector<Point> source;
+    source.reserve(count);
+    for (int index = 0; index < count; ++index) {
+        auto const angle = 2.0 * pi * index / count;
+        auto const radius = 20.0 + 2.2 * std::sin(80.0 * pi * index / count) +
+                            0.45 * std::sin(index * 0.371);
+        source.emplace_back(55.0 + radius * std::cos(angle), 55.0 + radius * std::sin(angle));
+        path += (index == 0 ? "M" : " L") + std::to_string(source.back().x) + "," +
+                std::to_string(source.back().y);
+    }
+    path += " Z";
+    for (std::size_t index = 0; index < source.size(); ++index) {
+        auto const &a = source[index];
+        auto const &b = source[(index + 1) % source.size()];
+        source_twice_area += a.x * b.y - b.x * a.y;
+        source_perimeter += std::hypot(b.x - a.x, b.y - a.y);
+    }
+    auto document = make_document(std::string{"<rect id='container' width='180' height='180'/>"} +
+                                  "<path id='part' d='" + path +
+                                  "' fill='none' stroke='#000' stroke-width='1.5'/>");
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts{item(*document, "part")};
+
+    auto prepared = prepareDocumentNesting(item(*document, "container"), parts);
+
+    ASSERT_TRUE(prepared) << prepared.error;
+    ASSERT_EQ(prepared.snapshot->parts.size(), 1u);
+    auto const &part = prepared.snapshot->parts.front();
+    ASSERT_EQ(part.components.size(), 1u);
+    double captured_twice_area = 0;
+    auto const &captured = part.components.front().outer;
+    for (std::size_t index = 0; index < captured.size(); ++index) {
+        auto const &a = captured[index];
+        auto const &b = captured[(index + 1) % captured.size()];
+        captured_twice_area += a.x * b.y - b.x * a.y;
+    }
+    auto const captured_area = std::abs(captured_twice_area) * .5;
+    auto const contour_area = std::abs(source_twice_area) * .5;
+    std::cout << "B36 contour source=" << static_cast<int>(part.contour_source) << " vertices=" << captured.size()
+              << " contour_area=" << contour_area << " captured_area=" << captured_area << "\n";
+    EXPECT_NE(part.contour_source, ContourSource::ConservativeBounds);
+    EXPECT_GT(captured.size(), 100u);
+    auto const stroke_ring_area = captured_area - contour_area;
+    auto const estimated_stroke_ring_area = 0.5 * 1.5 * source_perimeter;
+    EXPECT_GT(stroke_ring_area, 0.0);
+    EXPECT_NEAR(stroke_ring_area, estimated_stroke_ring_area, estimated_stroke_ring_area * .35);
+    auto inside = [&](Point const &point) {
+        bool result = false;
+        for (std::size_t i = 0, j = captured.size() - 1; i < captured.size(); j = i++) {
+            auto const &a = captured[i];
+            auto const &b = captured[j];
+            if (((a.y > point.y) != (b.y > point.y)) &&
+                point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x)
+                result = !result;
+        }
+        return result;
+    };
+    for (auto const &point : source)
+        EXPECT_TRUE(inside(point)) << "collision outline failed to enclose source contour";
+
+    // The filled-and-stroked branch retains the same boolean union as before.
+    auto filled_document = make_document(std::string{"<rect id='container' width='180' height='180'/>"} +
+                                         "<path id='part' d='" + path +
+                                         "' fill='#000' stroke='#000' stroke-width='1.5'/>");
+    ASSERT_TRUE(filled_document);
+    std::vector<SPItem *> filled_parts{item(*filled_document, "part")};
+    auto filled = prepareDocumentNesting(item(*filled_document, "container"), filled_parts);
+    ASSERT_TRUE(filled) << filled.error;
+    auto const &filled_outer = filled.snapshot->parts.front().components.front().outer;
+    ASSERT_EQ(filled_outer.size(), captured.size());
+    for (std::size_t index = 0; index < captured.size(); ++index) {
+        EXPECT_DOUBLE_EQ(filled_outer[index].x, captured[index].x);
+        EXPECT_DOUBLE_EQ(filled_outer[index].y, captured[index].y);
+    }
+
+    auto mixed_document = make_document(std::string{"<rect id='container' width='180' height='180'/>"} +
+                                        "<path id='part' d='" + path + " M100,100 H110' "
+                                        "fill='none' stroke='#000' stroke-width='1.5'/>");
+    ASSERT_TRUE(mixed_document);
+    std::vector<SPItem *> mixed_parts{item(*mixed_document, "part")};
+    auto mixed = prepareDocumentNesting(item(*mixed_document, "container"), mixed_parts);
+    ASSERT_TRUE(mixed) << mixed.error;
+    // Any open subpath bypasses the new fill-plus-stroke union and keeps the
+    // legacy stroked-outline classification for the complete item.
+    EXPECT_EQ(mixed.snapshot->parts.front().contour_source, ContourSource::ConservativeHull);
+}
+
+TEST_F(NestingDocumentTest, ExplodeBitmapContourStageOutputCapturesAsShape)
+{
+    BitmapMask mask;
+    for (int y = 0; y < static_cast<int>(mask.height); ++y) {
+        for (int x = 0; x < static_cast<int>(mask.width); ++x) {
+            auto dx = x + 0.5 - 47.0;
+            auto dy = y + 0.5 - 50.0;
+            auto angle = std::atan2(dy, dx);
+            auto radius = 34.0 + 3.6 * std::sin(13.0 * angle) + 1.4 * std::sin(31.0 * angle + 0.4);
+            auto notch = std::abs(std::remainder(angle - 2.25, 2.0 * 3.14159265358979323846)) < 0.20;
+            if (std::hypot(dx, dy) < radius - (notch ? 10.0 : 0.0))
+                mask.set(x, y);
+
+            auto ring_x = x + 0.5 - 96.0;
+            auto ring_y = y + 0.5 - 96.0;
+            auto ring_radius = std::hypot(ring_x, ring_y);
+            if (ring_radius >= 5.0 && ring_radius <= 12.0)
+                mask.set(x, y);
+        }
+    }
+    auto output = explode_mask(mask);
+    ASSERT_TRUE(output);
+    ASSERT_TRUE(output->analysis) << "Explode stage did not retain source analysis; count=" << output->count
+                                  << " contour=" << output->contours.outcome.diagnostic;
+    ASSERT_TRUE(output->contours.outcome.ok()) << output->contours.outcome.diagnostic;
+    ASSERT_TRUE(output->contours.product);
+    auto const &fitted = output->contours.product->fitted;
+    ASSERT_EQ(fitted.pieceCount, 2u) << "the synthetic raster contains a blob and a detached ring";
+
+    std::string svg = "<rect id='container' width='180' height='180'/>";
+    std::vector<std::string> ids;
+    for (unsigned index = 0; index < fitted.pieceCount; ++index) {
+        auto const &piece = fitted.pieces()[index];
+        auto d = Bitmap::serializeContours(fitted, piece.ringBegin, piece.ringEnd);
+        auto id = "exploded-contour-" + std::to_string(index);
+        ids.push_back(id);
+        svg += "<path id='" + id + "' transform='translate(20,20)' d='" + d +
+               "' style='fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1.5'/>";
+    }
+    auto document = make_document(svg);
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts;
+    for (auto const &id : ids)
+        parts.push_back(item(*document, id.c_str()));
+
+    auto prepared = prepareDocumentNesting(item(*document, "container"), parts);
+    ASSERT_TRUE(prepared) << prepared.error;
+    ASSERT_EQ(prepared.snapshot->parts.size(), 2u);
+    bool has_exact_blob = false;
+    for (auto const &part : prepared.snapshot->parts) {
+        has_exact_blob |= part.contour_source == ContourSource::ExactVector;
+        EXPECT_NE(part.contour_source, ContourSource::ConservativeBounds);
+        ASSERT_EQ(part.components.size(), 1u);
+        EXPECT_GT(part.components.front().outer.size(), 4u);
+    }
+    EXPECT_TRUE(has_exact_blob) << "the filled main blob must survive stroke cleanup as an exact vector";
+}
+
+TEST_F(NestingDocumentTest, JaggedStrokedPartsOutplaceTheirBoundingBoxes)
+{
+    constexpr int part_count = 30;
+    constexpr int vertex_count = 400;
+    constexpr double pi = 3.14159265358979323846;
+    std::string body = "<rect id='container' width='38' height='180'/>";
+    for (int part_index = 0; part_index < part_count; ++part_index) {
+        std::string path;
+        for (int vertex = 0; vertex < vertex_count; ++vertex) {
+            auto const angle = 2.0 * pi * vertex / vertex_count;
+            auto const radius = 8.0 + 0.8 * std::sin(34.0 * angle) + 0.35 * std::sin(13.0 * angle);
+            auto const x = 10.0 + radius * std::cos(angle);
+            auto const y = 10.0 + radius * std::sin(angle);
+            path += (vertex == 0 ? "M" : " L") + std::to_string(x) + "," + std::to_string(y);
+        }
+        path += " Z";
+        body += "<path id='part-" + std::to_string(part_index) + "' transform='translate(" +
+                std::to_string(110 + (part_index % 5) * 22) + "," +
+                std::to_string(200 + (part_index / 5) * 22) + ")' d='" + path +
+                "' fill='none' stroke='#000' stroke-width='1.5'/>";
+    }
+    auto document = make_document(body);
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts;
+    for (int index = 0; index < part_count; ++index)
+        parts.push_back(item(*document, ("part-" + std::to_string(index)).c_str()));
+    auto prepared = prepareDocumentNesting(item(*document, "container"), parts);
+    ASSERT_TRUE(prepared) << prepared.error;
+    ASSERT_EQ(prepared.snapshot->parts.size(), static_cast<std::size_t>(part_count));
+
+    auto boxes = *prepared.snapshot;
+    for (auto &part : boxes.parts) {
+        ASSERT_EQ(part.components.size(), 1u);
+        auto const bounds = point_bounds(part.components.front().outer);
+        part.components.front().outer = {{bounds.left(), bounds.top()}, {bounds.right(), bounds.top()},
+                                         {bounds.right(), bounds.bottom()}, {bounds.left(), bounds.bottom()}};
+        part.components.front().holes.clear();
+    }
+    auto options = draft_options();
+    options.time_limit_ms = 500;
+    options.random_seed = 17;
+    auto const shaped = solvePreparedNesting(*prepared.snapshot, options);
+    auto const boxed = solvePreparedNesting(boxes, options);
+    ASSERT_TRUE(shaped) << shaped.error;
+    ASSERT_TRUE(boxed) << boxed.error;
+    auto const shaped_count = std::count_if(shaped.placements.begin(), shaped.placements.end(),
+                                            [](Placement const &placement) { return placement.placed; });
+    auto const boxed_count = std::count_if(boxed.placements.begin(), boxed.placements.end(),
+                                           [](Placement const &placement) { return placement.placed; });
+    std::cout << "B36 jagged nesting placed=" << shaped_count << " boxes=" << boxed_count
+              << " backend=" << shaped.backend << "\n";
+    EXPECT_GT(shaped_count, boxed_count);
+    auto validate = [&](PreparedDocumentNesting const &snapshot, SolveResult const &result) {
+        Job validator(options);
+        EXPECT_EQ(validator.setContainer(snapshot.container_outline), Status::Ok);
+        for (auto const &part : snapshot.parts)
+            EXPECT_EQ(validator.addPart(part.id, part.components), Status::Ok);
+        EXPECT_EQ(validator.validate(result.placements), Status::Ok) << validator.error();
+    };
+    validate(*prepared.snapshot, shaped);
+    validate(boxes, boxed);
 }
 
 // The owner's real artwork stays outside source control. Run with the original

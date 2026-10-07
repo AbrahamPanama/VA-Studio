@@ -10,11 +10,13 @@
 #include <map>
 #include <random>
 #include <sstream>
+#include <tuple>
 #include <gtest/gtest.h>
 #include <libxml/c14n.h>
 #include <libxml/parser.h>
 #include <2geom/path-intersection.h>
 #include <2geom/svg-path-parser.h>
+#include <2geom/svg-path-writer.h>
 #include <2geom/sweeper.h>
 
 #include "document-undo.h"
@@ -32,6 +34,11 @@
 #include "xml/node.h"
 #include "xml/repr.h"
 using namespace Inkscape;
+namespace Inkscape::detail {
+void set_break_apart_parallel_pairs_threshold_for_testing(std::size_t);
+void set_break_apart_parallel_throw_event_for_testing(std::size_t);
+std::vector<std::vector<int>> break_apart_containment_for_testing(Geom::PathVector const &);
+}
 // Frozen pre-fix BUG-029 geometry oracle, captured before production changes.
 // Keep independent of the optimized containment implementation.
 namespace baseline029 {
@@ -655,4 +662,48 @@ TEST_F(BreakApartScaling, SparseContainmentOrderAndCycles)
             EXPECT_EQ(result.num_children, reference.num_children) << n << ":" << trial;
         }
     }
+}
+
+TEST_F(BreakApartScaling, ParallelContainmentPreservesExactComponents)
+{
+    auto run = [](std::size_t threshold) {
+        detail::set_break_apart_parallel_pairs_threshold_for_testing(threshold);
+        std::ostringstream data;
+        for (int i = 0; i < 28; ++i) {
+            auto const radius = 30.0 - i * 0.5;
+            data << "M" << radius << ",0 A" << radius << "," << radius << " 0 1 0 " << -radius << ",0 A"
+                 << radius << "," << radius << " 0 1 0 " << radius << ",0 Z ";
+        }
+        // Two circles touch at one point and are included in the same sweep.
+        data << "M70,0 A10,10 0 1 0 50,0 A10,10 0 1 0 70,0 Z "
+             << "M90,0 A10,10 0 1 0 70,0 A10,10 0 1 0 90,0 Z";
+        auto paths = Geom::parse_svg_path(data.str().c_str());
+        auto containment = detail::break_apart_containment_for_testing(paths);
+        auto pieces = split_non_intersecting_paths(Geom::PathVector{paths}, fill_nonZero);
+        std::vector<std::string> serialized;
+        for (auto const &piece : pieces) serialized.push_back(Geom::write_svg_path(piece, 17));
+        return std::tuple{std::move(containment), std::move(pieces), std::move(serialized)};
+    };
+    auto serial = run(std::numeric_limits<std::size_t>::max());
+    auto parallel = run(0);
+    detail::set_break_apart_parallel_pairs_threshold_for_testing(256);
+    EXPECT_EQ(std::get<0>(parallel), std::get<0>(serial));
+    EXPECT_EQ(std::get<1>(parallel), std::get<1>(serial));
+    EXPECT_EQ(std::get<2>(parallel), std::get<2>(serial));
+}
+
+TEST_F(BreakApartScaling, ParallelContainmentExceptionReturnsToCaller)
+{
+    std::ostringstream data;
+    for (int i = 0; i < 28; ++i) {
+        auto const radius = 30.0 - i * 0.5;
+        data << "M" << radius << ",0 A" << radius << "," << radius << " 0 1 0 " << -radius << ",0 A"
+             << radius << "," << radius << " 0 1 0 " << radius << ",0 Z ";
+    }
+    auto paths = Geom::parse_svg_path(data.str().c_str());
+    detail::set_break_apart_parallel_pairs_threshold_for_testing(0);
+    detail::set_break_apart_parallel_throw_event_for_testing(0);
+    EXPECT_THROW(detail::break_apart_containment_for_testing(paths), std::runtime_error);
+    detail::set_break_apart_parallel_throw_event_for_testing(std::numeric_limits<std::size_t>::max());
+    detail::set_break_apart_parallel_pairs_threshold_for_testing(256);
 }

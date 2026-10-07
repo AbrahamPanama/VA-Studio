@@ -6,6 +6,7 @@
 #include <fstream>
 #include <glib.h>
 #include <zlib.h>
+#include <tiffio.h>
 #include <libxml/parser.h>
 #include "object/sp-image.h"
 #include "io/export-color-profiles.h"
@@ -399,6 +400,124 @@ TEST_F(Files, ExportNativeFormatsPreserveLiveXmlAndDirty) {
   auto result=run("file.export",p);ASSERT_EQ(result.status,Status::Changed)<<format<<result.message;
   EXPECT_TRUE(result.publication_persisted);EXPECT_GT(std::filesystem::file_size(path),0u);
   EXPECT_EQ(xml(),before);EXPECT_TRUE(context.document->isModifiedSinceSave());
+ }
+}
+TEST_F(Files, CliGap34TiffRipOptionsAndRasterMemoryGuard) {
+ auto source=write("rip.svg","<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"4\" height=\"1\"><rect x=\"0\" y=\"0\" width=\"1\" height=\"1\" fill=\"white\"/><rect x=\"1\" y=\"0\" width=\"1\" height=\"1\" fill=\"white\" opacity=\"0\"/><rect x=\"2\" y=\"0\" width=\"1\" height=\"1\" fill=\"black\" opacity=\"0.4\"/><rect x=\"3\" y=\"0\" width=\"1\" height=\"1\" fill=\"black\"/></svg>");
+ ASSERT_EQ(run("file.open",load(source)).status,Status::Changed);
+ auto export_tiff=[&](std::string name,object extra={}) {
+  object p{{"path",dir+"/"+name},{"format","tiff"},{"page",1},{"profile",object{{"id","srgb"}}}};
+  for(auto const &[key,value]:extra)p[key]=value;
+  return run("file.export",p);
+ };
+ auto pixels=[&](std::string const &name) {
+  auto *tif=TIFFOpen((dir+"/"+name).c_str(),"r");EXPECT_NE(tif,nullptr);
+  std::vector<unsigned char> row(16);if(tif){EXPECT_GE(TIFFReadScanline(tif,row.data(),0,0),0);TIFFClose(tif);}return row;
+ };
+ auto off=export_tiff("rip-off.tiff");ASSERT_EQ(off.status,Status::Changed)<<off.message;
+ auto off_row=pixels("rip-off.tiff");EXPECT_EQ(off_row[0],255);EXPECT_EQ(off_row[1],255);EXPECT_EQ(off_row[2],255);
+ auto on=export_tiff("rip-on.tiff",{{"prevent-white-clipping",true}});ASSERT_EQ(on.status,Status::Changed)<<on.message;
+ auto on_row=pixels("rip-on.tiff");EXPECT_EQ(on_row[0],254);EXPECT_EQ(on_row[1],254);EXPECT_EQ(on_row[2],254);
+ EXPECT_EQ(on_row[3],off_row[3]);
+ // The fully transparent white pixel is untouched until the dependent option is enabled.
+ EXPECT_EQ(on_row[4],off_row[4]);EXPECT_EQ(on_row[5],off_row[5]);EXPECT_EQ(on_row[6],off_row[6]);EXPECT_EQ(on_row[7],0);
+ auto both=export_tiff("rip-transparent.tiff",{{"prevent-white-clipping",true},{"white-clipping-transparent",true}});
+ ASSERT_EQ(both.status,Status::Changed)<<both.message;
+ auto both_row=pixels("rip-transparent.tiff");EXPECT_EQ(both_row[4],on_row[4]);EXPECT_EQ(both_row[5],on_row[5]);EXPECT_EQ(both_row[6],on_row[6]);EXPECT_EQ(both_row[7],0);
+ EXPECT_TRUE(both.data.at("rip_options").as_object().at("white-clipping-transparent").as_bool());
+ // Cleaning writes transparent pixels white; the dependent flag then changes only RGB.
+ auto clean_white=export_tiff("clean-white.tiff",{{"clean-edges",true},{"prevent-white-clipping",true}});
+ ASSERT_EQ(clean_white.status,Status::Changed)<<clean_white.message;
+ auto clean_white_row=pixels("clean-white.tiff");
+ EXPECT_EQ(clean_white_row[4],255);EXPECT_EQ(clean_white_row[5],255);EXPECT_EQ(clean_white_row[6],255);EXPECT_EQ(clean_white_row[7],0);
+ auto clean_clipped=export_tiff("clean-clipped.tiff",{{"clean-edges",true},{"prevent-white-clipping",true},{"white-clipping-transparent",true}});
+ ASSERT_EQ(clean_clipped.status,Status::Changed)<<clean_clipped.message;
+ auto clean_clipped_row=pixels("clean-clipped.tiff");
+ EXPECT_EQ(clean_clipped_row[4],254);EXPECT_EQ(clean_clipped_row[5],254);EXPECT_EQ(clean_clipped_row[6],254);EXPECT_EQ(clean_clipped_row[7],0);
+ for(auto const &[key,value]:std::vector<std::pair<std::string,bool>>{{"prevent-white-clipping",true},{"white-clipping-transparent",true},{"clean-edges",true},{"hard-edges",true}}) {
+  auto rejected=run("file.export",{{"path",dir+"/bad.png"},{"format","png"},{"page",1},{key,value}});
+  EXPECT_EQ(rejected.reason,"invalid-argument")<<key;EXPECT_EQ(rejected.message,"RIP options apply to TIFF export only.");
+  EXPECT_FALSE(std::filesystem::exists(dir+"/bad.png"));
+ }
+ auto dependent=run("file.export",{{"path",dir+"/dependent.tiff"},{"format","tiff"},{"page",1},{"white-clipping-transparent",true}});
+ EXPECT_EQ(dependent.reason,"invalid-argument");EXPECT_FALSE(std::filesystem::exists(dir+"/dependent.tiff"));
+ auto hard=export_tiff("hard.tiff",{{"hard-edges",true}});ASSERT_EQ(hard.status,Status::Changed)<<hard.message;
+ auto hard_row=pixels("hard.tiff");for(std::size_t i=3;i<hard_row.size();i+=4)EXPECT_TRUE(hard_row[i]==0||hard_row[i]==255)<<i;
+ EXPECT_TRUE(hard.data.at("rip_options").as_object().at("clean-edges").as_bool());
+
+ auto large=write("large.svg","<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"864\" height=\"1824\"><rect width=\"864\" height=\"1824\" fill=\"white\"/></svg>");
+ ASSERT_EQ(run("file.open",load(large)).status,Status::Changed);
+ auto large_export=[&](std::string const &name) {return run("file.export",{{"path",dir+"/"+name},{"format","png"},{"page",1},{"dpi",600}});};
+ auto sixty_one=large_export("sixty-one.png");ASSERT_EQ(sixty_one.status,Status::Changed)<<sixty_one.reason<<": "<<sixty_one.message;
+ EXPECT_EQ(sixty_one.data.at("output_width"),5400);EXPECT_EQ(sixty_one.data.at("output_height"),11400);
+ EXPECT_EQ(sixty_one.data.at("output_width").to_number<std::uint64_t>()*sixty_one.data.at("output_height").to_number<std::uint64_t>(),61560000u);
+ EXPECT_TRUE(std::filesystem::exists(dir+"/sixty-one.png"));
+ {
+  ScopedIntakeMemoryForTesting no_memory(0);
+  auto refused=large_export("no-memory.png");EXPECT_EQ(refused.reason,"engine-limit");
+  EXPECT_EQ(refused.error_details.at("phase"),"raster-export");EXPECT_EQ(refused.error_details.at("pixels"),61560000u);
+  EXPECT_TRUE(refused.error_details.contains("bytes_needed"));EXPECT_TRUE(refused.error_details.contains("available_bytes"));
+  EXPECT_TRUE(refused.error_details.contains("bytes_per_pixel"));EXPECT_FALSE(std::filesystem::exists(dir+"/no-memory.png"));
+ }
+
+ auto boundary=write("boundary.svg","<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1152\" height=\"2304\"><rect width=\"1152\" height=\"2304\" fill=\"white\"/></svg>");
+ ASSERT_EQ(run("file.open",load(boundary)).status,Status::Changed);
+ auto max_export=[&](std::string const &name,double height) {return run("file.export",{{"path",dir+"/"+name},{"format","png"},{"dpi",600},{"area",object{{"x",object{{"value",0},{"unit","px"}}},{"y",object{{"value",0},{"unit","px"}}},{"width",object{{"value",1152},{"unit","px"}}},{"height",object{{"value",height},{"unit","px"}}}}}});};
+ auto maximum=max_export("maximum.png",2304);
+ if(maximum.status==Status::Changed) {
+  EXPECT_EQ(maximum.data.at("output_width"),7200);EXPECT_EQ(maximum.data.at("output_height"),14400);
+  EXPECT_TRUE(std::filesystem::exists(dir+"/maximum.png"));
+ } else {
+  EXPECT_EQ(maximum.reason,"engine-limit")<<maximum.message;
+  EXPECT_EQ(maximum.error_details.at("phase"),"raster-export");
+  EXPECT_FALSE(std::filesystem::exists(dir+"/maximum.png"));
+ }
+ auto too_tall=max_export("too-tall.png",2304.16); // rounds to one output row beyond the owner maximum.
+ EXPECT_EQ(too_tall.reason,"out-of-range");EXPECT_EQ(too_tall.message,"Raster export is limited to 103.68 MP (12 x 24 in at 600 dpi).");
+ EXPECT_FALSE(std::filesystem::exists(dir+"/too-tall.png"));
+}
+TEST_F(Files, CliGap34Raster61MPPNG) {
+ auto source=write("raster-61.svg","<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"864\" height=\"1824\"><rect width=\"864\" height=\"1824\" fill=\"white\"/></svg>");
+ ASSERT_EQ(run("file.open",load(source)).status,Status::Changed);
+ auto result=run("file.export",{{"path",dir+"/raster-61.png"},{"format","png"},{"page",1},{"dpi",600}});
+ ASSERT_EQ(result.status,Status::Changed)<<result.reason<<": "<<result.message;
+ EXPECT_EQ(result.data.at("output_width"),5400);EXPECT_EQ(result.data.at("output_height"),11400);
+ auto png=read(dir+"/raster-61.png");ASSERT_GE(png.size(),24u);
+ EXPECT_EQ(png.substr(0,8),std::string("\x89PNG\r\n\x1a\n",8));
+ auto dimension=[&](std::size_t offset) {std::uint32_t value=0;for(unsigned i=0;i<4;++i)value=(value<<8)|static_cast<unsigned char>(png[offset+i]);return value;};
+ EXPECT_EQ(dimension(16),5400u);EXPECT_EQ(dimension(20),11400u);
+}
+TEST_F(Files, CliGap34Raster61MPTIFF) {
+ auto source=write("raster-61.svg","<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"864\" height=\"1824\"><rect width=\"864\" height=\"1824\" fill=\"white\"/></svg>");
+ ASSERT_EQ(run("file.open",load(source)).status,Status::Changed);
+ auto result=run("file.export",{{"path",dir+"/raster-61.tiff"},{"format","tiff"},{"page",1},{"dpi",600},{"profile",object{{"id","srgb"}}}});
+ ASSERT_EQ(result.status,Status::Changed)<<result.reason<<": "<<result.message;
+ EXPECT_EQ(result.data.at("output_width"),5400);EXPECT_EQ(result.data.at("output_height"),11400);
+ auto *tif=TIFFOpen((dir+"/raster-61.tiff").c_str(),"r");ASSERT_NE(tif,nullptr);
+ std::uint32_t width=0,height=0;EXPECT_TRUE(TIFFGetField(tif,TIFFTAG_IMAGEWIDTH,&width));EXPECT_TRUE(TIFFGetField(tif,TIFFTAG_IMAGELENGTH,&height));
+ EXPECT_EQ(width,5400u);EXPECT_EQ(height,11400u);TIFFClose(tif);
+}
+TEST_F(Files, CliGap34RasterMaximumTIFF) {
+ auto source=write("raster-max.svg","<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1152\" height=\"2304\"><rect width=\"1152\" height=\"2304\" fill=\"white\"/></svg>");
+ ASSERT_EQ(run("file.open",load(source)).status,Status::Changed);
+ auto result=run("file.export",{{"path",dir+"/raster-max.tiff"},{"format","tiff"},{"page",1},{"dpi",600},{"profile",object{{"id","srgb"}}}});
+ if(result.status==Status::Changed) {
+  auto *tif=TIFFOpen((dir+"/raster-max.tiff").c_str(),"r");ASSERT_NE(tif,nullptr);
+  std::uint32_t width=0,height=0;EXPECT_TRUE(TIFFGetField(tif,TIFFTAG_IMAGEWIDTH,&width));EXPECT_TRUE(TIFFGetField(tif,TIFFTAG_IMAGELENGTH,&height));
+  EXPECT_EQ(width,7200u);EXPECT_EQ(height,14400u);TIFFClose(tif);
+  RecordProperty("maximum_export","7200x14400 TIFF exported");
+ } else {
+  EXPECT_EQ(result.reason,"engine-limit")<<result.message;
+  EXPECT_EQ(result.error_details.at("phase"),"raster-export");
+  EXPECT_FALSE(std::filesystem::exists(dir+"/raster-max.tiff"));
+  RecordProperty("maximum_export",serialize(result.error_details));
+ }
+ // Landscape uses the same pixel budget and reaches memory admission.
+ {
+  ScopedIntakeMemoryForTesting no_memory(0);
+  auto rotated=run("file.export",{{"path",dir+"/rotated.png"},{"format","png"},{"dpi",600},{"area",object{{"x",object{{"value",0},{"unit","px"}}},{"y",object{{"value",0},{"unit","px"}}},{"width",object{{"value",2304},{"unit","px"}}},{"height",object{{"value",1152},{"unit","px"}}}}}});
+  EXPECT_EQ(rotated.reason,"engine-limit");EXPECT_EQ(rotated.error_details.at("phase"),"raster-export");
+  EXPECT_EQ(rotated.error_details.at("pixels"),103680000u);EXPECT_FALSE(std::filesystem::exists(dir+"/rotated.png"));
  }
 }
 TEST_F(Files, ExpectedVersionRejectsContentAndIdentityRaces) {

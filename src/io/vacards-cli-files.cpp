@@ -272,12 +272,64 @@ static Record execute_file_impl(Request const &request, DispatchContext &context
         if(observed.outcome==IO::ExistingFileOutcome::Unavailable) return reject(r,"publication-unavailable",observed.error);
         if ((!overwrite && observed.version) || (overwrite && (!observed.version || !same(*observed.version,version(p.at("expected-version"))))))
             return reject(r,"publication-conflict","Destination exists or its expected version differs.");
+        std::string format=request.command=="file.save" ? "svg" : str(p,"format");
+        bool const prevent_white_clipping = flag(p,"prevent-white-clipping");
+        bool const white_clipping_transparent = flag(p,"white-clipping-transparent");
+        bool const clean_edges = flag(p,"clean-edges");
+        bool const hard_edges = flag(p,"hard-edges");
+        if (request.command=="file.export" &&
+            (prevent_white_clipping || white_clipping_transparent || clean_edges || hard_edges) && format!="tiff")
+            return reject(r,"invalid-argument","RIP options apply to TIFF export only.");
+        if (request.command=="file.export" && white_clipping_transparent && !prevent_white_clipping)
+            return reject(r,"invalid-argument","white-clipping-transparent requires prevent-white-clipping.");
+        // Admit an export's raster size before the generic snapshot budget so the
+        // refusal identifies raster-export and no rendering snapshot is allocated.
+        if (request.command=="file.export" && (format=="png" || format=="tiff")) {
+            unsigned scopes=p.contains("page")+p.contains("ids")+p.contains("area")+p.contains("drawing");
+            if (scopes!=1 || (p.contains("drawing") && !flag(p,"drawing")))
+                return reject(r,"invalid-target","Choose exactly one page, ids, area or drawing scope.");
+            Geom::OptRect source_area;
+            if (p.contains("page")) {
+                auto index=value_to<unsigned>(p.at("page")); auto &manager=context.document->getPageManager();
+                if (manager.getPageCount()) { auto page=manager.getPage(index-1); if (page) source_area=page->getDocumentRect(); }
+                else if (index==1) source_area=Geom::Rect::from_xywh(0,0,context.document->getWidth().value("px"),context.document->getHeight().value("px"));
+            } else if (p.contains("area")) {
+                auto const &a=p.at("area").as_object(); auto w=px(a.at("width")),h=px(a.at("height"));
+                if (w>0 && h>0) source_area=Geom::Rect::from_xywh(px(a.at("x")),px(a.at("y")),w,h);
+            } else if (p.contains("ids")) {
+                std::set<std::string> seen;
+                for (auto const &id:p.at("ids").as_array()) {
+                    std::string name(id.as_string()); auto item=cast<SPItem>(context.document->getObjectById(name.c_str()));
+                    if (!item || item==context.document->getRoot() || !seen.insert(name).second)
+                        return reject(r,"invalid-target","IDs must name unique graphical objects.");
+                    source_area.unionWith(item->documentVisualBounds());
+                }
+            } else source_area=context.document->getRoot()->documentVisualBounds();
+            if (!source_area || !std::isfinite(source_area->width()) || !std::isfinite(source_area->height()) ||
+                source_area->width()<=0 || source_area->height()<=0)
+                return reject(r,"invalid-target","Scope has no finite positive bounds.");
+            double dpi=number(p,"dpi",96);
+            auto width=std::max(1.0,std::floor(source_area->width()*dpi/96+0.5));
+            auto height=std::max(1.0,std::floor(source_area->height()*dpi/96+0.5));
+            if (width*height>103680000)
+                return reject(r,"out-of-range","Raster export is limited to 103.68 MP (12 x 24 in at 600 dpi).");
+            if (auto error=admit_raster_export_memory(static_cast<std::uint64_t>(width)*static_cast<std::uint64_t>(height)))
+                return reject_intake(std::move(r),*error);
+        }
         auto prepared_snapshot=prepare_file_snapshot(*context.document,grants,
             request.command=="file.save" ? str(p,"embedding-policy") : "embed");
         if (prepared_snapshot.error) return reject_intake(std::move(r), *prepared_snapshot.error);
         auto doc=std::move(prepared_snapshot.document);
-        std::string format=request.command=="file.save" ? "svg" : str(p,"format");
         r.data["format"]=format; r.data["validation_level"]="preflight";
+        IO::TiffExportOptions rip_options;
+        rip_options.prevent_white_clipping=prevent_white_clipping;
+        rip_options.include_transparent=prevent_white_clipping && white_clipping_transparent;
+        rip_options.clean_edges=clean_edges || hard_edges;
+        rip_options.hard_edges=hard_edges;
+        if (request.command=="file.export" && format=="tiff")
+            r.data["rip_options"]=object{{"prevent-white-clipping",rip_options.prevent_white_clipping},
+                {"white-clipping-transparent",rip_options.include_transparent},
+                {"clean-edges",rip_options.clean_edges},{"hard-edges",rip_options.hard_edges}};
         std::string payload;
         if (request.command=="file.save") {
             // Editable intake embeds all admitted image payloads before the live baseline.
@@ -310,7 +362,9 @@ static Record execute_file_impl(Request const &request, DispatchContext &context
             if (!area || !std::isfinite(area->width()) || !std::isfinite(area->height()) || area->width()<=0 || area->height()<=0)
                 return reject(r,"invalid-target","Scope has no finite positive bounds.");
             double dpi=number(p,"dpi",96); auto width=std::max(1.0,std::floor(area->width()*dpi/96+0.5)),height=std::max(1.0,std::floor(area->height()*dpi/96+0.5));
-            if (width<1 || height<1 || width*height>32000000) return reject(r,"out-of-range","Raster dimensions exceed the 32 MP limit.");
+            constexpr std::uint64_t raster_pixel_limit = 103680000;
+            if (width<1 || height<1 || width*height>raster_pixel_limit)
+                return reject(r,"out-of-range","Raster export is limited to 103.68 MP (12 x 24 in at 600 dpi).");
             r.data["output_width"]=std::uint64_t(width); r.data["output_height"]=std::uint64_t(height);
             IO::PreparedExportProfile prepared; std::string error;
             bool raster=format=="png" || format=="tiff";
@@ -340,7 +394,8 @@ static Record execute_file_impl(Request const &request, DispatchContext &context
                     format=="png" ? &prepared : nullptr)!=EXPORT_OK) return reject(r,"export-failed","Native PNG rendering failed.",Status::Failed);
                 if (format=="tiff") {
                     auto tiff=scratch.path("render.tiff");
-                    if (!IO::export_png_to_color_managed_tiff(png,tiff,prepared.profile.bytes,error)) return reject(r,"export-failed",error,Status::Failed);
+                    if (!IO::export_png_to_color_managed_tiff(png,tiff,prepared.profile.bytes,error,nullptr,rip_options))
+                        return reject(r,"export-failed",error,Status::Failed);
                     payload=read_payload(tiff);
                 } else payload=read_payload(png);
             } else {

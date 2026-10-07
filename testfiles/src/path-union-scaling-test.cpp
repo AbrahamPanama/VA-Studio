@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <sstream>
 #include <random>
+#include <limits>
 #include <2geom/svg-path-writer.h>
 #include <2geom/rect.h>
 #include <2geom/sbasis-geometric.h>
@@ -24,6 +25,12 @@
 #include "path/path-util.h"
 #include "xml/repr.h"
 using namespace Inkscape;
+namespace Inkscape::detail {
+void set_union_parallel_pairs_threshold_for_testing(std::size_t);
+void set_union_candidate_budget_for_testing(std::size_t);
+void set_union_fallback_exhaustive_for_testing(bool);
+void set_union_parallel_throw_pair_for_testing(unsigned, unsigned);
+}
 namespace {
 std::string dot(double x, double y) {
     constexpr double k = 0.5522847498307936;
@@ -338,4 +345,177 @@ TEST_F(PathUnionScaling, DenseCandidateStorageIsBoundedAtBothLargeSizes) {
         EXPECT_FALSE(detail::union_candidates_bounded(boxes,pairs,8*1024*1024));
         EXPECT_EQ(pairs.capacity(),0);
     }
+}
+
+TEST_F(PathUnionScaling, ParallelIntersectionsPreserveExactPathData)
+{
+    auto run = [](std::size_t threshold) {
+        detail::set_union_parallel_pairs_threshold_for_testing(threshold);
+        std::ostringstream svg;
+        svg << "<svg xmlns='http://www.w3.org/2000/svg'><g>";
+        std::vector<Geom::Rect> bounds;
+        for (int i = 0; i < 40; ++i) {
+            auto const x = (i % 8) * 0.5;
+            auto const y = (i / 8) * 0.5;
+            constexpr double size = 4.0;
+            constexpr double radius = 0.5;
+            constexpr double k = 0.5522847498307936;
+            std::ostringstream d;
+            d << std::setprecision(17) << "M" << x + radius << "," << y << " H" << x + size - radius
+              << " C" << x + size - radius + k * radius << "," << y << " " << x + size << ","
+              << y + radius - k * radius << " " << x + size << "," << y + radius << " V" << y + size - radius
+              << " C" << x + size << "," << y + size - radius + k * radius << " " << x + size - radius + k * radius
+              << "," << y + size << " " << x + size - radius << "," << y + size << " H" << x + radius
+              << " C" << x + radius - k * radius << "," << y + size << " " << x << ","
+              << y + size - radius + k * radius << " " << x << "," << y + size - radius << " V" << y + radius
+              << " C" << x << "," << y + radius - k * radius << " " << x + radius - k * radius << "," << y
+              << " " << x + radius << "," << y << " Z";
+            svg << "<path class='operand' d='" << d.str() << "'/>";
+            bounds.emplace_back(Geom::Point(x, y), Geom::Point(x + size, y + size));
+        }
+        svg << "</g></svg>";
+        std::vector<std::pair<unsigned, unsigned>> candidates;
+        EXPECT_TRUE(detail::union_candidates_bounded(bounds, candidates, 8 * 1024 * 1024));
+        EXPECT_GT(candidates.size(), 256);
+        auto doc = SPDocument::createNewDocFromMem(svg.str());
+        EXPECT_TRUE(doc);
+        if (!doc) return std::string{};
+        doc->ensureUpToDate();
+        auto operands = doc->getObjectsBySelector(".operand");
+        EXPECT_EQ(operands.size(), 40);
+        ObjectSet selection(doc.get());
+        selection.setList(operands);
+        selection.pathUnion();
+        auto result = selection.singleItem();
+        EXPECT_TRUE(result);
+        auto curve = result ? curve_for_item(result) : std::nullopt;
+        EXPECT_TRUE(curve);
+        return curve ? Geom::write_svg_path(*curve, 17) : std::string{};
+    };
+    auto const serial = run(std::numeric_limits<std::size_t>::max());
+    auto const parallel = run(0);
+    detail::set_union_parallel_pairs_threshold_for_testing(256);
+    EXPECT_FALSE(serial.empty());
+    EXPECT_EQ(parallel, serial);
+}
+
+TEST_F(PathUnionScaling, ExhaustiveParallelIntersectionsPreserveExactPathData)
+{
+    detail::set_union_candidate_budget_for_testing(0);
+    auto run = [](std::size_t threshold) {
+        detail::set_union_parallel_pairs_threshold_for_testing(threshold);
+        std::ostringstream svg;
+        svg << "<svg xmlns='http://www.w3.org/2000/svg'><g>";
+        for (int i = 0; i < 300; ++i) {
+            auto const x = i == 1 ? 0.5 : i * 4.0;
+            svg << "<path class='operand' d='M" << x << ",0 h2 v2 h-2 Z'/>";
+        }
+        svg << "</g></svg>";
+        auto doc = SPDocument::createNewDocFromMem(svg.str());
+        EXPECT_TRUE(doc);
+        if (!doc) return std::string{};
+        doc->ensureUpToDate();
+        auto operands = doc->getObjectsBySelector(".operand");
+        EXPECT_EQ(operands.size(), 300);
+        ObjectSet selection(doc.get());
+        selection.setList(operands);
+        selection.pathUnion();
+        auto result = selection.singleItem();
+        auto curve = result ? curve_for_item(result) : std::nullopt;
+        EXPECT_TRUE(curve);
+        return curve ? Geom::write_svg_path(*curve, 17) : std::string{};
+    };
+    auto const serial = run(std::numeric_limits<std::size_t>::max());
+    auto const parallel = run(0);
+    detail::set_union_parallel_pairs_threshold_for_testing(256);
+    detail::set_union_candidate_budget_for_testing(8 * 1024 * 1024);
+    EXPECT_FALSE(serial.empty());
+    EXPECT_EQ(parallel, serial);
+}
+
+TEST_F(PathUnionScaling, StreamedFallbackMatchesExhaustiveWithMixedBounds)
+{
+    auto make_result = [](bool exhaustive, std::size_t threshold) {
+        detail::set_union_candidate_budget_for_testing(1);
+        detail::set_union_fallback_exhaustive_for_testing(exhaustive);
+        detail::set_union_parallel_pairs_threshold_for_testing(threshold);
+        std::ostringstream svg;
+        svg << "<svg xmlns='http://www.w3.org/2000/svg'><g>";
+        for (int i = 0; i < 80; ++i) {
+            auto const radius = 12.0 + i;
+            svg << "<path class='operand' fill-rule='evenodd' d='M" << 50-radius << "," << 50-radius
+                << " H" << 50+radius << " V" << 50+radius << " H" << 50-radius << " Z M"
+                << 50-radius/2 << "," << 50-radius/2 << " H" << 50+radius/2 << " V"
+                << 50+radius/2 << " H" << 50-radius/2 << " Z'/>";
+        }
+        for (int i = 0; i < 80; ++i) {
+            auto const half = 8.0 + i * 0.2;
+            svg << "<path class='operand' d='M" << 100-half << "," << 100-half << " H"
+                << 100+half << " V" << 100+half << " H" << 100-half << " Z'/>";
+        }
+        for (int i = 0; i < 40; ++i) {
+            auto const x = 200.0 + i * 30;
+            svg << "<path class='operand' d='M" << x << ",0 h10 v10 h-10 Z'/>"
+                << "<path class='operand' d='M" << x+10 << ",0 h10 v10 h-10 Z'/>";
+        }
+        for (int i = 0; i < 40; ++i) {
+            auto const x = 300.0 + i * 3;
+            svg << "<path class='operand' d='M" << x << ",200 V220'/>";
+        }
+        for (int i = 0; i < 40; ++i) {
+            auto const y = 200.0 + i * 3;
+            svg << "<path class='operand' d='M400," << y << " H420'/>";
+        }
+        for (int i = 0; i < 40; ++i) {
+            auto const x = 600.0 + i * 24;
+            auto const y = 200.0 + (i % 5) * 24;
+            svg << "<path class='operand' d='M" << x << "," << y+4 << " h16 v8 h-16 Z'/>"
+                << "<path class='operand' d='M" << x+4 << "," << y << " h8 v16 h-8 Z'/>";
+        }
+        svg << "</g></svg>";
+        auto doc = SPDocument::createNewDocFromMem(svg.str());
+        EXPECT_TRUE(doc);
+        if (!doc) return std::string{};
+        doc->ensureUpToDate();
+        auto operands = doc->getObjectsBySelector(".operand");
+        EXPECT_EQ(operands.size(), 400);
+        ObjectSet selection(doc.get());
+        selection.setList(operands);
+        selection.pathUnion();
+        auto result = selection.singleItem();
+        EXPECT_TRUE(result);
+        auto curve = result ? curve_for_item(result) : std::nullopt;
+        EXPECT_TRUE(curve);
+        return curve ? Geom::write_svg_path(*curve, 17) : std::string{};
+    };
+    auto const serial_streamed = make_result(false, std::numeric_limits<std::size_t>::max());
+    auto const serial_exhaustive = make_result(true, std::numeric_limits<std::size_t>::max());
+    auto const parallel_streamed = make_result(false, 0);
+    auto const parallel_exhaustive = make_result(true, 0);
+    detail::set_union_fallback_exhaustive_for_testing(false);
+    detail::set_union_parallel_pairs_threshold_for_testing(256);
+    detail::set_union_candidate_budget_for_testing(8 * 1024 * 1024);
+    ASSERT_FALSE(serial_streamed.empty());
+    EXPECT_EQ(serial_streamed, serial_exhaustive);
+    EXPECT_EQ(parallel_streamed, parallel_exhaustive);
+    EXPECT_EQ(parallel_streamed, serial_streamed);
+}
+
+TEST_F(PathUnionScaling, ParallelIntersectionExceptionReturnsToCaller)
+{
+    detail::set_union_candidate_budget_for_testing(0);
+    detail::set_union_parallel_pairs_threshold_for_testing(0);
+    detail::set_union_parallel_throw_pair_for_testing(1, 0);
+    auto doc = SPDocument::createNewDocFromMem(
+        "<svg xmlns='http://www.w3.org/2000/svg'><path class='operand' d='M0,0 h10 v10 h-10 Z'/>"
+        "<path class='operand' d='M5,0 h10 v10 h-10 Z'/></svg>");
+    ASSERT_TRUE(doc);
+    doc->ensureUpToDate();
+    ObjectSet selection(doc.get());
+    selection.setList(doc->getObjectsBySelector(".operand"));
+    EXPECT_THROW(selection.pathUnion(), std::runtime_error);
+    detail::set_union_parallel_throw_pair_for_testing(std::numeric_limits<unsigned>::max(),
+                                                       std::numeric_limits<unsigned>::max());
+    detail::set_union_parallel_pairs_threshold_for_testing(256);
+    detail::set_union_candidate_budget_for_testing(8 * 1024 * 1024);
 }

@@ -14,11 +14,14 @@ namespace {
 // OS filesystem operation stops when GIO acknowledges cancellation.
 unsigned pending_queries = 0;
 constexpr unsigned max_pending_queries = 4;
+unsigned query_timeout_ms = 750;
+detail::FolderQuery folder_query_for_testing;
 std::string lower(std::string text)
 {
     for (auto &c : text) c = g_ascii_tolower(c);
     return text;
 }
+
 std::string without_suffix(std::string name, std::string const &suffix)
 {
     auto extension = lower(suffix);
@@ -37,6 +40,11 @@ std::string without_suffix(std::string name, std::string const &suffix)
     }
     return name;
 }
+}
+
+namespace detail {
+void set_folder_query_for_testing(FolderQuery query) { folder_query_for_testing = std::move(query); }
+void set_folder_query_timeout_for_testing(unsigned milliseconds) { query_timeout_ms = milliseconds; }
 }
 
 std::string format_key(std::string const &mime, std::string extension)
@@ -128,47 +136,76 @@ struct DirectoryRequest::State : std::enable_shared_from_this<State> {
     void stop() { callback = {}; ++generation; stop_query(); }
     ~State() { stop_query(); }
 
+    void deliver(std::string folder)
+    {
+        stop_query();
+        ++generation;
+        auto done = std::move(callback);
+        if (done) done(std::move(folder));
+    }
+
     struct Attempt { std::shared_ptr<State> state; unsigned generation; };
     void next()
     {
         stop_query();
         ++generation;
         if (!callback) return;
-        if (index == candidates.size() || pending_queries >= max_pending_queries) {
-            auto done = std::move(callback);
-            done({});
+        if (index == candidates.size()) {
+            deliver({});
             return;
         }
-        auto file = g_file_new_for_path(candidates[index++].c_str());
+        if (pending_queries >= max_pending_queries) {
+            // A saturated probe queue is common with blocked network filesystems.
+            // Returning an empty folder here produced the owner's empty Export path;
+            // accept this format's current candidate while its availability is unknown.
+            deliver(candidates[index++]);
+            return;
+        }
+        auto const candidate = candidates[index++];
+        auto file = g_file_new_for_path(candidate.c_str());
         cancel = g_cancellable_new();
-        timer = g_timeout_add_full(G_PRIORITY_DEFAULT, 750, [](gpointer data) -> gboolean {
+        timer = g_timeout_add_full(G_PRIORITY_DEFAULT, query_timeout_ms, [](gpointer data) -> gboolean {
             auto attempt = *static_cast<Attempt *>(data);
             if (attempt.generation == attempt.state->generation) {
                 attempt.state->timer = 0;
-                attempt.state->next();
+                // A slow filesystem response is unknown, not proof that the
+                // remembered folder is unusable. Keep the candidate the user chose.
+                attempt.state->deliver(attempt.state->candidates[attempt.state->index - 1]);
             }
             return G_SOURCE_REMOVE;
         }, new Attempt{shared_from_this(), generation}, [](gpointer data) { delete static_cast<Attempt *>(data); });
         ++pending_queries;
-        g_file_query_info_async(file, G_FILE_ATTRIBUTE_STANDARD_TYPE "," G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE,
-            G_FILE_QUERY_INFO_NONE, G_PRIORITY_DEFAULT, cancel,
-            [](GObject *file, GAsyncResult *result, gpointer data) {
-                --pending_queries;
-                std::unique_ptr<Attempt> attempt(static_cast<Attempt *>(data));
-                GError *error = nullptr;
-                auto info = g_file_query_info_finish(G_FILE(file), result, &error);
-                bool usable = info && g_file_info_get_file_type(info) == G_FILE_TYPE_DIRECTORY &&
-                    g_file_info_has_attribute(info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE) &&
-                    g_file_info_get_attribute_boolean(info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE);
-                if (info) g_object_unref(info);
-                g_clear_error(&error);
-                auto state = attempt->state;
-                if (attempt->generation != state->generation || !state->callback) return;
-                if (!usable) { state->next(); return; }
-                state->stop_query();
-                auto done = std::move(state->callback);
-                done(state->candidates[state->index - 1]);
-            }, new Attempt{shared_from_this(), generation});
+        auto complete = [attempt = Attempt{shared_from_this(), generation}, candidate](detail::QueryOutcome outcome) {
+            --pending_queries;
+            auto state = attempt.state;
+            if (attempt.generation != state->generation || !state->callback) return;
+            if (outcome == detail::QueryOutcome::Unusable) { state->next(); return; }
+            state->deliver(candidate);
+        };
+        if (folder_query_for_testing) {
+            folder_query_for_testing(candidate, [complete = std::move(complete)](detail::QueryOutcome outcome) mutable {
+                if (outcome != detail::QueryOutcome::Pending) complete(outcome);
+            });
+        } else {
+            g_file_query_info_async(file, G_FILE_ATTRIBUTE_STANDARD_TYPE "," G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE,
+                G_FILE_QUERY_INFO_NONE, G_PRIORITY_DEFAULT, cancel,
+                [](GObject *file, GAsyncResult *result, gpointer data) {
+                    std::unique_ptr<Attempt> attempt(static_cast<Attempt *>(data));
+                    GError *error = nullptr;
+                    auto info = g_file_query_info_finish(G_FILE(file), result, &error);
+                    bool usable = info && g_file_info_get_file_type(info) == G_FILE_TYPE_DIRECTORY &&
+                        g_file_info_has_attribute(info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE) &&
+                        g_file_info_get_attribute_boolean(info, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE);
+                    if (info) g_object_unref(info);
+                    auto cancelled = error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
+                    g_clear_error(&error);
+                    auto state = attempt->state;
+                    --pending_queries;
+                    if (attempt->generation != state->generation || !state->callback) return;
+                    if (!usable && !cancelled) { state->next(); return; }
+                    state->deliver(state->candidates[state->index - 1]);
+                }, new Attempt{shared_from_this(), generation});
+        }
         g_object_unref(file);
     }
 };

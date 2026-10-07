@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <glib.h>
+#include <glibmm/main.h>
 #include <gtkmm/label.h>
 #include <gtkmm/gesturedrag.h>
 #include <gtkmm/gestureclick.h>
@@ -226,6 +227,79 @@ protected:
     std::unique_ptr<Gtk::Window> host;
     std::unique_ptr<StatusbarProbe> widget;
 };
+
+TEST_F(StrokeWidthStatusbarTest, BulkUngroupUndoInvalidatesScopeAndRefreshesOnce)
+{
+    auto settle = [] {
+        auto context = Glib::MainContext::get_default();
+        auto quiet = std::chrono::steady_clock::now();
+        auto deadline = quiet + std::chrono::seconds(2);
+        while (std::chrono::steady_clock::now() < deadline) {
+            if (context->pending()) {
+                context->iteration(false);
+                quiet = std::chrono::steady_clock::now();
+            } else if (std::chrono::steady_clock::now() - quiet > std::chrono::milliseconds(50)) {
+                return;
+            } else {
+                g_usleep(1000);
+            }
+        }
+    };
+    std::string svg = R"(<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><g id="group">)";
+    for (int i = 0; i < 200; ++i) {
+        svg += "<path id=\"p" + std::to_string(i) + "\" d=\"M0 0h1v1z\"/>";
+    }
+    svg += "</g></svg>";
+    auto bulk_doc = SPDocument::createNewDocFromMem(svg);
+    ASSERT_TRUE(bulk_doc);
+    bulk_doc->ensureUpToDate();
+    auto bulk_desktop = std::make_unique<SPDesktop>(bulk_doc->getNamedView());
+    Gtk::Window bulk_host;
+    bulk_host.set_child(*bulk_desktop->getCanvas());
+    auto *group = dynamic_cast<SPItem *>(bulk_doc->getObjectById("group"));
+    ASSERT_TRUE(group);
+    bulk_desktop->getSelection()->set(group);
+    StatusbarProbe during;
+    during.setDesktop(bulk_desktop.get());
+    auto const before = sp_repr_save_buf(bulk_doc->getReprDoc()).raw();
+    DocumentUndo::clearUndo(bulk_doc.get());
+    DocumentUndo::clearRedo(bulk_doc.get());
+
+    bulk_desktop->getSelection()->ungroup();
+    settle();
+    auto const after = sp_repr_save_buf(bulk_doc->getReprDoc()).raw();
+    ASSERT_NE(after, before);
+    ASSERT_EQ(bulk_desktop->getSelection()->size(), 200u);
+
+    auto const generation = during.generation();
+    auto const updates = during.updateCountForTest();
+    std::uint64_t synchronous_changes = 0;
+    auto previous_generation = generation;
+    bool every_change_invalidated_synchronously = true;
+    auto membership_connection = bulk_desktop->getSelection()->connectChanged([&](Selection *) {
+        ++synchronous_changes;
+        auto const current_generation = during.generation();
+        every_change_invalidated_synchronously &= current_generation > previous_generation;
+        previous_generation = current_generation;
+    });
+    ASSERT_TRUE(DocumentUndo::undo(bulk_doc.get()));
+    membership_connection.disconnect();
+    EXPECT_GT(synchronous_changes, 0u);
+    EXPECT_TRUE(every_change_invalidated_synchronously);
+    EXPECT_GE(during.generation() - generation, synchronous_changes);
+    settle();
+    EXPECT_EQ(sp_repr_save_buf(bulk_doc->getReprDoc()).raw(), before);
+    EXPECT_LE(during.updateCountForTest() - updates, 2u);
+
+    StatusbarProbe fresh;
+    fresh.setDesktop(bulk_desktop.get());
+    EXPECT_EQ(during._mode[UI::Widget::SS_FILL], fresh._mode[UI::Widget::SS_FILL]);
+    EXPECT_EQ(during._mode[UI::Widget::SS_STROKE], fresh._mode[UI::Widget::SS_STROKE]);
+    EXPECT_EQ(during.readout(), fresh.readout());
+    fresh.setDesktop(nullptr);
+    during.setDesktop(nullptr);
+    bulk_host.unset_child();
+}
 
 TEST_F(StrokeWidthStatusbarTest, D01D02WidthHasNoGestureAdmissionAndPreservesRedo)
 {

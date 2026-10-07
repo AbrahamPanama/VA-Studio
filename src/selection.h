@@ -93,6 +93,8 @@ public:
     Selection(SPDocument *document);
     ~Selection() override;
 
+    void setDocument(SPDocument *document);
+
     /**
      * Returns active layer for selection (currentLayer or its parent).
      *
@@ -308,6 +310,7 @@ private:
     SPObject *_objectForXMLNode(XML::Node *repr) const;
     /** Releases an active layer object that is being removed. */
     void _releaseContext(SPObject *obj);
+    void _removeHistoryReplayTargets(std::vector<XML::Node *> const &nodes);
 
     SPObject *_selection_context = nullptr;
     unsigned _flags = 0;
@@ -322,6 +325,7 @@ private:
     std::unordered_map<SPObject *, sigc::scoped_connection> _modified_connections;
     sigc::scoped_connection _context_release_connection;
     sigc::scoped_connection _display_update_connection;
+    sigc::scoped_connection _history_replay_removals_connection;
 
     // Let later display observers run even if an earlier one cannot refresh.
     // An accumulator preserves sigc's normal tracking/disconnection semantics.

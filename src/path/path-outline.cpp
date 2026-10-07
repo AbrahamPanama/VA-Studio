@@ -40,6 +40,7 @@
 #include "object/object-set.h"
 #include "object/box3d.h"
 #include "object/sp-item.h"
+#include "object/weakptr.h"
 #include "object/sp-clippath.h"
 #include "object/sp-defs.h"
 #include "object/sp-mask.h"
@@ -569,9 +570,10 @@ item_to_paths_impl(SPItem *item, bool legacy, SPItem *context, StrokeToPathConve
 
         Inkscape::ObjectSet original_objects {doc}; // doc or desktop shouldn't be necessary
         original_objects.add(item);
+        Inkscape::SPWeakPtr<SPItem> original_weak(item);
         original_objects.toCurves(true);
         SPItem * new_item = original_objects.singleItem();
-        if (new_item && new_item != item) {
+        if (Inkscape::PathOutline::replacement_succeeded(item, !original_weak, new_item)) {
             flatten = true;
             item = new_item;
             // Text conversion may change the geometric bbox before recursion.

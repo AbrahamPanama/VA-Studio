@@ -65,38 +65,40 @@ void ceiling(std::string const &name, std::uint64_t found, std::uint64_t limit)
 // Owner measurement: a 49 MB sheet uses about 1.9 GB. 42x covers even GiB/decimal-MB
 // (1.9 * 2^30 / 49,000,000 = 41.63); retain another 256 MiB for recovery/headroom.
 constexpr std::uint64_t memory_factor = 42, memory_reserve = 256ull << 20;
+struct AvailableMemory { std::uint64_t bytes = 0; bool measured = false; };
+AvailableMemory available_memory()
+{
+    AvailableMemory result;
+    if (available_memory_for_testing) return {*available_memory_for_testing, true};
+    auto sample = Bitmap::sampleMemory(); // Shared native platform/pressure/footprint query.
+    if (!sample.ok()) return result;
+    result.bytes = std::min(sample.value.available, sample.value.physical > sample.value.baseline ?
+        sample.value.physical - sample.value.baseline : 0);
+    result.measured = true;
+    // The shared query reports process/commit headroom, not system free physical RAM.
+    // Bound it by reclaimable physical pages on macOS and ullAvailPhys on Windows.
+#ifdef __APPLE__
+    vm_statistics64_data_t vm{};
+    mach_msg_type_number_t count = HOST_VM_INFO64_COUNT;
+    vm_size_t page = 0;
+    auto host = mach_host_self();
+    result.measured = host_page_size(host, &page) == KERN_SUCCESS &&
+        host_statistics64(host, HOST_VM_INFO64, reinterpret_cast<host_info64_t>(&vm), &count) == KERN_SUCCESS;
+    mach_port_deallocate(mach_task_self(), host);
+    if (result.measured) result.bytes = std::min(result.bytes,
+        (std::uint64_t(vm.free_count) + vm.inactive_count) * page);
+#elif defined(_WIN32)
+    MEMORYSTATUSEX status{}; status.dwLength = sizeof status;
+    result.measured = GlobalMemoryStatusEx(&status);
+    if (result.measured) result.bytes = std::min(result.bytes, std::uint64_t(status.ullAvailPhys));
+#endif
+    return result;
+}
 void admit_memory(std::uint64_t bytes, char const *phase)
 {
-    std::uint64_t available = 0;
-    bool measured = false;
-    if (available_memory_for_testing) {
-        available = *available_memory_for_testing;
-        measured = true;
-    } else {
-        auto sample = Bitmap::sampleMemory(); // Reuse the native platform/pressure/footprint query.
-        if (sample.ok()) {
-            available = std::min(sample.value.available, sample.value.physical > sample.value.baseline ?
-                sample.value.physical - sample.value.baseline : 0);
-            measured = true;
-            // The shared query reports process/commit headroom, not system free physical RAM.
-            // Bound it by reclaimable physical pages on macOS and ullAvailPhys on Windows.
-#ifdef __APPLE__
-            vm_statistics64_data_t vm{};
-            mach_msg_type_number_t count = HOST_VM_INFO64_COUNT;
-            vm_size_t page = 0;
-            auto host = mach_host_self();
-            measured = host_page_size(host, &page) == KERN_SUCCESS &&
-                host_statistics64(host, HOST_VM_INFO64, reinterpret_cast<host_info64_t>(&vm), &count) == KERN_SUCCESS;
-            mach_port_deallocate(mach_task_self(), host);
-            if (measured) available = std::min(available,
-                (std::uint64_t(vm.free_count) + vm.inactive_count) * page);
-#elif defined(_WIN32)
-            MEMORYSTATUSEX status{}; status.dwLength = sizeof status;
-            measured = GlobalMemoryStatusEx(&status);
-            if (measured) available = std::min(available, std::uint64_t(status.ullAvailPhys));
-#endif
-        }
-    }
+    auto memory = available_memory();
+    auto available = memory.bytes;
+    auto measured = memory.measured;
     std::uint64_t required;
     if (!Bitmap::checkedMul(bytes, memory_factor, required) ||
         !Bitmap::checkedAdd(required, memory_reserve, required)) required = UINT64_MAX;
@@ -831,6 +833,29 @@ std::optional<std::uint64_t> exchange_intake_memory_for_testing(std::optional<st
     return previous;
 }
 } // namespace detail
+std::optional<IntakeError> admit_raster_export_memory(std::uint64_t pixels)
+{
+    // CLI-GAP-3/4 (build 31.1), Mac /usr/bin/time -l, baseline 59,195,392 B:
+    // 61.56 MP TIFF peak 550,453,248 B (delta 491,257,856; 7.980 B/pixel),
+    // PNG peak 65,863,680 B (delta 6,668,288; 0.108 B/pixel).
+    // ceil(max measured delta/pixel * 1.5) = 12; retain 256 MiB.
+    // 103.68 MP TIFF also exported: peak 853,704,704 B (7.663 B/pixel delta).
+    constexpr std::uint64_t bytes_per_pixel = 12;
+    constexpr std::uint64_t reserve_bytes = 256ull << 20;
+    std::uint64_t bytes_needed;
+    if (!Bitmap::checkedMul(pixels, bytes_per_pixel, bytes_needed) ||
+        !Bitmap::checkedAdd(bytes_needed, reserve_bytes, bytes_needed)) bytes_needed = UINT64_MAX;
+    auto const memory = available_memory();
+    if (!memory.measured || bytes_needed > memory.bytes) {
+        return IntakeError{"engine-limit", "Insufficient available physical memory for raster-export.",
+            "Free memory or use a smaller raster export on this machine.", false,
+            {{"reason", "insufficient-memory"}, {"phase", "raster-export"}, {"pixels", pixels},
+             {"bytes_needed", bytes_needed}, {"available_bytes", memory.bytes},
+             {"bytes_per_pixel", bytes_per_pixel}, {"reserve_bytes", reserve_bytes},
+             {"measured", memory.measured}}};
+    }
+    return std::nullopt;
+}
 IntakeResult load_inspection_document(std::string const &path, Grants const &grants, IntakeLimits const &limits)
 { return load_document(path, grants, limits, nullptr); }
 IntakeResult load_inspection_document_for_testing(std::string const &path, Grants const &grants,

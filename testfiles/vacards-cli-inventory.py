@@ -300,7 +300,8 @@ def m3_matrix(testfiles=None, catalog=None):
     m3=importlib.util.module_from_spec(spec);spec.loader.exec_module(m3)
     rows=m3.load_cases(); manifest=json.loads(m3.MANIFEST.read_text()); gaps=[]; commands=[]
     if manifest.get('descriptor_hash') != 'aedbdc2776bd24e09415ff14662640fd460fe41eb94a7082a967b52671e56a40': gaps.append('unreviewed M3 descriptor hash')
-    if catalog is not None and catalog.get('hash') != 'cca1282df999f5e18a8314f823a3498b05a058b2f0e19a2cac3b3e6cd29e2e36': gaps.append('unreviewed DESC-3 catalog hash')
+    # CLI-GAP-3/4 (build 31.1): file.export RIP options and raster memory guard.
+    if catalog is not None and catalog.get('hash') != 'e144543a1ed9d2f42643040989440063e3bc04d841a5976a38ca3040266850cc': gaps.append('unreviewed DESC-3 catalog hash')
     if sum(len(c['errors']) for c in manifest['commands']) != 527: gaps.append('M3 error inventory must contain 527 rows')
     # Frozen schema is for independently validating authored params, never generating expected results.
     frozen=Path(__file__).resolve().parents[2]/'work/cli-b31/evidence/INT/m3-obligations-02-snapshots/catalog.json'

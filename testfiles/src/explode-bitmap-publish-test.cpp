@@ -328,8 +328,10 @@ TEST_F(Publish, Bug017HistoryRemovalBatchesDisplayAndPreservesImmediateObservers
         ASSERT_TRUE(DocumentUndo::undo(doc.get()));
         EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()).raw(), before);
         EXPECT_EQ(selection->singleItem(), survivor);
-        EXPECT_EQ(changed, n);
-        EXPECT_EQ(remaining, n * (n + 1) / 2);
+        // BUG-026c: the members the replay releases leave the selection in ONE
+        // immediate change before the replay (formerly one change per object).
+        EXPECT_EQ(changed, 1u);
+        EXPECT_EQ(remaining, 1u);
         EXPECT_EQ(displayChanged, 1u);
         ASSERT_TRUE(DocumentUndo::redo(doc.get()));
         EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()).raw(), published);
@@ -360,7 +362,7 @@ TEST_F(Publish, Bug017HistoryRemovalBatchesDisplayAndPreservesImmediateObservers
         ASSERT_TRUE(DocumentUndo::redo(doc.get()));
         EXPECT_EQ(sp_repr_save_buf(doc->getReprDoc()).raw(), removed);
         EXPECT_EQ(selection->singleItem(), survivor);
-        EXPECT_EQ(changed, n);
+        EXPECT_EQ(changed, 1u); // BUG-026c: one batch change before the replay.
         EXPECT_EQ(displayChanged, 1u);
     }
 }
@@ -539,7 +541,9 @@ TEST_F(Publish, Bug017DisplayObserverCanDestroySelectionDuringDelivery) {
                     XML::Document::MutationScope outerMutation(*doc->getReprDoc());
                     ASSERT_TRUE(DocumentUndo::undo(doc.get()));
                     EXPECT_EQ(attempts, 0u);
-                    EXPECT_EQ(immediate, 5u); // Live membership observers remain immediate.
+                    // Live membership observers remain immediate: BUG-026c delivers the
+                    // five replay removals as one change before the replay.
+                    EXPECT_EQ(immediate, 1u);
                 }
                 if (delivery == Delivery::IdleRetry) {
                     ASSERT_TRUE(selection);

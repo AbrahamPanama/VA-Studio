@@ -82,6 +82,27 @@ namespace Inkscape::XML {
 class Event;
 } // namespace Inkscape::XML
 
+namespace {
+std::vector<Inkscape::XML::Node *> replay_removals(Inkscape::XML::Event *event, bool undo)
+{
+    std::vector<Inkscape::XML::Node *> nodes;
+    for (auto current = event; current; current = current->next) {
+        if (undo) {
+            if (auto add = dynamic_cast<Inkscape::XML::EventAdd *>(current)) nodes.push_back(add->child);
+        } else {
+            if (auto del = dynamic_cast<Inkscape::XML::EventDel *>(current)) nodes.push_back(del->child);
+        }
+    }
+    return nodes;
+}
+
+void emit_replay_removals(SPDocument *document, Inkscape::XML::Event *event, bool undo)
+{
+    auto nodes = replay_removals(event, undo);
+    document->emitHistoryReplayRemovals(nodes);
+}
+} // namespace
+
 namespace Inkscape {
 struct UndoInteractionLifetime : std::enable_shared_from_this<UndoInteractionLifetime> {
     SPDocument *document = nullptr; // Invalidated before SPDocument emits destroySignal.
@@ -868,6 +889,7 @@ void Inkscape::DocumentUndo::rollbackInteraction(RollbackableInteraction &intera
         sp_repr_rollback(document->rdoc);
     }
     if (document->partial) {
+        emit_replay_removals(document, document->partial, true);
         sp_repr_undo_log(document->partial);
         sp_repr_free_log(document->partial);
     }
@@ -1215,6 +1237,7 @@ void Inkscape::DocumentUndo::rollbackToDetachedChanges(SPDocument *document, Pen
         sp_repr_rollback(document->rdoc);
     }
     if (document->partial) {
+        emit_replay_removals(document, document->partial, true);
         sp_repr_undo_log(document->partial);
         sp_repr_free_log(document->partial);
     }
@@ -1289,6 +1312,7 @@ gboolean Inkscape::DocumentUndo::undo(SPDocument *doc)
     if (! doc->undo.empty()) {
         Inkscape::Event *log = doc->undo.back();
         doc->undo.pop_back();
+        emit_replay_removals(doc, log->event, true);
         sp_repr_undo_log (log->event);
         perform_document_update(*doc);
         doc->redo.push_back(log);
@@ -1330,6 +1354,7 @@ gboolean Inkscape::DocumentUndo::redo(SPDocument *doc)
     if (! doc->redo.empty()) {
         Inkscape::Event *log = doc->redo.back();
 		doc->redo.pop_back();
+		emit_replay_removals(doc, log->event, false);
 		sp_repr_replay_log (log->event);
         doc->undo.push_back(log);
         perform_document_update(*doc);

@@ -111,6 +111,7 @@ public:
     void setDesktop(SPDesktop *desktop);
     SPDesktop *getDesktop() {return _desktop;}
     void update();
+    std::uint64_t updateCountForTest() const { return _update_count_for_test; }
 
     /// Widget scope identity for the bounded status-bar stroke-width
     /// transaction. A selection or document replacement starts a new scope so a
@@ -134,6 +135,7 @@ protected:
     /// Live plan scope identity shared by prepare, apply and the commit
     /// readiness callback of `on_popup_preset`.
     std::uint64_t _scope_generation = 0;
+    std::uint64_t _update_count_for_test = 0;
 
     // Widgets
     Gtk::Grid  *grid;
@@ -156,6 +158,7 @@ protected:
 
     // Signals
     sigc::scoped_connection selection_changed_connection;
+    sigc::scoped_connection selection_changed_for_display_connection;
     sigc::scoped_connection selection_modified_connection;
     sigc::scoped_connection _document_replaced_connection;
     sigc::scoped_connection _desktop_destroy_connection;

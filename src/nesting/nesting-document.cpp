@@ -1594,6 +1594,28 @@ Geom::PathVector part_path(SPItem *item)
                 auto outline = sp_pathvector_boolop(fill, stroke, bool_op_union, rule, fill_nonZero);
                 return outline * item->i2doc_affine();
             }
+            if (item->style->fill.isNone() && !stroke.empty()) {
+                auto closed_fill = fill;
+                if (closed_fill.empty()) {
+                    if (auto curve = curve_for_item(item))
+                        closed_fill = std::move(*curve);
+                }
+                if (!closed_fill.empty() &&
+                    std::all_of(closed_fill.begin(), closed_fill.end(),
+                                [](Geom::Path const &path) { return path.closed(); })) {
+                    auto const rule = item->style->fill_rule.computed == SP_WIND_RULE_EVENODD ?
+                                      fill_oddEven : fill_nonZero;
+                    try {
+                        auto outline = sp_pathvector_boolop(closed_fill, stroke, bool_op_union, rule, fill_nonZero);
+                        if (!outline.empty())
+                            return outline * item->i2doc_affine();
+                    } catch (...) {
+                        // Fall back to the item's closed centerline below.
+                    }
+                    if (auto curve = curve_for_item(item))
+                        return *curve * item->i2doc_affine();
+                }
+            }
             return (stroke.empty() ? fill : stroke) * item->i2doc_affine();
         }
     }

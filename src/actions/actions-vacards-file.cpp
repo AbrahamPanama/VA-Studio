@@ -44,7 +44,11 @@ ParamSpec const export_params[]{WRITE,
  {.key="ids",.type=ParamType::List,.descriptor=&ids}, {.key="area",.descriptor=&area}, {.key="drawing",.type=ParamType::Boolean},
  {.key="dpi",.type=ParamType::Number,.default_value="96",.min=1,.max=9600},
  {.key="background",.descriptor=&rgba},{.key="profile",.descriptor=&profile},
- {.key="text-policy",.type=ParamType::Choice,.default_value="preserve",.choices=text}};
+ {.key="text-policy",.type=ParamType::Choice,.default_value="preserve",.choices=text},
+ {.key="prevent-white-clipping",.type=ParamType::Boolean,.default_value="false",.help="Write pure white (255,255,255) as 254,254,254 so printing software (RIP) does not treat it as transparent. Other colours and transparent areas are unchanged."},
+ {.key="white-clipping-transparent",.type=ParamType::Boolean,.default_value="false",.help="With Prevent white clipping on, also write fully transparent white as 254,254,254 (still transparent), for printing software that ignores transparency."},
+ {.key="clean-edges",.type=ParamType::Boolean,.default_value="false",.help="Give the semi-transparent outline of opaque artwork the colour of the artwork next to it, and remove colour hidden under full transparency. Images made in other programs often carry dark edges that printing software prints as an outline. Translucent areas keep their colour."},
+ {.key="hard-edges",.type=ParamType::Boolean,.default_value="false",.help="No semi-transparent pixels: each pixel is either opaque or transparent (at 50%), for printing software that mishandles soft edges."}};
 #undef LOAD
 #undef WRITE
 #undef DISCARD
@@ -102,6 +106,9 @@ object file_result_schema(std::string_view name)
     if (name=="file.export") {
         props["output_width"]=scalar("integer");props["output_height"]=scalar("integer");
         props["profile"]=closed({{"id",scalar("string")},{"name",scalar("string")},{"sha256",scalar("string")},{"notice",scalar("string")}});
+        props["rip_options"]=closed({{"prevent-white-clipping",scalar("boolean")},
+          {"white-clipping-transparent",scalar("boolean")},{"clean-edges",scalar("boolean")},
+          {"hard-edges",scalar("boolean")}});
     }
     return closed(props);
 }

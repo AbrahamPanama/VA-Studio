@@ -413,6 +413,7 @@ private:
 
     // Document ------------------------------
     std::unique_ptr<Avoid::Router> _router; // Instance of the connector router
+    sigc::signal<void (std::vector<Inkscape::XML::Node *> const &)> _history_replay_removals_signal;
     std::unique_ptr<Inkscape::Selection> _selection;
 
     // Document status -----------------------
@@ -536,6 +537,9 @@ public:
     void removeUndoObserver(Inkscape::UndoStackObserver& observer);
 
     sigc::connection connectDestroy(sigc::signal<void ()>::slot_type slot);
+    sigc::connection connectHistoryReplayRemovals(
+        sigc::slot<void (std::vector<Inkscape::XML::Node *> const &)> slot);
+    void emitHistoryReplayRemovals(std::vector<Inkscape::XML::Node *> const &nodes);
     sigc::connection connectModified(ModifiedSignal::slot_type slot);
     sigc::connection connectObjectBound(ObjectBoundSignal::slot_type slot);
     sigc::connection connectFilenameSet(FilenameSetSignal::slot_type slot);

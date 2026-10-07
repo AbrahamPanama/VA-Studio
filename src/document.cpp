@@ -2346,6 +2346,17 @@ sigc::connection SPDocument::connectDestroy(sigc::signal<void ()>::slot_type slo
     return destroySignal.connect(slot);
 }
 
+sigc::connection SPDocument::connectHistoryReplayRemovals(
+    sigc::slot<void (std::vector<Inkscape::XML::Node *> const &)> slot)
+{
+    return _history_replay_removals_signal.connect(std::move(slot));
+}
+
+void SPDocument::emitHistoryReplayRemovals(std::vector<Inkscape::XML::Node *> const &nodes)
+{
+    if (!nodes.empty()) _history_replay_removals_signal.emit(nodes);
+}
+
 sigc::connection SPDocument::connectModified(SPDocument::ModifiedSignal::slot_type slot)
 {
     return modified_signal.connect(slot);

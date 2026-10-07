@@ -7,6 +7,14 @@
 
 namespace ED = Inkscape::IO::ExportDestination;
 namespace {
+struct QuerySeam {
+    QuerySeam() { ED::detail::set_folder_query_timeout_for_testing(25); }
+    ~QuerySeam()
+    {
+        ED::detail::set_folder_query_for_testing({});
+        ED::detail::set_folder_query_timeout_for_testing(750);
+    }
+};
 std::string path(std::string const &name) { return Glib::build_filename(Glib::get_tmp_dir(), name); }
 bool await(std::function<bool()> const &complete)
 {
@@ -117,6 +125,18 @@ TEST(ExportDestination, OnlySuccessfulCompleteOutputsRememberDirectories)
     EXPECT_EQ(profile.at(ED::preference_key(tiff)), path("TIFF"));
 }
 
+TEST(ExportDestination, PerFormatFoldersRemainIndependent)
+{
+    std::map<std::string, std::string> profile;
+    auto remember = [&](auto const &key, auto const &directory) { profile[key] = directory; };
+    auto png = ED::format_key("image/png", ".png");
+    auto svg = ED::format_key("image/svg+xml", ".svg");
+    ED::record_result(png, Glib::build_filename(path("A"), "drawing.png"), true, false, remember);
+    ED::record_result(svg, Glib::build_filename(path("B"), "drawing.svg"), true, false, remember);
+    EXPECT_EQ(profile.at(ED::preference_key(png)), path("A"));
+    EXPECT_EQ(profile.at(ED::preference_key(svg)), path("B"));
+}
+
 TEST(ExportDestination, SeparateSessionsDoNotRewriteEachOther)
 {
     ED::Session first, second;
@@ -206,4 +226,83 @@ TEST(ExportDestination, EmptyCandidatesCompleteOnceWithoutSchedulingIo)
     EXPECT_EQ(count, 1);
     for (unsigned i = 0; i < 32; ++i) g_main_context_iteration(nullptr, false);
     EXPECT_EQ(count, 1);
+}
+
+TEST(ExportDestination, UsableRememberedFolderIsProposed)
+{
+    QuerySeam seam;
+    ED::detail::set_folder_query_for_testing([](auto const &, auto done) {
+        done(ED::detail::QueryOutcome::Usable);
+    });
+    std::string resolved;
+    ED::DirectoryRequest request({path("remembered"), path("document"), path("home")},
+                                 [&](auto folder) { resolved = std::move(folder); });
+    EXPECT_EQ(resolved, path("remembered"));
+}
+
+TEST(ExportDestination, SlowRememberedFolderIsProposedAfterTimeout)
+{
+    QuerySeam seam;
+    std::function<void(ED::detail::QueryOutcome)> late;
+    ED::detail::set_folder_query_for_testing([&](auto const &, auto done) { late = std::move(done); });
+    unsigned count = 0;
+    std::string resolved;
+    ED::DirectoryRequest request({path("remembered-slow"), path("document"), path("home")},
+                                 [&](auto folder) { ++count; resolved = std::move(folder); });
+    ASSERT_TRUE(await([&] { return count != 0; }));
+    EXPECT_EQ(resolved, path("remembered-slow"));
+    ASSERT_TRUE(static_cast<bool>(late));
+    late(ED::detail::QueryOutcome::Usable);
+    EXPECT_EQ(count, 1);
+    EXPECT_EQ(resolved, path("remembered-slow"));
+}
+
+TEST(ExportDestination, SaturatedProbeQueueProposesCurrentCandidate)
+{
+    QuerySeam seam;
+    std::vector<std::function<void(ED::detail::QueryOutcome)>> pending;
+    ED::detail::set_folder_query_for_testing([&](auto const &, auto done) { pending.push_back(std::move(done)); });
+    std::vector<std::unique_ptr<ED::DirectoryRequest>> requests;
+    for (unsigned i = 0; i < 4; ++i) {
+        requests.push_back(std::make_unique<ED::DirectoryRequest>(
+            std::vector<std::string>{path("blocked-" + std::to_string(i)), path("next")}, [](auto) {}));
+    }
+    ASSERT_EQ(pending.size(), 4u);
+    unsigned count = 0;
+    std::string resolved;
+    ED::DirectoryRequest saturated({path("first-candidate"), path("second-candidate")}, [&](auto folder) {
+        ++count;
+        resolved = std::move(folder);
+    });
+    EXPECT_EQ(count, 1);
+    EXPECT_EQ(resolved, path("first-candidate"));
+    requests.clear();
+    for (auto &complete : pending) complete(ED::detail::QueryOutcome::Unusable);
+}
+
+TEST(ExportDestination, MissingAndNotWritableCandidatesAdvanceInOrder)
+{
+    QuerySeam seam;
+    std::vector<ED::detail::QueryOutcome> outcomes{ED::detail::QueryOutcome::Unusable,
+                                                   ED::detail::QueryOutcome::Usable};
+    ED::detail::set_folder_query_for_testing([&](auto const &, auto done) {
+        auto outcome = outcomes.front();
+        outcomes.erase(outcomes.begin());
+        done(outcome);
+    });
+    std::string resolved;
+    ED::DirectoryRequest missing({path("missing"), path("document"), path("home")},
+                                 [&](auto folder) { resolved = std::move(folder); });
+    EXPECT_EQ(resolved, path("document"));
+
+    outcomes = {ED::detail::QueryOutcome::Unusable, ED::detail::QueryOutcome::Usable};
+    ED::DirectoryRequest not_writable({path("not-writable"), path("document-2"), path("home")},
+                                      [&](auto folder) { resolved = std::move(folder); });
+    EXPECT_EQ(resolved, path("document-2"));
+
+    outcomes = {ED::detail::QueryOutcome::Unusable, ED::detail::QueryOutcome::Unusable,
+                ED::detail::QueryOutcome::Usable};
+    ED::DirectoryRequest both_missing({path("missing-1"), path("missing-2"), path("home")},
+                                      [&](auto folder) { resolved = std::move(folder); });
+    EXPECT_EQ(resolved, path("home"));
 }

@@ -24,6 +24,7 @@
 #include "object/sp-item.h"
 #include "object/sp-path.h"
 #include "object/sp-root.h"
+#include "object/weakptr.h"
 #include "path/path-outline.h"
 #include "svg/svg.h"
 #include "style.h"
@@ -173,6 +174,20 @@ TEST_F(StrokeToPathClip, StrokeAndMarkers) { outcome("fill:none;stroke:blue;stro
 TEST_F(StrokeToPathClip, FillStrokeAndMarkers) { outcome("fill:blue;stroke:red;stroke-width:10;marker-end:url(#marker)", true); }
 TEST_F(StrokeToPathClip, MarkersOnly) { outcome("fill:none;stroke:none;marker-end:url(#marker)", true); }
 TEST_F(StrokeToPathClip, StrokeOnlyText) { outcome("fill:none;stroke:blue;stroke-width:10", true, true); }
+TEST_F(StrokeToPathClip, ReusedAddressCountsAsSuccessfulReplacement)
+{
+    auto doc = make(shape("fill:blue", "", true));
+    auto original = item(*doc);
+    ASSERT_TRUE(original);
+    Inkscape::SPWeakPtr<SPItem> original_weak(original);
+    auto const reused_address = original; // Save the raw value before releasing the text.
+    original->deleteObject();
+    ASSERT_FALSE(original_weak);
+
+    // Model allocator reuse: compare the released object's saved value only.
+    EXPECT_TRUE(Inkscape::PathOutline::replacement_succeeded(
+        reused_address, !original_weak, reused_address));
+}
 TEST_F(StrokeToPathClip, FillOnlyText) { outcome("fill:blue;stroke:none", true, true); }
 TEST_F(StrokeToPathClip, FillStrokeText) { outcome("fill:blue;stroke:red;stroke-width:10", true, true); }
 TEST_F(StrokeToPathClip, LegacyStroke) { outcome("fill:none;stroke:blue;stroke-width:10", true, false, true); }

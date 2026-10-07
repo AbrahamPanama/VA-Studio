@@ -23,12 +23,15 @@
 #include "inkscape-application.h"
 #include "object/sp-item.h"
 #include "object/sp-item-group.h"
+#include "object/sp-path.h"
 #include "object/sp-root.h"
 #include "preferences.h"
 #include "selection.h"
+#include "selection-chemistry.h"
 #include "ui/dialog/objects.h"
 #include "ui/widget/canvas.h"
 #include "ui/widget/gtk-registry.h"
+#include "ui/widget/selected-style.h"
 #include "xml/repr.h"
 #include "xml/document.h"
 #include "layer-manager.h"
@@ -926,6 +929,362 @@ public:
     return true;
 }();
 INSTANTIATE_TEST_SUITE_P(Matrix,ObjectsPanelBulk,::testing::Combine(::testing::Values(3000,6000,12000),::testing::Values(1,4),::testing::Bool(),::testing::Bool()));
+
+// BUG-026b reproduces the status-bar listener that is present in the installed
+// UI but absent from the original bulk-panel fixture.
+class UndoFixUngroup : public ObjectsPanelBulk {
+protected:
+    void SetUp() override {
+        auto [n, groups, _, __] = GetParam();
+        create(n, groups, false, false);
+        statusbar = std::make_unique<Inkscape::UI::Widget::SelectedStyle>();
+        statusbar->setDesktop(desktop.get());
+    }
+    void TearDown() override {
+        statusbar->setDesktop(nullptr);
+        statusbar.reset();
+        ObjectsPanelBulk::TearDown();
+    }
+    std::unique_ptr<Inkscape::UI::Widget::SelectedStyle> statusbar;
+};
+
+// Reproduce an ordinary O(selection) observer alongside the UndoFix UI
+// listeners. The observer models style/bounds consumers that scan the entire
+// live selection on every synchronous selection notification.
+struct ReplayCostObserver {
+    int calls = 0;
+    double bounds_work = 0;
+
+    void changed(Inkscape::Selection *selection) {
+        ++calls;
+        for (auto item : selection->items()) {
+            if (auto bounds = item->visualBounds()) {
+                bounds_work += bounds->min()[Geom::X] + bounds->min()[Geom::Y] +
+                               bounds->max()[Geom::X] + bounds->max()[Geom::Y];
+            }
+        }
+    }
+};
+
+std::string selected_ids(Inkscape::Selection *selection) {
+    std::vector<std::string> ids;
+    for (auto item : selection->items()) ids.emplace_back(item->getId());
+    std::sort(ids.begin(), ids.end());
+    std::ostringstream result;
+    result << "[";
+    for (std::size_t i = 0; i < ids.size(); ++i) {
+        if (i) result << ",";
+        result << ids[i];
+    }
+    result << "]";
+    return result.str();
+}
+
+void report_final_selection(char const *phase, Inkscape::Selection *selection) {
+    std::cout << "BATCH_FINAL_SELECTION phase=" << phase << " size=" << selection->size()
+              << " ids=" << selected_ids(selection) << std::endl;
+}
+
+template <typename Operation, typename Xml>
+void measure_replay_batch(std::unique_ptr<SPDocument> const &doc, Inkscape::Selection *selection,
+                          Xml xml, char const *label, int n, int groups, Operation operation) {
+    ReplayCostObserver observer;
+    auto connection = selection->connectChanged([&](auto current) { observer.changed(current); });
+    auto const before = xml();
+    operation();
+    settle();
+    auto const after = xml();
+    ASSERT_NE(before, after);
+    auto const operation_calls = observer.calls;
+    observer.calls = 0;
+    observer.bounds_work = 0;
+    auto start = std::chrono::steady_clock::now();
+    ASSERT_TRUE(DocumentUndo::undo(doc.get()));
+    settle();
+    auto const undo_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    ASSERT_EQ(xml(), before);
+    report_final_selection("undo", selection);
+    auto const undo_calls = observer.calls;
+    EXPECT_TRUE(selection->isEmpty());
+    observer.calls = 0;
+    observer.bounds_work = 0;
+    start = std::chrono::steady_clock::now();
+    ASSERT_TRUE(DocumentUndo::redo(doc.get()));
+    settle();
+    auto const redo_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    ASSERT_EQ(xml(), after);
+    report_final_selection("redo", selection);
+    EXPECT_TRUE(selection->isEmpty());
+    std::cout << "BATCH_PROFILE case=" << label << " n=" << n << " groups=" << groups
+              << " operation_listener_calls=" << operation_calls << " undo_seconds=" << undo_seconds
+              << " undo_listener_calls=" << undo_calls
+              << " redo_seconds=" << redo_seconds << " redo_listener_calls=" << observer.calls
+              << " bounds_work=" << observer.bounds_work << std::endl;
+    EXPECT_LE(undo_calls, 2);
+    EXPECT_LE(observer.calls, 2);
+    if (n == 12000) {
+        EXPECT_LE(undo_seconds, 10.0);
+        EXPECT_LE(redo_seconds, 10.0);
+    }
+    connection.disconnect();
+}
+
+TEST_P(UndoFixUngroup, ReplayUndoRedo) {
+    auto [n, groups, _, __] = GetParam();
+    auto const before = xml();
+    auto start = std::chrono::steady_clock::now();
+    desktop->getSelection()->ungroup();
+    settle();
+    double op = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    auto const after = xml();
+    ASSERT_NE(before, after);
+    start = std::chrono::steady_clock::now();
+    ASSERT_TRUE(DocumentUndo::undo(doc.get()));
+    settle();
+    double undo = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    ASSERT_EQ(xml(), before);
+    start = std::chrono::steady_clock::now();
+    ASSERT_TRUE(DocumentUndo::redo(doc.get()));
+    settle();
+    double redo = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    ASSERT_EQ(xml(), after);
+    std::cout << "UNDO_FIX ungroup-n" << n << "-g" << groups << " op=" << op << " undo=" << undo
+              << " redo=" << redo << " listeners=ObjectsPanel,SelectedStyle,ApplicationActiveSelection" << std::endl;
+}
+TEST_P(UndoFixUngroup, ReplayBatchBaseline) {
+    auto [n, groups, _, __] = GetParam();
+    measure_replay_batch(doc, desktop->getSelection(), [&] { return xml(); }, "ungroup", n, groups,
+                         [&] { desktop->getSelection()->ungroup(); });
+}
+INSTANTIATE_TEST_SUITE_P(UndoFix, UndoFixUngroup, ::testing::Combine(
+    ::testing::Values(3000, 6000, 12000), ::testing::Values(1, 4),
+    ::testing::Values(false), ::testing::Values(false)));
+
+class UndoFixBreakApart : public ObjectsPanelBulk {
+protected:
+    void SetUp() override {
+        auto [n, _, __, ___] = GetParam();
+        std::string svg = R"(<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><path id="donor" d=")";
+        for (int i = 0; i < n; ++i) {
+            auto x = (i % 100) * 2;
+            auto y = (i / 100) * 2;
+            svg += "M" + std::to_string(x) + "," + std::to_string(y) + "h1v1h-1z";
+        }
+        svg += R"("/></svg>)";
+        doc = SPDocument::createNewDocFromMem(svg);
+        ASSERT_TRUE(doc);
+        doc->ensureUpToDate();
+        desktop = std::make_unique<SPDesktop>(doc->getNamedView());
+        canvas = std::make_unique<Gtk::Window>(); canvas->set_child(*desktop->getCanvas());
+        Inkscape::Application::instance().add_desktop(desktop.get());
+        panel = std::make_unique<Inkscape::UI::Dialog::ObjectsPanel>();
+        host = std::make_unique<Gtk::Window>(); host->set_child(*panel);
+        panel->setDesktop(desktop.get()); host->present();
+        tree = find_widget<Gtk::TreeView>(*panel); ASSERT_TRUE(tree);
+        desktop->getSelection()->set(cast<SPItem>(doc->getObjectById("donor")));
+        settle();
+        if (auto row = tree->get_model()->get_iter("0")) tree->collapse_row(tree->get_model()->get_path(row));
+        settle();
+        statusbar = std::make_unique<Inkscape::UI::Widget::SelectedStyle>();
+        statusbar->setDesktop(desktop.get());
+        DocumentUndo::clearUndo(doc.get()); DocumentUndo::clearRedo(doc.get());
+    }
+    void TearDown() override {
+        statusbar->setDesktop(nullptr); statusbar.reset();
+        ObjectsPanelBulk::TearDown();
+    }
+    std::unique_ptr<Inkscape::UI::Widget::SelectedStyle> statusbar;
+};
+TEST_P(UndoFixBreakApart, ReplayUndoRedo) {
+    auto [n, _, __, ___] = GetParam();
+    auto const before = xml();
+    auto start = std::chrono::steady_clock::now();
+    desktop->getSelection()->breakApart();
+    settle();
+    double op = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    auto const after = xml();
+    ASSERT_NE(before, after);
+    start = std::chrono::steady_clock::now();
+    ASSERT_TRUE(DocumentUndo::undo(doc.get()));
+    settle();
+    double undo = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    ASSERT_EQ(xml(), before);
+    start = std::chrono::steady_clock::now();
+    ASSERT_TRUE(DocumentUndo::redo(doc.get()));
+    settle();
+    double redo = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    ASSERT_EQ(xml(), after);
+    std::cout << "UNDO_FIX break-apart-n" << n << " op=" << op << " undo=" << undo << " redo=" << redo
+              << " listeners=ObjectsPanel,SelectedStyle,ApplicationActiveSelection" << std::endl;
+}
+TEST_P(UndoFixBreakApart, ReplayBatchBaseline) {
+    auto [n, _, __, ___] = GetParam();
+    measure_replay_batch(doc, desktop->getSelection(), [&] { return xml(); }, "break-apart", n, 1,
+                         [&] { desktop->getSelection()->breakApart(); });
+}
+INSTANTIATE_TEST_SUITE_P(UndoFix, UndoFixBreakApart, ::testing::Combine(
+    ::testing::Values(3000, 12000), ::testing::Values(0), ::testing::Values(false), ::testing::Values(false)));
+
+// Real owner-sheet profiling is opt-in through GTEST_ALSO_RUN_DISABLED_TESTS.
+// Each case loads a disposable copy supplied through VACARDS_OWNER_SHEET.
+class RealOwnerSheet : public ObjectsPanelBulk {
+protected:
+    static std::vector<std::string> const r1_ids;
+    static std::vector<std::string> const r2_ids;
+    static std::vector<std::string> const r3_ids;
+
+    void SetUp() override {}
+
+    void load_rung(std::vector<std::string> const &ids) {
+        auto path = g_getenv("VACARDS_OWNER_SHEET");
+        ASSERT_NE(path, nullptr) << "VACARDS_OWNER_SHEET must name a disposable owner-file copy";
+        doc = SPDocument::createNewDoc(path);
+        ASSERT_TRUE(doc);
+        auto layer = doc->getObjectById("layer-MC0");
+        ASSERT_TRUE(layer);
+        std::vector<SPObject *> remove;
+        for (auto &child : layer->children) {
+            if (!is<SPItem>(&child)) continue;
+            auto id = child.getId();
+            if (!id || std::find(ids.begin(), ids.end(), id) == ids.end()) remove.push_back(&child);
+        }
+        for (auto child : remove) child->deleteObject();
+        cast<SPItem>(layer)->setExpanded(true);
+        doc->ensureUpToDate();
+        attach(ids);
+        // Keep the same ObjectsPanel listener bound as UndoFix while the panel
+        // window is hidden, matching the installed panel-closed measurements.
+        host->set_visible(false);
+        statusbar = std::make_unique<Inkscape::UI::Widget::SelectedStyle>();
+        statusbar->setDesktop(desktop.get());
+        DocumentUndo::clearUndo(doc.get());
+        DocumentUndo::clearRedo(doc.get());
+    }
+
+    void TearDown() override {
+        if (statusbar) statusbar->setDesktop(nullptr);
+        statusbar.reset();
+        ObjectsPanelBulk::TearDown();
+    }
+
+    std::size_t path_count() const {
+        std::size_t result = 0;
+        auto visit = [&](auto &&self, SPObject const *object) -> void {
+            if (is<SPPath>(object)) ++result;
+            for (auto const &child : object->children) self(self, &child);
+        };
+        visit(visit, doc->getRoot());
+        return result;
+    }
+
+    void run_union(std::vector<std::string> const &ids, std::string const &cell) {
+        load_rung(ids);
+        desktop->getSelection()->ungroup();
+        settle();
+        Inkscape::SelectionHelper::selectAll(desktop.get());
+        settle();
+        record_operation(cell, "Union", [&] {
+            auto selection = desktop->getSelection();
+            selection->removeLPESRecursive(true);
+            selection->unlinkRecursive(true);
+            selection->pathUnion();
+        });
+    }
+
+    void record_operation(std::string const &cell, std::string const &op, auto operation) {
+        auto const before = xml();
+        auto const paths_before = path_count();
+        std::cout << "REAL_START " << cell << " " << op << std::endl;
+        auto start = std::chrono::steady_clock::now();
+        operation();
+        settle();
+        auto const after = xml();
+        auto const paths_after = path_count();
+        ASSERT_NE(before, after) << cell << " " << op << " did not change XML";
+        // The root's inkscape:version names the build commit; hash without its value so
+        // results stay comparable across commits.
+        auto normalized = after;
+        constexpr std::string_view version_attribute = "inkscape:version=\"";
+        if (auto start = normalized.find(version_attribute); start != std::string::npos) {
+            start += version_attribute.size();
+            if (auto end = normalized.find('"', start); end != std::string::npos) {
+                normalized.erase(start, end - start);
+            }
+        }
+        auto const hash = g_compute_checksum_for_data(
+            G_CHECKSUM_SHA256, reinterpret_cast<guchar const *>(normalized.data()), normalized.size());
+        std::cout << "REAL_RESULT " << cell << " sha256=" << hash << std::endl;
+        g_free(hash);
+        std::cout << "REAL " << cell << " " << op << " seconds="
+                  << std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count()
+                  << " paths_before=" << paths_before << " paths_after=" << paths_after << std::endl;
+
+        std::cout << "REAL_START " << cell << " " << op << "Undo" << std::endl;
+        start = std::chrono::steady_clock::now();
+        ASSERT_TRUE(DocumentUndo::undo(doc.get()));
+        settle();
+        auto const undo_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+        ASSERT_EQ(xml(), before);
+        std::cout << "REAL " << cell << " " << op << "Undo seconds=" << undo_seconds
+                  << " paths_before=" << paths_after << " paths_after=" << paths_before << std::endl;
+
+        std::cout << "REAL_START " << cell << " " << op << "Redo" << std::endl;
+        start = std::chrono::steady_clock::now();
+        ASSERT_TRUE(DocumentUndo::redo(doc.get()));
+        settle();
+        auto const redo_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+        ASSERT_EQ(xml(), after);
+        std::cout << "REAL " << cell << " " << op << "Redo seconds=" << redo_seconds
+                  << " paths_before=" << paths_before << " paths_after=" << paths_after << std::endl;
+    }
+
+    std::unique_ptr<Inkscape::UI::Widget::SelectedStyle> statusbar;
+};
+
+std::vector<std::string> const RealOwnerSheet::r1_ids{"g1087"};
+std::vector<std::string> const RealOwnerSheet::r2_ids{"g1087-0", "g1087-0-0", "g1087-0-4", "g1087-0-4-5"};
+std::vector<std::string> const RealOwnerSheet::r3_ids{
+    "g1087", "g1087-0", "g1087-2", "g1087-0-4", "g1087-1", "g1087-0-0", "g1087-2-3", "g1087-0-4-5"};
+
+TEST_F(RealOwnerSheet, DISABLED_UngroupR1) {
+    load_rung(r1_ids);
+    record_operation("UngroupR1", "Ungroup", [&] { desktop->getSelection()->ungroup(); });
+}
+TEST_F(RealOwnerSheet, DISABLED_UngroupR2) {
+    load_rung(r2_ids);
+    record_operation("UngroupR2", "Ungroup", [&] { desktop->getSelection()->ungroup(); });
+}
+TEST_F(RealOwnerSheet, DISABLED_UngroupR3) {
+    load_rung(r3_ids);
+    record_operation("UngroupR3", "Ungroup", [&] { desktop->getSelection()->ungroup(); });
+}
+
+TEST_F(RealOwnerSheet, DISABLED_UngroupSelectAllUnionR1) { run_union(r1_ids, "UnionR1"); }
+TEST_F(RealOwnerSheet, DISABLED_UngroupSelectAllUnionR2) { run_union(r2_ids, "UnionR2"); }
+TEST_F(RealOwnerSheet, DISABLED_UngroupSelectAllUnionR3) { run_union(r3_ids, "UnionR3"); }
+
+TEST_F(RealOwnerSheet, DISABLED_CombineR2) {
+    load_rung(r2_ids);
+    desktop->getSelection()->ungroup();
+    settle();
+    Inkscape::SelectionHelper::selectAll(desktop.get());
+    settle();
+    DocumentUndo::clearUndo(doc.get());
+    DocumentUndo::clearRedo(doc.get());
+    record_operation("CombineR2", "Combine", [&] { desktop->getSelection()->combine(); });
+}
+TEST_F(RealOwnerSheet, DISABLED_BreakApartR2) {
+    load_rung(r2_ids);
+    desktop->getSelection()->ungroup();
+    settle();
+    Inkscape::SelectionHelper::selectAll(desktop.get());
+    settle();
+    desktop->getSelection()->combine();
+    settle();
+    DocumentUndo::clearUndo(doc.get());
+    DocumentUndo::clearRedo(doc.get());
+    record_operation("BreakApartR2", "BreakApart", [&] { desktop->getSelection()->breakApart(); });
+}
 
 // SPGroup::child_added places a child inserted in the middle of a group directly after the drawing item of its
 // previous SPItem sibling (Ungroup performance). Oracle: the incremental drawing order in every view must render

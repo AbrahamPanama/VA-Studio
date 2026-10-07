@@ -35,6 +35,7 @@
 #include "object/sp-path.h"
 #include "object/sp-root.h"
 #include "object/sp-text.h"
+#include "object/weakptr.h"
 #include "style.h"
 
 #include "ui/icon-names.h"
@@ -402,9 +403,10 @@ sp_item_list_to_curves(const std::vector<SPItem*> &items, std::vector<SPItem*>& 
         
         auto lpeitem = cast<SPLPEItem>(item);
         if (lpeitem && lpeitem->hasPathEffect()) {
+            Inkscape::SPWeakPtr<SPItem> original_weak(item);
             lpeitem->removeAllPathEffects(true);
             SPObject *elemref = document->getObjectById(id);
-            if (elemref != item) {
+            if (!original_weak || elemref != item) {
                 selected.erase(remove(selected.begin(), selected.end(), item), selected.end());
                 did = true;
                 if (elemref) {

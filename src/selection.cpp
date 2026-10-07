@@ -24,6 +24,7 @@
 #include <2geom/path-sink.h>
 #include <cmath>
 #include <glibmm/i18n.h>
+#include <unordered_set>
 
 #include "desktop.h"
 #include "document-undo.h"
@@ -47,11 +48,25 @@ namespace Inkscape {
 
 Selection::Selection(SPDesktop *desktop)
     : ObjectSet(desktop)
-{}
+{
+    setDocument(document());
+}
 
 Selection::Selection(SPDocument *document)
     : ObjectSet(document)
-{}
+{
+    setDocument(document);
+}
+
+void Selection::setDocument(SPDocument *document)
+{
+    ObjectSet::setDocument(document);
+    _history_replay_removals_connection.disconnect();
+    if (document) {
+        _history_replay_removals_connection = document->connectHistoryReplayRemovals(
+            sigc::mem_fun(*this, &Selection::_removeHistoryReplayTargets));
+    }
+}
 
 Selection::~Selection() {
     *_display_alive = false;
@@ -66,6 +81,26 @@ Selection::~Selection() {
         g_source_remove(_idle);
         _idle = 0;
     }
+}
+
+void Selection::_removeHistoryReplayTargets(std::vector<XML::Node *> const &nodes)
+{
+    std::unordered_set<XML::Node *> removals(nodes.begin(), nodes.end());
+    if (removals.empty()) return;
+
+    std::vector<SPObject *> affected;
+    for (auto member : objects()) {
+        for (auto object = member; object; object = object->parent) {
+            if (auto repr = object->getRepr(); repr && removals.contains(repr)) {
+                affected.push_back(member);
+                break;
+            }
+        }
+    }
+    if (affected.empty()) return;
+    for (auto member : affected) _remove(member);
+    // Last statement: an observer may destroy this Selection during delivery.
+    _emitChanged();
 }
 
 /* Handler for selected objects "modified" signal */

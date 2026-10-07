@@ -44,6 +44,8 @@ IntakeResult load_inspection_document(std::string const &absolute_path, Grants c
 std::vector<std::string> inspection_formats();
 /// Immutable intake provenance, valid until the document is destroyed. Null for non-inspection documents.
 boost::json::object const *inspection_report(SPDocument const *document);
+/// Check available memory before a raster export; returns a typed engine-limit refusal when it cannot fit.
+std::optional<IntakeError> admit_raster_export_memory(std::uint64_t pixels);
 // Native-only synchronous observations of intake call sites, not filesystem interception.
 // Borrowed for one request; no global state, CLI switch or retained callback.
 struct IntakeObservation {

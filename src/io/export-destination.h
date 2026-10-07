@@ -9,6 +9,14 @@
 
 namespace Inkscape::IO::ExportDestination {
 
+namespace detail {
+enum class QueryOutcome { Usable, Unusable, Pending };
+using FolderQuery = std::function<void(std::string const &, std::function<void(QueryOutcome)>)>;
+// Test seam for bounded asynchronous folder admission. Empty query restores GIO.
+void set_folder_query_for_testing(FolderQuery query);
+void set_folder_query_timeout_for_testing(unsigned milliseconds);
+}
+
 // Arguments come from Extension::Output, never a translated label or typed filename.
 std::string format_key(std::string const &mime, std::string extension);
 std::string preference_key(std::string const &format);

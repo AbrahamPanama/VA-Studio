@@ -12,6 +12,12 @@
 #include <iomanip>
 #include <random>
 #include <cmath>
+#include <atomic>
+#include <algorithm>
+#include <exception>
+#include <limits>
+#include <stdexcept>
+#include <thread>
 #include <boost/geometry.hpp>
 #include <boost/geometry/index/rtree.hpp>
 #include <2geom/path-sink.h>
@@ -20,10 +26,26 @@
 #include <2geom/circle.h>
 #include <2geom/sweeper.h>
 
+#include "display/dispatch-pool.h"
 #include "helper/geom-pathstroke.h"
 #include "helper/geom.h"
 #include "path/path-boolop.h"
 #include "util/treeify.h"
+
+namespace Inkscape::detail {
+namespace {
+std::atomic_size_t break_apart_parallel_pairs_threshold{256};
+std::atomic_size_t break_apart_throw_event{std::numeric_limits<std::size_t>::max()};
+}
+void set_break_apart_parallel_pairs_threshold_for_testing(std::size_t threshold)
+{
+    break_apart_parallel_pairs_threshold.store(threshold, std::memory_order_relaxed);
+}
+void set_break_apart_parallel_throw_event_for_testing(std::size_t event)
+{
+    break_apart_throw_event.store(event, std::memory_order_relaxed);
+}
+}
 
 namespace Geom {
 
@@ -1302,7 +1324,75 @@ public:
         _active.pop_back();
     }
 
+    void finalize()
+    {
+        std::vector<std::size_t> deferred;
+        for (std::size_t i = 0; i < _events.size(); ++i) {
+            if (!_events[i].immediate) deferred.push_back(i);
+        }
+        std::vector<unsigned char> results(deferred.size());
+        std::vector<std::exception_ptr> errors(deferred.size());
+        auto evaluate = [&](std::size_t first, std::size_t count, Inkscape::dispatch_pool *pool) {
+            auto check = [&](int index, int) {
+                auto const slot = first + index;
+                auto const event_index = deferred[slot];
+                auto const injected_event = Inkscape::detail::break_apart_throw_event.load(std::memory_order_relaxed);
+                try {
+                    if (injected_event == event_index) throw std::runtime_error("injected Break Apart containment failure");
+                    auto const &event = _events[event_index];
+                    Geom::PathVector const av{_pathv[event.ia]}, bv{_pathv[event.ib]};
+                    if (av.intersect(bv, _precision).empty() &&
+                        is_point_inside(_fill_rule, av.winding(_pathv[event.ib].initialPoint()))) {
+                        results[slot] = 1;
+                    }
+                } catch (...) {
+                    errors[slot] = std::current_exception();
+                }
+            };
+            if (pool) pool->dispatch(static_cast<int>(count), check);
+            else {
+                for (int i = 0; i < static_cast<int>(count); ++i) {
+                    auto const slot = first + i;
+                    auto const &event = _events[deferred[slot]];
+                    Geom::PathVector const av{_pathv[event.ia]}, bv{_pathv[event.ib]};
+                    if (av.intersect(bv, _precision).empty() &&
+                        is_point_inside(_fill_rule, av.winding(_pathv[event.ib].initialPoint()))) {
+                        results[slot] = 1;
+                    }
+                }
+            }
+        };
+        auto const threshold = Inkscape::detail::break_apart_parallel_pairs_threshold.load(std::memory_order_relaxed);
+#ifdef VA_2GEOM_THREAD_LOCAL_CLIPPING
+        if (deferred.empty() || deferred.size() < threshold) {
+            evaluate(0, deferred.size(), nullptr);
+        } else {
+            auto const pool_size = std::clamp<int>(std::thread::hardware_concurrency(), 1, 8);
+            Inkscape::dispatch_pool pool{pool_size};
+            constexpr std::size_t chunk_size = 16384;
+            for (std::size_t first = 0; first < deferred.size(); first += chunk_size) {
+                evaluate(first, std::min(chunk_size, deferred.size() - first), &pool);
+            }
+        }
+#else
+        evaluate(0, deferred.size(), nullptr);
+#endif
+
+        std::size_t deferred_index = 0;
+        for (auto const &event : _events) {
+            if (event.immediate) {
+                _contains[event.ia].push_back(event.ib);
+            } else {
+                if (errors[deferred_index]) std::rethrow_exception(errors[deferred_index]);
+                if (results[deferred_index]) _contains[event.ia].push_back(event.ib);
+                ++deferred_index;
+            }
+        }
+        _events.clear();
+    }
+
     std::vector<std::vector<int>> moveContainment() { return std::move(_contains); }
+    std::vector<std::vector<int>> copyContainmentForTesting() const { return _contains; }
 
 private:
     Geom::PathVector const &_pathv;
@@ -1317,16 +1407,19 @@ private:
     std::vector<std::optional<Box>> _boxes;
     std::vector<ItemIterator> _unindexed;
     std::vector<std::vector<int>> _contains;
+    struct Event { int ia; int ib; bool immediate; };
+    std::vector<Event> _events;
     std::vector<std::size_t> _active_positions;
     std::vector<Geom::OptRect> _bounds;
     std::vector<Geom::OptRect> _rectangles;
 
     void _checkPair(ItemIterator a, ItemIterator b)
     {
-        auto const ia = std::distance(_pathv.begin(), a);
-        auto const ib = std::distance(_pathv.begin(), b);
+        auto const ia = static_cast<int>(std::distance(_pathv.begin(), a));
+        auto const ib = static_cast<int>(std::distance(_pathv.begin(), b));
+#ifdef VA_2GEOM_THREAD_LOCAL_CLIPPING
         if (_rectangles[ia]) {
-            if (_rectangles[ia]->contains(_bounds[ib])) _contains[ia].push_back(ib);
+            if (_rectangles[ia]->contains(_bounds[ib])) _events.push_back({ia, ib, true});
             return;
         }
         // Most candidates fail this test. Do not copy paths or recompute exact
@@ -1334,13 +1427,17 @@ private:
         if (!_bounds[ia].contains(_bounds[ib])) {
             return;
         }
-        Geom::PathVector const av{*a}, bv{*b};
-        if (!av.intersect(bv, _precision).empty()) {
+        _events.push_back({ia, ib, false});
+#else
+        if (_rectangles[ia]) {
+            if (_rectangles[ia]->contains(_bounds[ib])) _contains[ia].push_back(ib);
             return;
         }
-        if (is_point_inside(_fill_rule, av.winding(b->initialPoint()))) {
-            _contains[ia].push_back(ib);
-        }
+        if (!_bounds[ia].contains(_bounds[ib])) return;
+        Geom::PathVector const av{*a}, bv{*b};
+        if (!av.intersect(bv, _precision).empty()) return;
+        if (is_point_inside(_fill_rule, av.winding(b->initialPoint()))) _contains[ia].push_back(ib);
+#endif
     }
 };
 
@@ -1414,10 +1511,21 @@ private:
 
 } // namespace
 
+namespace detail {
+std::vector<std::vector<int>> break_apart_containment_for_testing(Geom::PathVector const &paths)
+{
+    auto path_containment = PathContainmentSweeper{paths, fill_nonZero};
+    Geom::Sweeper{path_containment}.process();
+    path_containment.finalize();
+    return path_containment.copyContainmentForTesting();
+}
+} // namespace detail
+
 std::vector<Geom::PathVector> split_non_intersecting_paths(Geom::PathVector &&paths, FillRule fill_rule)
 {
     auto path_containment = PathContainmentSweeper{paths, fill_nonZero};
     Geom::Sweeper{path_containment}.process();
+    path_containment.finalize();
 
     auto const tree = Util::treeify(path_containment.moveContainment());
 

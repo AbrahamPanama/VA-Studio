@@ -95,8 +95,16 @@ static void
 ss_selection_changed (Inkscape::Selection *, gpointer data)
 {
     auto *ss = static_cast<Inkscape::UI::Widget::SelectedStyle *>(data);
-    // A selection replacement is a new scope identity: any in-flight bounded
-    // stroke-width plan must not apply to or commit against stale targets.
+    // Synchronous dependency observer: invalidate any in-flight bounded plan.
+    ss->beginNewScope();
+}
+
+static void
+ss_selection_changed_for_display (Inkscape::Selection *, gpointer data)
+{
+    auto *ss = static_cast<Inkscape::UI::Widget::SelectedStyle *>(data);
+    // Selection replacement is a new scope. During history replay the display
+    // signal is coalesced, so refresh only once after the final membership.
     ss->beginNewScope();
     ss->update();
 }
@@ -274,6 +282,7 @@ void SelectedStyle::setDesktop(SPDesktop *desktop)
 {
     if (_desktop) {
         selection_changed_connection.disconnect();
+        selection_changed_for_display_connection.disconnect();
         selection_modified_connection.disconnect();
         _document_replaced_connection.disconnect();
         _desktop_destroy_connection.disconnect();
@@ -294,6 +303,9 @@ void SelectedStyle::setDesktop(SPDesktop *desktop)
 
         selection_changed_connection = selection->connectChanged(
             sigc::bind(&ss_selection_changed, this)
+        );
+        selection_changed_for_display_connection = selection->connectChangedForDisplay(
+            sigc::bind(&ss_selection_changed_for_display, this)
         );
         selection_modified_connection = selection->connectModified(
             sigc::bind(&ss_selection_modified, this)
@@ -870,6 +882,7 @@ void SelectedStyle::onDefocus()
 void
 SelectedStyle::update()
 {
+    ++_update_count_for_test;
     closeStrokeWidthMenu();
     if (_desktop == nullptr)
         return;

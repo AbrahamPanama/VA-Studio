@@ -15,15 +15,25 @@
 #include <glibmm/i18n.h>
 #include <glibmm/markup.h>
 #include <2geom/rect.h>
+#include <boost/geometry.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include <cmath>
+#include <exception>
+#include <iterator>
 
 #include <algorithm>
+#include <atomic>
+#include <cstdint>
+#include <limits>
 #include <optional>
+#include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
 #include "desktop.h"
+#include "display/dispatch-pool.h"
 #include "document-undo.h"
 #include "document.h"
 #include "message-stack.h"
@@ -44,6 +54,29 @@
 #include "style.h"
 
 namespace Inkscape::detail {
+namespace {
+std::atomic_size_t union_parallel_pairs_threshold{256};
+std::atomic_size_t union_candidate_budget{8 * 1024 * 1024};
+std::atomic_uint64_t union_throw_pair{std::numeric_limits<std::uint64_t>::max()};
+std::atomic_bool union_fallback_exhaustive{false};
+}
+void set_union_parallel_pairs_threshold_for_testing(std::size_t threshold)
+{
+    union_parallel_pairs_threshold.store(threshold, std::memory_order_relaxed);
+}
+void set_union_candidate_budget_for_testing(std::size_t bytes)
+{
+    union_candidate_budget.store(bytes, std::memory_order_relaxed);
+}
+void set_union_fallback_exhaustive_for_testing(bool exhaustive)
+{
+    union_fallback_exhaustive.store(exhaustive, std::memory_order_relaxed);
+}
+void set_union_parallel_throw_pair_for_testing(unsigned i, unsigned j)
+{
+    union_throw_pair.store((static_cast<std::uint64_t>(i) << 32) | j, std::memory_order_relaxed);
+}
+
 // Internal to this implementation; declared by the focused test to exercise
 // the actual bounded enumerator, including its fallback and touching boxes.
 using UnionCandidate = std::pair<unsigned, unsigned>;
@@ -443,47 +476,170 @@ void Inkscape::ObjectSet::_pathBoolOp(BooleanOp bop, bool reverse_difference)
     // curves. Other operations retain their original preprocessing path.
     // 8 MiB is an allocation budget, not a geometry/accuracy threshold.
     // Dense selections retain the original exhaustive on-demand preprocessing.
-    constexpr std::size_t candidate_budget = 8 * 1024 * 1024;
+    auto const candidate_budget = detail::union_candidate_budget.load(std::memory_order_relaxed);
     // Below this size the single merge tree is fast and keeps the legacy contour order.
     // The below-threshold order is pinned by BoolopAttrTest.Union (testfiles/src/boolop-attr-test.cpp:184).
     constexpr std::size_t union_component_min_operands = 256;
     std::vector<detail::UnionCandidate> union_candidates;
+    std::vector<Geom::Rect> union_bounds;
     bool indexed_union = bop == bool_op_union;
+    bool union_bounds_usable = false;
+    bool stream_union_fallback = false;
     if (indexed_union) {
-        std::vector<Geom::Rect> bounds;
-        bounds.reserve(operands.size());
+        union_bounds.reserve(operands.size());
+        union_bounds_usable = true;
         for (auto const &operand : operands) {
             auto const box = operand.pathv.boundsFast();
             if (!box || !std::isfinite(box->left()) || !std::isfinite(box->right()) ||
                 !std::isfinite(box->top()) || !std::isfinite(box->bottom())) {
                 // Preserve the old behavior for geometry without usable bounds.
                 indexed_union = false;
+                union_bounds_usable = false;
                 break;
             }
-            bounds.push_back(*box);
+            union_bounds.push_back(*box);
         }
         if (indexed_union) {
-            indexed_union = detail::union_candidates_bounded(bounds, union_candidates, candidate_budget);
+            indexed_union = detail::union_candidates_bounded(union_bounds, union_candidates, candidate_budget);
+            stream_union_fallback = !indexed_union && union_bounds_usable &&
+                                    !detail::union_fallback_exhaustive.load(std::memory_order_relaxed);
         }
     }
-    auto candidate = union_candidates.cbegin();
-    for (int i = 0; i < operands.size(); i++) {
-        auto intersect = [&](int j) {
-            distribute_intersection_times(operands[i].cuts, operands[j].cuts,
-                                          operands[i].pathv.intersect(operands[j].pathv));
+    using Pair = std::pair<int, int>;
+    std::vector<Pair> pairs;
+    if (indexed_union) {
+        pairs.reserve(union_candidates.size());
+        for (auto const &[i, j] : union_candidates) pairs.emplace_back(i, j);
+    }
+    auto for_each_streamed_union_pair = [&](auto &&emit) {
+        using Point = boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian>;
+        using Box = boost::geometry::model::box<Point>;
+        using Value = std::pair<Box, unsigned>;
+        std::vector<Value> values;
+        values.reserve(union_bounds.size());
+        for (unsigned i = 0; i < union_bounds.size(); ++i) {
+            auto const &bounds = union_bounds[i];
+            auto const min_x = bounds.left();
+            auto const max_x = bounds.right();
+            auto const min_y = std::min(bounds.top(), bounds.bottom());
+            auto const max_y = std::max(bounds.top(), bounds.bottom());
+            values.emplace_back(Box{Point{min_x, min_y}, Point{max_x, max_y}}, i);
+        }
+        boost::geometry::index::rtree<Value, boost::geometry::index::quadratic<16>> index(values.begin(), values.end());
+        std::vector<Value> row;
+        row.reserve(union_bounds.size());
+        for (unsigned i = 0; i < union_bounds.size(); ++i) {
+            row.clear();
+            index.query(boost::geometry::index::intersects(values[i].first), std::back_inserter(row));
+            auto const &box = union_bounds[i];
+            row.erase(std::remove_if(row.begin(), row.end(), [&](Value const &overlap) {
+                auto const j = overlap.second;
+                if (j >= i) return true;
+                auto const &prior = union_bounds[j];
+                // Match the indexed path's closed X and Y interval predicate exactly.
+                return !(box.left() <= prior.right() && prior.left() <= box.right() &&
+                         box[Geom::Y].intersects(prior[Geom::Y]));
+            }), row.end());
+            std::sort(row.begin(), row.end(), [](Value const &a, Value const &b) {
+                return a.second < b.second;
+            });
+            for (auto const &overlap : row) emit(Pair{static_cast<int>(i), static_cast<int>(overlap.second)});
+        }
+    };
+    auto process_pair = [&](Pair const &pair) {
+        distribute_intersection_times(operands[pair.first].cuts, operands[pair.second].cuts,
+                                      operands[pair.first].pathv.intersect(operands[pair.second].pathv));
+    };
+    auto const threshold = detail::union_parallel_pairs_threshold.load(std::memory_order_relaxed);
+#ifdef VA_2GEOM_THREAD_LOCAL_CLIPPING
+    auto exhaustive_parallel_enough = [&] {
+        auto const n = operands.size();
+        auto const a = n % 2 == 0 ? n / 2 : n;
+        auto const b = n < 2 ? 0 : (n % 2 == 0 ? n - 1 : (n - 1) / 2);
+        return b && a > std::numeric_limits<std::size_t>::max() / b ? true : a * b >= threshold;
+    };
+    auto const exhaustive_count_nonzero = operands.size() > 1;
+    auto const parallel = indexed_union ? (!pairs.empty() && pairs.size() >= threshold)
+                                        : (exhaustive_count_nonzero && exhaustive_parallel_enough());
+    if (!parallel) {
+        if (indexed_union) {
+            for (auto const &pair : pairs) process_pair(pair);
+        } else if (stream_union_fallback) {
+            for_each_streamed_union_pair(process_pair);
+        } else {
+            for (int i = 0; i < operands.size(); ++i) {
+                for (int j = 0; j < i; ++j) process_pair({i, j});
+            }
+        }
+    } else {
+        auto const pool_size = std::clamp<int>(std::thread::hardware_concurrency(), 1, 8);
+        Inkscape::dispatch_pool pool{pool_size};
+        constexpr std::size_t chunk_size = 16384;
+        std::vector<Pair> chunk;
+        chunk.reserve(chunk_size);
+        auto dispatch_chunk = [&](std::vector<Pair> const &work) {
+            auto const count = work.size();
+            std::vector<std::vector<Geom::PathVectorIntersection>> results(count);
+            std::vector<std::exception_ptr> errors(count);
+            pool.dispatch(static_cast<int>(count), [&](int index, int) {
+                auto const [i, j] = work[index];
+                auto const injected_pair = detail::union_throw_pair.load(std::memory_order_relaxed);
+                try {
+                    if (injected_pair == ((static_cast<std::uint64_t>(i) << 32) | static_cast<unsigned>(j)))
+                        throw std::runtime_error("injected Union intersection failure");
+                    results[index] = operands[i].pathv.intersect(operands[j].pathv);
+                } catch (...) {
+                    errors[index] = std::current_exception();
+                }
+            });
+            for (std::size_t k = 0; k < count; ++k) {
+                if (errors[k]) std::rethrow_exception(errors[k]);
+                auto const [i, j] = work[k];
+                distribute_intersection_times(operands[i].cuts, operands[j].cuts, results[k]);
+            }
         };
         if (indexed_union) {
-            while (candidate != union_candidates.cend() && candidate->first == static_cast<unsigned>(i)) {
-                intersect(candidate->second);
-                ++candidate;
+            for (std::size_t first = 0; first < pairs.size(); first += chunk_size) {
+                auto const count = std::min(chunk_size, pairs.size() - first);
+                dispatch_chunk(std::vector<Pair>(pairs.begin() + first, pairs.begin() + first + count));
             }
+        } else if (stream_union_fallback) {
+            for_each_streamed_union_pair([&](Pair const &pair) {
+                chunk.push_back(pair);
+                if (chunk.size() == chunk_size) {
+                    dispatch_chunk(chunk);
+                    chunk.clear();
+                }
+            });
+            if (!chunk.empty()) dispatch_chunk(chunk);
         } else {
-            for (int j = 0; j < i; j++) intersect(j);
+            for (int i = 0; i < operands.size(); ++i) {
+                for (int j = 0; j < i; ++j) {
+                    chunk.emplace_back(i, j);
+                    if (chunk.size() == chunk_size) {
+                        dispatch_chunk(chunk);
+                        chunk.clear();
+                    }
+                }
+            }
+            if (!chunk.empty()) dispatch_chunk(chunk);
         }
     }
+#else
+    if (indexed_union) {
+        for (auto const &pair : pairs) process_pair(pair);
+    } else if (stream_union_fallback) {
+        for_each_streamed_union_pair(process_pair);
+    } else {
+        for (int i = 0; i < operands.size(); ++i) {
+            for (int j = 0; j < i; ++j) process_pair({i, j});
+        }
+    }
+#endif
 
     std::vector<unsigned> component_of(operands.size());
     std::size_t component_count = 1;
+    // Keep the component split off here; enabling it on fallback would reorder output subpaths.
     if (bop == bool_op_union && indexed_union && operands.size() >= union_component_min_operands) {
         std::vector<unsigned> parent(operands.size());
         std::vector<unsigned> size(operands.size(), 1);

@@ -35,8 +35,10 @@
 #include <src/object/sp-defs.h>
 #include <src/object/sp-switch.h>
 #include <src/document-undo.h>
+#include <src/selection.h>
 #include <src/preferences.h>
 #include <src/ui/toolbar/boolean-assist.h>
+#include <xml/repr.h>
 using namespace Inkscape;
 using namespace Inkscape::XML;
 namespace BAT = Inkscape::UI::Toolbar;
@@ -1424,6 +1426,125 @@ TEST_F(ObjectSetTest, BooleanAssistSessionDropsLeavesWhenUndoDeletesAMember)
     quiet.clear(); // a session that ends normally must not fire the callback later
     ASSERT_TRUE(DocumentUndo::undo(doc.get()));
     EXPECT_FALSE(called);
+}
+
+namespace {
+std::string history_selection_xml(SPDocument *document)
+{
+    return sp_repr_save_buf(document->getReprDoc()).raw();
+}
+
+std::unique_ptr<SPDocument> history_selection_doc(std::string const &inner)
+{
+    auto svg = "<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'>" + inner + "</svg>";
+    return make_boolean_doc(svg);
+}
+} // namespace
+
+TEST_F(ObjectSetTest, HistoryReplayUngroupRemovesSelectionInOneChange)
+{
+    std::string children;
+    for (int i = 0; i < 200; ++i) {
+        children += "<path id='batch-path-" + std::to_string(i) + "' d='M0 0h1v1z'/>";
+    }
+    auto doc = history_selection_doc("<g id='batch-group'>" + children + "</g>");
+    ASSERT_TRUE(doc);
+    auto selection = doc->getSelection();
+    selection->set(cast<SPItem>(doc->getObjectById("batch-group")));
+    DocumentUndo::clearUndo(doc.get());
+    auto const before = history_selection_xml(doc.get());
+    selection->ungroup();
+    auto const after = history_selection_xml(doc.get());
+    ASSERT_NE(before, after);
+
+    int changes = 0;
+    auto connection = selection->connectChanged([&](auto) { ++changes; });
+    ASSERT_TRUE(DocumentUndo::undo(doc.get()));
+    connection.disconnect();
+    EXPECT_EQ(changes, 1);
+    EXPECT_TRUE(selection->isEmpty());
+    EXPECT_EQ(history_selection_xml(doc.get()), before);
+}
+
+TEST_F(ObjectSetTest, HistoryReplayUndoMoveKeepsSelectionWithoutRemovalChange)
+{
+    auto doc = history_selection_doc("<rect id='move-target' width='10' height='10'/>");
+    ASSERT_TRUE(doc);
+    auto selection = doc->getSelection();
+    auto target = cast<SPItem>(doc->getObjectById("move-target"));
+    selection->set(target);
+    DocumentUndo::clearUndo(doc.get());
+    auto const before = history_selection_xml(doc.get());
+    selection->move(5, 0);
+    ASSERT_NE(history_selection_xml(doc.get()), before);
+
+    int changes = 0;
+    auto connection = selection->connectChanged([&](auto) { ++changes; });
+    ASSERT_TRUE(DocumentUndo::undo(doc.get()));
+    connection.disconnect();
+    EXPECT_EQ(changes, 0);
+    EXPECT_EQ(selection->size(), 1u);
+    EXPECT_EQ(selection->single(), target);
+    EXPECT_EQ(history_selection_xml(doc.get()), before);
+}
+
+TEST_F(ObjectSetTest, HistoryReplayUndoDuplicateRemovesSelectedDescendant)
+{
+    auto doc = history_selection_doc("<g id='source'><path id='source-path' d='M0 0h1v1z'/></g>");
+    ASSERT_TRUE(doc);
+    DocumentUndo::clearUndo(doc.get());
+    auto const before = history_selection_xml(doc.get());
+    auto duplicate = doc->getReprDoc()->createElement("svg:g");
+    duplicate->setAttribute("id", "duplicate");
+    auto path = doc->getReprDoc()->createElement("svg:path");
+    path->setAttribute("id", "duplicate-path");
+    path->setAttribute("d", "M0 0h1v1z");
+    duplicate->appendChild(path);
+    doc->getRoot()->getRepr()->appendChild(duplicate);
+    Inkscape::GC::release(path);
+    Inkscape::GC::release(duplicate);
+    doc->ensureUpToDate();
+    DocumentUndo::done(doc.get(), Util::Internal::ContextString{"Duplicate group"}, "");
+    auto selection = doc->getSelection();
+    selection->set(cast<SPItem>(doc->getObjectById("duplicate-path")));
+
+    int changes = 0;
+    auto connection = selection->connectChanged([&](auto) { ++changes; });
+    ASSERT_TRUE(DocumentUndo::undo(doc.get()));
+    connection.disconnect();
+    EXPECT_EQ(changes, 1);
+    EXPECT_TRUE(selection->isEmpty());
+    EXPECT_EQ(history_selection_xml(doc.get()), before);
+}
+
+TEST_F(ObjectSetTest, HistoryReplayRedoUngroupRemovesRestoredGroupsInOneChange)
+{
+    auto doc = history_selection_doc(
+        "<g id='redo-group-a'><path id='redo-path-a' d='M0 0h1v1z'/></g>"
+        "<g id='redo-group-b'><path id='redo-path-b' d='M1 1h1v1z'/></g>");
+    ASSERT_TRUE(doc);
+    auto selection = doc->getSelection();
+    std::vector<SPObject *> groups{
+        doc->getObjectById("redo-group-a"), doc->getObjectById("redo-group-b")};
+    selection->setList(groups);
+    DocumentUndo::clearUndo(doc.get());
+    auto const before = history_selection_xml(doc.get());
+    selection->ungroup();
+    auto const after = history_selection_xml(doc.get());
+    ASSERT_NE(before, after);
+    ASSERT_TRUE(DocumentUndo::undo(doc.get()));
+    EXPECT_EQ(history_selection_xml(doc.get()), before);
+    std::vector<SPObject *> restored_groups{
+        doc->getObjectById("redo-group-a"), doc->getObjectById("redo-group-b")};
+    selection->setList(restored_groups);
+
+    int changes = 0;
+    auto connection = selection->connectChanged([&](auto) { ++changes; });
+    ASSERT_TRUE(DocumentUndo::redo(doc.get()));
+    connection.disconnect();
+    EXPECT_EQ(changes, 1);
+    EXPECT_TRUE(selection->isEmpty());
+    EXPECT_EQ(history_selection_xml(doc.get()), after);
 }
 
 // U3: cancelling a knot drag or a connector reroute undoes only the step that interaction pushed.
