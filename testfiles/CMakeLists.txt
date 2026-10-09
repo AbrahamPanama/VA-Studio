@@ -917,7 +917,8 @@ set_tests_properties(vacards-agent-cli-inventory PROPERTIES
 # (vacards-cli-docs-generate.py regenerates it; this test never rewrites it).
 add_test(NAME vacards-cli-docs
          COMMAND "${Python3_EXECUTABLE}" -B "${CMAKE_CURRENT_SOURCE_DIR}/vacards-cli-docs-test.py"
-                 --binary "$<TARGET_FILE:vastudio_cli>")
+                 --binary "$<TARGET_FILE:vastudio_cli>"
+                 "${CMAKE_CURRENT_SOURCE_DIR}/vacards-cli-cases/m4-cli-docs")
 set_tests_properties(vacards-cli-docs PROPERTIES
     ENVIRONMENT "INKSCAPE_FONTCONFIG=${CMAKE_CURRENT_SOURCE_DIR}/rendering_tests/fonts/isolated.conf;${CMAKE_CTEST_ENV};LC_ALL=C"
     LABELS vacards-agent-docs
@@ -926,7 +927,8 @@ set_tests_properties(vacards-cli-docs PROPERTIES
 # End-to-end MCP over stdio against the real vastudio-cli --mcp-stdio.
 add_test(NAME vacards-agent-mcp-stdio
          COMMAND "${Python3_EXECUTABLE}" -B "${CMAKE_CURRENT_SOURCE_DIR}/vacards-mcp-stdio-test.py"
-                 "$<TARGET_FILE:vastudio_cli>")
+                 "$<TARGET_FILE:vastudio_cli>"
+                 "${CMAKE_CURRENT_SOURCE_DIR}/vacards-cli-cases/m4-mcp-stdio")
 set_tests_properties(vacards-agent-mcp-stdio PROPERTIES
     ENVIRONMENT "INKSCAPE_FONTCONFIG=${CMAKE_CURRENT_SOURCE_DIR}/rendering_tests/fonts/isolated.conf;${CMAKE_CTEST_ENV};LC_ALL=C"
     LABELS vacards-agent-mcp
@@ -1366,5 +1368,28 @@ set_tests_properties(test_vacards-cli-nest PROPERTIES LABELS "vacards-cli-scaffo
 set_tests_properties(test_vacards-cli-tokens PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
 set_tests_properties(test_vacards-cli-m3-integration PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
 set_tests_properties(test_vacards-cli-parser-audit PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
+# BEGIN VACARDS OPEN AUDIT WINDOWS BACKEND (Build 33 item 8)
+if(BUILD_TESTING AND WIN32)
+    add_library(vacards-open-audit SHARED src/vacards-open-audit/windows-audit.c)
+    target_compile_definitions(vacards-open-audit PRIVATE VACARDS_OPEN_AUDIT_BUILD)
+    target_include_directories(vacards-open-audit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/vacards-open-audit)
+    set_target_properties(vacards-open-audit PROPERTIES PREFIX "" OUTPUT_NAME "vacards-open-audit")
+    target_compile_definitions(test_vacards-cli-parser-audit PRIVATE VACARDS_OPEN_AUDIT_WINDOWS_BACKEND)
+    target_include_directories(test_vacards-cli-parser-audit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    add_dependencies(test_vacards-cli-parser-audit vacards-open-audit)
+endif()
+# END VACARDS OPEN AUDIT WINDOWS BACKEND
+# BEGIN VACARDS OPEN AUDIT MACOS BACKEND (Build 33 item 2)
+if(BUILD_TESTING AND APPLE)
+    add_library(vacards-open-audit-macos SHARED src/vacards-open-audit/macos-audit.c)
+    target_include_directories(vacards-open-audit-macos PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/vacards-open-audit)
+    target_link_options(vacards-open-audit-macos PRIVATE "LINKER:-undefined,dynamic_lookup")
+    set_target_properties(vacards-open-audit-macos PROPERTIES PREFIX "" OUTPUT_NAME "vacards-open-audit"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    target_compile_definitions(test_vacards-cli-parser-audit PRIVATE VACARDS_OPEN_AUDIT_MACOS_BACKEND)
+    target_include_directories(test_vacards-cli-parser-audit PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    add_dependencies(test_vacards-cli-parser-audit vacards-open-audit-macos)
+endif()
+# END VACARDS OPEN AUDIT MACOS BACKEND
 set_tests_properties(test_vacards-cli-mcp PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 60 RUN_SERIAL TRUE)
 set_tests_properties(test_vacards-cli-legacy-reachability PROPERTIES LABELS "vacards-cli-scaffold" TIMEOUT 120 RUN_SERIAL TRUE)

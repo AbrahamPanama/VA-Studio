@@ -25,7 +25,7 @@ import zlib
 ROOT = Path(__file__).resolve().parent
 CASES = ROOT / 'cli_tests/vacards-agent-session'
 FIXTURES = ROOT / 'cli_tests/vacards-agent/fixtures/m3'
-MANIFEST = ROOT.parent / 'doc/vacards/cli/m3-outcome-manifest.json'
+MANIFEST = ROOT.parent / 'doc' / 'vacards' / 'cli' / 'm3-outcome-manifest.json'
 COMMANDS = ('selection.set selection.clear history.query history.undo history.redo '
             'geometry.move geometry.resize geometry.rotate geometry.skew geometry.flip geometry.matrix '
             'geometry.boolean geometry.offset geometry.corners bitmap.tone-query bitmap.histogram '

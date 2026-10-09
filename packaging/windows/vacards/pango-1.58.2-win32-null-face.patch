@@ -1,0 +1,14 @@
+# VACards guard: skip unusable faces when DirectWrite yields a NULL description.
+# Owner approved: 2026-10-08.
+# Upstream: pango/pangowin32-fontmap.c:1285 (Pango 1.58.2).
+--- a/pango/pangowin32-fontmap.c
++++ b/pango/pangowin32-fontmap.c
+@@ -1282,7 +1282,7 @@ pango_win32_insert_font (PangoWin32FontMap *fontmap,
+   /* In some cases, extracting a name for a font can fail; such fonts
+    * aren't usable for us
+    */
+-  if (!pango_font_description_get_family (description))
++  if (description == NULL || !pango_font_description_get_family (description))
+     {
+       pangowin32_release_com_obj (dwrite_font);
+       pango_font_description_free (description);

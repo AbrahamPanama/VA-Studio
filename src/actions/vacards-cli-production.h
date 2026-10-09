@@ -23,7 +23,7 @@ struct ProductionContext {
     Nesting::CliSession *nest = nullptr; // Persistent Engine-owned native capture.
     Bitmap::CliSession *bitmap = nullptr; // Persistent Engine-owned native capability, never a token payload.
 };
-inline constexpr bool m3_accepted = false, m4_accepted = false;
+inline constexpr bool m3_accepted = true, m4_accepted = true;
 Record production_unavailable(Request const &);
 // Development overlay admission; legacy native registry remains unchanged.
 Record dispatch_production(Request const &, DispatchContext &);
@@ -37,6 +37,6 @@ void production_unavailable_action(ActionContext &);
 // legacy typed IDs only when integration explicitly adopts version 2.
 std::vector<PackageCommand> production_commands();
 boost::json::object planned_production_catalog();
-// Executable development catalog: all 31 overlay rows are experimental and unaccepted.
+// Executable production catalog: all 31 overlay rows are accepted for M3 and M4.
 boost::json::object production_catalog();
 }

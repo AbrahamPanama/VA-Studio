@@ -6,11 +6,17 @@
 #include <array>
 #include <cmath>
 #include <csignal>
+#include <cstdint>
+#include <chrono>
+#include <fstream>
 #include <functional>
+#include <iterator>
 #include <limits>
 #include <locale>
 #include <memory>
 #include <string>
+#include <sstream>
+#include <span>
 #include <string_view>
 #include <vector>
 
@@ -19,19 +25,31 @@
 #include <gtkmm/cssprovider.h>
 #include <gtkmm/icontheme.h>
 #include <gtkmm/settings.h>
+#include <gtkmm/snapshot.h>
+#include <gtkmm/window.h>
 #include <glibmm/miscutils.h>
+
+#include <cairo.h>
+#include <gdkmm/surface.h>
+#include <glib/gstdio.h>
+#include <gtk/gtk.h>
 
 #include "ui/cursor-utils.h"
 #include "rubberband.h"
 
 #include "desktop.h"
 #include "display/control/canvas-item-drawing.h"
+#include "display/control/canvas-item-group.h"
 #include "display/control/canvas-item-picture.h"
+#include "display/control/canvas-item-text.h"
 #include "display/drawing.h"
+#include "display/drawing-context.h"
+#include "display/drawing-surface.h"
 #include "document.h"
 #include "document-undo.h"
 #include "inkscape.h"
 #include "inkscape-application.h"
+#include "helper/png-write.h"
 #include "object/sp-item.h"
 #include "object/sp-namedview.h"
 #include "object/sp-root.h"
@@ -54,6 +72,17 @@
 #include "xml/repr.h"
 #include "xml/document.h"
 #include "xml/node-observer.h"
+
+namespace Inkscape {
+class CanvasItemTextTestAccess
+{
+public:
+    static Pango::Layout *layout(CanvasItemText const &item) { return item._layout.get(); }
+    static Glib::ustring const &requested_text(CanvasItemText const &item) { return item._requested_text; }
+    static double requested_fontsize(CanvasItemText const &item) { return item._requested_fontsize; }
+    static double requested_border(CanvasItemText const &item) { return item._requested_border; }
+};
+} // namespace Inkscape
 
 using namespace Inkscape;
 using namespace Inkscape::UI::Tools;
@@ -89,6 +118,51 @@ void drain_main_context()
     while (context->iteration(false)) {}
 }
 
+bool wait_for_paint(Gtk::Window &window)
+{
+    auto *clock = gtk_widget_get_frame_clock(GTK_WIDGET(window.gobj()));
+    if (!clock) return false;
+    bool painted = false;
+    auto const connection = g_signal_connect_after(clock, "after-paint", G_CALLBACK(+[](GdkFrameClock *, gpointer data) {
+        *static_cast<bool *>(data) = true;
+    }), &painted);
+    gtk_widget_queue_draw(GTK_WIDGET(window.gobj()));
+    auto const deadline = g_get_monotonic_time() + 5000000;
+    auto context = Glib::MainContext::get_default();
+    while (!painted && g_get_monotonic_time() < deadline) {
+        for (unsigned i = 0; i < 64 && !painted && context->iteration(false); ++i) {}
+        if (!painted) g_usleep(1000);
+    }
+    g_signal_handler_disconnect(clock, connection);
+    return painted;
+}
+
+bool save_canvas(Gtk::Window &window, Gtk::Widget &canvas, std::string const &path)
+{
+    if (!wait_for_paint(window)) return false;
+    auto snapshot = Gtk::Snapshot::create();
+    gtk_widget_snapshot_child(GTK_WIDGET(window.gobj()), GTK_WIDGET(canvas.gobj()), snapshot->gobj());
+    auto *node = gtk_snapshot_to_node(snapshot->gobj());
+    if (!node) return false;
+    auto surface = window.get_surface();
+    if (!surface) {
+        gsk_render_node_unref(node);
+        return false;
+    }
+    auto *renderer = gsk_renderer_new_for_surface(surface->gobj());
+    if (!renderer) {
+        gsk_render_node_unref(node);
+        return false;
+    }
+    auto *texture = gsk_renderer_render_texture(renderer, node, nullptr);
+    bool const saved = texture && gdk_texture_save_to_png(texture, path.c_str());
+    if (texture) g_object_unref(texture);
+    gsk_renderer_unrealize(renderer);
+    g_object_unref(renderer);
+    gsk_render_node_unref(node);
+    return saved;
+}
+
 bool affine_near(Geom::Affine const &lhs, Geom::Affine const &rhs, double epsilon = 1e-8)
 {
     for (unsigned i = 0; i < 6; ++i) {
@@ -97,6 +171,38 @@ bool affine_near(Geom::Affine const &lhs, Geom::Affine const &rhs, double epsilo
         }
     }
     return true;
+}
+
+struct DrawingPixels {
+    Geom::IntRect area;
+    int stride = 0;
+    std::vector<uint32_t> pixels;
+
+    std::array<unsigned, 4> at(Geom::Point point) const
+    {
+        auto const x = static_cast<int>(std::lround(point.x() - area.left()));
+        auto const y = static_cast<int>(std::lround(point.y() - area.top()));
+        auto const pixel = pixels.at(static_cast<size_t>(y) * (stride / 4) + x);
+        return {static_cast<unsigned>((pixel >> 16) & 0xff),
+                static_cast<unsigned>((pixel >> 8) & 0xff),
+                static_cast<unsigned>(pixel & 0xff),
+                static_cast<unsigned>((pixel >> 24) & 0xff)};
+    }
+};
+
+DrawingPixels render_drawing(SPDesktop &desktop)
+{
+    auto *drawing = desktop.getCanvasDrawing()->get_drawing();
+    drawing->update(Geom::IntRect::infinite(), desktop.doc2dt(), DrawingItem::STATE_ALL);
+    auto const area = *drawing->root()->drawbox();
+    DrawingSurface surface(area);
+    DrawingContext context(surface);
+    drawing->render(context, area);
+    cairo_surface_flush(surface.raw());
+    auto const stride = cairo_image_surface_get_stride(surface.raw());
+    auto const *data = reinterpret_cast<uint32_t const *>(cairo_image_surface_get_data(surface.raw()));
+    auto const count = static_cast<size_t>(stride / 4) * area.height();
+    return {area, stride, std::vector<uint32_t>(data, data + count)};
 }
 
 class CommaDecimal final : public std::numpunct<char>
@@ -242,8 +348,12 @@ protected:
 <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
   <rect id="inside" x="10" y="10" width="10" height="10"/>
   <rect id="crossing" x="18" y="18" width="15" height="15"/>
+  <path id="triangle" d="M 10,50 L 30,50 L 10,70 Z" style="fill:black;stroke:none"/>
+  <ellipse id="second" cx="55" cy="60" rx="10" ry="10" style="fill:red;stroke:none"/>
   <image id="bitmap" x="40" y="10" width="10" height="10" preserveAspectRatio="none"
          href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLx9QAAAABJRU5ErkJggg=="/>
+  <image id="alpha-bitmap" x="70" y="10" width="8" height="8" preserveAspectRatio="none"
+         href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAGElEQVR4nGNgQAL/gQgdM1CuAJvgYFMAAAi/bZNkj2MnAAAAAElFTkSuQmCC"/>
 </svg>)svg");
         ASSERT_TRUE(document);
         document->ensureUpToDate();
@@ -345,6 +455,92 @@ private:
 };
 
 } // namespace
+
+TEST_F(SelectorInteractionTest, CanvasTextMeasurementUsesRequestedStateDuringSnapshot)
+{
+    CanvasItemContext context(desktop->getCanvas());
+    auto *label = new CanvasItemText(context.root(), {0, 0}, "x");
+    context.root()->update(false);
+
+    auto *const initial_layout = CanvasItemTextTestAccess::layout(*label);
+    ASSERT_NE(initial_layout, nullptr);
+    auto const initial_size = label->get_text_size();
+
+    context.snapshot();
+    label->set_text("Canvas dimension width 1234.56 mm");
+    label->set_fontsize(18);
+    label->set_border(8);
+    EXPECT_EQ(CanvasItemTextTestAccess::requested_text(*label), "Canvas dimension width 1234.56 mm");
+    EXPECT_DOUBLE_EQ(CanvasItemTextTestAccess::requested_fontsize(*label), 18);
+    EXPECT_DOUBLE_EQ(CanvasItemTextTestAccess::requested_border(*label), 8);
+    auto const requested_size = label->get_text_size();
+
+    EXPECT_GT(requested_size.width(), initial_size.width());
+    EXPECT_GT(requested_size.height(), initial_size.height());
+    EXPECT_EQ(CanvasItemTextTestAccess::layout(*label), initial_layout);
+
+    context.unsnapshot();
+    EXPECT_EQ(CanvasItemTextTestAccess::layout(*label), initial_layout);
+    context.root()->update(false);
+
+    auto *const updated_layout = CanvasItemTextTestAccess::layout(*label);
+    ASSERT_NE(updated_layout, nullptr);
+    EXPECT_NE(updated_layout, initial_layout);
+    auto const extents = updated_layout->get_pixel_logical_extents();
+    EXPECT_NEAR(requested_size.width(), extents.get_width() + 16, 1e-9);
+    EXPECT_NEAR(requested_size.height(), extents.get_height() + 16, 1e-9);
+}
+
+TEST_F(SelectorInteractionTest, ResizeOverlayStaysStableDuringTileRendering)
+{
+    if (!g_getenv("INKSCAPE_TEST_GUI")) GTEST_SKIP() << "set INKSCAPE_TEST_GUI=1 to run the canvas tile stress case";
+
+    auto *const canvas = desktop->getCanvas();
+    Gtk::Window window;
+    window.set_default_size(900, 700);
+    window.set_child(*canvas);
+    window.present();
+    ASSERT_TRUE(wait_for_paint(window));
+
+    desktop->getNamedView()->snap_manager.snapprefs.setSnapEnabledGlobally(false);
+    auto const bbox = desktop->getSelection()->bounds(SPItem::GEOMETRIC_BBOX);
+    ASSERT_TRUE(bbox);
+    auto &seltrans = *tool->_seltrans;
+    begin_corner_resize(seltrans, *desktop, *bbox);
+
+    constexpr int resize_steps = 2000;
+    auto resize_to = [&](int i) {
+        double const fraction = static_cast<double>(i) / (resize_steps - 1);
+        double const sx = 0.5 + fraction * 1.5;
+        double const sy = 2.0 - fraction * 1.25;
+        auto point = bbox->min() + bbox->dimensions() * Geom::Scale(sx, sy);
+        return seltrans.scaleRequest(point, 0);
+    };
+    ASSERT_TRUE(resize_to(0));
+    ASSERT_TRUE(seltrans.hasResizeDimensionOverlay());
+
+    // The mapped canvas starts tile rendering with the dimension overlay already present.
+    canvas->redraw_all();
+    drain_main_context();
+    ASSERT_TRUE(wait_for_paint(window));
+
+    for (int i = 1; i < resize_steps; ++i) {
+        ASSERT_TRUE(resize_to(i)) << "resize step " << i;
+        // Repeatedly schedule full canvas tiles while the selector updates the dimension labels.
+        if ((i + 1) % 100 == 0) {
+            canvas->redraw_all();
+            drain_main_context();
+        }
+    }
+
+    EXPECT_TRUE(seltrans.cancel());
+    EXPECT_FALSE(seltrans.hasResizeDimensionOverlay());
+    canvas->redraw_all();
+    EXPECT_TRUE(wait_for_paint(window));
+    window.unset_child();
+    window.close();
+    drain_main_context();
+}
 
 TEST_F(SelectorInteractionTest, TransformKnotsDeliverDirectionalCanvasCursors)
 {
@@ -513,6 +709,282 @@ TEST_F(SelectorInteractionTest, HoverOutlineShowsPlainClickTarget)
     auto const outline = tool->hover_outline_rect_for_testing();
     ASSERT_TRUE(outline);
     EXPECT_EQ(*outline, *bounds);
+}
+
+TEST_F(SelectorInteractionTest, HoverTintUsesOnlyPaintedVectorPixelsAndClearsExactly)
+{
+    ScopedCursorTolerance tolerance(0.0);
+    document->ensureUpToDate();
+    desktop->getCanvasDrawing()->update(false);
+    desktop->getSelection()->clear();
+    auto const baseline = render_drawing(*desktop);
+    auto const inside = desktop->doc2dt({15, 55});
+    auto const outside_shape_inside_bounds = desktop->doc2dt({28, 68});
+    auto const original_inside = baseline.at(inside);
+    auto const original_outside = baseline.at(outside_shape_inside_bounds);
+    ASSERT_EQ(original_inside[3], 255u);
+
+    MotionEvent motion;
+    motion.pos = inside;
+    tool->root_handler(motion);
+    ASSERT_TRUE(tool->hover_outline_rect_for_testing());
+    auto const tinted = render_drawing(*desktop);
+    auto const blue_black = tinted.at(inside);
+    EXPECT_NEAR(blue_black[0], 12, 2);
+    EXPECT_NEAR(blue_black[1], 38, 2);
+    EXPECT_NEAR(blue_black[2], 77, 2);
+    EXPECT_EQ(blue_black[3], original_inside[3]);
+    EXPECT_EQ(tinted.at(outside_shape_inside_bounds), original_outside)
+        << "transparent space inside the triangle bounds stays unchanged";
+
+    motion.pos = desktop->doc2dt({95, 95});
+    tool->root_handler(motion);
+    EXPECT_FALSE(tool->hover_outline_rect_for_testing());
+    auto const restored = render_drawing(*desktop);
+    EXPECT_EQ(restored.pixels, baseline.pixels)
+        << "clearing hover restores every drawing pixel, including cached ancestors";
+}
+
+TEST_F(SelectorInteractionTest, HoverTintPreservesTransparentBitmapCorners)
+{
+    ScopedCursorTolerance tolerance(0.0);
+    document->ensureUpToDate();
+    desktop->getCanvasDrawing()->update(false);
+    desktop->getSelection()->clear();
+    auto const baseline = render_drawing(*desktop);
+    auto const transparent_corner = desktop->doc2dt({70.5, 10.5});
+    auto const opaque_pixel = desktop->doc2dt({74.5, 14.5});
+    ASSERT_EQ(baseline.at(opaque_pixel)[3], 255u);
+
+    MotionEvent motion;
+    motion.pos = opaque_pixel;
+    tool->root_handler(motion);
+    ASSERT_TRUE(tool->hover_outline_rect_for_testing());
+    auto const tinted = render_drawing(*desktop);
+    EXPECT_EQ(tinted.at(transparent_corner), baseline.at(transparent_corner));
+    auto const red = tinted.at(opaque_pixel);
+    EXPECT_NEAR(red[0], 190, 2);
+    EXPECT_NEAR(red[1], 38, 2);
+    EXPECT_NEAR(red[2], 77, 2);
+    EXPECT_EQ(red[3], 255u);
+}
+
+TEST_F(SelectorInteractionTest, HoverTintMovesToOnlyTheSecondTarget)
+{
+    ScopedCursorTolerance tolerance(0.0);
+    document->ensureUpToDate();
+    desktop->getCanvasDrawing()->update(false);
+    desktop->getSelection()->clear();
+    auto const baseline = render_drawing(*desktop);
+    auto const triangle = desktop->doc2dt({15, 55});
+    auto const ellipse = desktop->doc2dt({55, 60});
+
+    MotionEvent motion;
+    motion.pos = triangle;
+    tool->root_handler(motion);
+    auto const first = render_drawing(*desktop);
+    EXPECT_NE(first.at(triangle), baseline.at(triangle));
+
+    motion.pos = ellipse;
+    tool->root_handler(motion);
+    auto const second = render_drawing(*desktop);
+    EXPECT_EQ(second.at(triangle), baseline.at(triangle));
+    auto const red = second.at(ellipse);
+    EXPECT_NEAR(red[0], 190, 2);
+    EXPECT_NEAR(red[1], 38, 2);
+    EXPECT_NEAR(red[2], 77, 2);
+}
+
+TEST_F(SelectorInteractionTest, HoverTintSkipsSelectedTargetsAndModifiers)
+{
+    ScopedCursorTolerance tolerance(0.0);
+    document->ensureUpToDate();
+    desktop->getCanvasDrawing()->update(false);
+    auto const probe = desktop->doc2dt({15, 55});
+    auto const baseline = render_drawing(*desktop);
+
+    desktop->getSelection()->set(item("triangle"));
+    MotionEvent selected;
+    selected.pos = probe;
+    tool->root_handler(selected);
+    EXPECT_FALSE(tool->hover_outline_rect_for_testing());
+    EXPECT_EQ(render_drawing(*desktop).pixels, baseline.pixels);
+
+    desktop->getSelection()->clear();
+    MotionEvent modified;
+    modified.pos = probe;
+    modified.modifiers = GDK_SHIFT_MASK;
+    tool->root_handler(modified);
+    EXPECT_FALSE(tool->hover_outline_rect_for_testing());
+    EXPECT_EQ(render_drawing(*desktop).pixels, baseline.pixels);
+}
+
+TEST_F(SelectorInteractionTest, HoverTintDoesNotChangeDocumentPngExport)
+{
+    ScopedCursorTolerance tolerance(0.0);
+    desktop->getSelection()->clear();
+    auto *tmp = g_dir_make_tmp("inkscape-hover-export-XXXXXX", nullptr);
+    ASSERT_NE(tmp, nullptr);
+    auto const before_path = Glib::build_filename(tmp, "before.png");
+    auto const hover_path = Glib::build_filename(tmp, "hover.png");
+    auto cleanup = [&] {
+        g_remove(before_path.c_str());
+        g_remove(hover_path.c_str());
+        g_rmdir(tmp);
+        g_free(tmp);
+    };
+
+    ASSERT_EQ(sp_export_png_file(document.get(), before_path.c_str(), 0, 0, 100, 100,
+                                 100, 100, 96, 96, Colors::Color(0xffffffff), nullptr, nullptr), EXPORT_OK);
+    document->ensureUpToDate();
+    desktop->getCanvasDrawing()->update(false);
+    MotionEvent motion;
+    motion.pos = desktop->doc2dt({15, 55});
+    tool->root_handler(motion);
+    ASSERT_TRUE(tool->hover_outline_rect_for_testing());
+    ASSERT_EQ(sp_export_png_file(document.get(), hover_path.c_str(), 0, 0, 100, 100,
+                                 100, 100, 96, 96, Colors::Color(0xffffffff), nullptr, nullptr), EXPORT_OK);
+
+    auto read_bytes = [](std::string const &path) {
+        std::ifstream input(path, std::ios::binary);
+        return std::vector<char>(std::istreambuf_iterator<char>(input), {});
+    };
+    EXPECT_EQ(read_bytes(hover_path), read_bytes(before_path));
+    cleanup();
+}
+
+TEST(SelectorHoverTintShots, CaptureOwnerVectorAndBitmapStates)
+{
+    auto const shot_dir = std::getenv("HOVER_TINT_SHOT_DIR");
+    if (!shot_dir || !*shot_dir) GTEST_SKIP() << "set HOVER_TINT_SHOT_DIR to capture owner screenshots";
+    ASSERT_TRUE(initialize_gui());
+    if (!Application::exists()) Application::create(false);
+    auto document = SPDocument::createNewDocFromMem(R"svg(
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="700" viewBox="0 0 1000 700">
+  <path id="black" fill="#101010" d="M120 245 L430 190 L405 500 L255 555 Z"/>
+  <ellipse id="color" cx="515" cy="365" rx="165" ry="145" fill="#e34b36"/>
+  <image id="bitmap" x="625" y="270" width="250" height="250" preserveAspectRatio="none"
+         href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAQElEQVR42u3WMQ0AIBADwJeCfwVIwgVIYGg+DFyTzr2xVZesOXbSSgMAANAOSAdiIAAAAAAAAMBzgEcEAPA94ABBMD152isIFgAAAABJRU5ErkJggg=="/>
+</svg>)svg");
+    ASSERT_TRUE(document);
+    document->ensureUpToDate();
+    auto desktop = std::make_unique<SPDesktop>(document->getNamedView());
+    ASSERT_TRUE(desktop);
+    Application::instance().add_desktop(desktop.get());
+    Gtk::Window window;
+    window.set_default_size(1000, 700);
+    window.set_child(*desktop->getCanvas());
+    window.present();
+    ASSERT_TRUE(wait_for_paint(window));
+    ASSERT_GT(desktop->getCanvas()->get_width(), 900);
+    ASSERT_GT(desktop->getCanvas()->get_height(), 600);
+    desktop->zoom_absolute({500, 350}, 1.0);
+    desktop->set_display_area({500, 350}, {desktop->getCanvas()->get_width() / 2.0,
+                                           desktop->getCanvas()->get_height() / 2.0}, false);
+
+    auto *tool = dynamic_cast<SelectTool *>(desktop->getTool());
+    ASSERT_TRUE(tool);
+    auto const mode = std::getenv("HOVER_TINT_SHOT_MODE");
+    ASSERT_TRUE(mode && (std::string(mode) == "vector" || std::string(mode) == "bitmap" || std::string(mode) == "none"));
+    bool const bitmap_mode = std::string(mode) == "bitmap";
+    if (std::string(mode) == "none") {
+        desktop->getCanvasDrawing()->update(false);
+        drain_main_context();
+        ASSERT_TRUE(save_canvas(window, *desktop->getCanvas(), Glib::build_filename(shot_dir, "hover-none.png")));
+        window.unset_child();
+        window.close();
+        Application::instance().remove_desktop(desktop.get());
+        drain_main_context();
+        return;
+    }
+    MotionEvent motion;
+    motion.pos = desktop->doc2dt(bitmap_mode ? Geom::Point{750, 395} : Geom::Point{515, 365});
+    tool->root_handler(motion);
+    auto *target = cast<SPItem>(document->getObjectById(bitmap_mode ? "bitmap" : "color"));
+    ASSERT_TRUE(target);
+    auto const target_bounds = target->desktopVisualBounds();
+    ASSERT_TRUE(target_bounds);
+    ASSERT_EQ(tool->hover_outline_rect_for_testing(), target_bounds);
+    desktop->getCanvasDrawing()->update(false);
+    drain_main_context();
+    auto const output_name = bitmap_mode ? "hover-bitmap.png" : "hover-vector.png";
+    ASSERT_TRUE(save_canvas(window, *desktop->getCanvas(), Glib::build_filename(shot_dir, output_name)));
+
+    LeaveEvent leave;
+    tool->root_handler(leave);
+    window.unset_child();
+    window.close();
+    Application::instance().remove_desktop(desktop.get());
+    drain_main_context();
+}
+
+TEST(SelectorHoverTintPerformance, OneHoverAndRedrawForLargeTargets)
+{
+    if (!std::getenv("HOVER_TINT_BENCHMARK")) GTEST_SKIP() << "set HOVER_TINT_BENCHMARK=1 to run performance measurements";
+    ASSERT_TRUE(initialize_gui());
+    if (!Application::exists()) Application::create(false);
+
+    constexpr unsigned width = 3311;
+    constexpr unsigned height = 1919;
+    std::ostringstream paths;
+    paths << "<svg xmlns='http://www.w3.org/2000/svg' width='" << width << "' height='" << height << "'>";
+    paths << "<g id='paths' fill='#151515'>";
+    for (unsigned i = 0; i < 2000; ++i) {
+        auto const x = (i % 50) * 65;
+        auto const y = (i / 50) * 48;
+        paths << "<path d='M" << x << ' ' << y << "h24v24h-24z'/>";
+    }
+    paths << "</g></svg>";
+
+    std::vector<unsigned char> png;
+    auto *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    auto *cr = cairo_create(surface);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba(cr, 0.12, 0.36, 0.82, 0.8);
+    cairo_paint(cr);
+    cairo_destroy(cr);
+    auto const png_status = cairo_surface_write_to_png_stream(surface, +[](void *closure, unsigned char const *data, unsigned int length) {
+        auto &bytes = *static_cast<std::vector<unsigned char> *>(closure);
+        bytes.insert(bytes.end(), data, data + length);
+        return CAIRO_STATUS_SUCCESS;
+    }, &png);
+    cairo_surface_destroy(surface);
+    ASSERT_EQ(png_status, CAIRO_STATUS_SUCCESS);
+    auto *encoded_png = g_base64_encode(png.data(), png.size());
+    ASSERT_NE(encoded_png, nullptr);
+    auto const image_svg = "<svg xmlns='http://www.w3.org/2000/svg' width='3311' height='1919'>"
+                           "<image id='image' width='3311' height='1919' preserveAspectRatio='none' href='data:image/png;base64," +
+                           std::string(encoded_png) + "'/></svg>";
+    g_free(encoded_png);
+
+    auto measure = [&](std::string const &svg, char const *id) {
+        auto document = SPDocument::createNewDocFromMem(std::span<char const>(svg.data(), svg.size()));
+        EXPECT_TRUE(document);
+        if (!document) return 0.0;
+        document->ensureUpToDate();
+        auto desktop = std::make_unique<SPDesktop>(document->getNamedView());
+        desktop->getCanvas()->size_allocate(Gtk::Allocation(0, 0, 900, 700), -1);
+        auto *target = cast<SPItem>(document->getObjectById(id));
+        EXPECT_TRUE(target);
+        if (!target) return 0.0;
+        auto *drawing_item = target->get_arenaitem(desktop->dkey);
+        EXPECT_TRUE(drawing_item);
+        if (!drawing_item) return 0.0;
+        auto *drawing = desktop->getCanvasDrawing()->get_drawing();
+        drawing->update(Geom::IntRect::infinite(), desktop->doc2dt(), DrawingItem::STATE_ALL);
+        (void)render_drawing(*desktop); // Warm the untinted surface and candidate caches.
+        auto const start = std::chrono::steady_clock::now();
+        drawing_item->setHoverTint(0x277fff4d);
+        (void)render_drawing(*desktop);
+        return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
+    };
+
+    auto const paths_ms = measure(paths.str(), "paths");
+    auto const image_ms = measure(image_svg, "image");
+    ASSERT_GT(paths_ms, 0.0);
+    ASSERT_GT(image_ms, 0.0);
+    std::cout << "HOVER_TINT_PERF 2000-path-group=" << paths_ms
+              << " ms 3311x1919-RGBA-image=" << image_ms << " ms\n";
 }
 
 // Owner crash report 2026-09-28 (build 21, macOS): moving the pointer after

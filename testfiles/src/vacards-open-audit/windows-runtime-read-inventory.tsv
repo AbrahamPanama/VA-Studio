@@ -1,0 +1,12 @@
+# Slash-normalized path substring	Reviewed reason for expected non-grant read
+/windows/system32/	Windows system DLLs loaded by the test process and parser dependencies
+/msys64/ucrt64/bin/	UCRT64 runtime DLLs required by the parser test executable
+/msys64/ucrt64/lib/gdk-pixbuf-2.0/	GdkPixbuf loader cache and codec modules used during image parsing
+/share/locale/	gettext message catalogs consulted by GLib during parser initialization
+/share/fonts/	Bundled font files consulted by the rendering and text stack
+/windows/fonts/	Windows system fonts consulted by the rendering and text stack
+/share/color/icc/	Bundled ICC profiles consulted by color management
+/windows/system32/drivers/etc/hosts	Windows name service configuration read by system networking initialization
+/vacards/deps/	Pinned parser dependency DLLs and support data loaded by the LASER build
+/vacards/laser/build/	The test executable and test-only DLL loaded from the LASER build tree
+/msys64/ucrt64/share/poppler/	Poppler character mapping, CMap and Unicode tables needed to parse PDF fonts

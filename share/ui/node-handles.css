@@ -256,11 +256,18 @@ Notes:
 */
 
 .inkscape-selection-rect, /* default selection box */
-.inkscape-selection-lasso, /* node tool while holding "Alt" key */
-.inkscape-selection-touchrect { /* select tool with "touch to select" mode */
+.inkscape-selection-lasso { /* node tool while holding "Alt" key */
    fill: #277fff;
    fill-opacity: 10%;
    stroke: #277fff;
+   stroke-width: 2px;
+   outline-width: 1px;
+}
+
+.inkscape-selection-touchrect { /* select tool with "touch to select" mode */
+   fill: #1fa84f;
+   fill-opacity: 10%;
+   stroke: #1fa84f;
    stroke-width: 2px;
    outline-width: 1px;
 }

@@ -381,14 +381,18 @@ void remove_redundant_points(std::vector<Point> &points)
  * Flatten one closed Geom::Path ring. P2 semantics are retained deliberately:
  * the flattened ring is cleaned with the exact collinear-only pass (no
  * tolerance shaving, which could cut sampled cells) and is never split into
- * partial cycles. A ring that cannot be flattened safely is reported as
- * std::nullopt so the caller uses the diagnosed P2 fallback (complete rendered
- * bounds) instead of publishing new winding/component semantics for vectors.
+ * partial cycles. A degenerate ring may return its cleaned points to the part
+ * caller for a conservative hull; other failures remain std::nullopt so parts
+ * use complete rendered bounds and containers continue to fail closed.
  */
-std::optional<Contour> flatten_contour(Geom::Path const &path, double tolerance)
+std::optional<Contour> flatten_contour(Geom::Path const &path, double tolerance, bool *degenerate = nullptr,
+                                       std::vector<Point> *degenerate_points = nullptr)
 {
-    if (path.empty())
+    if (degenerate)
+        *degenerate = false;
+    if (path.empty()) {
         return std::nullopt;
+    }
 
     auto const initial = path.initialPoint();
     Point start{initial[Geom::X], initial[Geom::Y]};
@@ -400,18 +404,33 @@ std::optional<Contour> flatten_contour(Geom::Path const &path, double tolerance)
     points.emplace_back(start);
     for (auto iterator = path.begin(); iterator != path.end_open(); ++iterator) {
         auto const end = point_at(*iterator, 1.0);
-        if (!append_flattened_curve(*iterator, 0.0, 1.0, start, end, tolerance * tolerance, 0, points)) {
+        if (!append_flattened_curve(*iterator, 0.0, 1.0, start, end, tolerance * tolerance, 0, points))
             return std::nullopt;
-        }
         start = end;
     }
 
     remove_redundant_points(points);
-    if (points.size() < 3 || points.size() > MAX_CONTOUR_POINTS)
+    if (points.size() < 3) {
+        if (degenerate) {
+            *degenerate = true;
+            if (degenerate_points)
+                degenerate_points->insert(degenerate_points->end(), points.begin(), points.end());
+        }
+        return std::nullopt;
+    }
+    if (points.size() > MAX_CONTOUR_POINTS)
         return std::nullopt;
     auto const area = signed_area(points);
-    if (!std::isfinite(area) || std::abs(area) <= tolerance * tolerance)
+    if (!std::isfinite(area))
         return std::nullopt;
+    if (std::abs(area) <= tolerance * tolerance) {
+        if (degenerate) {
+            *degenerate = true;
+            if (degenerate_points)
+                degenerate_points->insert(degenerate_points->end(), points.begin(), points.end());
+        }
+        return std::nullopt;
+    }
     return Contour{.points = std::move(points), .signed_area = area, .absolute_area = std::abs(area)};
 }
 
@@ -1473,6 +1492,40 @@ std::vector<Point> convex_hull(std::vector<Point> points, double tolerance)
     return hull;
 }
 
+bool point_inside_or_near_contour(Point const &point, std::span<Point const> contour, double tolerance,
+                                  ValidationBudget *budget, bool &too_complex)
+{
+    auto const containment = point_in_polygon_bounded(point, contour, budget);
+    if (containment == Containment::TooComplex) {
+        too_complex = true;
+        return false;
+    }
+    if (containment == Containment::Inside)
+        return true;
+
+    auto const tolerance_squared = tolerance * tolerance;
+    for (std::size_t index = 0; index < contour.size(); ++index) {
+        if (budget && !budget->charge_pair()) {
+            too_complex = true;
+            return false;
+        }
+        auto const &start = contour[index];
+        auto const &end = contour[(index + 1) % contour.size()];
+        auto const dx = end.x - start.x;
+        auto const dy = end.y - start.y;
+        auto const length_squared = dx * dx + dy * dy;
+        auto const projection = length_squared > 0.0
+                                    ? std::clamp(((point.x - start.x) * dx + (point.y - start.y) * dy) /
+                                                     length_squared,
+                                                 0.0, 1.0)
+                                    : 0.0;
+        auto const nearest = Point{start.x + projection * dx, start.y + projection * dy};
+        if (squared_distance(point, nearest) <= tolerance_squared)
+            return true;
+    }
+    return false;
+}
+
 GeometryResult contours_from_path(Geom::PathVector const &input, SPWindRule wind_rule, double tolerance, bool container,
                                  ValidationBudget *budget)
 {
@@ -1494,6 +1547,7 @@ GeometryResult contours_from_path(Geom::PathVector const &input, SPWindRule wind
 
     std::vector<Contour> contours;
     contours.reserve(resolved.size());
+    std::vector<Point> degenerate_points;
     // Non-consuming aggregate vertex peek. The shared validity gate still
     // charges the emitted geometry exactly once; this local counter bounds the
     // temporary contour storage while flattening so a many-subpath part cannot
@@ -1505,10 +1559,21 @@ GeometryResult contours_from_path(Geom::PathVector const &input, SPWindRule wind
                : MAX_PART_VALIDATED_VERTICES;
     std::size_t aggregate_vertices = 0;
     for (auto const &path : resolved) {
-        auto contour = flatten_contour(path, tolerance);
+        bool degenerate = false;
+        auto const degenerate_begin = degenerate_points.size();
+        auto contour = flatten_contour(path, tolerance, container ? nullptr : &degenerate,
+                                       container ? nullptr : &degenerate_points);
         if (!contour) {
-            // Never silently discard a loop: the caller must recover with the
-            // complete rendered extent instead of hulling the survivors.
+            if (!container && degenerate) {
+                // Keep degenerate vertices bounded and available to the
+                // conservative part fallback after the usable contours are classified.
+                auto const degenerate_count = degenerate_points.size() - degenerate_begin;
+                if (degenerate_count > allowance - aggregate_vertices) {
+                    return {.error = "item path aggregate geometry exceeds the validation budget", .too_complex = true};
+                }
+                aggregate_vertices += degenerate_count;
+                continue;
+            }
             return {.error = "item path contains a contour that could not be flattened safely"};
         }
         // Reject before storing the next contour, not after: aggregate_vertices
@@ -1519,7 +1584,7 @@ GeometryResult contours_from_path(Geom::PathVector const &input, SPWindRule wind
         aggregate_vertices += contour->points.size();
         contours.emplace_back(std::move(*contour));
     }
-    if (contours.empty())
+    if (contours.empty() && degenerate_points.empty())
         return {.error = "item has no closed non-zero-area contour"};
     bool classify_too_complex = false;
     if (!classify_contours(contours, tolerance, budget, classify_too_complex)) {
@@ -1532,6 +1597,25 @@ GeometryResult contours_from_path(Geom::PathVector const &input, SPWindRule wind
     for (std::size_t index = 0; index < contours.size(); ++index) {
         if (contours[index].depth == 0)
             outer_indices.emplace_back(index);
+    }
+
+    bool include_degenerate_points = false;
+    for (auto const &point : degenerate_points) {
+        bool contained = false;
+        for (auto const index : outer_indices) {
+            bool too_complex = false;
+            if (point_inside_or_near_contour(point, contours[index].points, tolerance, budget, too_complex)) {
+                contained = true;
+                break;
+            }
+            if (too_complex) {
+                return {.error = "item contour nesting exceeds the validation budget", .too_complex = true};
+            }
+        }
+        if (!contained) {
+            include_degenerate_points = true;
+            break;
+        }
     }
 
     if (container) {
@@ -1557,7 +1641,7 @@ GeometryResult contours_from_path(Geom::PathVector const &input, SPWindRule wind
     }
 
     PolygonGeometry result;
-    if (outer_indices.size() == 1) {
+    if (outer_indices.size() == 1 && !include_degenerate_points) {
         result.outer = contours[outer_indices.front()].points;
         orient_counterclockwise(result.outer);
         result.source = contours.size() == 1 ? ContourSource::ExactVector : ContourSource::ConservativeHull;
@@ -1566,7 +1650,13 @@ GeometryResult contours_from_path(Geom::PathVector const &input, SPWindRule wind
         for (auto const index : outer_indices) {
             points.insert(points.end(), contours[index].points.begin(), contours[index].points.end());
         }
-        result.outer = convex_hull(std::move(points), tolerance);
+        // Degenerate fragments are ignored when enclosed by a usable outer;
+        // otherwise hulling their vertices with every usable outer is conservative.
+        if (include_degenerate_points)
+            points.insert(points.end(), degenerate_points.begin(), degenerate_points.end());
+        // Keep every degenerate vertex inside the recovery hull; tolerance-based
+        // near-point merging could otherwise trim the small fragment itself.
+        result.outer = convex_hull(std::move(points), include_degenerate_points ? 0.0 : tolerance);
         result.source = ContourSource::ConservativeHull;
     }
     if (result.outer.size() < 3)

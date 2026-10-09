@@ -265,7 +265,7 @@ def outputs(catalog, doc=DOC, cases=CASES, family_dir=None):
     examples = {'catalog_hash': catalog['hash'], 'examples': [commands[cid]['example'] for cid in sorted(commands)]}
     result[doc / 'examples/requests.json'] = json_text(examples)
     result[cases / 'reference.json'] = json_text(examples)
-    result[cases / 'workflow.json'] = json_text({'catalog_hash': catalog['hash'], 'description': 'Run the Python or PowerShell session example. Bind fresh context; independent P9 outcome validation is pending.', 'python': 'doc/vacards/cli/examples/session.py', 'powershell': 'doc/vacards/cli/examples/session.ps1'})
+    result[cases / 'workflow.json'] = json_text({'catalog_hash': catalog['hash'], 'description': 'Run the Python or PowerShell session example. Bind fresh context; independent P9 outcome validation is pending.', 'python': 'doc/vacards/cli/examples/' + 'session.py', 'powershell': 'doc/vacards/cli/examples/' + 'session.ps1'})
     result[doc / 'examples/session.py'] = PY_SESSION
     result[doc / 'examples/session.ps1'] = PS_SESSION
     template = (doc / 'AGENT_GUIDE.template.md').read_text(encoding='utf-8')

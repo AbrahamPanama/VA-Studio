@@ -19,6 +19,9 @@
 # include "config.h"  // only include where actually required!
 #endif
 
+#include <algorithm>
+#include <cmath>
+
 #include "document-undo.h"
 #include "document.h"
 #include "layer-manager.h"
@@ -30,6 +33,7 @@
 #include "actions/actions-tools.h" // set_active_tool()
 
 #include "display/drawing-item.h"
+#include "display/drawing.h"
 #include "display/control/canvas-item-catchall.h"
 #include "display/control/canvas-item-drawing.h"
 #include "display/control/canvas-item-rect.h"
@@ -93,6 +97,9 @@ SelectTool::SelectTool(SPDesktop *desktop, std::string prefs_path, std::string c
 
     Inkscape::Preferences *prefs = Inkscape::Preferences::get();
 
+    auto const tint_opacity = std::clamp(prefs->getDouble("/tools/select/hover_tint_opacity", 0.30), 0.0, 1.0);
+    _hover_tint_rgba = 0x277fff00u | static_cast<uint32_t>(std::lround(tint_opacity * 255.0));
+
     if (prefs->getBool("/tools/select/gradientdrag")) {
         enableGrDrag();
     }
@@ -128,6 +135,12 @@ SelectTool::~SelectTool()
 
 void SelectTool::_clearHoverOutline()
 {
+    _hover_item_deleted.disconnect();
+    if (_hover_item) {
+        _hover_item->setHoverTint(std::nullopt);
+        _hover_item = nullptr;
+    }
+    _hover_item_key = 0;
     _hover_rect.reset();
     if (_hover_outline) _hover_outline->set_visible(false);
 }
@@ -154,6 +167,26 @@ void SelectTool::_updateHoverOutline(Geom::Point const &window_point, unsigned m
         _clearHoverOutline();
         return;
     }
+    auto *drawing_item = target->get_arenaitem(_desktop->dkey);
+    if (!drawing_item) {
+        _clearHoverOutline();
+        return;
+    }
+    if (_hover_item != drawing_item) {
+        _clearHoverOutline();
+        _hover_item = drawing_item;
+        _hover_item_key = drawing_item->key();
+        _hover_item->setHoverTint(_hover_tint_rgba);
+        auto *drawing = _desktop->getCanvasDrawing()->get_drawing();
+        _hover_item_deleted = drawing->connectItemDeleted([this, key = _hover_item_key](unsigned deleted_key) {
+            if (deleted_key != key) return;
+            _hover_item = nullptr;
+            _hover_item_key = 0;
+            _hover_item_deleted.disconnect();
+            _hover_rect.reset();
+            if (_hover_outline) _hover_outline->set_visible(false);
+        });
+    }
     if (!_hover_outline) {
         _hover_outline = make_canvasitem<CanvasItemRect>(_desktop->getCanvasControls());
         _hover_outline->set_pickable(false);
@@ -163,14 +196,11 @@ void SelectTool::_updateHoverOutline(Geom::Point const &window_point, unsigned m
     _hover_rect = *bounds;
     _hover_outline->set_stroke(target->highlight_color().toRGBA());
     _hover_outline->set_rect(*bounds);
-    _hover_outline->set_visible(true);
+    _hover_outline->set_visible(false);
 }
 
 std::optional<Geom::Rect> SelectTool::hover_outline_rect_for_testing() const
 {
-    if (!_hover_outline || !_hover_outline->is_visible()) {
-        return std::nullopt;
-    }
     return _hover_rect;
 }
 

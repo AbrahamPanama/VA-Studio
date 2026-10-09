@@ -1,0 +1,16 @@
+# Slash-normalized path substring (single-dot and root-slash entries match exactly)	Reviewed reason for expected non-grant read
+/system/library/	macOS system frameworks and resources loaded by the test process
+/usr/lib/	macOS system libraries used by dyld and parser dependencies
+/library/	Machine-wide macOS data and framework resources consulted by the runtime
+/private/var/db/	macOS system service and font metadata consulted by runtime initialization
+/var/db/timezone/zoneinfo/	macOS time-zone metadata read by the C runtime during locale initialization
+/private/var/folders/	Per-user macOS caches and temporary support data used by Foundation and GLib
+/opt/homebrew/	Homebrew runtime libraries and data used by the configured test build
+/deps/	Pinned parser and GTK dependency libraries/data used by the test executable
+/build/testfiles/	The parser-audit executable and test-only interposer loaded by the child
+/share/	Locale, font, color, and parser support data used by GLib and linked libraries
+/vacards-parser-audit-	Temporary parser-audit fixture tree, classified separately as granted or ungranted
+/dev/urandom	System entropy source read by runtime initialization
+.	Relative current-directory descriptor opened by the C runtime during time-zone initialization
+/	Filesystem root directory descriptor opened as a canonical path-walk anchor
+/etc/	System configuration consulted by the runtime and name-service initialization

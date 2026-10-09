@@ -73,7 +73,7 @@ def copy(source, destination):
     shutil.copy2(source, destination)
 
 
-def stage_env(cairo, cdr, ucrt, environ=None):
+def stage_env(cairo, cdr, pango, ucrt, environ=None):
     """Build the one explicit child-process environment used by every stage command.
 
     The approved prefixes and the UCRT64/MSYS2 shell directories are searched in
@@ -88,7 +88,7 @@ def stage_env(cairo, cdr, ucrt, environ=None):
     """
     environ = os.environ if environ is None else environ
     system_root = Path(environ["SystemRoot"])
-    directories = [cairo / "bin", cdr / "bin", ucrt / "bin", ucrt.parent / "usr/bin",
+    directories = [pango / "bin", cairo / "bin", cdr / "bin", ucrt / "bin", ucrt.parent / "usr/bin",
                    ucrt.parent / "usr/bin/core_perl", system_root / "System32", system_root]
     return dict(environ, PATH=";".join(map(str, directories)), LANG="C", LC_ALL="C")
 
@@ -434,6 +434,36 @@ def gtk_inputs(run_root, source, ucrt=None, probe=None, baseline_dll=None, bundl
                 bundle_sha256=sha(bundle), run_root=str(run_root))
 
 
+def pango_inputs(prefix, source):
+    """Bind a patched Pango install prefix to the tracked DLL identities."""
+    prefix, source = Path(prefix).resolve(), Path(source).resolve()
+    base = source / "packaging/dependencies/pango-1.58.2-win32-null-face"
+    bundle_path, hashes_path = base / "VACARDS-PANGO-BUNDLE.env", base / "pango-dlls.sha256"
+    patch_path = source / "packaging/windows/vacards/pango-1.58.2-win32-null-face.patch"
+    deps = fields(source / "VACARDS-DEPENDENCIES.env")
+    pin = fields(bundle_path)
+    require(pin.get("format") == "1" and pin.get("dependency") == "pango" and
+            pin.get("pango_version") == "1.58.2" and pin.get("platform") == "windows-ucrt64" and
+            pin.get("architecture") == "x86_64", "unsupported Pango bundle pin")
+    require(deps.get("pango_windows_release") == pin["pango_version"] and
+            deps.get("pango_windows_source_archive_sha256") == pin["source_archive_sha256"] and
+            deps.get("pango_windows_patch_filename") == pin["patch_filename"] and
+            deps.get("pango_windows_patch_sha256") == pin["patch_sha256"] and
+            deps.get("pango_windows_bundle") == "packaging/dependencies/pango-1.58.2-win32-null-face/VACARDS-PANGO-BUNDLE.env",
+            "Pango identity differs from VACARDS-DEPENDENCIES.env")
+    require(patch_path.is_file() and sha(patch_path) == pin["patch_sha256"],
+            "Pango patch differs from the tracked bundle pin")
+    require(deps.get("pango_windows_prefix") == prefix.as_posix(),
+            "Pango prefix differs from VACARDS-DEPENDENCIES.env")
+    for line in hashes_path.read_text(encoding="utf-8").splitlines():
+        digest, relative = line.split("  ", 1)
+        require(re.fullmatch(r"[0-9a-f]{64}", digest) and relative.startswith("bin/") and
+                ".." not in Path(relative).parts, "invalid tracked Pango DLL inventory")
+        dll = prefix / relative
+        require(dll.is_file() and sha(dll) == digest, f"Pango prefix DLL differs from its pin: {relative}")
+    return dict(prefix=prefix, inventory=hashes_path, hashes=hashes_path)
+
+
 def utf8_process_manifest(executable):
     """Update only the copied app's manifest, retaining DPI and other resources.
 
@@ -592,6 +622,7 @@ def stage(args):
     gtk_run_root = args.gtk_run.resolve()
     gtk_record = gtk_inputs(gtk_run_root, source, ucrt)
     gtk_dll = gtk_run_root / "install" / gtk_record["library_relative_path"]
+    pango = pango_inputs(args.pango_prefix, source)
     cairo_record = fields(cairo / "VACARDS-CAIRO.env")
     require(cairo_record["clipping_test"] == "passed" and
             cairo_record["upstream_fix"] == deps["cairo_fix_commit"] and
@@ -603,7 +634,7 @@ def stage(args):
         digest, relative = line.split("  ", 1)
         require(not Path(relative).is_absolute() and ".." not in Path(relative).parts, "unsafe Cairo inventory")
         require(sha(cairo / relative) == digest, f"Cairo input changed: {relative}")
-    env = stage_env(cairo, cdr, ucrt)
+    env = stage_env(cairo, cdr, pango["prefix"], ucrt)
     version = run(build / "bin/inkscape.com", "--version", env=env)
     require(args.source_commit[:10] in version or args.rehearsal, f"rebuild frozen commit first: {version}")
     version_fields = fields(source / "packaging/vacards/VERSION.env")
@@ -690,13 +721,17 @@ def stage(args):
     webview2_package = run(ucrt.parent / "usr/bin/pacman.exe", "-Q", "mingw-w64-ucrt-x86_64-webview2-loader",
                            env=env).strip()
     librevenge_dll = librevenge / librevenge_record["library_relative_path"]
+    pango_dlls = [pango["prefix"] / line.split("  ", 1)[1]
+                  for line in pango["hashes"].read_text(encoding="utf-8").splitlines()]
     approved = (list((cairo / "bin").glob("libcairo*.dll")) +
-                [cdr / "bin/libcdr-0.1.dll", librevenge_dll, gtk_dll])
+                [cdr / "bin/libcdr-0.1.dll", librevenge_dll, gtk_dll, *pango_dlls])
     # A stock same-basename librevenge may already be staged by the GTK/Python
     # runtime install rules. Overwrite it with the verified paired prefix copy
     # before the import closure runs so the imported name resolves to the
     # attested bytes; the digest check below fails closed if that did not hold.
     copy(librevenge_dll, payload / "bin" / librevenge_dll.name)
+    for dll in pango_dlls:
+        copy(dll, payload / "bin" / dll.name)
     pe_count = complete_pe_closure(payload, ucrt, approved, env, out / "pe-imports.json")
     gtk_deps = gtk_dependency_manifest(gtk_run_root / "abi/gtk-ucrt64-dlls.sha256")
     staged_deps = {p.name.lower(): sha(p) for p in (payload / "bin").glob("*.dll")
@@ -708,6 +743,11 @@ def stage(args):
             "staged librevenge bytes differ from the verified runtime dependency")
     require(sha(payload / "bin" / gtk_dll.name) == gtk_record["library_sha256"],
             "staged GTK bytes differ from the verified patched runtime dependency")
+    for dll in pango_dlls:
+        require(sha(payload / "bin" / dll.name) == sha(dll),
+                f"staged Pango bytes differ from the pinned runtime dependency: {dll.name}")
+    run(ucrt.parent / "usr/bin/bash.exe", source / "packaging/windows/vacards/verify-vacards-pango-prefix.sh",
+        pango["prefix"], payload, env=dict(env, MSYSTEM="UCRT64"), log=log)
     run(payload / "bin/glib-compile-schemas.exe", "--strict", payload / "share/glib-2.0/schemas", env=env, log=log)
     required = ["bin/inkscape.exe", "bin/inkscape.com", "bin/vastudio-cli.exe",
                 "bin/python.exe", "bin/libgtk-4-1.dll", "etc/fonts/fonts.conf",
@@ -724,6 +764,7 @@ def stage(args):
                      cdr / "VACARDS-LIBCDR.env", cairo / "VACARDS-CAIRO.env",
                      librevenge / "VACARDS-LIBREVENGE.env", *cdr_test_files):
         copy(original, payload / "share/vacards-test" / original.name)
+    copy(pango["hashes"], payload / "share/vacards-test/VACARDS-PANGO.sha256")
     # Carry the validated GTK run provenance beside the pinned dependency records.
     for original, name in ((gtk_run_root / "VACARDS-GTK.env", "VACARDS-GTK.env"),
                            (gtk_run_root / "VACARDS-GTK.sha256", "VACARDS-GTK.sha256"),
@@ -864,6 +905,8 @@ def build_parser():
     s.add_argument("--source-commit", required=True)
     s.add_argument("--gtk-run", type=Path, required=True,
                    help="validated patched GTK build run root; required for this internal-test channel")
+    s.add_argument("--pango-prefix", type=Path, required=True,
+                   help="validated patched Pango install prefix; required for this internal-test channel")
     s.add_argument("--rehearsal", action="store_true", help="visibly label pre-freeze implementation tests")
     p = commands.add_parser("pack")
     p.add_argument("--payload", type=Path, required=True)

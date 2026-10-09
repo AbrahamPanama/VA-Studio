@@ -678,8 +678,8 @@ TEST_F(VacardsCliProcess, NativeVersionAvailabilityIsRetryableOnSessionWire) {
 
 TEST(VacardsCliSession, DevelopmentOverlayExecutesWithoutAcceptance) {
     Harness h; auto hello = h.wait("hello");
-    EXPECT_EQ(hello.at("capabilities").as_object().at("m3_accepted"), false);
-    EXPECT_EQ(hello.at("capabilities").as_object().at("m3_experimental"), true);
+    EXPECT_EQ(hello.at("capabilities").as_object().at("m3_accepted"), true);
+    EXPECT_EQ(hello.at("capabilities").as_object().at("m3_experimental"), false);
     auto fresh = parse(find_command("file.new")->example).as_object(); fresh["id"] = "new";
     h.send(serialize(fresh) + "\n");
     auto created = h.wait("result", "new").at("result").as_object();

@@ -53,8 +53,8 @@ object cli_identity() {
         {"enabled_slices", array{"M1"}}, {"inspection_formats", formats},
         {"capabilities", object{{"enabled_slices", array{"M1"}}, {"inspection", true}, {"editable_documents", editable},
             {"files", files}, {"m2_accepted", false},
-            {"m3_accepted", m3_accepted}, {"m3_experimental", true}, {"tokens", true}, {"mcp", true},
-            {"mcp_experimental", true}, {"mcp_protocol_version", "2025-06-18"},
+            {"m3_accepted", m3_accepted}, {"m3_experimental", false}, {"tokens", true}, {"mcp", true},
+            {"mcp_experimental", !m4_accepted}, {"mcp_protocol_version", "2025-06-18"},
             {"cancellation", "before-handler"}, {"native_calls_interruptible", false}}}};
 }
 namespace {

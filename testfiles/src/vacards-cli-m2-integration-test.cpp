@@ -176,8 +176,8 @@ TEST_F(VACardsCliM2Integration, ProbeReportsBackendCapabilitiesWithoutSliceAccep
     EXPECT_EQ(identity.at("capabilities").as_object().at("m2_accepted"), false);
     EXPECT_EQ(identity.at("capabilities").as_object().at("files"), file_capabilities());
     EXPECT_EQ(identity.at("catalog_hash"), production_catalog().at("hash"));
-    EXPECT_FALSE(identity.at("capabilities").as_object().at("m3_accepted").as_bool());
-    EXPECT_TRUE(identity.at("capabilities").as_object().at("m3_experimental").as_bool());
+    EXPECT_TRUE(identity.at("capabilities").as_object().at("m3_accepted").as_bool());
+    EXPECT_FALSE(identity.at("capabilities").as_object().at("m3_experimental").as_bool());
 }
 TEST_F(VACardsCliM2Integration, OneShotLifecycleHasOneResultAndNeverAutosaves) {
     auto spec = find_command("file.new"); ASSERT_NE(spec, nullptr);

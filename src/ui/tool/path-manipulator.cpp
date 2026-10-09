@@ -1202,6 +1202,7 @@ void PathManipulator::_externalChange(unsigned type)
         }
         unsigned size = selpos.size(), curpos = 0;
 
+        _recalculateIsBSpline();
         _createControlPointsFromGeometry();
 
         for (auto & _subpath : _subpaths) {
@@ -1241,6 +1242,10 @@ Geom::Affine PathManipulator::_getTransform() const
 
 void PathManipulator::_normalizeBsplineHandles(Node *n)
 {
+    if (!_is_bspline) {
+        return; // Only B-spline paths need paired-degenerate handles; ordinary cubics keep their handles (BUG-039).
+    }
+
     // If either handle is degenerate, make them both degenerate. When loading a bspline curve,
     // only one side might start degenerate (which isn't a possible situation in the UI - they
     // should both be or neither be) and we need to do this to fix it.

@@ -1,6 +1,6 @@
 {
-  "catalog_hash": "e144543a1ed9d2f42643040989440063e3bc04d841a5976a38ca3040266850cc",
+  "catalog_hash": "906e367c3a1197a1eb737b9980aa882ca26216e50e00c876b2b742c1a621d06a",
   "description": "Run the Python or PowerShell session example. Bind fresh context; independent P9 outcome validation is pending.",
-  "python": "doc/vacards/cli/examples/session.py",
-  "powershell": "doc/vacards/cli/examples/session.ps1"
+  "python": "session.py",
+  "powershell": "session.ps1"
 }

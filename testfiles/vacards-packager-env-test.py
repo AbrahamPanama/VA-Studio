@@ -63,9 +63,10 @@ class PackagerStageEnvironment(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.cairo = self.root / "cairo prefix"
         self.cdr = self.root / "libcdr prefix"
+        self.pango = self.root / "pango prefix"
         self.ucrt = self.root / "msys64/ucrt64"
         self.system_root = self.root / "Windows"
-        for directory in (self.cairo / "bin", self.cdr / "bin", self.ucrt / "bin",
+        for directory in (self.pango / "bin", self.cairo / "bin", self.cdr / "bin", self.ucrt / "bin",
                           self.ucrt.parent / "usr/bin",
                           self.ucrt.parent / "usr/bin/core_perl",
                           self.system_root / "System32"):
@@ -92,25 +93,25 @@ class PackagerStageEnvironment(unittest.TestCase):
         return path
 
     def approved(self):
-        return [str(self.cairo / "bin"), str(self.cdr / "bin"), str(self.ucrt / "bin"),
+        return [str(self.pango / "bin"), str(self.cairo / "bin"), str(self.cdr / "bin"), str(self.ucrt / "bin"),
                 str(self.ucrt.parent / "usr/bin"), str(self.ucrt.parent / "usr/bin/core_perl"),
                 str(self.system_root / "System32"), str(self.system_root)]
 
     def test_approved_dependency_order_includes_core_perl(self):
-        env = packager.stage_env(self.cairo, self.cdr, self.ucrt, environ=self.ambient)
+        env = packager.stage_env(self.cairo, self.cdr, self.pango, self.ucrt, environ=self.ambient)
         self.assertEqual(env["PATH"].split(";"), self.approved())
         self.assertEqual(len(self.approved()), len(set(self.approved())))
-        self.assertEqual(Path(env["PATH"].split(";")[4]), self.ucrt.parent / "usr/bin/core_perl")
+        self.assertEqual(Path(env["PATH"].split(";")[5]), self.ucrt.parent / "usr/bin/core_perl")
 
     def test_inherited_unsafe_path_entries_are_excluded(self):
-        env = packager.stage_env(self.cairo, self.cdr, self.ucrt, environ=self.ambient)
+        env = packager.stage_env(self.cairo, self.cdr, self.pango, self.ucrt, environ=self.ambient)
         entries = env["PATH"].split(";")
         for inherited in self.ambient["PATH"].split(";"):
             self.assertNotIn(inherited, entries)
 
     def test_locale_pinned_and_ambient_mapping_unchanged(self):
         ambient = dict(self.ambient)
-        env = packager.stage_env(self.cairo, self.cdr, self.ucrt, environ=ambient)
+        env = packager.stage_env(self.cairo, self.cdr, self.pango, self.ucrt, environ=ambient)
         self.assertEqual((env["LANG"], env["LC_ALL"]), ("C", "C"))
         self.assertIsNot(env, ambient)
         self.assertEqual(ambient, self.ambient)
@@ -122,13 +123,13 @@ class PackagerStageEnvironment(unittest.TestCase):
                                      "PATH": "C:\\unsafe-host-tools",
                                      "LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8"}):
             before = dict(os.environ)
-            env = packager.stage_env(self.cairo, self.cdr, self.ucrt)
+            env = packager.stage_env(self.cairo, self.cdr, self.pango, self.ucrt)
             self.assertEqual(dict(os.environ), before)
         self.assertEqual((env["LANG"], env["LC_ALL"]), ("C", "C"))
         self.assertNotIn("unsafe-host-tools", env["PATH"].split(";"))
 
     def test_synthetic_checksum_tool_discoverable_by_child(self):
-        env = packager.stage_env(self.cairo, self.cdr, self.ucrt, environ=self.ambient)
+        env = packager.stage_env(self.cairo, self.cdr, self.pango, self.ucrt, environ=self.ambient)
         # Keep the real Windows loader root for the child; the synthetic PATH
         # still determines which checksum tool is found.
         if os.name == "nt":
@@ -146,7 +147,7 @@ class PackagerStageEnvironment(unittest.TestCase):
 
     @REQUIRES_POSIX_EXECUTION
     def test_posix_shim_executes_from_core_perl(self):
-        env = packager.stage_env(self.cairo, self.cdr, self.ucrt, environ=self.ambient)
+        env = packager.stage_env(self.cairo, self.cdr, self.pango, self.ucrt, environ=self.ambient)
         found = subprocess.run([sys.executable, "-B", "-c",
                                 "import os,shutil;print(shutil.which('shasum') or '')"],
                                env=dict(env, PATH=os.pathsep.join(env["PATH"].split(";"))),

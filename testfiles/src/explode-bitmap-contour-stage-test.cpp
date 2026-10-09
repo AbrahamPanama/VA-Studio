@@ -3,6 +3,7 @@
 #include <glibmm/init.h>
 #include <glib.h>
 #include <png.h>
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -25,6 +26,17 @@ struct Image {
 };
 Image two() { Image im; im.box(10,10,30,30); im.box(60,60,85,85); return im; }
 Image donut() { Image im; im.box(8,8,88,88); im.box(24,24,72,72,0); im.box(40,40,56,56); return im; }
+Image contourBudgetComb() {
+    Image im; im.w=1122; im.h=1402; im.pixels.assign(std::uint64_t(im.w)*im.h*4,0);
+    auto opaque=[&](unsigned x,unsigned y) { im.pixels[(std::uint64_t(y)*im.w+x)*4+3]=255; };
+    for (unsigned y=40;y<1360;++y) for (unsigned x=24;x<29;++x) opaque(x,y);
+    for (unsigned y=40;y<1360;y+=4) {
+        auto row=(y-40)/4;
+        auto end=250+(row*7919+row*row*17+123)%860;
+        for (unsigned x=29;x<end;++x) opaque(x,y);
+    }
+    return im;
+}
 TargetSnapshot geometry(unsigned w,unsigned h) {
     TargetSnapshot t; t.bitmap=1; t.destinationParent=2; t.generation=3;
     t.supportability=Supportability::Supported;
@@ -119,6 +131,31 @@ void sameBitmapProducts(Output const &baseline, Output const &refused) {
     ASSERT_EQ(refused.adjustment->image.count(),1u);
     samePieces(baseline.adjustment->image,refused.adjustment->image);
 }
+void sameFitted(FittedContourSet const &a, FittedContourSet const &b) {
+    EXPECT_EQ(a.pieceCount,b.pieceCount); EXPECT_EQ(a.ringCount,b.ringCount);
+    EXPECT_EQ(a.segmentCount,b.segmentCount); EXPECT_EQ(a.anchorCount,b.anchorCount);
+    EXPECT_EQ(a.serializedBytes,b.serializedBytes);
+    for (unsigned i=0;i<std::min(a.pieceCount,b.pieceCount);++i) {
+        auto const &x=a.pieces()[i], &y=b.pieces()[i];
+        EXPECT_EQ(x.piece,y.piece); EXPECT_EQ(x.ringBegin,y.ringBegin);
+        EXPECT_EQ(x.ringEnd,y.ringEnd); EXPECT_EQ(x.noContour,y.noContour);
+    }
+    for (unsigned i=0;i<std::min(a.ringCount,b.ringCount);++i) {
+        auto const &x=a.rings()[i], &y=b.rings()[i];
+        EXPECT_EQ(x.begin,y.begin); EXPECT_EQ(x.end,y.end);
+        EXPECT_EQ(x.start.x,y.start.x); EXPECT_EQ(x.start.y,y.start.y);
+        EXPECT_EQ(x.area,y.area); EXPECT_EQ(x.minX,y.minX); EXPECT_EQ(x.minY,y.minY);
+        EXPECT_EQ(x.maxX,y.maxX); EXPECT_EQ(x.maxY,y.maxY);
+        EXPECT_EQ(x.depth,y.depth); EXPECT_EQ(x.parent,y.parent); EXPECT_EQ(x.fallback,y.fallback);
+    }
+    for (unsigned i=0;i<std::min(a.segmentCount,b.segmentCount);++i) {
+        auto const &x=a.segments()[i], &y=b.segments()[i];
+        EXPECT_EQ(x.cubic,y.cubic);
+        EXPECT_EQ(x.c1.x,y.c1.x); EXPECT_EQ(x.c1.y,y.c1.y);
+        EXPECT_EQ(x.c2.x,y.c2.x); EXPECT_EQ(x.c2.y,y.c2.y);
+        EXPECT_EQ(x.end.x,y.end.x); EXPECT_EQ(x.end.y,y.end.y);
+    }
+}
 }
 TEST(ExplodeBitmapContourStage, DisabledMatchesPinnedCommittedOracle) {
     // Measured from committed preparation e2fb73f244 (before B4), not a second
@@ -182,6 +219,38 @@ TEST(ExplodeBitmapContourStage, TwoPiecesHaveOneFittedSetEach) {
     ASSERT_TRUE(o->contours.product); auto const &f=o->contours.product->fitted;
     EXPECT_EQ(o->count,2u); ASSERT_EQ(f.pieceCount,2u); EXPECT_EQ(f.ringCount,2u);
     for(unsigned i=0;i<2;++i) { EXPECT_EQ(f.pieces()[i].piece,i); EXPECT_EQ(f.pieces()[i].ringEnd-f.pieces()[i].ringBegin,1u); }
+}
+TEST(ExplodeBitmapContourStage, PositiveGapGetsThreePassAllowanceAndZeroMatchesLegacy) {
+    Counts analysisCounts;
+    auto analyzed=execute(input(contourBudgetComb(),{true,3.6,0,0},analysisCounts),analysisCounts);
+    auto prepared=output(analyzed); ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->analysis);
+    auto state=prepared->analysis;
+    auto pixels=std::uint64_t(state->grid.width)*state->grid.height;
+    auto legacyLimit=100000000u+100u*pixels;
+
+    auto const &zero=prepared->contours;
+    ASSERT_TRUE(zero.outcome.ok()) << zero.outcome.diagnostic;
+    ASSERT_TRUE(zero.product);
+    Budget legacyBudget(Budget::FixedLimitForTest{},1536*MiB);
+    JobWork legacyWork(pixels,100);
+    auto raw=offsetContours(state->grid,state->partition,{3.6,0,state->dpiX,state->dpiY},legacyBudget,legacyWork);
+    ASSERT_TRUE(raw.ok()) << raw.outcome.diagnostic;
+    auto fitted=fitContours(raw.value,{0},legacyBudget,legacyWork);
+    ASSERT_TRUE(fitted.ok()) << fitted.outcome.diagnostic;
+    EXPECT_EQ(zero.visits,legacyWork.visits());
+    EXPECT_LE(zero.visits,legacyLimit);
+    sameFitted(zero.product->fitted,fitted.value);
+
+    for (auto gap : {0.1,0.5,1.0,2.0}) {
+        Counts counts;
+        auto run=recompute(state,{true,3.6,gap,0},counts);
+        ASSERT_TRUE(run.result.ok());
+        auto result=std::dynamic_pointer_cast<ContourResult const>(run.result.value.payload);
+        ASSERT_TRUE(result); ASSERT_TRUE(result->outcome.ok()) << "gap=" << gap << ": " << result->outcome.diagnostic
+            << " visits=" << result->visits << " legacyLimit=" << legacyLimit << " threePassLimit=" << 100000000u+300u*pixels;
+        ASSERT_TRUE(result->product);
+        if (gap==0.1) EXPECT_GT(result->visits,legacyLimit);
+    }
 }
 TEST(ExplodeBitmapContourStage, RecomputeRetainsBorrowedRunsAfterOriginalRetiresAndSkipsAnalysis) {
     Counts c; auto r=execute(input(two(),enabled,c),c); auto o=output(r); ASSERT_TRUE(o); ASSERT_TRUE(o->analysis);

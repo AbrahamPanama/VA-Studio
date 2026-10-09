@@ -25,6 +25,7 @@ struct ScrollEvent;
 class SelTrans;
 class SelectionDescriber;
 class Selection;
+class DrawingItem;
 } // namespace Inkscape
 
 namespace Inkscape::UI::Tools {
@@ -70,6 +71,10 @@ private:
     // Hover outline of the object a plain click would select (display only, never pickable).
     CanvasItemPtr<CanvasItemRect> _hover_outline;
     sigc::scoped_connection _hover_selection_changed;
+    sigc::scoped_connection _hover_item_deleted;
+    Inkscape::DrawingItem *_hover_item = nullptr;
+    unsigned _hover_item_key = 0;
+    uint32_t _hover_tint_rgba = 0x277fff4d;
     std::optional<Geom::Rect> _hover_rect;
     void _updateHoverOutline(Geom::Point const &window_point, unsigned modifiers);
     void _clearHoverOutline();

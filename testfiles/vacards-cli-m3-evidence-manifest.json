@@ -1,0 +1,185 @@
+{
+  "schema": "vacards-m3-evidence/1",
+  "files": [
+    {
+      "path": "work/cli-b31/FREEZE-REVIEW/review.md",
+      "sha256": "b33b7a957d7aa1c7651aa947c6d34e680b9f29649d6f63b3791655c48dc578f0",
+      "bytes": 24809,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/S0-R1/catalog.json",
+      "sha256": "4057533589b1edddbbff6966be4dfe0c137d4fa2a8b7b52ac973ce4e5e773997",
+      "bytes": 841252,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/DESC/desc2-catalog-diff.json",
+      "sha256": "b53eea5b467aae93bd85d84b9c8344f8b1f738e7a5c35d84a30c0ea4b6f50e80",
+      "bytes": 6420,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/DESC/desc3-catalog-diff.json",
+      "sha256": "10c3f3cacd98cc8e071bcd3e666fa6fc9baee9df3e6e6af379f36dfbca4b9bc6",
+      "bytes": 665,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/INT/catalog-after-debt.json",
+      "sha256": "3c06311b0003b4dd783cdf5d5190ffa9544e9f8a25389e489c9a1a1fbb4083c5",
+      "bytes": 294561,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/INT/catalog-before-debt.json",
+      "sha256": "a011d1cc194a66c7fef85e4943b8dc2e8e2a6cee2add2d4bd7381b28253a6509",
+      "bytes": 294949,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/INT/catalog.json",
+      "sha256": "5691823820b08ab2a3c8592c7c5e9551ccbd96fb01f4dea078338f925b548b8a",
+      "bytes": 843034,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/INT/contract-hashes-03.json",
+      "sha256": "e5d6a4b1ce8157bc8d0b5f747e6c1958654318ee922f44945ef17dbaa26ccb1b",
+      "bytes": 987,
+      "reader": "the development acceptance gate:1789"
+    },
+    {
+      "path": "work/cli-b31/evidence/INT/contract-hashes-04.json",
+      "sha256": "9620c2fb85893ba52dd17df5cd1ad0a72c2b9c50f4202db5d4de108c38ee1c36",
+      "bytes": 995,
+      "reader": "the development acceptance gate:1823-1834 (m3_acceptance INT contract hashes)"
+    },
+    {
+      "path": "work/cli-b31/evidence/INT/contract-hashes-05.json",
+      "sha256": "763626e8a075e50119fa047464270126af8d737e1756416158ea09f72b61e779",
+      "bytes": 995,
+      "reader": "the development acceptance gate:1823-1834 (M4 promotion INT contract hashes)"
+    },
+    {
+      "path": "work/cli-b31/evidence/INT/m3-obligations-02-snapshots/catalog.json",
+      "sha256": "02119a270c5ba998b09c7069fcbc8ec17688484102f5d65230184ba045fcf1c8",
+      "bytes": 845822,
+      "reader": "testfiles/vacards-cli-inventory.py:307"
+    },
+    {
+      "path": "work/cli-b31/evidence/INT/m3-obligations-02-snapshots/result-schemas-draft.json",
+      "sha256": "5a9afbac35c3e339f99c4e93c4627892ac171fe6289bfbfe522ca0523066fb35",
+      "bytes": 96514,
+      "reader": "the development acceptance gate:1821-1825 (m3_acceptance INT contract hashes; listed in work/cli-b31/evidence/INT/contract-hashes-03.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/INT/m3-obligations-02-snapshots/schemas-draft.json",
+      "sha256": "07babcd441b67ba1b16b86c3e8a8c587a8f961265ebeddf82dfd2bd2889c531f",
+      "bytes": 393274,
+      "reader": "the development acceptance gate:1821-1825 (m3_acceptance INT contract hashes; listed in work/cli-b31/evidence/INT/contract-hashes-03.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/deferred-errors.json",
+      "sha256": "cde1ca9f7a2aa5bdc228ae2e7c1682c60a22fa8e792ce1043dbf3982a50a5f9a",
+      "bytes": 2166367,
+      "reader": "testfiles/src/vacards-cli-registry-test.cpp:1468,1725-1819"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/m2-removal-review.md",
+      "sha256": "e1f22d48b9e8f49dc6763430156c19867f73f34c190307ae98a0abdf042b3f22",
+      "bytes": 2214,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r4-proposal-decisions.json",
+      "sha256": "84ed43e4bf5db112021b34bd7c0ea9d25fec3d96edbc8a22d68b36b356224fae",
+      "bytes": 21539,
+      "reader": "testfiles/src/vacards-cli-legacy-reachability-test.cpp:81"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r5-ledger.json",
+      "sha256": "c6d7a62b605300127081cfe63066124fa8c670da0480afeadbb6e29987acd59c",
+      "bytes": 2197795,
+      "reader": "testfiles/src/vacards-cli-registry-test.cpp:1022"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r5-legacy-catalog-after.json",
+      "sha256": "7f24bde2d7081152fb264d8c8c0e0b3b968bc283d0c5a03c78a8bcfa772c9524",
+      "bytes": 3642690,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r5-legacy-catalog-before.json",
+      "sha256": "a011d1cc194a66c7fef85e4943b8dc2e8e2a6cee2add2d4bd7381b28253a6509",
+      "bytes": 294949,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r5-owner-actions.json",
+      "sha256": "b4c9262a0d242e2bdb487baaed9248212bb636d64f14fa1b0e4b977d4a02cc8a",
+      "bytes": 193162,
+      "reader": "testfiles/src/vacards-cli-registry-test.cpp:970"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r5-retired-rows.json",
+      "sha256": "eb674ceac7daa2f7f678289ebf622fcb7e2e723d45931ae88d0ba1852ef2f4f8",
+      "bytes": 52854,
+      "reader": "testfiles/src/vacards-cli-registry-test.cpp:965"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r6-desc2-catalog-after.json",
+      "sha256": "742a5eb2ae91b6276416f3ea70f5f6d32129778e82f06c4a184c965107da81e4",
+      "bytes": 3641827,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r6-desc2-catalog-before.json",
+      "sha256": "7f24bde2d7081152fb264d8c8c0e0b3b968bc283d0c5a03c78a8bcfa772c9524",
+      "bytes": 3642690,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r7-desc3-catalog-after.json",
+      "sha256": "0228a6ac799ec54cd1c11759afdd8c3f0bb01dcec7150ab39c50c5c74cede507",
+      "bytes": 3641779,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r7-desc3-catalog-before.json",
+      "sha256": "742a5eb2ae91b6276416f3ea70f5f6d32129778e82f06c4a184c965107da81e4",
+      "bytes": 3641827,
+      "reader": "the development acceptance gate:1407-1450 (stage_removal_artifacts; rows in r8-ledger.json)"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/r8-ledger.json",
+      "sha256": "b54cb6e1dd506c56d29700e7389e8f184da8a5852547bb21492a9b6815e303cf",
+      "bytes": 5837171,
+      "reader": "the development acceptance gate:1554,1804"
+    },
+    {
+      "path": "work/cli-b31/evidence/P9/waveB-pending-branches.json",
+      "sha256": "e49211eaab08707748798ff5b0c8063b1876053ed06aad2e7636dc1e1aed2a6a",
+      "bytes": 169759,
+      "reader": "testfiles/src/vacards-cli-registry-test.cpp:979,1295-1317"
+    },
+    {
+      "path": "work/cli-b31/handoffs/INT-contract-hash.md",
+      "sha256": "bf5b4cae071f2d08f15cf23835dccf07022fca5e84638b90f712802169151255",
+      "bytes": 4581,
+      "reader": "the development acceptance gate:1782-1789"
+    },
+    {
+      "path": "work/cli-b31/handoffs/P6-F1-F3.md",
+      "sha256": "8a66339ce3a68655e77df9020236a2a852138d8b9139250bd7bb68d7480c09a6",
+      "bytes": 3337,
+      "reader": "the development acceptance gate:1782-1789"
+    },
+    {
+      "path": "work/cli-b31/handoffs/P7-F2.md",
+      "sha256": "cb5e6582a2d68f69ed802faa7c0a1515896c33fb2b27a943841d6d2232251ef4",
+      "bytes": 1356,
+      "reader": "the development acceptance gate:1782-1789"
+    }
+  ]
+}

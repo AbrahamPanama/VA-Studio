@@ -57,6 +57,8 @@ public:
     Geom::Rect get_text_size();
 
 protected:
+    friend class CanvasItemTextTestAccess;
+
     ~CanvasItemText() override = default;
 
     void _update(bool propagate) override;
@@ -69,15 +71,19 @@ protected:
     Geom::Point _adjust_offset;
     Geom::Rect _text_box;
     Glib::ustring _text;
+    Glib::ustring _requested_text;
     std::string _fontname = "sans-serif";
     double _fontsize = 10;
+    double _requested_fontsize = 10;
     double _border = 3;
+    double _requested_border = 3;
     double _bg_rad = 0;
     uint32_t _background = 0x0000007f;
     bool _use_background = true;
     bool _scaled = false;
 
-    Geom::Rect draw_text_and_return_extents();
+    Glib::RefPtr<Pango::Layout> create_layout(Glib::ustring const &text, double fontsize) const;
+    Geom::Rect rect_from_extents(Pango::Rectangle const &extents, double border) const;
 };
 
 } // namespace Inkscape

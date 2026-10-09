@@ -82,11 +82,6 @@ class Harness:
         return True
 
 
-def step(name, passed, detail=""):
-    print(f"MCP-STEP {name} {'PASS' if passed else 'FAIL'}" + (f" ({detail})" if detail else ""), flush=True)
-    return passed
-
-
 def unwrap(call_result):
     if not isinstance(call_result, dict):
         raise RuntimeError(f"tools/call result is not an object: {call_result!r}")
@@ -96,13 +91,13 @@ def unwrap(call_result):
     return structured
 
 
-def main():
-    if len(sys.argv) != 2:
-        print("usage: vacards-mcp-stdio-test.py <vastudio-cli>", file=sys.stderr)
-        return 2
-    cli = pathlib.Path(sys.argv[1]).resolve()
+def require(passed, reason):
+    if not passed:
+        raise RuntimeError(reason)
+
+
+def run_check(cli, name):
     fixture = pathlib.Path(__file__).resolve().parent / "cli_tests/vacards-agent/fixtures/m3/explode.svg"
-    all_passed = True
     with tempfile.TemporaryDirectory(prefix="vacards-mcp-stdio-") as temporary:
         root = pathlib.Path(temporary)
         source = root / "embedded-image.svg"
@@ -115,97 +110,175 @@ def main():
             initialized = harness.request(1, "initialize", {
                 "protocolVersion": "2025-06-18", "capabilities": {},
                 "clientInfo": {"name": "vacards-mcp-test", "version": "1"}})
-            all_passed &= step("initialize", initialized.get("protocolVersion") == "2025-06-18"
-                               and "tools" in initialized.get("capabilities", {}))
+            if name == "initialize":
+                require(initialized.get("protocolVersion") == "2025-06-18"
+                        and "tools" in initialized.get("capabilities", {}),
+                        "initialize response did not advertise the expected protocol and tools")
+                return
+
             harness.send({"jsonrpc": "2.0", "method": "notifications/initialized"})
-            # The next request is the acknowledgment that the initialized notification was accepted.
             ping = harness.request(2, "ping", {})
-            all_passed &= step("initialized-notification", ping == {})
+            if name == "initialized-notification":
+                require(ping == {}, "ping acknowledgment was not an empty object")
+                return
 
-            tools = []
-            cursor = None
-            page_number = 0
-            while True:
-                params = {"cursor": cursor} if cursor else {}
-                page = harness.request(10 + page_number, "tools/list", params)
-                tools.extend(page.get("tools", []))
-                cursor = page.get("nextCursor")
-                page_number += 1
-                if not cursor:
-                    break
-            names = [item.get("name") for item in tools]
-            all_passed &= step("tools-list-pages", len(tools) > 0 and len(names) == len(set(names)),
-                               f"{len(tools)} tools across {page_number} page(s)")
+            if name in ("tools-list-pages", "catalog-tool-coverage"):
+                tools = []
+                cursor = None
+                page_number = 0
+                while True:
+                    params = {"cursor": cursor} if cursor else {}
+                    page = harness.request(10 + page_number, "tools/list", params)
+                    tools.extend(page.get("tools", []))
+                    cursor = page.get("nextCursor")
+                    page_number += 1
+                    if not cursor:
+                        break
+                names = [item.get("name") for item in tools]
+                if name == "tools-list-pages":
+                    require(len(tools) > 0 and len(names) == len(set(names)),
+                            f"{len(tools)} tools across {page_number} page(s); names must be unique")
+                    return
+                catalog = unwrap(harness.call(30, "va_system_catalog", {"params": {}})).get("data", {})
+                available = [row["id"] for row in catalog.get("commands", [])
+                             if row.get("available", True)]
+                expected = {"va_" + command.replace(".", "_").replace("-", "_") for command in available}
+                require(bool(expected) and expected.issubset(set(names)),
+                        f"{len(expected)} available catalog commands are not covered")
+                return
 
-            catalog_call = harness.call(30, "va_system_catalog", {"params": {}})
-            catalog_result = unwrap(catalog_call)
-            catalog = catalog_result.get("data", {})
-            available = [row["id"] for row in catalog.get("commands", [])
-                         if row.get("available", True)]
-            expected = {"va_" + command.replace(".", "_").replace("-", "_") for command in available}
-            all_passed &= step("catalog-tool-coverage", bool(expected) and expected.issubset(set(names)),
-                               f"{len(expected)} available catalog commands")
+            if name == "eof-clean-exit":
+                cursor = None
+                page_number = 0
+                while True:
+                    page = harness.request(10 + page_number, "tools/list",
+                                           {"cursor": cursor} if cursor else {})
+                    cursor = page.get("nextCursor")
+                    page_number += 1
+                    if not cursor:
+                        break
+                unwrap(harness.call(30, "va_system_catalog", {"params": {}}))
+                opened = unwrap(harness.call(31, "va_file_open", {
+                    "params": {"path": str(source), "format": "svg", "resource-policy": "embed",
+                               "font-policy": "reject", "discard": False}, "if_revision": 0}))
+                document = opened.get("document_id")
+                revision = opened.get("revision_after", 0)
+                moved = unwrap(harness.call(32, "va_geometry_move", {
+                    "params": {"ids": ["shape1"], "dx": {"value": 2, "unit": "px"},
+                               "dy": {"value": 3, "unit": "px"}},
+                    "document": document, "if_revision": revision}))
+                revision = moved.get("revision_after", revision)
+                saved_path = root / "saved.svg"
+                harness.call(33, "va_file_save", {
+                    "params": {"path": str(saved_path), "embedding-policy": "embed", "overwrite": False},
+                    "document": document, "if_revision": revision})
+                unwrap(harness.call(34, "va_bitmap_histogram", {
+                    "params": {"ids": ["image1"], "channel": "luminance", "bins": 256, "remap": "none"},
+                    "document": document, "if_revision": revision}))
+                unwrap(harness.call(35, "va_geometry_move", {
+                    "params": {"ids": ["unknown-object-id"], "dx": {"value": 1, "unit": "px"},
+                               "dy": {"value": 1, "unit": "px"}},
+                    "document": document, "if_revision": revision}))
+                process.stdin.close()
+                eof_seen = harness.wait_eof(10)
+                exit_code = process.wait(timeout=10)
+                require(eof_seen and exit_code == 0, f"EOF={eof_seen}, exit={exit_code}")
+                return
 
             opened = unwrap(harness.call(31, "va_file_open", {
                 "params": {"path": str(source), "format": "svg", "resource-policy": "embed",
                            "font-policy": "reject", "discard": False}, "if_revision": 0}))
             document = opened.get("document_id")
             revision = opened.get("revision_after", 0)
-            all_passed &= step("file-open", opened.get("status") == "changed" and bool(document))
+            if name == "file-open":
+                require(opened.get("status") == "changed" and bool(document), "file open did not change a document")
+                return
+            require(bool(document), "file open prerequisite did not return a document")
 
-            moved = unwrap(harness.call(32, "va_geometry_move", {
-                "params": {"ids": ["shape1"], "dx": {"value": 2, "unit": "px"},
-                           "dy": {"value": 3, "unit": "px"}},
-                "document": document, "if_revision": revision}))
-            revision = moved.get("revision_after", revision)
-            all_passed &= step("geometry-command", moved.get("status") == "changed")
+            if name in ("geometry-command", "file-save", "bitmap-affinity"):
+                moved = unwrap(harness.call(32, "va_geometry_move", {
+                    "params": {"ids": ["shape1"], "dx": {"value": 2, "unit": "px"},
+                               "dy": {"value": 3, "unit": "px"}},
+                    "document": document, "if_revision": revision}))
+                revision = moved.get("revision_after", revision)
+                if name == "geometry-command":
+                    require(moved.get("status") == "changed", "geometry move did not change the document")
+                    return
+                saved_path = root / "saved.svg"
+                saved = unwrap(harness.call(33, "va_file_save", {
+                    "params": {"path": str(saved_path), "embedding-policy": "embed", "overwrite": False},
+                    "document": document, "if_revision": revision}))
+                if name == "file-save":
+                    require(saved.get("status") == "changed" and saved_path.is_file(),
+                            "save did not change the document and create the output file")
+                    return
+                bitmap = unwrap(harness.call(34, "va_bitmap_histogram", {
+                    "params": {"ids": ["image1"], "channel": "luminance", "bins": 256, "remap": "none"},
+                    "document": document, "if_revision": revision}))
+                require("status" in bitmap and isinstance(bitmap.get("data"), dict),
+                        f"bitmap result has no typed status/data (status={bitmap.get('status')})")
+                return
 
-            saved_path = root / "saved.svg"
-            saved = unwrap(harness.call(33, "va_file_save", {
-                "params": {"path": str(saved_path), "embedding-policy": "embed", "overwrite": False},
-                "document": document, "if_revision": revision}))
-            all_passed &= step("file-save", saved.get("status") == "changed" and saved_path.is_file())
-
-            bitmap = unwrap(harness.call(34, "va_bitmap_histogram", {
-                "params": {"ids": ["image1"], "channel": "luminance", "bins": 256, "remap": "none"},
-                "document": document, "if_revision": revision}))
-            all_passed &= step("bitmap-affinity", "status" in bitmap and isinstance(bitmap.get("data"), dict),
-                               f"typed status={bitmap.get('status')}")
-
-            refused_call = harness.call(35, "va_geometry_move", {
-                "params": {"ids": ["unknown-object-id"], "dx": {"value": 1, "unit": "px"},
-                           "dy": {"value": 1, "unit": "px"}},
-                "document": document, "if_revision": revision})
-            refused = unwrap(refused_call)
-            all_passed &= step("structured-refusal", refused_call.get("isError") is True
-                               and isinstance(refused.get("error"), dict)
-                               and bool(refused["error"].get("code")))
-
-            process.stdin.close()
-            eof_seen = harness.wait_eof(10)
-            try:
-                exit_code = process.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                exit_code = None
-            all_passed &= step("eof-clean-exit", eof_seen and exit_code == 0,
-                               f"exit={exit_code}")
-        except Exception as exc:
-            all_passed &= step("harness", False, str(exc))
-            if process.poll() is None:
-                process.stdin.close()
-                try:
-                    process.wait(timeout=10)
-                except subprocess.TimeoutExpired:
-                    pass
+            if name == "structured-refusal":
+                refused_call = harness.call(35, "va_geometry_move", {
+                    "params": {"ids": ["unknown-object-id"], "dx": {"value": 1, "unit": "px"},
+                               "dy": {"value": 1, "unit": "px"}},
+                    "document": document, "if_revision": revision})
+                refused = unwrap(refused_call)
+                require(refused_call.get("isError") is True and isinstance(refused.get("error"), dict)
+                        and bool(refused["error"].get("code")), "unknown object refusal was not structured")
+                return
+            raise ValueError(f"unknown check: {name}")
         finally:
             if process.poll() is None:
-                process.stdin.close()
+                if process.stdin and not process.stdin.closed:
+                    process.stdin.close()
                 try:
                     process.wait(timeout=10)
                 except subprocess.TimeoutExpired:
                     process.kill()
                     process.wait()
-    return 0 if all_passed else 1
+
+
+def load_cases(directory):
+    cases = []
+    for path in sorted(pathlib.Path(directory).glob("*.json"), key=lambda item: item.name):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            check = data["check"]
+            if not isinstance(check, str) or not check:
+                raise ValueError("check must be a non-empty string")
+            cases.append((path.name, check))
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            cases.append((path.name, exc))
+    return cases
+
+
+def main():
+    if len(sys.argv) != 3:
+        print("usage: vacards-mcp-stdio-test.py <vastudio-cli> <case-directory>", file=sys.stderr)
+        return 2
+    cli = pathlib.Path(sys.argv[1]).resolve()
+    cases = load_cases(sys.argv[2])
+    if not cases:
+        print("no JSON cases found", file=sys.stderr)
+        return 1
+    known = {"initialize", "initialized-notification", "tools-list-pages", "catalog-tool-coverage",
+             "file-open", "geometry-command", "file-save", "bitmap-affinity", "structured-refusal",
+             "eof-clean-exit"}
+    failed = False
+    for filename, check in cases:
+        try:
+            if isinstance(check, Exception):
+                raise check
+            if check not in known:
+                raise ValueError(f"unknown check: {check}")
+            run_check(cli, check)
+            print(f"PASS {filename}", flush=True)
+        except Exception as exc:
+            failed = True
+            print(f"FAIL {filename}: {exc}", flush=True)
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

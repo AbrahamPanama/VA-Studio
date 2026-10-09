@@ -68516,6 +68516,10 @@ msgid "Analysis canceled. Unapplied changes were discarded. Click Analyze to sta
 msgstr "Análisis cancelado. Se descartaron los cambios sin aplicar. Haz clic en Analizar para empezar de nuevo."
 
 #: ../src/ui/dialog/explode-bitmap.cpp
+msgid "Invalid value replaced by the previous one."
+msgstr "Valor no válido reemplazado por el anterior."
+
+#: ../src/ui/dialog/explode-bitmap.cpp
 msgid "Contour"
 msgstr "Contorno"
 

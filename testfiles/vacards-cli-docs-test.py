@@ -20,38 +20,94 @@ gen = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gen)
 
 
-def negative_checks(catalog):
-    checks = []
+def negative_fixture(catalog, family_dir=None):
+    """Create the clean generated-doc fixture shared by the existing drift scenarios."""
+    root = Path(tempfile.mkdtemp(prefix='vacards-docs-negative-'))
+    doc = root / 'doc'; doc.mkdir()
+    (doc / 'AGENT_GUIDE.template.md').write_bytes((gen.DOC / 'AGENT_GUIDE.template.md').read_bytes())
+    expected = gen.outputs(catalog, doc, root / 'cases', root / 'families')
+    for path, text in expected.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding='utf-8', newline='\n')
+    if gen.drift(expected):
+        raise ValueError('clean negative fixture drifted')
+    return root, doc, expected
+
+
+def check_missing_example_rejected(catalog, family_dir=None):
     broken = copy.deepcopy(catalog)
     del broken['commands'][0]['example']
     try:
         gen.validate_catalog(broken)
     except (ValueError, KeyError):
-        checks.append('missing example rejected')
+        return
     else:
         raise ValueError('missing example did not fail')
-    with tempfile.TemporaryDirectory(prefix='vacards-docs-negative-') as folder:
-        root = Path(folder)
-        doc = root / 'doc'; doc.mkdir()
-        (doc / 'AGENT_GUIDE.template.md').write_bytes((gen.DOC / 'AGENT_GUIDE.template.md').read_bytes())
-        expected = gen.outputs(catalog, doc, root / 'cases', root / 'families')
-        for path, text in expected.items():
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(text, encoding='utf-8', newline='\n')
-        if gen.drift(expected): raise ValueError('clean negative fixture drifted')
+
+
+def with_negative_fixture(catalog, check):
+    root, doc, expected = negative_fixture(catalog)
+    try:
+        return check(root, doc, expected)
+    finally:
+        import shutil
+        shutil.rmtree(root)
+
+
+def check_catalog_hash_drift_rejected(catalog, family_dir=None):
+    def check(root, doc, expected):
         changed = copy.deepcopy(catalog)
         changed['hash'] = ('0' if catalog['hash'][0] != '0' else '1') + catalog['hash'][1:]
         if not gen.drift(gen.outputs(changed, doc, root / 'cases', root / 'families')):
             raise ValueError('catalog hash drift did not fail')
-        checks.append('catalog hash drift rejected')
+    with_negative_fixture(catalog, check)
+
+
+def check_reference_content_drift_rejected(catalog, family_dir=None):
+    def check(root, doc, expected):
         path = doc / 'reference.md'; path.write_text('stale docs\n', encoding='utf-8', newline='\n')
-        if str(path) not in gen.drift(expected): raise ValueError('content drift did not fail')
-        checks.append('reference content drift rejected')
+        if str(path) not in gen.drift(expected):
+            raise ValueError('content drift did not fail')
+    with_negative_fixture(catalog, check)
+
+
+def check_missing_family_page_rejected(catalog, family_dir=None):
+    def check(root, doc, expected):
         page = next(path for path in expected if path.parent == root / 'families' and path.name != 'index.md')
         page.unlink()
-        if str(page) not in gen.drift(expected): raise ValueError('missing family page did not fail')
-        checks.append('missing family page rejected')
-    return checks
+        if str(page) not in gen.drift(expected):
+            raise ValueError('missing family page did not fail')
+    with_negative_fixture(catalog, check)
+
+
+def check_generated_docs_current(catalog, family_dir=None):
+    expected = gen.outputs(catalog, family_dir=family_dir)
+    changed = gen.drift(expected)
+    if changed:
+        raise ValueError('generated docs drift: ' + ', '.join(changed))
+
+
+CHECKS = {
+    'generated-docs-current': check_generated_docs_current,
+    'missing-example-rejected': check_missing_example_rejected,
+    'catalog-hash-drift-rejected': check_catalog_hash_drift_rejected,
+    'reference-content-drift-rejected': check_reference_content_drift_rejected,
+    'missing-family-page-rejected': check_missing_family_page_rejected,
+}
+
+
+def load_cases(directory):
+    cases = []
+    for path in sorted(Path(directory).glob('*.json'), key=lambda item: item.name):
+        try:
+            data = json.loads(path.read_text(encoding='utf-8'))
+            check = data['check']
+            if not isinstance(check, str) or not check:
+                raise ValueError('check must be a non-empty string')
+            cases.append((path.name, check))
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            cases.append((path.name, error))
+    return cases
 
 
 def execute_examples(binary, catalog, evidence):
@@ -97,23 +153,34 @@ def main():
     parser.add_argument('--binary', type=Path, required=True)
     parser.add_argument('--family-dir', type=Path)
     parser.add_argument('--execute-examples', type=Path, metavar='FRESH_EVIDENCE_DIR')
+    parser.add_argument('case_dir', type=Path)
     args = parser.parse_args()
+    cases = load_cases(args.case_dir)
+    if not cases:
+        print('no JSON cases found', file=sys.stderr)
+        return 1
     try:
         catalog = gen.read_catalog(args.binary)
-        expected = gen.outputs(catalog, family_dir=args.family_dir)
-        changed = gen.drift(expected)
-        if changed: raise ValueError('generated docs drift: ' + ', '.join(changed))
-        checks = negative_checks(catalog)
-        rows = execute_examples(args.binary.resolve(strict=True), catalog, args.execute_examples) if args.execute_examples else []
-        report = dict(catalog_hash=catalog['hash'], commands=len(catalog['commands']), generated_files=len(expected), negative_checks=checks,
-                      examples_executed=len(rows), examples_passed=sum(r['passed'] for r in rows),
-                      examples_success=sum(r.get('result', {}).get('status') in ('ok', 'changed', 'unchanged') and r['passed'] for r in rows),
-                      examples_typed_refusals=sum(r.get('result', {}).get('status') in ('rejected', 'cancelled') and r['passed'] for r in rows))
-        print(gen.json_text(report))
-        return 0 if all(r['passed'] for r in rows) else 1
     except (ValueError, KeyError, OSError, subprocess.SubprocessError) as error:
-        print('FAIL: ' + str(error), file=sys.stderr)
+        for filename, _ in cases:
+            print('FAIL ' + filename + ': ' + str(error), flush=True)
         return 1
+    failed = False
+    for filename, check in cases:
+        try:
+            if isinstance(check, Exception):
+                raise check
+            if check not in CHECKS:
+                raise ValueError('unknown check: ' + check)
+            CHECKS[check](catalog, args.family_dir)
+            print('PASS ' + filename, flush=True)
+        except Exception as error:
+            failed = True
+            print('FAIL ' + filename + ': ' + str(error), flush=True)
+    if args.execute_examples:
+        rows = execute_examples(args.binary.resolve(strict=True), catalog, args.execute_examples)
+        failed = failed or not all(row['passed'] for row in rows)
+    return 1 if failed else 0
 
 
 if __name__ == '__main__':

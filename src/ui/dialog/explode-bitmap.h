@@ -63,6 +63,9 @@ private:
     void request();
     void analyze();
     void endSession(Glib::ustring const & = {});
+    void discardEdits();
+    void discardFieldEdit(unsigned);
+    void discardContourEdit(unsigned);
     void stale();
     bool sameSelection() const;
     bool _session = false;

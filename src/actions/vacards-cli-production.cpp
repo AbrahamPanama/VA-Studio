@@ -200,8 +200,8 @@ boost::json::object production_catalog() {
         auto spec = find_production_command(c.id);
         auto row = describe_action(*spec);
         row["id"] = c.id; row["version"] = spec->version;
-        row["available"] = true; row["accepted"] = false; row["experimental"] = true;
-        row["schema_status"] = "development overlay; independent Mac and Windows acceptance pending";
+        row["available"] = true; row["accepted"] = true; row["experimental"] = false;
+        row["schema_status"] = "accepted (VA Studio 1.1, M3 and M4)";
         row["aliases"] = array{}; row["effects"] = c.effects; row["target_policy"] = c.policy;
         row["params"] = spec->input->schema; row["request_schema"] = request_schema(*spec);
         row["result_schema"] = production_result_schema(c.result_data); row["result_data"] = c.result_data;

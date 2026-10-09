@@ -392,6 +392,11 @@ static ResourceAccess inspect_path(std::string const &href, std::string const &b
     std::error_code ec;
     auto path = fs::u8path(local);
     if (!path.is_absolute()) path = fs::u8path(base) / path;
+#ifdef _WIN32
+    // Without a drive-qualified base, a rooted ("/x") or relative reference names no definite local file.
+    // Resolving it would fail as an invalid \\?\ name and report a retryable "unavailable".
+    if (!path.is_absolute()) return {"ungranted", {}};
+#endif
     if(!safe_public_path(path)) return {"unsafe", {}};
     path = resolved(path, ec);
     if(ec) return {ec==std::errc::permission_denied ? "unavailable" : "ungranted",{}};

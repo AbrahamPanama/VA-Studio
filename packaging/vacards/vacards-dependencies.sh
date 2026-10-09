@@ -44,7 +44,7 @@ read_value()
     awk -F= -v key="$key" '$1 == key {sub(/^[^=]*=/, ""); sub(/\r$/, ""); print; exit}' "$manifest"
 }
 
-fields='format source_baseline_commit libcdr_repository libcdr_ref libcdr_commit libcdr_pkgconfig_version cairo_release cairo_release_sha256 cairo_fix_commit nesting_engine_repository nesting_engine_version nesting_engine_commit nesting_rust_toolchain nesting_ffi_api_version sparrow_repository sparrow_commit sparrow_darwin_arm64_sha256 sparrow_windows_x64_sha256 sparrow_windows_rust_toolchain sparrow_windows_cargo_lock_sha256 tiff_rgb_profile_filename tiff_rgb_profile_sha256 macos_deployment_target required_cmake_features disabled_cmake_features'
+fields='format source_baseline_commit libcdr_repository libcdr_ref libcdr_commit libcdr_pkgconfig_version cairo_release cairo_release_sha256 cairo_fix_commit nesting_engine_repository nesting_engine_version nesting_engine_commit nesting_rust_toolchain nesting_ffi_api_version sparrow_repository sparrow_commit sparrow_darwin_arm64_sha256 sparrow_windows_x64_sha256 sparrow_windows_rust_toolchain sparrow_windows_cargo_lock_sha256 tiff_rgb_profile_filename tiff_rgb_profile_sha256 macos_deployment_target required_cmake_features disabled_cmake_features pango_windows_release pango_windows_platform pango_windows_source_archive_sha256 pango_windows_patch_filename pango_windows_patch_sha256 pango_windows_bundle pango_windows_prefix'
 
 [ -f "$manifest" ] || fail "missing $manifest"
 tr -d '\000' < "$manifest" | cmp -s "$manifest" - || fail "NUL byte in manifest"
@@ -88,7 +88,14 @@ unknown_fields=$(awk -F= '
     $1 != "tiff_rgb_profile_sha256" &&
     $1 != "macos_deployment_target" &&
     $1 != "required_cmake_features" &&
-    $1 != "disabled_cmake_features" {print $1}
+    $1 != "disabled_cmake_features" &&
+    $1 != "pango_windows_release" &&
+    $1 != "pango_windows_platform" &&
+    $1 != "pango_windows_source_archive_sha256" &&
+    $1 != "pango_windows_patch_filename" &&
+    $1 != "pango_windows_patch_sha256" &&
+    $1 != "pango_windows_bundle" &&
+    $1 != "pango_windows_prefix" {print $1}
 ' "$manifest")
 [ -z "$unknown_fields" ] || fail "unknown field(s): $unknown_fields"
 
@@ -112,7 +119,9 @@ IFS=' ' read -r format source_baseline_commit libcdr_repository libcdr_ref \
     sparrow_windows_x64_sha256 sparrow_windows_rust_toolchain \
     sparrow_windows_cargo_lock_sha256 tiff_rgb_profile_filename \
     tiff_rgb_profile_sha256 macos_deployment_target required_cmake_features \
-    disabled_cmake_features <<EOF
+    disabled_cmake_features pango_windows_release pango_windows_platform \
+    pango_windows_source_archive_sha256 pango_windows_patch_filename \
+    pango_windows_patch_sha256 pango_windows_bundle pango_windows_prefix <<EOF
 $manifest_values
 EOF
 
@@ -148,6 +157,13 @@ invalid_value=$(awk -F= '
         require(v["macos_deployment_target"] ~ /^[0-9]+\.[0-9]+$/, "macos_deployment_target must be MAJOR.MINOR")
         require(v["required_cmake_features"] ~ /^[A-Z][A-Z0-9_]*(,[A-Z][A-Z0-9_]*)*$/, "required_cmake_features must be a comma-separated CMake option list")
         require(v["disabled_cmake_features"] ~ /^[A-Z][A-Z0-9_]*(,[A-Z][A-Z0-9_]*)*$/, "disabled_cmake_features must be a comma-separated CMake option list")
+        require(v["pango_windows_release"] ~ /^[0-9]+\.[0-9]+\.[0-9]+$/, "pango_windows_release must have three numeric components")
+        require(v["pango_windows_platform"] ~ /^[a-z0-9][a-z0-9-]*$/, "pango_windows_platform must be a safe platform name")
+        require(v["pango_windows_source_archive_sha256"] ~ /^[0-9a-f]{64}$/, "pango_windows_source_archive_sha256 must be a lowercase SHA-256")
+        require(v["pango_windows_patch_filename"] ~ /^[A-Za-z0-9][A-Za-z0-9._-]*\.patch$/, "pango_windows_patch_filename must be a safe patch filename")
+        require(v["pango_windows_patch_sha256"] ~ /^[0-9a-f]{64}$/, "pango_windows_patch_sha256 must be a lowercase SHA-256")
+        require(v["pango_windows_bundle"] ~ /^packaging\/dependencies\/[A-Za-z0-9._\/-]+\.env$/ && v["pango_windows_bundle"] !~ /\.\./, "pango_windows_bundle must be a repository-relative packaging/dependencies path")
+        require(v["pango_windows_prefix"] ~ /^[A-Za-z]:\/[A-Za-z0-9._\/-]+$/, "pango_windows_prefix must be an absolute Windows path")
     }
 ' "$manifest")
 [ -z "$invalid_value" ] || fail "$invalid_value"

@@ -45,6 +45,7 @@ CanvasItemText::CanvasItemText(CanvasItemGroup *group, Geom::Point const &p, Gli
     : CanvasItem(group)
     , _p(p)
     , _text(std::move(text))
+    , _requested_text(_text)
     , _scaled(scaled)
 {
     _name = "CanvasItemText";
@@ -96,8 +97,10 @@ void CanvasItemText::_update(bool)
     // Point needs to be scaled manually if not cairo scaling
     Geom::Point p = _scaled ? _p : _p * affine();
 
-    // Measure text size
-    _text_box = draw_text_and_return_extents();
+    // Prepare render-side text only during the deferred canvas update phase.
+    _layout = create_layout(_text, _fontsize);
+    _text_extents = _layout->get_pixel_logical_extents();
+    _text_box = rect_from_extents(_text_extents, _border);
 
     // Offset relative to requested point
     double offset_x = -(_anchor_position.x() * _text_box.width());
@@ -168,6 +171,9 @@ void CanvasItemText::_render(Inkscape::CanvasItemBuffer &buf) const
 
 void CanvasItemText::set_text(Glib::ustring text)
 {
+    if (_requested_text == text) return;
+    _requested_text = text;
+
     defer([this, text = std::move(text)] () mutable {
         if (_text == text) return;
         _text = std::move(text);
@@ -182,6 +188,9 @@ void CanvasItemText::set_text(Glib::ustring text)
  */
 void CanvasItemText::set_fontsize(double fontsize)
 {
+    if (_requested_fontsize == fontsize) return;
+    _requested_fontsize = fontsize;
+
     defer([=, this] {
         if (_fontsize == fontsize) return;
         _fontsize = fontsize;
@@ -190,33 +199,33 @@ void CanvasItemText::set_fontsize(double fontsize)
 }
 
 Geom::Rect CanvasItemText::get_text_size() {
-    auto text_box = draw_text_and_return_extents();
-    return text_box;
+    auto layout = create_layout(_requested_text, _requested_fontsize);
+    return rect_from_extents(layout->get_pixel_logical_extents(), _requested_border);
 }
 
-/**
- * Load the sizes of the text extent using the given font.
- */
-Geom::Rect CanvasItemText::draw_text_and_return_extents()
+Glib::RefPtr<Pango::Layout> CanvasItemText::create_layout(Glib::ustring const &text, double fontsize) const
 {
     auto surface = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, 1, 1);
     auto context = Cairo::Context::create(surface);
 
     // Call Pango to draw text with fallback fonts.
     // This is the sole source of truth for the text layout.
-    _layout = Pango::Layout::create(context);
+    auto layout = Pango::Layout::create(context);
 
     // Set Pango font description
     auto fontdesc = Pango::FontDescription(_fontname);
-    fontdesc.set_absolute_size(_fontsize * PANGO_SCALE);
+    fontdesc.set_absolute_size(fontsize * PANGO_SCALE);
 
-    _layout->set_font_description(fontdesc);
-    _layout->set_text(_text);
-    _text_extents = _layout->get_pixel_logical_extents();
+    layout->set_font_description(fontdesc);
+    layout->set_text(text);
+    return layout;
+}
 
+Geom::Rect CanvasItemText::rect_from_extents(Pango::Rectangle const &extents, double border) const
+{
     return Geom::Rect::from_xywh(0, 0,
-                                 _text_extents.get_width() + _border * 2,
-                                 _text_extents.get_height() + _border * 2);
+                                 extents.get_width() + border * 2,
+                                 extents.get_height() + border * 2);
 }
 
 void CanvasItemText::set_background(uint32_t background)
@@ -253,6 +262,9 @@ void CanvasItemText::set_adjust(Geom::Point const &adjust_pt)
 
 void CanvasItemText::set_border(double border)
 {
+    if (_requested_border == border) return;
+    _requested_border = border;
+
     defer([=, this] {
         if (_border == border) return;
         _border = border;

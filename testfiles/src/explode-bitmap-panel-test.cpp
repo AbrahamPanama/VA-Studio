@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <cstring>
 #include <latch>
 #include <map>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
+#include <locale>
 #include <sstream>
 #ifdef __APPLE__
 #include <dlfcn.h>
@@ -62,6 +66,22 @@ private:
     void _render(CanvasItemBuffer &) const override {}
 };
 std::atomic<long long> ticks{0}; JobClock::time_point now() { return JobClock::time_point(std::chrono::milliseconds(ticks.load())); }
+std::locale const &testNumericLocale() {
+    static auto locale = [] { try { return std::locale(""); } catch (...) { return std::locale::classic(); } }();
+    return locale;
+}
+std::string localizedNumericText(std::string text) {
+    auto decimal = std::use_facet<std::numpunct<char>>(testNumericLocale()).decimal_point();
+    if (decimal == '.') return text;
+    for (std::size_t i = 1; i + 1 < text.size(); ++i) {
+        if (text[i] == '.' && std::isdigit(static_cast<unsigned char>(text[i - 1])) &&
+            std::isdigit(static_cast<unsigned char>(text[i + 1]))) text[i] = decimal;
+    }
+    return text;
+}
+std::string localizedInteger(unsigned value) {
+    std::ostringstream text; text.imbue(testNumericLocale()); text << value; return text.str();
+}
 std::atomic<unsigned> workerStarts{0}, contourStarts{0}, fullWithContours{0};
 std::atomic<unsigned> phases[6];
 void observePreparation(PreparationPhase phase, void *) noexcept { ++phases[unsigned(phase)]; }
@@ -175,6 +195,34 @@ struct ExplodeBitmapPanelTest : testing::Test {
     // Assert exact UTF-8 bytes, independent of locale-sensitive ustring collation.
     std::string message() { return panel->_status.get_text().raw(); }
     void field(unsigned i, char const *text) { pending(i, text); g_signal_emit_by_name(panel->_spins[i].gobj(), "activate"); }
+    void rawContour(unsigned i, char const *text) {
+        setContourText(i, text); panel->_contourSpins[i].update();
+    }
+    void setContourText(unsigned i, char const *text) {
+        panel->_contourSpins[i].set_numeric(false); panel->_contourSpins[i].set_text(text);
+    }
+    void activateContour(unsigned i) { g_signal_emit_by_name(panel->_contourSpins[i].gobj(), "activate"); }
+    void focusContourOnlyButton() { panel->_createContour.grab_focus(); drainEvents(); }
+    void spinContour(unsigned i, GtkSpinType direction) { gtk_spin_button_spin(panel->_contourSpins[i].gobj(), direction, 0); }
+    void setContourSlider(unsigned i, double value) { panel->_contourSliders[i].set_value(value); }
+    std::string contourText(unsigned i) { return panel->_contourSpins[i].get_text().raw(); }
+    bool contourDirty(unsigned i) { return panel->_contourDirty[i]; }
+    void clickCancel() { g_signal_emit_by_name(panel->_cancel.gobj(), "clicked"); }
+    void focusContourField(unsigned i) { panel->_contourSpins[i].grab_focus(); drainEvents(); }
+    bool contourFocused(unsigned i) { return panel->_contourFocused[i]; }
+    bool contourFieldHasFocus(unsigned i) { return gtk_widget_has_focus(GTK_WIDGET(panel->_contourSpins[i].gobj())); }
+    void focusCancelButton() { panel->_cancel.grab_focus(); drainEvents(); }
+    void focusWholeField(unsigned i) { panel->_spins[i].grab_focus(); drainEvents(); }
+    bool wholeFocused(unsigned i) { return panel->_focused[i]; }
+    bool wholeFieldHasFocus(unsigned i) { return gtk_widget_has_focus(GTK_WIDGET(panel->_spins[i].gobj())); }
+    std::string wholeText(unsigned i) { return panel->_spins[i].get_text().raw(); }
+    bool wholeDirty(unsigned i) { return panel->_dirty[i]; }
+    bool acceptWholeText(unsigned i, char const *text) { pending(i, text); return panel->accept(i); }
+    bool acceptContourText(unsigned i, char const *text) {
+        panel->_contourSpins[i].set_numeric(false); panel->_contourSpins[i].set_text(text);
+        return panel->acceptContour(i);
+    }
+    void select(SPObject *object) { desktop->getSelection()->set(object); drainEvents(); }
     void refine(bool on) { panel->_refine.set_active(on); }
     bool refineEnabled() { return panel->_refine.get_sensitive(); }
     bool applyEnabled() { return panel->_apply.get_sensitive(); }
@@ -605,7 +653,8 @@ struct ExplodeBitmapPanelTest : testing::Test {
         EXPECT_DOUBLE_EQ(fraction(), .37); EXPECT_TRUE(panel->_progress.get_visible());
         seed(State::Ready); EXPECT_EQ(message(), "23 pieces"); EXPECT_EQ(primary(), "Explode 23 pieces");
         EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(panel->_zoom.get_sensitive());
-        EXPECT_TRUE(panel->_detailsExpander.get_visible()); EXPECT_FALSE(panel->_progress.get_visible());
+        EXPECT_TRUE(panel->_detailsExpander.get_visible()); EXPECT_TRUE(panel->_progress.get_visible());
+        EXPECT_DOUBLE_EQ(panel->_progress.get_opacity(), 0.0);
         seed(State::Ready, 1, true); EXPECT_EQ(primary(), "Explode 1 piece");
         EXPECT_EQ(message(), "1 piece. Adjustment applied.\nPiece outlines are unavailable. The piece count is exact.");
         EXPECT_FALSE(applyEnabled()); EXPECT_TRUE(panel->_zoom.get_sensitive()); EXPECT_FALSE(panel->_status.has_css_class("dim-label"));
@@ -632,16 +681,17 @@ struct ExplodeBitmapPanelTest : testing::Test {
         EXPECT_NE(details().find("Hidden pixels: 0% (0 mm²)"), std::string::npos);
         auto growth = g_format_size(530410); // GLib may use a nonbreaking unit separator.
         EXPECT_NE(details().find(std::string("Estimated document growth: ") + growth), std::string::npos) << details();
-        EXPECT_NE(std::string(growth).find("530.4"), std::string::npos); g_free(growth);
+        EXPECT_NE(std::string(growth).find(localizedNumericText("530.4")), std::string::npos); g_free(growth);
         EXPECT_EQ(details().find("bytes"), std::string::npos);
         out->visible = 100000; out->lost = 1; out->lostArea = .001; out->smallestArea = .005; out->pieces.hrefBytes = 999;
         panel->display(State::Ready);
-        EXPECT_NE(details().find("Hidden pixels: <0.1% (<0.01 mm²)"), std::string::npos);
-        EXPECT_NE(details().find("Smallest piece: <0.01 mm²"), std::string::npos);
+        EXPECT_NE(details().find(localizedNumericText("Hidden pixels: <0.1% (<0.01 mm²)")), std::string::npos);
+        EXPECT_NE(details().find(localizedNumericText("Smallest piece: <0.01 mm²")), std::string::npos);
         EXPECT_NE(details().find("Estimated document growth: <1 kB"), std::string::npos);
         out->lostArea = .25; out->smallestArea = 12.34; out->pieces.hrefBytes = 0;
         panel->display(State::Ready);
-        EXPECT_NE(details().find("0.25 mm²"), std::string::npos); EXPECT_NE(details().find("12.3 mm²"), std::string::npos);
+        EXPECT_NE(details().find(localizedNumericText("0.25 mm²")), std::string::npos);
+        EXPECT_NE(details().find(localizedNumericText("12.3 mm²")), std::string::npos);
         EXPECT_NE(details().find("Estimated document growth: 0 kB"), std::string::npos);
         out->visible = 0; out->count = 0; panel->display(State::AdjustmentEmpty);
         EXPECT_TRUE(details().empty()); // Missing statistics must not become invented zero rows.
@@ -943,7 +993,8 @@ struct ExplodeBitmapPanelTest : testing::Test {
                 panel->display(State::Ready); EXPECT_EQ(panel->_contourSpins[i].get_text(),text); EXPECT_FALSE(explodeEnabled());
                 key(GDK_KEY_Escape); EXPECT_DOUBLE_EQ(panel->_contourSpins[i].get_value(),old);
                 EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(contourOnlyEnabled());
-                panel->_contourSpins[i].set_text(i==1 ? "65" : "0.2"); panel->acceptContour(i); finish();
+                auto valid = i == 1 ? std::string("65") : localizedNumericText("0.2");
+                panel->_contourSpins[i].set_text(valid); panel->acceptContour(i); finish();
                 EXPECT_DOUBLE_EQ(contourValueForTest(i),i==1 ? 65 : .2); EXPECT_TRUE(explodeEnabled());
             }
         }
@@ -1013,6 +1064,42 @@ struct ExplodeBitmapPanelTest : testing::Test {
         contourField(0, .3);
     }
     void storm() { for (unsigned i = 0; i < 10000; ++i) panel->_sliders[0].set_value(i % 200); }
+    void checkStatusAreaStability() {
+        host->set_default_size(360, 700);
+        open(2, 128, false, {}, {}, nullptr, 0, true, false);
+
+        float baseline = -1;
+        auto capture = [&](char const *state) {
+            paintedFrame();
+            graphene_rect_t bounds{};
+            ASSERT_TRUE(gtk_widget_compute_bounds(GTK_WIDGET(panel->_comparison.gobj()),
+                                                  GTK_WIDGET(panel->_content.gobj()), &bounds));
+            std::cout << "EB_STATUS_Y state=" << state << " y=" << bounds.origin.y << '\n';
+            if (baseline < 0) baseline = bounds.origin.y;
+            EXPECT_FLOAT_EQ(bounds.origin.y, baseline) << state;
+        };
+
+        panel->display(State::Idle);
+        capture("idle");
+
+        panel->display(State::Counting);
+        panel->progress(JobProgress{Stage::topology, 0, 100, JobPhase::contourTrace});
+        EXPECT_EQ(message(), "Tracing contours… 0% · Esc cancels");
+        capture("progress");
+
+        panel->display(State::Ready);
+        panel->setStatus("N pieces · contours ready");
+        capture("ready");
+
+        Glib::ustring const warning = "Contours unavailable: tracing failed because this image has too many narrow gaps to process safely. Explode will create pieces without contours.";
+        panel->setStatus(warning, true);
+        capture("warning");
+        EXPECT_TRUE(panel->_status.get_layout()->is_ellipsized());
+        EXPECT_EQ(panel->_status.get_tooltip_text(), warning);
+
+        panel->setStatus("");
+        capture("empty");
+    }
 };
 TEST_F(ExplodeBitmapPanelTest, NativeWidgetTreeAndSharedAdjustmentsWithoutWindow) { unmapped(); checkStructure(); }
 TEST_F(ExplodeBitmapPanelTest, IdleAndResultPresentationWithoutWindow) { unmapped(); checkIdleAndStates(); }
@@ -1036,6 +1123,7 @@ TEST_F(ExplodeBitmapPanelTest, PanelCanBeRenderedForVisualRegressionReview) {
     if (!directory || !*directory) GTEST_SKIP() << "Set INKSCAPE_EB_PANEL_RENDER_DIR on an isolated display to render the real panel.";
     renderPanels(directory);
 }
+TEST_F(ExplodeBitmapPanelTest, StatusAreaAndFirstControlStayFixedAcrossMessages) { checkStatusAreaStability(); }
 TEST_F(ExplodeBitmapPanelTest, AnalysisOnDemandIdleStaleCancelAndDoneDispatchCounters) {
     open(2, 128, false, {}, {}, nullptr, 0, true, false);
     auto before = xml(); EXPECT_EQ(ticket(), 0u); EXPECT_FALSE(enabled(0));
@@ -1111,6 +1199,153 @@ TEST_F(ExplodeBitmapPanelTest, AnotherEligibleBitmapEndsSessionUntilAnalyze) {
     EXPECT_EQ(message(), "Selection changed. Click Analyze to inspect this image.");
     panel->refresh(); expectNoWorkerStarts(); EXPECT_EQ(ticket(), old); clickPrimary(); EXPECT_EQ(ticket(), old + 1); finish();
     EXPECT_EQ(state(), State::Ready);
+}
+TEST_F(ExplodeBitmapPanelTest, InvalidContourEditIsDiscardedOnCancelAndAnalyzeRemainsAvailable) {
+    open(2, 255); finish(); contours(true); finish();
+    rawContour(2, "}0.1");
+    EXPECT_FALSE(explodeEnabled()); EXPECT_FALSE(applyEnabled()); EXPECT_FALSE(contourOnlyEnabled());
+    clickCancel();
+    EXPECT_EQ(state(), State::Idle); EXPECT_EQ(contourText(2), localizedNumericText("0.5"));
+    EXPECT_FALSE(contourDirty(2)); EXPECT_TRUE(explodeEnabled()); EXPECT_EQ(primary(), "Analyze");
+    clickPrimary(); finish(); EXPECT_EQ(state(), State::Ready) << message();
+}
+TEST_F(ExplodeBitmapPanelTest, InvalidTextOnFocusLeaveIsReplacedWithoutTrappingFocus) {
+    open(2, 255); finish(); contours(true); finish();
+    focusContourField(2); ASSERT_TRUE(contourFocused(2));
+    rawContour(2, "}0.1");
+    EXPECT_NE(message().find("Enter a number from 0 to 5."), std::string::npos);
+    EXPECT_FALSE(explodeEnabled()); EXPECT_FALSE(applyEnabled()); EXPECT_FALSE(contourOnlyEnabled());
+    focusCancelButton();
+    EXPECT_FALSE(contourFocused(2)); EXPECT_FALSE(contourFieldHasFocus(2));
+    EXPECT_EQ(contourText(2), localizedNumericText("0.5")); EXPECT_FALSE(contourDirty(2));
+    EXPECT_EQ(message(), "Invalid value replaced by the previous one.");
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(contourOnlyEnabled());
+}
+TEST_F(ExplodeBitmapPanelTest, InvalidWholeNumberOnFocusLeaveIsReplacedWithoutTrappingFocus) {
+    open(); finish();
+    focusWholeField(0); ASSERT_TRUE(wholeFocused(0));
+    acceptWholeText(0, "2.5");
+    EXPECT_NE(message().find("Enter a whole number from 0 to "), std::string::npos);
+    EXPECT_FALSE(explodeEnabled()); EXPECT_FALSE(applyEnabled());
+    focusCancelButton();
+    EXPECT_FALSE(wholeFocused(0)); EXPECT_FALSE(wholeFieldHasFocus(0));
+    EXPECT_EQ(wholeText(0), "128"); EXPECT_FALSE(wholeDirty(0));
+    EXPECT_EQ(message(), "Invalid value replaced by the previous one.");
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled());
+}
+TEST_F(ExplodeBitmapPanelTest, InvalidContourEditIsDiscardedOnSelectionChange) {
+    open(2, 255); finish(); contours(true); finish();
+    rawContour(2, "}0.1");
+    ASSERT_FALSE(explodeEnabled());
+    select(doc->getObjectById("v"));
+    EXPECT_EQ(state(), State::Idle); EXPECT_EQ(contourText(2), localizedNumericText("0.5")); EXPECT_FALSE(contourDirty(2));
+    EXPECT_FALSE(explodeEnabled()); // The new target is a vector.
+    select(image());
+    EXPECT_EQ(state(), State::Idle); EXPECT_EQ(primary(), "Analyze"); EXPECT_TRUE(explodeEnabled());
+    EXPECT_EQ(contourText(2), localizedNumericText("0.5")); clickPrimary(); finish(); EXPECT_EQ(state(), State::Ready) << message();
+}
+TEST_F(ExplodeBitmapPanelTest, ValidZeroPointOneGapStillTracesContours) {
+    open(2, 255); finish(); contours(true); finish();
+    auto starts = contourStarts.load();
+    auto gap = localizedNumericText("0.1");
+    ASSERT_TRUE(acceptContourText(2, gap.c_str())); finish();
+    EXPECT_DOUBLE_EQ(contourValueForTest(2), .1); EXPECT_EQ(contourStarts.load(), starts + 1);
+    EXPECT_TRUE(contourPreview());
+}
+TEST_F(ExplodeBitmapPanelTest, ContourFocusGapEnterZeroThenClickPublishesOneUndo) {
+    open(2, 255); finish(); contours(true); finish();
+    ASSERT_EQ(state(), State::Ready) << message();
+    ASSERT_TRUE(explodeEnabled()); ASSERT_TRUE(applyEnabled()); ASSERT_TRUE(contourOnlyEnabled());
+    ASSERT_EQ(preflightUndo(*doc, {false, 0, 1}).usage.undoCount, 0u);
+    auto before = xml();
+
+    focusContourField(2);
+    ASSERT_TRUE(contourFocused(2));
+    setContourText(2, "0");
+    activateContour(2);
+    finish();
+    EXPECT_DOUBLE_EQ(contourValueForTest(2), 0);
+    EXPECT_EQ(contourText(2), "0");
+    EXPECT_FALSE(contourDirty(2));
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(contourOnlyEnabled());
+
+    focusContourOnlyButton();
+    EXPECT_FALSE(contourFocused(2));
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(contourOnlyEnabled());
+    contourOnly();
+    EXPECT_NE(xml(), before);
+    EXPECT_EQ(preflightUndo(*doc, {false, 0, 1}).usage.undoCount, 1u);
+}
+TEST_F(ExplodeBitmapPanelTest, ContourZeroFocusSequenceSurvivesProcessNumericLocale) {
+    auto decimal = std::use_facet<std::numpunct<char>>(std::locale("")).decimal_point();
+    if (auto expected = g_getenv("VACARDS_EXPECTED_DECIMAL_POINT")) EXPECT_EQ(decimal, expected[0]);
+    open(2, 255); finish(); contours(true); finish();
+    ASSERT_EQ(state(), State::Ready) << message();
+    ASSERT_TRUE(explodeEnabled()); ASSERT_TRUE(applyEnabled()); ASSERT_TRUE(contourOnlyEnabled());
+    ASSERT_EQ(preflightUndo(*doc, {false, 0, 1}).usage.undoCount, 0u);
+    auto before = xml();
+
+    focusContourField(2);
+    setContourText(2, "0");
+    activateContour(2);
+    finish();
+    EXPECT_DOUBLE_EQ(contourValueForTest(2), 0);
+    EXPECT_EQ(contourText(2), "0"); EXPECT_FALSE(contourDirty(2));
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(contourOnlyEnabled());
+
+    focusContourOnlyButton();
+    EXPECT_FALSE(contourFieldHasFocus(2));
+    EXPECT_EQ(contourText(2), "0");
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(contourOnlyEnabled());
+
+    contourOnly();
+    EXPECT_NE(xml(), before);
+    EXPECT_EQ(preflightUndo(*doc, {false, 0, 1}).usage.undoCount, 1u);
+}
+TEST_F(ExplodeBitmapPanelTest, ContourOutputKeepsTabSpinSliderEscapeAndInvalidRecovery) {
+    auto decimal = std::use_facet<std::numpunct<char>>(std::locale("")).decimal_point();
+    auto localized = [decimal](char const *value) {
+        std::string text(value);
+        if (decimal == ',') std::replace(text.begin(), text.end(), '.', ',');
+        return text;
+    };
+    auto input = localized("0.2");
+    open(2, 255); finish(); contours(true); finish();
+
+    focusContourField(2);
+    rawContour(2, input.c_str());
+    activateContour(2); finish();
+    ASSERT_DOUBLE_EQ(contourValueForTest(2), .2);
+    focusContourField(2); nativeTab(); drainEvents();
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(contourOnlyEnabled());
+
+    focusContourField(2);
+    spinContour(2, GTK_SPIN_STEP_FORWARD);
+    finish(); EXPECT_DOUBLE_EQ(contourValueForTest(2), .3);
+    spinContour(2, GTK_SPIN_STEP_BACKWARD);
+    finish(); EXPECT_DOUBLE_EQ(contourValueForTest(2), .2);
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(contourOnlyEnabled());
+
+    setContourSlider(2, .3); finish();
+    ASSERT_DOUBLE_EQ(contourValueForTest(2), .3);
+    EXPECT_EQ(contourText(2), localized("0.3"));
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(contourOnlyEnabled());
+
+    focusContourField(2);
+    auto pending = localized("0.4");
+    setContourText(2, pending.c_str());
+    key(GDK_KEY_Escape);
+    EXPECT_DOUBLE_EQ(contourValueForTest(2), .3);
+    EXPECT_EQ(contourText(2), localized("0.3"));
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(contourOnlyEnabled());
+
+    rawContour(2, "invalid");
+    EXPECT_EQ(contourText(2), "invalid");
+    EXPECT_FALSE(explodeEnabled()); EXPECT_FALSE(applyEnabled()); EXPECT_FALSE(contourOnlyEnabled());
+    key(GDK_KEY_Escape);
+    EXPECT_DOUBLE_EQ(contourValueForTest(2), .3);
+    EXPECT_EQ(contourText(2), localized("0.3"));
+    EXPECT_TRUE(explodeEnabled()); EXPECT_TRUE(applyEnabled()); EXPECT_TRUE(contourOnlyEnabled());
 }
 TEST_F(ExplodeBitmapPanelTest, SelectionChangeCancelsQueuedPublicationAndNeverReanalyzes) {
     open(); finish(); auto before = xml(); auto old = ticket();
@@ -1523,7 +1758,8 @@ TEST_F(ExplodeBitmapPanelTest, WindowNativeTabTogglesArrowsEnterAndDragEscapeKee
     nativeCompareActivation(); EXPECT_TRUE(comparing()); EXPECT_FALSE(preview());
     focus(0); EXPECT_TRUE(comparing()); EXPECT_FALSE(preview()); // Persistent across focus loss.
     compare(false); EXPECT_TRUE(preview());
-    focus(0); pending(0, "999"); focus(1); EXPECT_NE(message().find("whole number"), std::string::npos);
+    focus(0); pending(0, "999"); focus(1);
+    EXPECT_EQ(message(), "Invalid value replaced by the previous one."); EXPECT_EQ(wholeText(0), "161");
     key(GDK_KEY_Escape); EXPECT_TRUE(panel->get_visible());
 }
 TEST_F(ExplodeBitmapPanelTest, T28PublicationReentryTeardownAndDeferredOutput) {
@@ -1672,7 +1908,7 @@ TEST_F(ExplodeBitmapPanelTest, WorkerMemoryRefusalShowsLimitNeedAndAvailable) {
         return JobResult{Bitmap::memoryFailure("OS headroom / operation budget", 2048*MiB, 1024*MiB)};
     });
     clickPrimary(); finish(); ASSERT_EQ(state(), State::Failed);
-    EXPECT_EQ(message(), "Not enough memory: OS headroom / operation budget; estimated need 2048.00 MiB, available 1024.00 MiB.");
+    EXPECT_EQ(message(), localizedNumericText("Not enough memory: OS headroom / operation budget; estimated need 2048.00 MiB, available 1024.00 MiB."));
     EXPECT_FALSE(resultReady()); EXPECT_FALSE(preview()); EXPECT_EQ(xml(), before);
     EXPECT_EQ(preflightUndo(*doc, {false, 0, 1}).usage.undoCount, 0u);
 }
@@ -1693,7 +1929,7 @@ TEST_F(ExplodeBitmapPanelTest, RetiredLedgerUsesFreshMemoryAdmissionOnReopen) {
     // Fresh admission must still refuse when A cannot cover the 256 MiB reserve.
     room.available = 256*MiB; panel->set_visible(true); EXPECT_EQ(state(), State::Idle); clickPrimary();
     EXPECT_EQ(state(), State::Failed); EXPECT_EQ(reserved(), 0u);
-    EXPECT_EQ(message(), "Not enough memory: OS headroom / recovery reserve; estimated need 256.00 MiB, available 256.00 MiB.");
+    EXPECT_EQ(message(), localizedNumericText("Not enough memory: OS headroom / recovery reserve; estimated need 256.00 MiB, available 256.00 MiB."));
     EXPECT_FALSE(working()); EXPECT_FALSE(resultReady());
     EXPECT_FALSE(applyEnabled()); EXPECT_EQ(primary(), "Analyze");
     explode(); EXPECT_FALSE(publicationPending()); EXPECT_EQ(reserved(), 0u); EXPECT_EQ(xml(), before);
@@ -1886,7 +2122,7 @@ TEST_F(ExplodeBitmapPanelTest, QueuedPublicationCancellationPreservesRealUndoAnd
 TEST_F(ExplodeBitmapPanelTest, OversizedSourceOffersExactDpiBeforeExplodeReservation) {
     largeSource(); auto h = seedHistory(); auto before = xml();
     ASSERT_EQ(state(), State::Resize) << message();
-    EXPECT_EQ(message(), "This image is 5001 × 20 px. Explode Bitmap supports images up to 5000 × 5000 px. Resize to continue.");
+    EXPECT_EQ(message(), "This image is " + localizedInteger(5001) + " × 20 px. Explode Bitmap supports images up to 5000 × 5000 px. Resize to continue.");
     expectNoWorkerStarts(); EXPECT_FALSE(working()); EXPECT_FALSE(resultReady()); EXPECT_EQ(ticket(), 0u); EXPECT_EQ(reserved(), 0u);
     EXPECT_TRUE(explodeEnabled()); EXPECT_EQ(primary(), "Resize"); EXPECT_FALSE(applyEnabled());
     auto bounds = desktop->getSelection()->documentBounds(SPItem::VISUAL_BBOX); ASSERT_TRUE(bounds);
@@ -1896,7 +2132,7 @@ TEST_F(ExplodeBitmapPanelTest, OversizedSourceOffersExactDpiBeforeExplodeReserva
 }
 TEST_F(ExplodeBitmapPanelTest, HeightAloneAndNoFittingDpiNeverDispatch) {
     largeSource(20, 5001); EXPECT_EQ(state(), State::Resize);
-    EXPECT_EQ(message(), "This image is 20 × 5001 px. Explode Bitmap supports images up to 5000 × 5000 px. Resize to continue.");
+    EXPECT_EQ(message(), "This image is 20 × " + localizedInteger(5001) + " px. Explode Bitmap supports images up to 5000 × 5000 px. Resize to continue.");
     expectNoWorkerStarts(); EXPECT_EQ(ticket(), 0u); EXPECT_EQ(reserved(), 0u);
     image()->getRepr()->setAttribute("width", "6000"); doc->ensureUpToDate(); inspect();
     auto bounds = desktop->getSelection()->documentBounds(SPItem::VISUAL_BBOX); ASSERT_TRUE(bounds);
@@ -2713,7 +2949,7 @@ TEST_F(ExplodeBitmapPanelTest, R3MainThreadHrefAllocationRefusalPreservesDocumen
     clickPrimary(); ASSERT_EQ(state(), State::Failed) << message();
     EXPECT_EQ(fault.attempts, 1u); EXPECT_EQ(workerStarts.load(), starts);
     EXPECT_NE(message().find("main-thread allocator / image input"), std::string::npos);
-    EXPECT_NE(message().find("estimated need 2.00 MiB"), std::string::npos);
+    EXPECT_NE(message().find(localizedNumericText("estimated need 2.00 MiB")), std::string::npos);
     EXPECT_NE(message().find("estimated need"), std::string::npos);
     EXPECT_NE(message().find("available"), std::string::npos);
     EXPECT_NE(message().find("MiB"), std::string::npos);

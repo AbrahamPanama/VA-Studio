@@ -13,14 +13,10 @@
 
 #include "rubberband.h"
 
-#include <cairomm/pattern.h>
 #include <cstdint>
-#include <unordered_map>
-#include <utility>
 
 #include <2geom/path.h>
 #include "desktop.h"
-#include "display/cairo-utils.h"
 #include "display/control/canvas-item-bpath.h"
 #include "display/control/canvas-item-enums.h"
 #include "display/control/canvas-item-rect.h"
@@ -86,17 +82,6 @@ void Inkscape::Rubberband::stop()
     _path.clear();
 
     delete_canvas_items();
-}
-
-static std::unordered_map<uint32_t, Cairo::RefPtr<Cairo::Pattern>> _pattern_cache;
-
-static Cairo::RefPtr<Cairo::Pattern> get_cached_pattern(uint32_t color)
-{
-    auto &pat = _pattern_cache[color];
-    if (!pat) {
-        pat = ink_cairo_pattern_create_slanting_stripes(color);
-    }
-    return pat;
 }
 
 void Inkscape::Rubberband::move(Geom::Point const &p)
@@ -177,7 +162,7 @@ void Inkscape::Rubberband::move(Geom::Point const &p)
                 _rect->set_shadow(0xffffffff, 0); // Not a shadow
             }
             _rect->set_rect(Geom::Rect(_start, _end));
-            _rect->set_fill_pattern(get_cached_pattern(fill_color));
+            _rect->set_fill(fill_color);
             _rect->set_stroke(stroke_color);
             _rect->set_visible(true);
             break;

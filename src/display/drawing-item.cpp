@@ -239,6 +239,15 @@ void DrawingItem::setOpacityOverride(std::optional<double> opacity)
     });
 }
 
+void DrawingItem::setHoverTint(std::optional<uint32_t> rgba)
+{
+    defer([=, this] {
+        if (_hover_tint == rgba) return;
+        _hover_tint = rgba;
+        _markForRendering();
+    });
+}
+
 void DrawingItem::setAntialiasing(Antialiasing antialias)
 {
     defer([=, this] {
@@ -794,8 +803,11 @@ unsigned DrawingItem::render(DrawingContext &dc, RenderContext &rc, Geom::IntRec
 
     std::unique_lock<std::mutex> lock;
 
+    bool const hover_tint = _hover_tint.has_value();
+
+    // A hover tint is transient display state and must never enter the item cache.
     // Render from cache if possible, unless requested not to (hatches).
-    if (_cache && !(flags & RENDER_BYPASS_CACHE)) {
+    if (_cache && !hover_tint && !(flags & RENDER_BYPASS_CACHE)) {
         lock = std::unique_lock(_cache->mutables);
 
         if (_cache->surface) {
@@ -837,7 +849,8 @@ unsigned DrawingItem::render(DrawingContext &dc, RenderContext &rc, Geom::IntRec
         || _blend_mode != SP_CSS_BLEND_NORMAL     // 5. it has blend mode
         || _isolation == SP_CSS_ISOLATION_ISOLATE // 6. it is isolated
         || (_child_type == ChildType::ROOT && isolate_root) // 7. it is the root and needs isolation
-        || (bool)_cache;                          // 8. it is to be cached
+        || (bool)_cache                          // 8. it is to be cached
+        || hover_tint;                            // 9. tint the complete rendered subtree
 
     auto antialias = rc.antialiasing_override.value_or(_antialias);
 
@@ -950,8 +963,20 @@ unsigned DrawingItem::render(DrawingContext &dc, RenderContext &rc, Geom::IntRec
     ict.setOperator(CAIRO_OPERATOR_IN);
     ict.paint();
 
+    // ATOP blends the blue only into pixels that already have alpha.
+    if (hover_tint) {
+        auto const rgba = *_hover_tint;
+        ict.setSource(((rgba >> 24) & 0xff) / 255.0,
+                      ((rgba >> 16) & 0xff) / 255.0,
+                      ((rgba >> 8) & 0xff) / 255.0,
+                      (rgba & 0xff) / 255.0);
+        ict.setOperator(CAIRO_OPERATOR_ATOP);
+        ict.paint();
+        ict.setOperator(CAIRO_OPERATOR_OVER);
+    }
+
     // 6. Paint the completed rendering onto the base context (or into cache)
-    if (_cache && !(flags & RENDER_BYPASS_CACHE)) {
+    if (_cache && !hover_tint && !(flags & RENDER_BYPASS_CACHE)) {
         if (!forcecache) {
             lock.lock(); // Only hold the lock for the full duration of rendering for filters.
         }

@@ -130,7 +130,8 @@ ContourResult contours(AnalysisState const &state, ContourRecipe recipe,
     ContourResult result;
     if (!recipe.enabled) return result;
     auto start = JobClock::now();
-    JobWork work(std::uint64_t(state.grid.width)*state.grid.height, 100);
+    auto passes = recipe.gapToleranceMm > 0 ? 3u : 1u;
+    JobWork work(std::uint64_t(state.grid.width)*state.grid.height, 100 * passes);
     PhaseTimer timer;
     auto run = [&]() -> Outcome {
         if (stop.requested()) return {Status::canceled, "Canceled"};

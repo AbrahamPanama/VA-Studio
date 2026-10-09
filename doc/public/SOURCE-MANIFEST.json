@@ -1,12 +1,12 @@
 {
   "schema": "va-studio-public-source-manifest/1",
   "about": "Inputs of this public source tree. The modules were flattened from their pinned commits; the libcdr fork is in third_party/libcdr-vacards.",
-  "source_commit": "784011a8fe3416d9c505f0a5ef1f20e6b64b3956",
+  "source_commit": "697d1c7a2d02a95d9f5b1c614736a94eaf70b308",
   "inkscape_baseline": "d2b9be1c53",
   "modules": [
     {
       "path": "po",
-      "commit": "e279e549efbb56de2728fd9ee5a3315aafc72ef1",
+      "commit": "7107139cc4816d7b335a65f57ec7844cc40aea52",
       "origin": "VA Studio fork commit (exists only in the VA Studio development history; its complete source is this directory)",
       "fork_of": "https://gitlab.com/inkscape/translations",
       "upstream_base": "4a4241de4b7fa4f71160b628487369a42320e9ff"
@@ -97,8 +97,8 @@
     "fork_of": "https://git.libreoffice.org/libcdr (mirror: https://github.com/LibreOffice/libcdr)",
     "upstream_base": "none (snapshot import of the libcdr 0.1.10 release)"
   },
-  "exclude_manifest_sha256": "3abde1e5da7050f4024b627c4c0376673664189830a9144684dd95e717933f04",
-  "substitutions_sha256": "6929986e868a58c918912880face66df426335f6dfdb90928d78e9dac88f0bef",
-  "excluded_file_count": 232,
+  "exclude_manifest_sha256": "ef235b0185355a41812df6efc4d6c9415ac14ddd77facf6c2a6c1ac6bc026c4c",
+  "substitutions_sha256": "dfe27ab05a90a760b09bd7c8daab80b979846c26d1a7065d2b484a590cdb6b30",
+  "excluded_file_count": 233,
   "rules_source": "commit"
 }

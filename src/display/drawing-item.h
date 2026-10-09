@@ -152,6 +152,7 @@ public:
     virtual void setChildrenStyle(SPStyle const *context_style);
     void setOpacity(float opacity);
     void setOpacityOverride(std::optional<double> opacity);
+    void setHoverTint(std::optional<uint32_t> rgba);
     void setAntialiasing(Antialiasing antialias);
     void setIsolation(bool isolation); // CSS Compositing and Blending
     void setBlendMode(SPBlendMode blend_mode);
@@ -233,6 +234,7 @@ protected:
     SPStyle const *_context_style; // Used for 'context-fill', 'context-stroke'
 
     float _opacity;
+    std::optional<uint32_t> _hover_tint;
     std::optional<double> _opacity_override;
     std::unique_ptr<Geom::Affine> _transform; ///< Incremental transform from parent to this item's coords
     Geom::Affine _ctm; ///< Total transform from item coords to display coords

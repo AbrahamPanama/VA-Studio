@@ -151,7 +151,13 @@ ExplodeBitmapPanel::ExplodeBitmapPanel(Options options)
         label->set_wrap(true); label->set_wrap_mode(Pango::WrapMode::WORD_CHAR); label->set_xalign(0);
         label->set_hexpand(true);
     }
+    _status.set_lines(2); _status.set_ellipsize(Pango::EllipsizeMode::END);
+    int w = 0, h = 0;
+    auto layout = _status.create_pango_layout("Ag\nAg");
+    layout->get_pixel_size(w, h);
+    _status.set_size_request(-1, h);
     _status.add_css_class("dim-label"); _content.append(_status); _content.append(_progress);
+    _progress.set_opacity(0); _progress.set_sensitive(false);
     _before.set_label(_("Before")); _previewToggle.set_label(_("Preview"));
     _before.set_group(_previewToggle); _previewToggle.set_active(true);
     _before.set_hexpand(true); _previewToggle.set_hexpand(true);
@@ -190,7 +196,11 @@ ExplodeBitmapPanel::ExplodeBitmapPanel(Options options)
         }, false);
         spin.signal_output().connect([this, i] {
             double value = 0;
-            return !_updating && _contourDirty[i] && !contourNumber(_contourSpins[i].get_text(), i, value);
+            if (_contourDirty[i] && !contourNumber(_contourSpins[i].get_text(), i, value)) return true;
+            auto updating = std::exchange(_updating, true);
+            auto restore = scope_exit([this, updating] { _updating = updating; });
+            _contourSpins[i].set_text(number(_contourAdjustments[i]->get_value(), i == 1 ? 0 : 1));
+            return true;
         }, false);
         spin.signal_changed().connect([this, i] {
             if (!_updating) {
@@ -204,7 +214,13 @@ ExplodeBitmapPanel::ExplodeBitmapPanel(Options options)
         focus->signal_enter().connect([this, i] { _contourFocused[i] = true; _contourSpins[i].set_numeric(false); });
         focus->signal_leave().connect([this, i] {
             _contourFocused[i] = false; _contourSpins[i].set_numeric(true);
-            if (!_updating && !acceptContour(i)) _contourSpins[i].grab_focus();
+            if (_updating) return;
+            double value = 0;
+            if (!contourNumber(_contourSpins[i].get_text(), i, value)) {
+                discardContourEdit(i);
+                display(_state);
+                setStatus(_("Invalid value replaced by the previous one."));
+            } else acceptContour(i);
         });
         spin.add_controller(focus);
         _contourAdjustments[i]->signal_value_changed().connect([this, i] {
@@ -268,7 +284,11 @@ ExplodeBitmapPanel::ExplodeBitmapPanel(Options options)
         }, false);
         _spins[i].signal_output().connect([this, i] {
             unsigned value = 0;
-            return !_updating && _dirty[i] && !wholeNumber(_spins[i].get_text(), 0, fieldMax[i], value);
+            if (_dirty[i] && !wholeNumber(_spins[i].get_text(), 0, fieldMax[i], value)) return true;
+            auto updating = std::exchange(_updating, true);
+            auto restore = scope_exit([this, updating] { _updating = updating; });
+            _spins[i].set_text(std::to_string(static_cast<unsigned>(_adjustments[i]->get_value())));
+            return true;
         }, false);
         // Observe raw capture events: GtkRange claims its gesture and denies a
         // separate GestureClick, which then never receives released.
@@ -295,7 +315,13 @@ ExplodeBitmapPanel::ExplodeBitmapPanel(Options options)
         focus->signal_enter().connect([this, i] { _focused[i] = true; _spins[i].set_numeric(false); });
         focus->signal_leave().connect([this, i] {
             _focused[i] = false; _spins[i].set_numeric(true);
-            if (!_updating && !accept(i)) _spins[i].grab_focus();
+            if (_updating) return;
+            unsigned value = 0;
+            if (!wholeNumber(_spins[i].get_text(), 0, fieldMax[i], value)) {
+                discardFieldEdit(i);
+                display(_state);
+                setStatus(_("Invalid value replaced by the previous one."));
+            } else accept(i);
         });
         _spins[i].add_controller(focus);
         _adjustments[i]->signal_value_changed().connect([this, i] {
@@ -410,13 +436,42 @@ bool ExplodeBitmapPanel::sameSelection() const
 }
 void ExplodeBitmapPanel::endSession(Glib::ustring const &message)
 {
+    discardEdits();
     _sessionWatch.disconnect(); _session = false; ++_sessionGeneration;
     _dragging = false; stop(); _identity = {}; _applyMessage.clear(); resetComparison();
     _idleMessage = message; display(State::Idle, _idleMessage);
 }
+void ExplodeBitmapPanel::discardEdits()
+{
+    _updating = true;
+    for (unsigned i = 0; i < 3; ++i) {
+        auto value = fieldValue(_recipe, i);
+        _adjustments[i]->set_value(value); _spins[i].set_text(std::to_string(value)); _dirty[i] = false;
+    }
+    for (unsigned i = 0; i < 3; ++i) {
+        auto value = contourValue(_contourRecipe, i);
+        _contourAdjustments[i]->set_value(value); _contourSpins[i].set_text(number(value, i == 1 ? 0 : 1)); _contourDirty[i] = false;
+    }
+    _updating = false;
+}
+void ExplodeBitmapPanel::discardFieldEdit(unsigned i)
+{
+    auto value = fieldValue(_recipe, i);
+    _updating = true;
+    _adjustments[i]->set_value(value); _spins[i].set_text(std::to_string(value)); _dirty[i] = false;
+    _updating = false;
+}
+void ExplodeBitmapPanel::discardContourEdit(unsigned i)
+{
+    auto value = contourValue(_contourRecipe, i);
+    _updating = true;
+    _contourAdjustments[i]->set_value(value); _contourSpins[i].set_text(number(value, i == 1 ? 0 : 1)); _contourDirty[i] = false;
+    _updating = false;
+}
 void ExplodeBitmapPanel::stale()
 {
     if (!_session) return;
+    discardEdits();
     bool resize = _state == State::Resize || _resizing;
     auto image = getSelection() ? cast<SPImage>(getSelection()->singleItem()) : nullptr;
     bool viewUnavailable = image && getDesktop() && !image->viewDependencyStamp(getDesktop()->dkey).available();
@@ -457,6 +512,7 @@ void ExplodeBitmapPanel::analyze()
 {
     if (!active() || _publishing || _publicationPending || !eligible()) return;
     if (_state != State::Idle && _state != State::Stale && _state != State::Failed) return;
+    discardEdits();
     stop(); resetComparison(); _applyMessage.clear(); _idleMessage.clear(); _activation->retry();
     _identity = logicalImageIdentity(*cast<SPImage>(getSelection()->singleItem()));
     _session = true; ++_sessionGeneration;
@@ -615,24 +671,15 @@ void ExplodeBitmapPanel::drag(bool start, bool cancel)
 bool ExplodeBitmapPanel::key(unsigned k, Gdk::ModifierType modifiers)
 {
     bool pending = _dirty[0] || _dirty[1] || _dirty[2] || _contourDirty[0] || _contourDirty[1] || _contourDirty[2];
-    auto discard = [this] {
-        _updating = true;
-        for (unsigned i = 0; i < 3; ++i) { _adjustments[i]->set_value(fieldValue(_recipe, i)); _spins[i].set_text(std::to_string(fieldValue(_recipe, i))); _dirty[i] = false; }
-        for (unsigned i = 0; i < 3; ++i) {
-            auto value = contourValue(_contourRecipe, i);
-            _contourAdjustments[i]->set_value(value); _contourSpins[i].set_text(number(value, i == 1 ? 0 : 1)); _contourDirty[i] = false;
-        }
-        _updating = false;
-    };
     if ((modifiers & Gdk::ModifierType::CONTROL_MASK) != Gdk::ModifierType{} && (k == GDK_KEY_z || k == GDK_KEY_Z)) {
-        discard(); _dragging = false; stale(); if (getDocument()) {
+        discardEdits(); _dragging = false; stale(); if (getDocument()) {
             if ((modifiers & Gdk::ModifierType::SHIFT_MASK) != Gdk::ModifierType{}) DocumentUndo::redo(getDocument());
             else DocumentUndo::undo(getDocument());
         } refresh(); return true;
     }
     if (k == GDK_KEY_Escape) {
         if (_dragging) drag(false, true);
-        else if (pending) { discard(); display(_state); }
+        else if (pending) { discardEdits(); display(_state); }
         else if (_state != State::Idle) endSession(eligible() ? _("Analysis canceled. Unapplied changes were discarded. Click Analyze to start again.") : Glib::ustring{});
         else { stop(); set_visible(false); }
         return true;
@@ -671,7 +718,7 @@ void ExplodeBitmapPanel::resetComparison()
 }
 void ExplodeBitmapPanel::setStatus(Glib::ustring const &text, bool warn)
 {
-    _status.set_text(text); _status.set_visible(!text.empty());
+    _status.set_text(text); _status.set_tooltip_text(text); _status.set_visible(true);
     if (warn) _status.remove_css_class("dim-label"); else _status.add_css_class("dim-label");
 }
 void ExplodeBitmapPanel::warning(Glib::ustring const &text)
@@ -763,7 +810,8 @@ void ExplodeBitmapPanel::display(State state, Glib::ustring const &detail)
     _apply.set_tooltip_text(_("Bake the transparency adjustment into this image. Undo restores the previous image."));
     _primary.set_sensitive(!publishing && (state == State::Ready || state == State::Resize || ((state == State::Idle || state == State::Stale || (state == State::Failed && !out)) && eligible())));
     _cancel.set_sensitive(!_publishing);
-    _progress.set_visible((state == State::Counting || state == State::Processing) && !publishing);
+    bool showProgress = (state == State::Counting || state == State::Processing) && !publishing;
+    _progress.set_opacity(showProgress ? 1.0 : 0.0); _progress.set_sensitive(showProgress);
     if (state == State::Counting || state == State::Processing) _progress.set_fraction(0);
     _fit.set_sensitive(eligible() && !publishing);
     _zoom.set_visible(state != State::Resize); _zoom.set_sensitive(!publishing && state == State::Ready && out && out->count && out->count <= MaxExplodePieces);
@@ -900,6 +948,7 @@ void ExplodeBitmapPanel::request()
     if (!_prepared.limits.workerQualified) { display(State::Failed, _(platformFailure)); return; }
     auto image = cast<SPImage>(getSelection()->singleItem()); if (!image) return;
     auto identity = logicalImageIdentity(*image);
+    if (identity != _identity) discardEdits();
     if (!_dragging || identity != _identity) _recipe = query(identity);
     if (identity != _identity) resetComparison();
     _identity = identity;

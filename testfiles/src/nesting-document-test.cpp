@@ -800,6 +800,89 @@ TEST_F(NestingDocumentTest, DisconnectedPartUsesAConservativeHull)
     expect_rect_near(point_bounds(prepared.snapshot->parts.front().components.front().outer), rect(120, 20, 160, 50));
 }
 
+TEST_F(NestingDocumentTest, DegeneratePartRingKeepsUsableRingsAndAddsItsPointsConservatively)
+{
+    constexpr char failing_ring[] = "M 70,10 L 70.125,10 L 70.125,10.015625 Z";
+    auto document = make_document(std::string{R"svg(
+      <rect id="container" width="100" height="100"/>
+      <path id="part" fill="black" d="
+        M 10,10 H 20 V 20 H 10 Z
+        M 40,10 H 50 V 20 H 40 Z
+        )svg"} + failing_ring + R"svg("/>)svg");
+    ASSERT_TRUE(document);
+    std::vector<SPItem *> parts{item(*document, "part")};
+
+    auto prepared = prepareDocumentNesting(item(*document, "container"), parts, 0.05);
+
+    ASSERT_TRUE(prepared) << prepared.error;
+    ASSERT_EQ(prepared.snapshot->parts.size(), 1u);
+    auto const &part = prepared.snapshot->parts.front();
+    ASSERT_EQ(part.components.size(), 1u);
+    EXPECT_NE(part.recovery, RecoveryKind::ConservativeFallback);
+    EXPECT_EQ(part.contour_source, ContourSource::ConservativeHull);
+    EXPECT_NE(part.contour_source, ContourSource::ConservativeBounds);
+    auto const &outer = part.components.front().outer;
+    auto contains = [&](Point const &point) {
+        bool inside = false;
+        for (std::size_t current = 0, previous = outer.size() - 1; current < outer.size(); previous = current++) {
+            auto const &a = outer[current];
+            auto const &b = outer[previous];
+            auto const dx = b.x - a.x;
+            auto const dy = b.y - a.y;
+            auto const length_squared = dx * dx + dy * dy;
+            auto const projection = length_squared > 0.0
+                                        ? std::clamp(((point.x - a.x) * dx + (point.y - a.y) * dy) / length_squared,
+                                                     0.0, 1.0)
+                                        : 0.0;
+            if (std::hypot(point.x - (a.x + projection * dx), point.y - (a.y + projection * dy)) < 1e-5)
+                return true;
+            if (((a.y > point.y) != (b.y > point.y)) &&
+                point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y) + a.x)
+                inside = !inside;
+        }
+        return inside;
+    };
+    // The three original rings survive flattened() normalization. The tiny
+    // triangle has area 0.001, below tolerance squared (0.0025); every source
+    // vertex from it and both valid rectangles must remain enclosed by the
+    // conservative outer hull assembled from the original flattened points.
+    for (Point point : {Point{10, 10}, Point{20, 10}, Point{20, 20}, Point{10, 20}, Point{40, 10},
+                        Point{50, 10}, Point{50, 20}, Point{40, 20}, Point{70, 10}, Point{70.125, 10},
+                        Point{70.125, 10.015625}}) {
+        EXPECT_TRUE(contains(point)) << "point (" << point.x << ", " << point.y << ")";
+    }
+    std::array<Point, 5> const expected_hull{{{10, 10}, {70.125, 10}, {70.125, 10.015625}, {50, 20}, {10, 20}}};
+    ASSERT_EQ(outer.size(), expected_hull.size()) << "the usable ring vertices must contribute to the exact hull";
+    for (auto const &expected : expected_hull) {
+        EXPECT_TRUE(std::any_of(outer.begin(), outer.end(), [&](Point const &point) {
+            return point.x == expected.x && point.y == expected.y;
+        })) << "missing exact hull point (" << expected.x << ", " << expected.y << ")";
+    }
+    EXPECT_NEAR(point_bounds(outer).max()[Geom::X], 70.125, 1e-6);
+    EXPECT_NEAR(point_bounds(outer).min()[Geom::X], 10, 1e-5);
+
+    // The same normalized failing ring remains fatal when it is the container.
+    auto container_document = make_document(std::string{"<path id='container' fill='black' d='"} + failing_ring +
+                                            "'/><rect id='part' x='10' y='10' width='5' height='5'/>");
+    ASSERT_TRUE(container_document);
+    std::vector<SPItem *> container_parts{item(*container_document, "part")};
+    auto rejected = prepareDocumentNesting(item(*container_document, "container"), container_parts, 0.05);
+    EXPECT_FALSE(rejected) << "degenerate container rings must continue to fail closed";
+
+    auto contained_document = make_document(R"svg(
+      <rect id="container" width="100" height="100"/>
+      <path id="part" fill="black"
+            d="M 10,10 H 20 V 20 H 10 Z M 12,12 L 12.125,12 L 12.125,12.015625 Z"/>)svg");
+    ASSERT_TRUE(contained_document);
+    std::vector<SPItem *> contained_parts{item(*contained_document, "part")};
+    auto contained = prepareDocumentNesting(item(*contained_document, "container"), contained_parts, 0.05);
+    ASSERT_TRUE(contained) << contained.error;
+    auto const &contained_part = contained.snapshot->parts.front();
+    EXPECT_EQ(contained_part.contour_source, ContourSource::ExactVector)
+        << "degenerate points within the usable outer ring should be ignored";
+    expect_rect_near(point_bounds(contained_part.components.front().outer), rect(10, 10, 20, 20));
+}
+
 TEST_F(NestingDocumentTest, GroupPartKeepsVisibleChildrenAsRigidCollisionComponents)
 {
     auto document = make_document(R"svg(

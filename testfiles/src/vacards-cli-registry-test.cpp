@@ -6,6 +6,13 @@
 #include <limits>
 #include <boost/json.hpp>
 #include <set>
+#ifdef _WIN32
+#include <windows.h>
+#include <aclapi.h>
+#include <filesystem>
+#include <string>
+#include <vector>
+#endif
 
 #include <gtest/gtest.h>
 
@@ -21,6 +28,65 @@
 using namespace Inkscape;
 using namespace Inkscape::VACardsCli;
 namespace {
+#ifdef _WIN32
+// Temporarily deny the active user access to one test fixture path, preserving
+// and restoring its original DACL even when a GoogleTest assertion returns.
+class ScopedUserDenyAcl
+{
+public:
+    ~ScopedUserDenyAcl()
+    {
+        restore();
+        if (_new_dacl) LocalFree(_new_dacl);
+        // _old_dacl points into _old_sd; only the descriptor is freed.
+        if (_old_sd) LocalFree(_old_sd);
+    }
+
+    bool restore()
+    {
+        if (!_applied) return true;
+        auto result = SetNamedSecurityInfoW(_path.data(), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+                                            nullptr, nullptr, _old_dacl, nullptr);
+        if (result == ERROR_SUCCESS) _applied = false;
+        return result == ERROR_SUCCESS;
+    }
+
+    bool deny(std::filesystem::path const &path, DWORD mask)
+    {
+        _path = path.native();
+        HANDLE token = nullptr;
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) return false;
+        struct CloseToken { HANDLE value; ~CloseToken() { CloseHandle(value); } } close_token{token};
+        DWORD bytes = 0;
+        GetTokenInformation(token, TokenUser, nullptr, 0, &bytes);
+        if (!bytes) return false;
+        std::vector<unsigned char> token_data(bytes);
+        if (!GetTokenInformation(token, TokenUser, token_data.data(), bytes, &bytes)) return false;
+        auto user = reinterpret_cast<TOKEN_USER *>(token_data.data());
+        if (GetNamedSecurityInfoW(_path.data(), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+                                  nullptr, nullptr, &_old_dacl, nullptr, &_old_sd) != ERROR_SUCCESS) return false;
+        EXPLICIT_ACCESSW entry{};
+        entry.grfAccessPermissions = mask;
+        entry.grfAccessMode = DENY_ACCESS;
+        entry.grfInheritance = NO_INHERITANCE;
+        entry.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+        entry.Trustee.TrusteeType = TRUSTEE_IS_USER;
+        entry.Trustee.ptstrName = reinterpret_cast<LPWSTR>(user->User.Sid);
+        if (SetEntriesInAclW(1, &entry, _old_dacl, &_new_dacl) != ERROR_SUCCESS) return false;
+        if (SetNamedSecurityInfoW(_path.data(), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+                                  nullptr, nullptr, _new_dacl, nullptr) != ERROR_SUCCESS) return false;
+        _applied = true;
+        return true;
+    }
+
+private:
+    std::wstring _path;
+    PSECURITY_DESCRIPTOR _old_sd = nullptr;
+    PACL _old_dacl = nullptr;
+    PACL _new_dacl = nullptr;
+    bool _applied = false;
+};
+#endif
 // Independent test oracle for the generated schema vocabulary. Never calls validate_schema.
 bool conforms(boost::json::value const &v, boost::json::object const &s)
 {
@@ -978,7 +1044,7 @@ std::set<std::string> r5_skipped_ids() {
 array rows() {
     auto all=read(root()/"work/cli-b31/evidence/P9/waveB-pending-branches.json").as_object().at("INT").as_array();
     auto r5_skipped=r5_skipped_ids();
-    auto manifest=read(source_root()/"doc/vacards/cli/m3-outcome-manifest.json");
+    auto manifest=read(source_root()/"doc/vacards/cli"/"m3-outcome-manifest.json");
     std::map<std::string,object> expected;
     for (auto const &c:manifest.as_object().at("commands").as_array())
         for (auto const &e:c.as_object().at("errors").as_array()) {
@@ -1437,7 +1503,7 @@ TEST(INTFaultSeam, UnarmedProductionSelectionAndHistoryRemainNative) {
 }
 TEST(INTD12, EngineContainmentExactBranches) {
     using namespace boost::json;
-    auto manifest=D12::read(D12::source_root()/"doc/vacards/cli/m3-outcome-manifest.json");unsigned count=0;
+    auto manifest=D12::read(D12::source_root()/"doc/vacards/cli"/"m3-outcome-manifest.json");unsigned count=0;
     for(auto const &cmd:{"selection.set","selection.clear","history.query","history.undo","history.redo"}) {
         object row;
         for(auto const &c:manifest.as_object().at("commands").as_array()) if(c.as_object().at("id")==cmd)
@@ -1609,6 +1675,38 @@ void legacy_files() {
             struct Restore {std::filesystem::path p;~Restore(){std::error_code ec;std::filesystem::permissions(p,std::filesystem::perms::owner_all,ec);}} restore{denied};
             std::filesystem::permissions(denied,std::filesystem::perms::none);
             auto before=f.state();auto result=dispatch(r,f.context);
+            legacy_observe(row,f,before,result,r,{{"native_permission_denial",true}});++count;continue;
+        }
+#else
+        if(code=="resource-unavailable" && cmd=="file.save") {
+            auto denied=f.dir/"denied";std::filesystem::create_directory(denied);
+            auto image=f.context.document->getObjectById("image1");ASSERT_NE(image,nullptr);
+            std::string href=image->getRepr()->attribute("xlink:href");auto comma=href.find(',');ASSERT_NE(comma,std::string::npos);
+            gsize n=0;auto decoded=g_base64_decode(href.c_str()+comma+1,&n);ASSERT_NE(decoded,nullptr);
+            auto path=f.write("denied/source.png",std::string(reinterpret_cast<char const *>(decoded),n));g_free(decoded);
+            image->getRepr()->setAttribute("xlink:href",path.c_str());
+            DocumentUndo::done(f.context.document,Util::Internal::ContextString("linked fixture"),"");
+            r.if_revision=document_stamp(f.context.document).revision;
+            r.params["path"]=(f.dir/"output.svg").string();
+            ScopedUserDenyAcl restore;
+            ASSERT_TRUE(restore.deny(denied/"source.png",FILE_READ_DATA)) << "cannot deny linked resource read";
+            auto before=f.state();auto result=dispatch(r,f.context);
+            ASSERT_TRUE(restore.restore()) << "cannot restore linked resource DACL";
+            legacy_observe(row,f,before,result,r);++count;continue;
+        }
+        if((code=="resource-unavailable" && intake) || (code=="publication-unavailable" && cmd=="file.export")) {
+            auto denied=f.dir/"denied";std::filesystem::create_directory(denied);
+            f.write("denied/source.svg","<svg xmlns=\"http://www.w3.org/2000/svg\"/>");
+            // Windows grants FILE_READ_ATTRIBUTES through the parent's list right, so a denied directory still
+            // admits the destination. An existing destination whose data cannot be read reaches the same
+            // "destination admission or expected-version read unavailable" branch.
+            if(!intake) f.write("denied/output.svg","<svg xmlns=\"http://www.w3.org/2000/svg\"/>");
+            auto target=intake ? denied/"source.svg" : denied/"output.svg";
+            r.params["path"]=target.string();
+            ScopedUserDenyAcl restore;
+            ASSERT_TRUE(restore.deny(target,FILE_READ_DATA)) << "cannot deny intake or destination read";
+            auto before=f.state();auto result=dispatch(r,f.context);
+            ASSERT_TRUE(restore.restore()) << "cannot restore intake or publication DACL";
             legacy_observe(row,f,before,result,r,{{"native_permission_denial",true}});++count;continue;
         }
 #endif
